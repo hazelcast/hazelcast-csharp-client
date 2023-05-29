@@ -5,16 +5,17 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Class MemberVersion
+      <title>MemberVersion Class
  | Hazelcast .NET Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Class MemberVersion
+      <meta name="title" content="MemberVersion Class
  | Hazelcast .NET Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../../styles/docfx.css">
       <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
       <meta property="docfx:navrel" content="../toc.html">
       <meta property="docfx:tocrel" content="toc.html">
     
@@ -22,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="">
       <header>
 
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -36,7 +37,7 @@
               </button>
 
               <a class="navbar-brand" href="../../index.html">
-                <img id="logo" class="svg" src="../../logo.svg" alt="">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -48,12 +49,15 @@
             </div>
           </div>
         </nav>
-
+        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
-            <ul class="breadcrumb">
-              <li></li>
-            </ul>
+              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
           </div>
         </div>
       </header>
@@ -81,11 +85,16 @@
 
 
 
-  <h1 id="Hazelcast_Models_MemberVersion" data-uid="Hazelcast.Models.MemberVersion" class="text-break">Class MemberVersion
+  <h1 id="Hazelcast_Models_MemberVersion" data-uid="Hazelcast.Models.MemberVersion" class="text-break">MemberVersion Class
 </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Models.html">Models</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
   <div class="markdown level0 summary"><p>Represents the version of a cluster member.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public class MemberVersion : IEquatable&lt;MemberVersion&gt;, IComparable&lt;MemberVersion&gt;</code></pre>
+  </div>
   <div class="inheritance">
     <h5>Inheritance</h5>
     <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
@@ -110,12 +119,6 @@
     <div>
       <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
     </div>
-  </div>
-  <h6><strong>Namespace</strong>: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Models.html">Models</a></h6>
-  <h6><strong>Assembly</strong>: Hazelcast.Net.dll</h6>
-  <h5 id="Hazelcast_Models_MemberVersion_syntax">Syntax</h5>
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class MemberVersion : IEquatable&lt;MemberVersion&gt;, IComparable&lt;MemberVersion&gt;</code></pre>
   </div>
   <h3 id="constructors">Constructors
 </h3>
@@ -183,7 +186,8 @@
         <td id="Hazelcast_Models_MemberVersion_CompareTo_Hazelcast_Models_MemberVersion_" data-uid="Hazelcast.Models.MemberVersion.CompareTo(Hazelcast.Models.MemberVersion)">
           <a class="xref" href="Hazelcast.Models.MemberVersion.CompareTo.html#Hazelcast_Models_MemberVersion_CompareTo_Hazelcast_Models_MemberVersion_">CompareTo(MemberVersion)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.</p>
+</td>
       </tr>
       <tr>
         <td id="Hazelcast_Models_MemberVersion_Equals_Hazelcast_Models_MemberVersion_" data-uid="Hazelcast.Models.MemberVersion.Equals(Hazelcast.Models.MemberVersion)">
@@ -203,13 +207,15 @@
         <td id="Hazelcast_Models_MemberVersion_Equals_System_Object_" data-uid="Hazelcast.Models.MemberVersion.Equals(System.Object)">
           <a class="xref" href="Hazelcast.Models.MemberVersion.Equals.html#Hazelcast_Models_MemberVersion_Equals_System_Object_">Equals(object)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Determines whether the specified object is equal to the current object.</p>
+</td>
       </tr>
       <tr>
         <td id="Hazelcast_Models_MemberVersion_GetHashCode" data-uid="Hazelcast.Models.MemberVersion.GetHashCode">
           <a class="xref" href="Hazelcast.Models.MemberVersion.GetHashCode.html#Hazelcast_Models_MemberVersion_GetHashCode">GetHashCode()</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Serves as the default hash function.</p>
+</td>
       </tr>
       <tr>
         <td id="Hazelcast_Models_MemberVersion_ToString" data-uid="Hazelcast.Models.MemberVersion.ToString">

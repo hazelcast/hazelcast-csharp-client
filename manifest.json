@@ -6865,6 +6865,36 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.op_Equality.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.op_Inequality.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.Time.html"
         }
       },
@@ -7016,36 +7046,6 @@
       "output": {
         ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.GetHashCode.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.op_Equality.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.op_Inequality.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalDateTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.HLocalDateTime.html"
         }
       },
       "version": ""

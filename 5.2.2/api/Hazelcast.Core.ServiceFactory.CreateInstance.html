@@ -5,16 +5,17 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Method CreateInstance
+      <title>CreateInstance Method
  | Hazelcast .NET Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Method CreateInstance
+      <meta name="title" content="CreateInstance Method
  | Hazelcast .NET Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../../styles/docfx.css">
       <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
       <meta property="docfx:navrel" content="../toc.html">
       <meta property="docfx:tocrel" content="toc.html">
     
@@ -22,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="">
       <header>
 
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -36,7 +37,7 @@
               </button>
 
               <a class="navbar-brand" href="../../index.html">
-                <img id="logo" class="svg" src="../../logo.svg" alt="">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -48,12 +49,15 @@
             </div>
           </div>
         </nav>
-
+        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
-            <ul class="breadcrumb">
-              <li></li>
-            </ul>
+              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
           </div>
         </div>
       </header>
@@ -81,7 +85,7 @@
 
 
 
-<h1 id="Hazelcast_Core_ServiceFactory_CreateInstance_" data-uid="Hazelcast.Core.ServiceFactory.CreateInstance*">Method CreateInstance
+<h1 id="Hazelcast_Core_ServiceFactory_CreateInstance_" data-uid="Hazelcast.Core.ServiceFactory.CreateInstance*">CreateInstance Method
 </h1>
 <div class="markdown level0 summary"></div>
 <div class="markdown level0 conceptual"></div>
@@ -93,26 +97,19 @@
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static TService CreateInstance&lt;TService&gt;(IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
+  <pre><code class="lang- hljs">public static TService CreateInstance&lt;TService&gt;(IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
       <td><span class="parametername">stringArgs</span></td>
       <td><p>Optional string named arguments for the constructor (can be null).</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
       <td><span class="parametername">paramArgs</span></td>
       <td><p>Parameter arguments for the constructor.</p>
 </td>
@@ -120,32 +117,20 @@
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="xref">TService</span></td>
+      <td class="hz-one-third"><span class="xref">TService</span></td>
       <td><p>A new instance of type <code class="typeparamref">TService</code>.</p>
 </td>
     </tr>
   </tbody>
 </table>
 <h5 class="typeParameters">Type Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="parametername">TService</span></td>
+      <td class="hz-one-third"><span class="parametername">TService</span></td>
       <td><p>The type of the instance.</p>
 </td>
     </tr>
@@ -164,26 +149,19 @@ but it should not be used for intensive creation of objects.</p>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static TService CreateInstance&lt;TService, TActual&gt;(IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs) where TActual : TService</code></pre>
+  <pre><code class="lang- hljs">public static TService CreateInstance&lt;TService, TActual&gt;(IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs) where TActual : TService</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
       <td><span class="parametername">stringArgs</span></td>
       <td><p>Optional string named arguments for the constructor (can be null).</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
       <td><span class="parametername">paramArgs</span></td>
       <td><p>Parameter arguments for the constructor.</p>
 </td>
@@ -191,37 +169,25 @@ but it should not be used for intensive creation of objects.</p>
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="xref">TService</span></td>
+      <td class="hz-one-third"><span class="xref">TService</span></td>
       <td><p>A new instance of type <code class="typeparamref">TActual</code> as <code class="typeparamref">TService</code>.</p>
 </td>
     </tr>
   </tbody>
 </table>
 <h5 class="typeParameters">Type Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="parametername">TService</span></td>
+      <td class="hz-one-third"><span class="parametername">TService</span></td>
       <td><p>The type of the returned instance.</p>
 </td>
     </tr>
     <tr>
-      <td><span class="parametername">TActual</span></td>
+      <td class="hz-one-third"><span class="parametername">TActual</span></td>
       <td><p>The type of the created instance.</p>
 </td>
     </tr>
@@ -240,32 +206,25 @@ but it should not be used for intensive creation of objects.</p>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static TService CreateInstance&lt;TService&gt;(Type type, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
+  <pre><code class="lang- hljs">public static TService CreateInstance&lt;TService&gt;(Type type, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></td>
       <td><span class="parametername">type</span></td>
       <td><p>The type of the created instance.</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
       <td><span class="parametername">stringArgs</span></td>
       <td><p>Optional string named arguments for the constructor (can be null).</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
       <td><span class="parametername">paramArgs</span></td>
       <td><p>Parameter arguments for the constructor.</p>
 </td>
@@ -273,32 +232,20 @@ but it should not be used for intensive creation of objects.</p>
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="xref">TService</span></td>
+      <td class="hz-one-third"><span class="xref">TService</span></td>
       <td><p>A new instance of type <code class="paramref">type</code> as <code class="typeparamref">TService</code>.</p>
 </td>
     </tr>
   </tbody>
 </table>
 <h5 class="typeParameters">Type Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="parametername">TService</span></td>
+      <td class="hz-one-third"><span class="parametername">TService</span></td>
       <td><p>The type of the returned instance.</p>
 </td>
     </tr>
@@ -317,32 +264,25 @@ but it should not be used for intensive creation of objects.</p>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static TService CreateInstance&lt;TService&gt;(string typeName, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
+  <pre><code class="lang- hljs">public static TService CreateInstance&lt;TService&gt;(string typeName, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></td>
       <td><span class="parametername">typeName</span></td>
       <td><p>The name of the type of the created instance.</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
       <td><span class="parametername">stringArgs</span></td>
       <td><p>Optional string named arguments for the constructor (can be null).</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
       <td><span class="parametername">paramArgs</span></td>
       <td><p>Parameter arguments for the constructor.</p>
 </td>
@@ -350,32 +290,20 @@ but it should not be used for intensive creation of objects.</p>
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="xref">TService</span></td>
+      <td class="hz-one-third"><span class="xref">TService</span></td>
       <td><p>A new instance of type <code class="paramref">typeName</code> as <code class="typeparamref">TService</code>.</p>
 </td>
     </tr>
   </tbody>
 </table>
 <h5 class="typeParameters">Type Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><span class="parametername">TService</span></td>
+      <td class="hz-one-third"><span class="parametername">TService</span></td>
       <td><p>The type of the returned instance.</p>
 </td>
     </tr>
@@ -394,32 +322,25 @@ but it should not be used for intensive creation of objects.</p>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static object CreateInstance(Type type, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
+  <pre><code class="lang- hljs">public static object CreateInstance(Type type, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></td>
       <td><span class="parametername">type</span></td>
       <td><p>The type of the instance.</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
       <td><span class="parametername">stringArgs</span></td>
       <td><p>Optional string named arguments for the constructor (can be null).</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
       <td><span class="parametername">paramArgs</span></td>
       <td><p>Parameter arguments for the constructor.</p>
 </td>
@@ -427,16 +348,10 @@ but it should not be used for intensive creation of objects.</p>
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></td>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></td>
       <td><p>A new instance of type <code class="paramref">type</code>.</p>
 </td>
     </tr>
@@ -455,32 +370,25 @@ but it should not be used for intensive creation of objects.</p>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static object CreateInstance(string typeName, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
+  <pre><code class="lang- hljs">public static object CreateInstance(string typeName, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></td>
       <td><span class="parametername">typeName</span></td>
       <td><p>The name of the type of the instance.</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</td>
       <td><span class="parametername">stringArgs</span></td>
       <td><p>Optional string named arguments for the constructor (can be null).</p>
 </td>
     </tr>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[]</td>
       <td><span class="parametername">paramArgs</span></td>
       <td><p>Parameter arguments for the constructor.</p>
 </td>
@@ -488,16 +396,10 @@ but it should not be used for intensive creation of objects.</p>
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-condensed">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
+<table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></td>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></td>
       <td><p>A new instance of type <code class="paramref">typeName</code>.</p>
 </td>
     </tr>

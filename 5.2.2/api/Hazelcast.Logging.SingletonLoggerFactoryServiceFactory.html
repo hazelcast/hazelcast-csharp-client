@@ -5,16 +5,17 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Class SingletonLoggerFactoryServiceFactory
+      <title>SingletonLoggerFactoryServiceFactory Class
  | Hazelcast .NET Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Class SingletonLoggerFactoryServiceFactory
+      <meta name="title" content="SingletonLoggerFactoryServiceFactory Class
  | Hazelcast .NET Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../../styles/docfx.css">
       <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
       <meta property="docfx:navrel" content="../toc.html">
       <meta property="docfx:tocrel" content="toc.html">
     
@@ -22,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="">
       <header>
 
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -36,7 +37,7 @@
               </button>
 
               <a class="navbar-brand" href="../../index.html">
-                <img id="logo" class="svg" src="../../logo.svg" alt="">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -48,12 +49,15 @@
             </div>
           </div>
         </nav>
-
+        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
-            <ul class="breadcrumb">
-              <li></li>
-            </ul>
+              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
           </div>
         </div>
       </header>
@@ -81,11 +85,16 @@
 
 
 
-  <h1 id="Hazelcast_Logging_SingletonLoggerFactoryServiceFactory" data-uid="Hazelcast.Logging.SingletonLoggerFactoryServiceFactory" class="text-break">Class SingletonLoggerFactoryServiceFactory
+  <h1 id="Hazelcast_Logging_SingletonLoggerFactoryServiceFactory" data-uid="Hazelcast.Logging.SingletonLoggerFactoryServiceFactory" class="text-break">SingletonLoggerFactoryServiceFactory Class
 </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Logging.html">Logging</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
   <div class="markdown level0 summary"><p>Represents a singleton <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory">ILoggerFactory</a> service factory.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public class SingletonLoggerFactoryServiceFactory : SingletonServiceFactory&lt;ILoggerFactory&gt;, ILoggerFactory, IDisposable</code></pre>
+  </div>
   <div class="inheritance">
     <h5>Inheritance</h5>
     <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
@@ -139,12 +148,6 @@
       <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
     </div>
   </div>
-  <h6><strong>Namespace</strong>: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Logging.html">Logging</a></h6>
-  <h6><strong>Assembly</strong>: Hazelcast.Net.dll</h6>
-  <h5 id="Hazelcast_Logging_SingletonLoggerFactoryServiceFactory_syntax">Syntax</h5>
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class SingletonLoggerFactoryServiceFactory : SingletonServiceFactory&lt;ILoggerFactory&gt;, ILoggerFactory, IDisposable</code></pre>
-  </div>
   <h3 id="properties">Properties
 </h3>
   <table class="table table-bordered table-condensed">
@@ -178,13 +181,15 @@
         <td id="Hazelcast_Logging_SingletonLoggerFactoryServiceFactory_AddProvider_Microsoft_Extensions_Logging_ILoggerProvider_" data-uid="Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider)">
           <a class="xref" href="Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider.html#Hazelcast_Logging_SingletonLoggerFactoryServiceFactory_AddProvider_Microsoft_Extensions_Logging_ILoggerProvider_">AddProvider(ILoggerProvider)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerprovider">ILoggerProvider</a> to the logging system.</p>
+</td>
       </tr>
       <tr>
         <td id="Hazelcast_Logging_SingletonLoggerFactoryServiceFactory_CreateLogger_System_String_" data-uid="Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(System.String)">
           <a class="xref" href="Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger.html#Hazelcast_Logging_SingletonLoggerFactoryServiceFactory_CreateLogger_System_String_">CreateLogger(string)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Creates a new <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.ilogger">ILogger</a> instance.</p>
+</td>
       </tr>
     </tbody>
   </table>

@@ -5,16 +5,17 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Enum FieldKind
+      <title>FieldKind Enum
  | Hazelcast .NET Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Enum FieldKind
+      <meta name="title" content="FieldKind Enum
  | Hazelcast .NET Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../../styles/docfx.css">
       <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
       <meta property="docfx:navrel" content="../toc.html">
       <meta property="docfx:tocrel" content="toc.html">
     
@@ -22,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="">
       <header>
 
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -36,7 +37,7 @@
               </button>
 
               <a class="navbar-brand" href="../../index.html">
-                <img id="logo" class="svg" src="../../logo.svg" alt="">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -48,12 +49,15 @@
             </div>
           </div>
         </nav>
-
+        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
-            <ul class="breadcrumb">
-              <li></li>
-            </ul>
+              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
           </div>
         </div>
       </header>
@@ -82,16 +86,15 @@
 
 
 
-  <h1 id="Hazelcast_Serialization_FieldKind" data-uid="Hazelcast.Serialization.FieldKind" class="text-break">Enum FieldKind
+  <h1 id="Hazelcast_Serialization_FieldKind" data-uid="Hazelcast.Serialization.FieldKind" class="text-break">FieldKind Enum
 </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Serialization.html">Serialization</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
   <div class="markdown level0 summary"><p>Defines the kind of a field for serialization.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
-  <h6><strong>Namespace</strong>: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Serialization.html">Serialization</a></h6>
-  <h6><strong>Assembly</strong>: Hazelcast.Net.dll</h6>
-  <h5 id="Hazelcast_Serialization_FieldKind_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public enum FieldKind</code></pre>
+    <pre><code class="lang- hljs">public enum FieldKind</code></pre>
   </div>
   <h5 id="Hazelcast_Serialization_FieldKind_remarks"><strong>Remarks</strong></h5>
   <div class="markdown level0 remarks"><p>In order to stay close to C# nullable names, arrays and everything named "Nullable"
@@ -102,231 +105,225 @@ serialization. Note that one serialization solution may not support all types.</
 </div>
   <h3 id="fields">Fields
 </h3>
-  <table class="table table-bordered table-condensed">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Description</th>
-      </tr>
-    <thead>
+  <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfBoolean">ArrayOfBoolean</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfBoolean" class="hz-one-third">ArrayOfBoolean</td>
         <td><p>The array-of-boolean primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfCompact">ArrayOfCompact</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfCompact" class="hz-one-third">ArrayOfCompact</td>
         <td><p>The array-of-compact-object primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfDate">ArrayOfDate</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfDate" class="hz-one-third">ArrayOfDate</td>
         <td><p>The array-of-nullable-date primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfDecimal">ArrayOfDecimal</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfDecimal" class="hz-one-third">ArrayOfDecimal</td>
         <td><p>The array-of-nullable-decimal primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfFloat32">ArrayOfFloat32</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfFloat32" class="hz-one-third">ArrayOfFloat32</td>
         <td><p>The array-of-f32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfFloat64">ArrayOfFloat64</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfFloat64" class="hz-one-third">ArrayOfFloat64</td>
         <td><p>The array-of-f64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt16">ArrayOfInt16</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt16" class="hz-one-third">ArrayOfInt16</td>
         <td><p>The array-of-i16 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt32">ArrayOfInt32</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt32" class="hz-one-third">ArrayOfInt32</td>
         <td><p>The array-of-i32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt64">ArrayOfInt64</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt64" class="hz-one-third">ArrayOfInt64</td>
         <td><p>The array-of-i64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt8">ArrayOfInt8</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfInt8" class="hz-one-third">ArrayOfInt8</td>
         <td><p>The array-of-i8 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableBoolean">ArrayOfNullableBoolean</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableBoolean" class="hz-one-third">ArrayOfNullableBoolean</td>
         <td><p>The array-of-nullable-boolean primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat32">ArrayOfNullableFloat32</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat32" class="hz-one-third">ArrayOfNullableFloat32</td>
         <td><p>The array-of-nullable-f32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat64">ArrayOfNullableFloat64</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat64" class="hz-one-third">ArrayOfNullableFloat64</td>
         <td><p>The array-of-nullable-f24 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt16">ArrayOfNullableInt16</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt16" class="hz-one-third">ArrayOfNullableInt16</td>
         <td><p>The array-of-nullable-i16 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt32">ArrayOfNullableInt32</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt32" class="hz-one-third">ArrayOfNullableInt32</td>
         <td><p>The array-of-nullable-i32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt64">ArrayOfNullableInt64</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt64" class="hz-one-third">ArrayOfNullableInt64</td>
         <td><p>The array-of-nullable-i64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt8">ArrayOfNullableInt8</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfNullableInt8" class="hz-one-third">ArrayOfNullableInt8</td>
         <td><p>The array-of-nullable-i8 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfString">ArrayOfString</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfString" class="hz-one-third">ArrayOfString</td>
         <td><p>The array-of-string primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfTime">ArrayOfTime</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfTime" class="hz-one-third">ArrayOfTime</td>
         <td><p>The array-of-nullable-time primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfTimeStamp">ArrayOfTimeStamp</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfTimeStamp" class="hz-one-third">ArrayOfTimeStamp</td>
         <td><p>The array-of-nullable-timestamp primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_ArrayOfTimeStampWithTimeZone">ArrayOfTimeStampWithTimeZone</td>
+        <td id="Hazelcast_Serialization_FieldKind_ArrayOfTimeStampWithTimeZone" class="hz-one-third">ArrayOfTimeStampWithTimeZone</td>
         <td><p>The array-of-nullable-timestamp-with-timezone primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Boolean">Boolean</td>
+        <td id="Hazelcast_Serialization_FieldKind_Boolean" class="hz-one-third">Boolean</td>
         <td><p>The boolean primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Compact">Compact</td>
+        <td id="Hazelcast_Serialization_FieldKind_Compact" class="hz-one-third">Compact</td>
         <td><p>The nullable compact object primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Date">Date</td>
+        <td id="Hazelcast_Serialization_FieldKind_Date" class="hz-one-third">Date</td>
         <td><p>The nullable-date primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Decimal">Decimal</td>
+        <td id="Hazelcast_Serialization_FieldKind_Decimal" class="hz-one-third">Decimal</td>
         <td><p>The nullable-decimal primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Float32">Float32</td>
+        <td id="Hazelcast_Serialization_FieldKind_Float32" class="hz-one-third">Float32</td>
         <td><p>The f32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Float64">Float64</td>
+        <td id="Hazelcast_Serialization_FieldKind_Float64" class="hz-one-third">Float64</td>
         <td><p>The f64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Int16">Int16</td>
+        <td id="Hazelcast_Serialization_FieldKind_Int16" class="hz-one-third">Int16</td>
         <td><p>The i16 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Int32">Int32</td>
+        <td id="Hazelcast_Serialization_FieldKind_Int32" class="hz-one-third">Int32</td>
         <td><p>The i32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Int64">Int64</td>
+        <td id="Hazelcast_Serialization_FieldKind_Int64" class="hz-one-third">Int64</td>
         <td><p>The i64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Int8">Int8</td>
+        <td id="Hazelcast_Serialization_FieldKind_Int8" class="hz-one-third">Int8</td>
         <td><p>The i8 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NotAvailable">NotAvailable</td>
+        <td id="Hazelcast_Serialization_FieldKind_NotAvailable" class="hz-one-third">NotAvailable</td>
         <td><p>The type of a field that is not available.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableBoolean">NullableBoolean</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableBoolean" class="hz-one-third">NullableBoolean</td>
         <td><p>The nullable-boolean primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableFloat32">NullableFloat32</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableFloat32" class="hz-one-third">NullableFloat32</td>
         <td><p>The nullable-f32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableFloat64">NullableFloat64</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableFloat64" class="hz-one-third">NullableFloat64</td>
         <td><p>The nullable-f64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableInt16">NullableInt16</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableInt16" class="hz-one-third">NullableInt16</td>
         <td><p>The nullable-i16 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableInt32">NullableInt32</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableInt32" class="hz-one-third">NullableInt32</td>
         <td><p>The nullable-i32 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableInt64">NullableInt64</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableInt64" class="hz-one-third">NullableInt64</td>
         <td><p>The nullable-i64 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_NullableInt8">NullableInt8</td>
+        <td id="Hazelcast_Serialization_FieldKind_NullableInt8" class="hz-one-third">NullableInt8</td>
         <td><p>The nullable-i8 primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_String">String</td>
+        <td id="Hazelcast_Serialization_FieldKind_String" class="hz-one-third">String</td>
         <td><p>The nullable-string primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_Time">Time</td>
+        <td id="Hazelcast_Serialization_FieldKind_Time" class="hz-one-third">Time</td>
         <td><p>The nullable-time primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_TimeStamp">TimeStamp</td>
+        <td id="Hazelcast_Serialization_FieldKind_TimeStamp" class="hz-one-third">TimeStamp</td>
         <td><p>The nullable-timestamp primitive type.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Serialization_FieldKind_TimeStampWithTimeZone">TimeStampWithTimeZone</td>
+        <td id="Hazelcast_Serialization_FieldKind_TimeStampWithTimeZone" class="hz-one-third">TimeStampWithTimeZone</td>
         <td><p>The nullable-timestamp-with-timezone primitive type.</p>
 </td>
       </tr>
     </tbody>
-  </thead></thead></table>
+  </table>
 </article>
           </div>
 
