@@ -228,9 +228,10 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
         {
             try
             {
-                HConsole.WriteLine(this, "waiting");
+                // _enabled or _available may complete because they are being replaced,
+                // so the queue is not really enabled nor available, that will be taken
+                // care of in the locked block below and just spin this while loop once.
                 await Task.WhenAll(_enabled.Task, _available.Task).WaitAsync(cancellationToken).CfAwait();
-                HConsole.WriteLine(this, "waited");
             }
             catch (OperationCanceledException)
             {

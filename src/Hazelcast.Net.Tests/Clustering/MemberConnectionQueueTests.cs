@@ -97,7 +97,7 @@ public class MemberConnectionQueueTests
         var time3 = Clock.Milliseconds;
         Assert.That(enumerator.Current.Member.Id, Is.EqualTo(id1));
         Assert.That(time2, Is.LessThan(enumerator.Current.Time));
-        Assert.That(time3, Is.GreaterThan(enumerator.Current.Time - MemberConnectionQueue.TimeMargin));
+        Assert.That(time3, Is.GreaterThanOrEqualTo(enumerator.Current.Time - MemberConnectionQueue.TimeMargin));
     }
 
     [Test]

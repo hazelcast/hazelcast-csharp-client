@@ -125,6 +125,7 @@ public class ServerlessCloudTests : CloudTestBase
         HConsole.WriteLine(this, "Stopped cluster");
         await AssertEx.SucceedsEventually(
             () => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)),
+            () => client.State == ClientState.Shutdown, // no point waiting
             ClientTimeout, Polling);
         HConsole.WriteLine(this, "Client is disconnected");
 
@@ -133,6 +134,7 @@ public class ServerlessCloudTests : CloudTestBase
         HConsole.WriteLine(this, "Resumed cluster");
         await AssertEx.SucceedsEventually(
             () => Assert.That(client.State, Is.EqualTo(ClientState.Connected)),
+            () => client.State == ClientState.Shutdown, // no point waiting
             ClientTimeout, Polling);
         HConsole.WriteLine(this, "Client is reconnected");
 
