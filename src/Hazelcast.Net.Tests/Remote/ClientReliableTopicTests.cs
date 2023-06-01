@@ -40,35 +40,49 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         var options = new HazelcastOptionsBuilder()
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With(opt =>
+            .With((conf,opt) =>
             {
                 opt.ReliableTopics[topicName] = new ReliableTopicOptions(policy, 2);
                 opt.ClusterName = RcCluster.Id;
 
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
             })
             .Build();
 
 
-        var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
-        
-        var msgCount = 3;
 
+        var msgCount = 3;
+        var mneDisposed = new ManualResetEvent(false);
         var mne = new ManualResetEvent(false);
         var list = new int[msgCount + 1];
 
         await rt.SubscribeAsync(events =>
-            events.Message((sender, args) =>
-            {
-                list[args.Payload] = args.Payload;
-                Console.WriteLine("SEQ:" + args.Sequence);
-                Console.WriteLine("Data:" + args.Payload);
+                events.Message((sender, args) =>
+                {
+                    list[args.Payload] = args.Payload;
+                    Console.WriteLine("SEQ:" + args.Sequence);
+                    Console.WriteLine("Data:" + args.Payload);
 
-                if (args.Payload == msgCount)
-                    mne.Set();
-                
-            }));
+                    if (args.Payload == msgCount)
+                        mne.Set();
+                }).Disposed((sender, args) =>
+                    {
+                        Console.WriteLine("Reliable topic subscription is disposed.");
+                        mneDisposed.Set();
+                    }
+                ),
+            default,
+            ex =>
+            {
+                Console.WriteLine(ex);
+                return true;
+            });
 
 
         for (var i = 1; i <= msgCount; i++)
@@ -83,6 +97,8 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         {
             Assert.AreEqual(i, list[i]);
         }
-        
+
+        await rt.DisposeAsync();
+        Assert.True(await mneDisposed.WaitOneAsync());
     }
 }

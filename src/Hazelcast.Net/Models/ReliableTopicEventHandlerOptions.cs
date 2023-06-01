@@ -19,8 +19,6 @@ namespace Hazelcast.Models;
 
 public class ReliableTopicEventHandlerOptions
 {
-    private Type _typeOfException;
-
     /// <summary>
     /// Initial sequence to start processing to messages.
     /// <remarks>-1 means start from next published message.</remarks>
@@ -37,21 +35,4 @@ public class ReliableTopicEventHandlerOptions
     /// <see cref="ReliableTopicMessageEventHandler{T}"/> is too slow. Eventually the message won't be available anymore.
     /// </summary>
     public bool IsLossTolerant { get; set; }
-
-    
-    /// <summary>
-    /// The type of the exception if the <see cref="ReliableTopicMessageEventHandler{T}"/> should be terminated based on an
-    /// exception thrown while raising the <see cref="ReliableTopicEventHandler{T}.Message(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs{T}})" />.
-    /// </summary>
-    public Type ExceptionToTerminal
-    {
-        get => _typeOfException;
-        set
-        {
-            if (!value.IsAssignableFrom(typeof(Exception)))
-                throw new ArgumentException(@"The {Type} must be extended from Exception.", value.FullName);
-
-            _typeOfException = value;
-        }
-    }
 }

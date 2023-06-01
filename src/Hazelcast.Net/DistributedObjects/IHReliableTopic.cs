@@ -28,10 +28,12 @@ public interface IHReliableTopic<T> : IDistributedObject
     /// <summary>Subscribes to this reliable topic.</summary>
     /// <remarks>Each subscription has its own thread to process messages.</remarks>
     /// <param name="handlerOptions">Options for <see cref="ReliableTopicEventHandler{T}"/></param>
+    /// <param name="shouldTerminate">A function to decide whether subscription should be terminated or not
+    /// based on the exception occured while handling the event.</param>
     /// <param name="state">A state object.</param>
     /// <param name="events">Set action to be executed on the received message.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<T>> events, ReliableTopicEventHandlerOptions handlerOptions = default, object state = null, CancellationToken cancellationToken = default);
+    Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<T>> events, ReliableTopicEventHandlerOptions handlerOptions = default, Func<Exception, bool> shouldTerminate = default, object state = null, CancellationToken cancellationToken = default);
 
     /// <summary>Stops receiving messages for the given message listener.</summary>
     /// <remarks>
@@ -46,6 +48,13 @@ public interface IHReliableTopic<T> : IDistributedObject
     /// de-activated, and the thread will be released which means that no events will trigger anymore.</para>
     /// </remarks>
     ValueTask<bool> UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks the subscription by given id whether disposed or not.
+    /// </summary>
+    /// <param name="subscriptionId">Subscription id to check.</param>
+    /// <returns>True, if subscription is existing and running; otherwise false.</returns>
+    bool IsSubscriptionExist(Guid subscriptionId);
 
     /// <summary>Publishes the message to all subscribers of this topic.</summary>
     /// <param name="message"></param>

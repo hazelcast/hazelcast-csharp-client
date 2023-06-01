@@ -24,26 +24,45 @@ namespace Hazelcast.DistributedObjects;
 /// <typeparam name="T">Type of topic message.</typeparam>
 public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTopicEventHandler<T>>
 {
-    // Follow the event handler pattern but chaining.
-    // Reliable topic handlers has own thread and has only Message event. 
-    
     /// <summary>
-    /// Sets the handler which runs when a message is received.
+    /// Adds the handler which runs when a message is received.
     /// </summary>
     /// <param name="handler">The handler.</param>
     /// <returns>The handlers.</returns>
-    public void Message(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+    public ReliableTopicEventHandler<T> Message(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
     {
         Add(new ReliableTopicMessageEventHandler<T>(handler));
+        return this;
     }
 
     /// <summary>
-    /// Sets the handler which runs when a message is received.
+    /// Adds the handler which runs when a message is received.
     /// </summary>
     /// <param name="handler">The handler.</param>
     /// <returns>The handlers.</returns>
-    public void Message(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+    public ReliableTopicEventHandler<T> Message(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
     {
         Add(new ReliableTopicMessageEventHandler<T>(handler));
+        return this;
+    }
+    
+    // Disposed event is single, no chaining.
+    
+    /// <summary>
+    /// Sets the handler which runs when the subscription is disposed.
+    /// </summary>
+    /// <param name="handler">The handler.</param>
+    public void Disposed(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+    {
+        Add(new ReliableTopicDisposedEventHandler<T>(handler));
+    }
+
+    /// <summary>
+    /// Sets the handler which runs when the subscription is disposed.
+    /// </summary>
+    /// <param name="handler">The handler.</param>
+    public void Disposed(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+    {
+        Add(new ReliableTopicDisposedEventHandler<T>(handler));
     }
 }

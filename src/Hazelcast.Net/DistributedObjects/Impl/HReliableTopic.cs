@@ -20,7 +20,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
-using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -28,17 +27,17 @@ namespace Hazelcast.DistributedObjects.Impl;
 
 internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TItem>
 {
-    private IHRingBuffer<ReliableTopicMessage> _ringBuffer;
-    private int _backOffMax = 2000;
-    private int _backOffInitial = 100;
-    private SerializationService _serializationService;
+    private readonly IHRingBuffer<ReliableTopicMessage> _ringBuffer;
+    private readonly ReliableTopicOptions _options;
+    private readonly Cluster _cluster;
+    private readonly SerializationService _serializationService;
+    private readonly ConcurrentDictionary<Guid, ReliableTopicMessageExecutor<TItem>> _executors = new();
     private ILogger _logger;
     private ILoggerFactory _loggerFactory;
-    private ReliableTopicOptions _options;
-    private Cluster _cluster;
+    private int _backOffMax = 2000;
+    private int _backOffInitial = 100;
     private string _name;
     private int _disposed;
-    private ConcurrentDictionary<Guid, ReliableTopicMessageExecutor<TItem>> _executors = new();
 
     public HReliableTopic(string serviceName, string name, DistributedObjectFactory factory, ReliableTopicOptions options, Cluster cluster, SerializationService serializationService, IHRingBuffer<ReliableTopicMessage> ringBuffer, ILoggerFactory loggerFactory)
         : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
@@ -53,12 +52,20 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     }
 
     /// <inheritdoc />
-    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events, ReliableTopicEventHandlerOptions handlerOptions = default, object state = null, CancellationToken cancellationToken = default)
+    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events,
+        ReliableTopicEventHandlerOptions handlerOptions = default,
+        Func<Exception, bool> shouldTerminate = default,
+        object state = null,
+        CancellationToken cancellationToken = default)
     {
         if (events == null) throw new ArgumentNullException(nameof(events));
 
         var id = Guid.NewGuid();
-        
+
+        // The executor can be disposed depending on a exception or loss tolerant policy.
+        void OnExecutorDisposed(Guid sId) => _executors.TryRemove(sId, out _);
+
+        // Create and register the executor. The executor starts immediately.
         var executor = ReliableTopicMessageExecutor<TItem>
             .New(_ringBuffer,
                 events,
@@ -70,6 +77,8 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
                 _serializationService,
                 id,
                 _loggerFactory,
+                OnExecutorDisposed,
+                shouldTerminate,
                 cancellationToken
             );
 
@@ -83,16 +92,23 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     /// <inheritdoc />
     public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
     {
-        if (_executors.TryRemove(subscriptionId, out var executor))
+        if (_executors.TryRemove(subscriptionId, out var executor) && !executor.IsDisposed)
         {
             // Executor is local to client. No need to wait server, kill it.
             executor.DisposeAsync().CfAwait();
+            _logger.IfDebug()?.LogDebug("Subscription {Id} is unsubscribed. ", subscriptionId);
             return new ValueTask<bool>(true);
         }
 
-        _logger.IfDebug()?.LogDebug("Subscription {Id} not exist or already removed. ", subscriptionId);
+        _logger.IfDebug()?.LogDebug("Subscription {Id} is not exist or already unsubscribed. ", subscriptionId);
 
         return new ValueTask<bool>(false);
+    }
+
+    /// <inheritdoc />
+    public bool IsSubscriptionExist(Guid subscriptionId)
+    {
+        return _executors.TryGetValue(subscriptionId, out var executor) && !executor.IsDisposed;
     }
 
     /// <inheritdoc />
@@ -154,27 +170,25 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         }
 
         if (cancellationToken.IsCancellationRequested)
-            _logger.IfDebug()?.LogDebug("Publishing process is canceled. {Message}", rtMessage);
+            _logger.IfDebug()?.LogDebug("Publishing process is canceled. ");
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_disposed.InterlockedZeroToOne())
         {
             foreach (var id in _executors.Keys)
             {
-                UnsubscribeAsync(id).CfAwait();
+                await UnsubscribeAsync(id).CfAwait();
             }
         }
-
-        return default;
     }
 
     public new async ValueTask DestroyAsync()
     {
         // Can't destroy if disposed.
         if (_disposed > 0) return;
+        await DisposeAsync().CfAwait();
         await _ringBuffer.DestroyAsync().CfAwait();
-        await DestroyAsync().CfAwait();
     }
 }

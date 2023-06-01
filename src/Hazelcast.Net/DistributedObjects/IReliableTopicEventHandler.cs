@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Models;
 
@@ -32,5 +33,6 @@ public interface IReliableTopicEventHandler<T>
     /// <param name="payload">The topic object carried by the message.</param>
     /// <param name="sequence">The sequence of the message in the ring buffer.</param>
     /// <param name="state">A state object.</param>
+    /// <param name="e">Exception occured while processing the event.</param>
     ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, object state);
 }
