@@ -55,8 +55,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events,
         ReliableTopicEventHandlerOptions handlerOptions = default,
         Func<Exception, bool> shouldTerminate = default,
-        object state = null,
-        CancellationToken cancellationToken = default)
+        object state = null)
     {
         if (events == null) throw new ArgumentNullException(nameof(events));
 
@@ -78,8 +77,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
                 id,
                 _loggerFactory,
                 OnExecutorDisposed,
-                shouldTerminate,
-                cancellationToken
+                shouldTerminate
             );
 
         _executors[id] = executor;
@@ -90,19 +88,18 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     }
 
     /// <inheritdoc />
-    public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
     {
-        if (_executors.TryRemove(subscriptionId, out var executor) && !executor.IsDisposed)
+        if (_executors.TryRemove(subscriptionId, out var executor))
         {
-            // Executor is local to client. No need to wait server, kill it.
-            executor.DisposeAsync().CfAwait();
+            await executor.DisposeAsync().CfAwait();
             _logger.IfDebug()?.LogDebug("Subscription {Id} is unsubscribed. ", subscriptionId);
-            return new ValueTask<bool>(true);
+            return true;
         }
 
         _logger.IfDebug()?.LogDebug("Subscription {Id} is not exist or already unsubscribed. ", subscriptionId);
 
-        return new ValueTask<bool>(false);
+        return false;
     }
 
     /// <inheritdoc />

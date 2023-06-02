@@ -33,7 +33,6 @@ namespace Hazelcast.Core;
 internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 {
     private BackgroundTask _backgroundTask;
-    private CancellationToken _cancellationToken;
     private IHRingBuffer<ReliableTopicMessage> _ringBuffer;
     private Func<Exception, bool> _shouldTerminate;
     private Action<ReliableTopicEventHandler<TItem>> _events;
@@ -61,10 +60,8 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         Guid id,
         ILoggerFactory loggerFactory,
         Action<Guid> onDisposed,
-        Func<Exception, bool> shouldTerminate,
-        CancellationToken cancellationToken)
+        Func<Exception, bool> shouldTerminate)
     {
-        _cancellationToken = cancellationToken;
         _ringBuffer = ringBuffer;
         _events = events;
         _topic = topic;
@@ -79,7 +76,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         _onDisposed = onDisposed;
         _shouldTerminate = shouldTerminate;
         _events(_handlers);
-        _backgroundTask = BackgroundTask.Run(Execute);
+        _backgroundTask = BackgroundTask.Run(ExecuteAsync);
     }
 
     public static ReliableTopicMessageExecutor<TItem> New(IHRingBuffer<ReliableTopicMessage> ringBuffer,
@@ -93,8 +90,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         Guid id,
         ILoggerFactory loggerFactory,
         Action<Guid> onDisposed,
-        Func<Exception, bool> shouldTerminate,
-        CancellationToken cancellationToken)
+        Func<Exception, bool> shouldTerminate)
     {
         return new ReliableTopicMessageExecutor<TItem>(ringBuffer,
             action,
@@ -107,11 +103,10 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
             id,
             loggerFactory,
             onDisposed,
-            shouldTerminate,
-            cancellationToken);
+            shouldTerminate);
     }
 
-    private async Task Execute(CancellationToken cancellationToken)
+    private async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await SetInitialSequenceOnceAsync().CfAwait();
 
@@ -121,18 +116,16 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogInformation("CANCELED:"+cancellationToken.IsCancellationRequested);
             _logger.IfDebug()?.LogDebug("Reading messages from ring buffer {Name}. ", _ringBuffer.Name);
-
             try
             {
-                var result = await _ringBuffer.ReadManyWithResultSetAsync(_sequence, 1, _batchSize).CfAwait();
+                var result = await _ringBuffer.ReadManyWithResultSetAsync(_sequence, 1, _batchSize, cancellationToken).CfAwait();
 
                 var lostCount = result.NextSequence - result.Count - _sequence;
 
                 if (lostCount != 0 && !_options.IsLossTolerant)
                 {
-                    _logger.IfDebug()?.LogDebug("The reliable topic subscription is not loss tolerant. Disposing the process...");
+                    _logger.IfWarning()?.LogWarning("The reliable topic subscription is not loss tolerant. Disposing the process...");
                     await DisposeAsync().CfAwaitNoThrow();
                     return;
                 }
@@ -158,7 +151,6 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                         {
                             if (await DisposeIfCanceledAsync(cancellationToken).CfAwait()) return;
 
-                            // By design, there is only one handler. No worries about other handlers since they don't exist.
                             await handler
                                 .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, _stateObject)
                                 .CfAwait();
@@ -168,7 +160,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                     {
                         _logger.IfDebug()?.LogError(ex, "Something went wrong while handling the event. ");
 
-                        if (_shouldTerminate?.Invoke(ex) == true)
+                        if (cancellationToken.IsCancellationRequested || _shouldTerminate?.Invoke(ex) == true)
                         {
                             _logger.IfWarning()?.LogWarning("Exception {Exception} caused to dispose the reliable topic subscription [{Id}]. ", ex, _id);
                             await DisposeAsync().CfAwaitNoThrow();
@@ -186,10 +178,11 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                 // Can't throw at the background.
                 _logger.IfWarning()?.LogWarning(ex, "Something went wrong while reading result from {RingBuffer}. ", _ringBuffer.Name);
 
-                if (await ShouldDisposeAsync(ex).CfAwait())
+                if (cancellationToken.IsCancellationRequested || await ShouldDisposeAsync(ex).CfAwait())
                 {
                     _logger.IfWarning()?.LogWarning("Exception {Exception} caused to dispose the reliable topic subscription [{Id}]. ", ex, _id);
                     await DisposeAsync().CfAwaitNoThrow();
+                    return;
                 }
             }
         }
@@ -261,10 +254,10 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         if (_disposed.InterlockedZeroToOne())
         {
             _logger.IfDebug()?.LogDebug("Disposing the reliable topic subscription [{Id}]. ", _id);
-            
-            await _backgroundTask.CompletedOrCancelAsync(true).CfAwait();
+
+            await _backgroundTask.CompletedOrCancelAsync(true).CfAwaitNoThrow();
             _onDisposed?.Invoke(_id);
-            
+
             var disposedHandler = _handlers
                 .FirstOrDefault(p => p.GetType() == typeof(ReliableTopicDisposedEventHandler<TItem>));
 

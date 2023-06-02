@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -93,7 +94,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IRingBufferResultSet<TItem>> ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount)
+        public async Task<IRingBufferResultSet<TItem>> ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount, CancellationToken cancellationToken=default)
         {
             if (startSequence < 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
             if (minCount < 0) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be equal to, or greater than, zero.");
@@ -104,7 +105,7 @@ namespace Hazelcast.DistributedObjects.Impl
             if (maxCount > MaxBatchSize) throw new ArgumentOutOfRangeException(nameof(maxCount), "The value of maxCount must be lower than, or equal to, the max batch size.");
 
             var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
             var response = RingbufferReadManyCodec.DecodeResponse(responseMessage);
             var result = new RingBufferResultSet<TItem>(SerializationService, response.ItemSeqs, response.ReadCount, response.NextSeq);
             await result.AddAsync(response.Items).CfAwait();

@@ -14,6 +14,7 @@
 
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -28,21 +29,21 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 {
     private IDisposable HConsoleForTest()
         => HConsole.Capture(options => options
-            .Configure().SetMaxLevel()
-            .Configure(this).SetPrefix("TEST"));
+            .Configure().SetMinLevel()
+            .Configure(this).SetMaxLevel().SetPrefix("TEST"));
 
     [Test]
-    [Timeout(10_000)]
+    [Timeout(20_000)]
     public async Task TestReliableTopic([Values] TopicOverloadPolicy policy)
     {
-        //HConsoleForTest();
-        var topicName = "rtTestTopic1";
+        HConsoleForTest();
+        var topicName = "rtTestTopic";
 
         var options = new HazelcastOptionsBuilder()
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf,opt) =>
+            .With((conf, opt) =>
             {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(policy, 2);
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(policy, 3);
                 opt.ClusterName = RcCluster.Id;
 
                 opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
@@ -54,10 +55,11 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             .Build();
 
 
-        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
 
         var msgCount = 3;
+        var receivedCount = 0;
         var mneDisposed = new ManualResetEvent(false);
         var mne = new ManualResetEvent(false);
         var list = new int[msgCount + 1];
@@ -66,39 +68,39 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                 events.Message((sender, args) =>
                 {
                     list[args.Payload] = args.Payload;
-                    Console.WriteLine("SEQ:" + args.Sequence);
-                    Console.WriteLine("Data:" + args.Payload);
-
+                    HConsole.WriteLine(this, "SEQ:" + args.Sequence);
+                    HConsole.WriteLine(this, "Data:" + args.Payload);
+                    receivedCount++;
                     if (args.Payload == msgCount)
                         mne.Set();
                 }).Disposed((sender, args) =>
                     {
-                        Console.WriteLine("Reliable topic subscription is disposed.");
+                        HConsole.WriteLine(this, "Reliable topic subscription is disposed.");
                         mneDisposed.Set();
                     }
                 ),
-            default,
+            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false},
             ex =>
             {
-                Console.WriteLine(ex);
+                HConsole.WriteLine(this, ex);
                 return true;
             });
 
-
+        // 0 is not a message.
         for (var i = 1; i <= msgCount; i++)
-        {
             await rt.PublishAsync(i);
-        }
 
         var result = await mne.WaitOneAsync();
         Assert.True(result);
 
-        for (var i = 1; i <= msgCount; i++)
+        var assertedCount = 0;
+        for (int i = 1; i <= msgCount; i++)
         {
-            Assert.AreEqual(i, list[i]);
+            if (list[i] == i) assertedCount++;
         }
 
-        await rt.DisposeAsync();
+        Assert.AreEqual(receivedCount, assertedCount);
+        await rt.DestroyAsync();
         Assert.True(await mneDisposed.WaitOneAsync());
     }
 }

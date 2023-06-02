@@ -59,9 +59,9 @@
     <time-to-live-seconds>180</time-to-live-seconds>
   </ringbuffer>
   <reliable-topic name="rtTestTopic">
-    <topic-overload-policy>BLOCK</topic-overload-policy>
+    <topic-overload-policy>DISCARD_OLDEST</topic-overload-policy>
   </reliable-topic>
   <ringbuffer name="rtTestTopic">
-    <capacity>10</capacity>
+    <capacity>15</capacity>
   </ringbuffer>
 </hazelcast>

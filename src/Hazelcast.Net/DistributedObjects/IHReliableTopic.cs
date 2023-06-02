@@ -32,8 +32,7 @@ public interface IHReliableTopic<T> : IDistributedObject
     /// based on the exception occured while handling the event.</param>
     /// <param name="state">A state object.</param>
     /// <param name="events">Set action to be executed on the received message.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<T>> events, ReliableTopicEventHandlerOptions handlerOptions = default, Func<Exception, bool> shouldTerminate = default, object state = null, CancellationToken cancellationToken = default);
+    Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<T>> events, ReliableTopicEventHandlerOptions handlerOptions = default, Func<Exception, bool> shouldTerminate = default, object state = null);
 
     /// <summary>Stops receiving messages for the given message listener.</summary>
     /// <remarks>
@@ -41,13 +40,12 @@ public interface IHReliableTopic<T> : IDistributedObject
     ///     this method does nothing.
     /// </remarks>
     /// <param name="subscriptionId">Id of listener registration.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Whether the operation completed successfully.</returns>
     /// <remarks>
     /// <para>Once this method has been invoked, and whatever its result, the subscription is
     /// de-activated, and the thread will be released which means that no events will trigger anymore.</para>
     /// </remarks>
-    ValueTask<bool> UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+    ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
 
     /// <summary>
     /// Checks the subscription by given id whether disposed or not.
