@@ -31,6 +31,11 @@ internal class Server<TState> : IAsyncDisposable
     }
 
     /// <summary>
+    /// Gets the number of active connections.
+    /// </summary>
+    public int ConnectionCount => _server.ConnectionCount;
+
+    /// <summary>
     /// Gets the state object.
     /// </summary>
     public TState State { get; }

@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Data
             var memberId = Guid.NewGuid();
             var address = NetworkAddress.Parse("192.168.33.34:5569");
 
-            var x = new AuthenticationResult(clusterId, memberId, address, "4.5.6", true, 12, 4, "principal");
+            var x = new AuthenticationResult(clusterId, memberId, address, "4.5.6", true, 12, 4, "principal", null, null);
 
             Assert.That(x.ClusterId, Is.EqualTo(clusterId));
             Assert.That(x.MemberId, Is.EqualTo(memberId));

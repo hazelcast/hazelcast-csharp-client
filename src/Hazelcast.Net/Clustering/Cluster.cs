@@ -68,7 +68,7 @@ namespace Hazelcast.Clustering
             Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
             SerializationService = serializationServiceFactory(Messaging);
             Connections = new ClusterConnections(State, Members, SerializationService);
-            Heartbeat = new Heartbeat(State, Messaging, options.Heartbeat, _terminateConnections);
+            Heartbeat = new Heartbeat(State, options.Heartbeat, _terminateConnections);
 
             HConsole.Configure(x => x.Configure<Cluster>().SetIndent(2).SetPrefix("CLUSTER"));
         }

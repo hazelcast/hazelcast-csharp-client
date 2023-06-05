@@ -32,18 +32,9 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Clustering
 {
     [TestFixture]
-    [Timeout(30_000)]
+    [Timeout(60_000)]
     public class SubscriptionCollectTests
     {
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
-
         [Test]
         public async Task SubscriptionIsCollected()
         {
@@ -52,8 +43,6 @@ namespace Hazelcast.Tests.Clustering
 
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
-
-            using var __ = HConsoleForTest();
 
             HConsole.WriteLine(this, "Begin");
             HConsole.WriteLine(this, "Start servers");

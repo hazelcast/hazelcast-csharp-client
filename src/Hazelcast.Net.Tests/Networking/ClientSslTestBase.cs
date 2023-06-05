@@ -242,12 +242,8 @@ namespace Hazelcast.Tests.Networking
         [SetUp]
         public void SetUp()
         {
-            _console = HConsole.Capture(consoleOptions => consoleOptions
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET")
+            HConsole.Configure(options => options
+                .ConfigureDefaults(this)
                 .Configure<ClientMessageConnection>().SetLevel(1)
                 .Configure<MemberConnection>().SetLevel(1)
             );

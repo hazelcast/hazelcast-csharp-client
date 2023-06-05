@@ -109,6 +109,11 @@ internal class Server : IAsyncDisposable
     public NetworkAddress Address { get; }
 
     /// <summary>
+    /// Gets the number of active connections.
+    /// </summary>
+    public int ConnectionCount => _connections.Count;
+
+    /// <summary>
     /// Gets the member identifier of the server.
     /// </summary>
     public Guid MemberId { get; set; }

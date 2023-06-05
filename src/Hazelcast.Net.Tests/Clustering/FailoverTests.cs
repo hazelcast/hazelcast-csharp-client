@@ -158,16 +158,6 @@ namespace Hazelcast.Tests.Clustering
             return options;
         }
 
-        private static IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMinLevel()
-                .Configure<HConsoleLoggerProvider>().SetMaxLevel()
-                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
-                .Configure<FailoverTests>().SetPrefix("TEST").SetMaxLevel()
-            );
-
         private static ClusterState MockClusterState(HazelcastOptions options)
         {
             return new ClusterState(options, "clusterName", "clientName", Mock.Of<Partitioner>(), new NullLoggerFactory());
@@ -285,7 +275,11 @@ namespace Hazelcast.Tests.Clustering
         [TestCase(false, 1)]
         public async Task TestClientCanFailover(bool smartRouting, int memberCount)
         {
-            var _ = HConsoleForTest();
+            HConsole.Configure(options => options
+                .ConfigureDefaults(this)
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
+            );
+
             var states = new ConcurrentQueue<ClientState>();
 
             var failoverOptions = new HazelcastFailoverOptionsBuilder()
@@ -381,7 +375,8 @@ namespace Hazelcast.Tests.Clustering
         [TestCase(false, 1)]
         public async Task TestClientCanFailoverFirstClusterNotUp(bool smartRouting, int memberCount)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
+
             var states = new ConcurrentQueue<ClientState>();
 
             var failoverOptions = new HazelcastFailoverOptionsBuilder()
@@ -475,7 +470,10 @@ namespace Hazelcast.Tests.Clustering
 
         public async Task TestClientThrowExceptionOnFailover()
         {
-            var _ = HConsoleForTest();
+            HConsole.Configure(options => options
+                .ConfigureDefaults(this)
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
+            );
 
             var failoverOptions = new HazelcastFailoverOptionsBuilder()
                 .With(fo =>
@@ -543,7 +541,11 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task TestClientCannotFailoverToDifferentPartitionCount()
         {
-            var _ = HConsoleForTest();
+            HConsole.Configure(options => options
+                .ConfigureDefaults(this)
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
+            );
+
             var states = new ConcurrentQueue<ClientState>();
 
             var failoverOptions = new HazelcastFailoverOptionsBuilder()
@@ -637,7 +639,11 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task TestClientRetryCurrentClusterBeforeFailover()
         {
-            var _ = HConsoleForTest();
+            HConsole.Configure(options => options
+                .ConfigureDefaults(this)
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
+            );
+
             var states = new ConcurrentQueue<ClientState>();
 
             var failoverOptions = new HazelcastFailoverOptionsBuilder()

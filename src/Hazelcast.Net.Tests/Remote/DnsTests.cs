@@ -26,19 +26,10 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class DnsTests : SingleMemberRemoteTestBase
     {
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
-
         [Test]
         public async Task SingleFailureAtAddressResolutionShouldNotBlowUpClient()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
             HConsole.WriteLine(this, "Begin");
 
             // the alt DNS will throw on the Nth invocation of GetHostAddresses

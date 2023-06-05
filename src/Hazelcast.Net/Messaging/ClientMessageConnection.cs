@@ -32,11 +32,12 @@ namespace Hazelcast.Messaging
     /// </remarks>
     internal class ClientMessageConnection : IAsyncDisposable
     {
-        private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
+        private readonly Dictionary<long, ClientMessage> _messages = new();
         private readonly SocketConnectionBase _connection;
         private readonly IHSemaphore _writer;
         private readonly ILogger _logger;
 
+        private int _disposed;
         private Action<ClientMessageConnection, ClientMessage> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
@@ -71,6 +72,11 @@ namespace Hazelcast.Messaging
             // (in case threading control is performed elsewhere)
             _writer = writerSemaphore;
         }
+
+        /// <summary>
+        /// Gets the inner socket connection.
+        /// </summary>
+        public SocketConnectionBase SocketConnection => _connection;
 
         /// <summary>
         /// Gets or sets the function that handles messages.
@@ -399,11 +405,34 @@ namespace Hazelcast.Messaging
             return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length).CfAwait();
         }
 
+        /// <summary>
+        /// Gets the life state of the connection.
+        /// </summary>
+        /// <param name="now">The reference date.</param>
+        /// <param name="period">The life state check period.</param>
+        /// <param name="timeout">The life state check timeout.</param>
+        /// <returns>The life state of the connection.</returns>
+        public ConnectionLifeState GetLifeState(DateTime now, TimeSpan period, TimeSpan timeout)
+        {
+            var readElapsed = now - _connection.LastReadTime;
+            var writeElapsed = now - _connection.LastWriteTime;
+
+            // make sure we read from the client at least every 'timeout', which is greater
+            // than the interval, so we *should* have read from the last ping, if nothing else,
+            // so no read means that the client not responsive - terminate it
+            if (readElapsed > timeout && writeElapsed < period) return ConnectionLifeState.Dead;
+
+            // make sure we write to the client at least every 'period',
+            // this should trigger a read when we receive the response
+            return writeElapsed > period ? ConnectionLifeState.Cold : ConnectionLifeState.Warm;
+        }
+
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            // note: DisposeAsync should not throw (CA1065)
+            if (!_disposed.InterlockedZeroToOne()) return;
 
+            // note: DisposeAsync should not throw (CA1065)
             await _connection.DisposeAsync().CfAwait(); // does not throw
             _writer.Dispose();
         }

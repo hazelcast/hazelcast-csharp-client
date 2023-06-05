@@ -35,20 +35,11 @@ namespace Hazelcast.Tests.Serialization.Compact;
 [ServerCondition("[5.2,)")]
 public class CompactQaTests : ClusterRemoteTestBase
 {
-    private IDisposable UseHConsole() => HConsole.Capture(o => o
-        //.WithFilename("console.out")
-        .Configure().SetMaxLevel().EnableTimeStamp(origin: DateTime.Now)
-        .Configure(this).SetPrefix("TEST")
-        .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET").SetLevel(0)
-        .Configure<ClientMessageConnection>().SetMinLevel()
-        .Configure<AsyncContext>().SetMinLevel()
-        .Configure<Partitioner>().SetLevel(1));
-
     [Test]
     [Explicit("See comment in test.")]
     public async Task MemberAddressMatch()
     {
-        using var _ = UseHConsole();
+        HConsole.Configure(options => options.ConfigureDefaults(this));
 
         var member = await RcClient.StartMemberAsync(RcCluster).CfAwait();
         await using var cleanup = new DisposeAsyncAction(async () => await RcClient.StopMemberAsync(RcCluster, member));
@@ -71,7 +62,7 @@ public class CompactQaTests : ClusterRemoteTestBase
     [Explicit]
     public async Task ExceptionPreventsClientFromReconnecting(bool recover)
     {
-        using var _ = UseHConsole();
+        HConsole.Configure(options => options.ConfigureDefaults(this));
 
         // in case a test times out, NUnit just reports that it failed, without further
         // details - in fact, it does not even say that the test timed out - so by wrapping

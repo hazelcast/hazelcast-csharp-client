@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Cloud
         [Test]
         public async Task SampleClient()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             HConsole.WriteLine(this, "Hazelcast Cloud Client");
             var stopwatch = Stopwatch.StartNew();
@@ -520,14 +520,5 @@ result = """" + text
             Console.WriteLine("JAVA OUTPUT:");
             Console.WriteLine(resultString);
         }
-
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel()
-                .Configure().SetMinLevel().EnableTimeStamp(origin: DateTime.Now)
-                .Configure(this).SetMaxLevel().SetPrefix("TEST")
-            );
     }
 }

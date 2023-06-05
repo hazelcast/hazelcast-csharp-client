@@ -40,14 +40,8 @@ namespace Hazelcast.Tests.Clustering
         [Timeout(RunCount * MinutesPerRun * 60 * 1000)]
         public async Task Test()
         {
-            using var _ = HConsole.Capture(consoleOptions =>
-                consoleOptions
-                    .ClearAll()
-                    .Configure().SetLevel(1).EnableTimeStamp(origin: DateTime.Now)
-                    .Configure(this).SetPrefix("TEST")
-                    .Configure<AsyncContext>().SetMinLevel()
-                    .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
-
+            HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetLevel(1));
+ 
             for (var i = 0; i < RunCount; i++)
             {
                 HConsole.WriteLine(this, $"-------- RUN #{i} --------");
