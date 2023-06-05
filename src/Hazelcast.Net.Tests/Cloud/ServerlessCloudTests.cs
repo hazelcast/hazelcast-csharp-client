@@ -92,12 +92,7 @@ public class ServerlessCloudTests : CloudTestBase
     [Timeout(TestTimeout)]
     public async Task TestCloudWithResume([Values] bool tlsEnabled, [Values] bool smartMode)
     {
-        using var _ = HConsole.Capture(x => x
-            .Configure().SetLevel(0).EnableTimeStamp(origin: DateTime.Now) // default level
-            .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel() // always write the log output
-            .Configure(this).SetMaxLevel().SetPrefix("TEST") // always write the test output
-            .Configure<AsyncContext>().SetMinLevel() // do *not* write the AsyncContext verbose output
-            .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
+        HConsole.Configure(x => x.ConfigureDefaults(this));
 
         HConsole.WriteLine(this, "Create cloud cluster");
         var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);

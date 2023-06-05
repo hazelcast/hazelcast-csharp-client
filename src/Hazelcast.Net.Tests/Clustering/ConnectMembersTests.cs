@@ -33,15 +33,9 @@ namespace Hazelcast.Tests.Clustering
     public class ConnectMembersTests
     {
         [Test]
-        //[Repeat(64)] // FIXME trying to get it to fail
         public async Task Test()
         {
-            using var _ = HConsole.Capture(x => x
-                .Configure().SetLevel(0).EnableTimeStamp(origin: DateTime.Now) // default level
-                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel() // always write the log output
-                .Configure(this).SetMaxLevel().SetPrefix("TEST") // always write the test output
-                .Configure<AsyncContext>().SetMinLevel() // do *not* write the AsyncContext verbose output
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
+            HConsole.Configure(x => x.ConfigureDefaults(this));
 
             var addresses = new List<NetworkAddress>();
             var mutex = new SemaphoreSlim(1);
@@ -203,12 +197,7 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task TestDelayedQueue()
         {
-            using var _ = HConsole.Capture(x => x
-                .Configure().SetLevel(0).EnableTimeStamp(origin: DateTime.Now) // default level
-                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel() // always write the log output
-                .Configure(this).SetMaxLevel().SetPrefix("TEST") // always write the test output
-                .Configure<AsyncContext>().SetMinLevel() // do *not* write the AsyncContext verbose output
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
+            HConsole.Configure(x => x.ConfigureDefaults(this));
 
             static MemberInfo MemberInfo(NetworkAddress address)
             {
