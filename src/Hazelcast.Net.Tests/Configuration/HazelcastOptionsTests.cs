@@ -39,6 +39,16 @@ namespace Hazelcast.Tests.Configuration
         private static readonly string _optionsPath = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options/"));
 
         [Test]
+        public void LoggingOptions()
+        {
+            var options = new HazelcastOptionsBuilder().Build();
+
+            // with no logger factory configured, an instance of NullLoggerFactory is returned
+            _ = options.LoggerFactory.Service.CreateLogger("MEH");
+            _ = options.LoggerFactory.CreateLogger("MEH");
+        }
+
+        [Test]
         public void BuildExceptions()
         {
             Assert.Throws<ArgumentNullException>(() =>

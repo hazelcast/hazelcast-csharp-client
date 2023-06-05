@@ -6,11 +6,14 @@ For instance, the low-level networking stack now relies on Microsoft's high-perf
 
 Unfortunately, the move from synchronous to asynchronous coding patterns impacts the client API in large ways. Although the Hazelcast *concepts* have not changed, they are exposed in a quite different API. This document proposes to introduce you to the new API and serve as a companion on your migration path from version 3 to more recent versions (as of this writing, version 5).
 
+> [!WARNING]
+> Migrating existing code to an asynchronous programming model is not a trivial operation and requires some understanding of how asynchronous code functions in .NET, especially when running one .NET Framework platform. To help your transition, we gather a list of [asynchronous pitfalls](async-pitfalls.md) and pointers to documentations.
+
 ## Configuring a client instance
 
 Up to version 3, the Hazelcast .NET client provided two ways of configuration. You could load a declarative configuration from an XML file:
 ```
-var client = HazelcastClient.NewHazelcastClient("path/to/config.xml"):
+var client = HazelcastClient.NewHazelcastClient("path/to/config.xml");
 ```
 
 Alternatively, you could create a `ClientConfig` object and programmatically configure the client:

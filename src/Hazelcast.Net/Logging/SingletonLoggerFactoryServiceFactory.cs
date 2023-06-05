@@ -14,6 +14,7 @@
 
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Logging
 {
@@ -34,6 +35,9 @@ namespace Hazelcast.Logging
         /// <param name="other">Another factory.</param>
         /// <param name="shallow">Whether to shallow- or deep-clone the factory.</param>
         private SingletonLoggerFactoryServiceFactory(SingletonLoggerFactoryServiceFactory other, bool shallow) : base(other, shallow) { }
+
+        /// <inheritdoc />
+        public override ILoggerFactory Service => base.Service ?? NullLoggerFactory.Instance;
 
         /// <inheritdoc />
         public ILogger CreateLogger(string categoryName) => Service.CreateLogger(categoryName);

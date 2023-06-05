@@ -30,16 +30,7 @@ namespace Hazelcast.Testing
         {
             // create remote client and cluster
             RcClient = await ConnectToRemoteControllerAsync().CfAwait();
-            try
-            {
-                RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
-            }
-            catch (ServerException e)
-            {
-                // Thrift exceptions are weird and need to be "fixed"
-                e.FixMessage();
-                throw;
-            }
+            RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
         }
 
         [OneTimeTearDown]

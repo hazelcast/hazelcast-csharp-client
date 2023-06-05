@@ -56,16 +56,7 @@ namespace Hazelcast.Tests.Clustering
 
         private async Task<Hazelcast.Testing.Remote.Cluster> CreateClusterAsync(string config)
         {
-            try
-            {
-                return await _rcClient.CreateClusterAsync(config).CfAwait();
-            }
-            catch (ServerException e)
-            {
-                // Thrift exceptions are weird and need to be "fixed"
-                e.FixMessage();
-                throw;
-            }
+            return await _rcClient.CreateClusterAsync(config).CfAwait();
         }
 
         [OneTimeSetUp]
