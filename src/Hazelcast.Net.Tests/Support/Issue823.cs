@@ -57,8 +57,9 @@ public class Issue823
     {
         // option files need to be in the current directory
         var directory = AppContext.BaseDirectory;
+        foreach (var file in Directory.GetFiles(directory, "*.json"))
+            File.Delete(file);
         var appsettings = Path.Combine(directory, "appsettings.json");
-        if (File.Exists(appsettings)) File.Delete(appsettings);
         TestFiles.Copy<Issue823>("Options/ConfigurationTests1.json", appsettings);
 
         IConfiguration configuration = new ConfigurationBuilder()
@@ -89,8 +90,9 @@ public class Issue823
     {
         // option files need to be in the current directory
         var directory = AppContext.BaseDirectory;
+        foreach (var file in Directory.GetFiles(directory, "*.json"))
+            File.Delete(file);
         var appsettings = Path.Combine(directory, "appsettings.json");
-        if (File.Exists(appsettings)) File.Delete(appsettings);
         TestFiles.Copy<Issue823>("Options/ConfigurationTests1.json", appsettings);
 
         // build explicit options and bare HostBuilder

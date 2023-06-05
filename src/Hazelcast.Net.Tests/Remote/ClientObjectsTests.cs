@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Models;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
+using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote;
@@ -23,18 +26,24 @@ namespace Hazelcast.Tests.Remote;
 internal class ClientObjectsTests : SingleMemberClientRemoteTestBase 
 {
     [Test]
+    [ServerCondition("[5.0,)")] // 5.0 and above
     public async Task CanGetDistributedObjects()
     {
         var map = await Client.GetMapAsync<int, int>(CreateUniqueName());
         var list = await Client.GetListAsync<int>(CreateUniqueName());
         var objects = await Client.GetDistributedObjectsAsync();
-        Assert.That(objects.Count, Is.EqualTo(2));
+
+        var expectedCount = ServerVersion.GetVersion() >= new NuGetVersion(5, 1, 0)
+            ? 2 // the map and the list
+            : 3; // and also the internal sql catalog
+
+        Assert.That(objects.Count, Is.EqualTo(expectedCount));
         Assert.That(objects, Does.Contain(new DistributedObjectInfo(map.ServiceName, map.Name)));
         Assert.That(objects, Does.Contain(new DistributedObjectInfo(list.ServiceName, list.Name)));
 
         await using var client2 = await HazelcastClientFactory.StartNewClientAsync(Client.Options);
         objects = await client2.GetDistributedObjectsAsync();
-        Assert.That(objects.Count, Is.EqualTo(2));
+        Assert.That(objects.Count, Is.EqualTo(expectedCount));
         Assert.That(objects, Does.Contain(new DistributedObjectInfo(map.ServiceName, map.Name)));
         Assert.That(objects, Does.Contain(new DistributedObjectInfo(list.ServiceName, list.Name)));
     }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -22,6 +23,7 @@ using Hazelcast.Core;
 using Hazelcast.Testing.Remote;
 using NuGet.Versioning;
 using NUnit.Framework;
+using Console = System.Console;
 
 namespace Hazelcast.Testing
 {
@@ -226,7 +228,51 @@ namespace Hazelcast.Testing
         /// <returns>Whether the member was properly resumed.</returns>
         public static Task<bool> ResumeMemberAsync(this IRemoteControllerClient rc, Cluster cluster, Member member)
             => rc.ResumeMemberAsync(cluster.Id, member.Uuid);
-        
+
+        /// <summary>
+        /// Deletes a cluster from the cloud.
+        /// </summary>
+        /// <param name="rc">The remote controller.</param>
+        /// <param name="cluster">The cluster.</param>
+        public static async Task DeleteCloudClusterAsync(this IRemoteControllerClient rc, CloudCluster cluster)
+        {
+            if (cluster.IsTlsEnabled)
+            {
+                var certificatePath = cluster.CertificatePath;
+                var rcPath = await rc.GetRcPathAsync();
+                if (Path.IsPathRooted(certificatePath))
+                    certificatePath = certificatePath.Substring(rcPath.Length+1);
+                var certificateRoot = certificatePath;
+                while (true)
+                {
+                    var temp = Path.GetDirectoryName(certificateRoot);
+                    if (string.IsNullOrWhiteSpace(temp)) break;
+                    certificateRoot = temp;
+                }
+                var path = Path.Combine(rcPath, certificateRoot);
+                Directory.Delete(Path.Combine(rcPath, path), true);
+            }
+            await rc.DeleteCloudClusterAsync(cluster.Id);
+        }
+
+        /// <summary>
+        /// Detects the current filesystem path of the RC process.
+        /// </summary>
+        /// <param name="rc">The remote controller.</param>
+        /// <returns>The current filesystem path of the RC process.</returns>
+        public static async Task<string> GetRcPathAsync(this IRemoteControllerClient rc)
+        {
+            // Java is this beautiful lang that has an infinite ways of getting the current directory of a process...
+            const string script = @"
+
+paths = Java.type(""java.nio.file.Paths"")  
+result = """" + paths.get("""").toAbsolutePath()
+";
+            var response = await rc.ExecuteOnControllerAsync(null, script, Lang.JAVASCRIPT).CfAwait();
+            var result = response.Result;
+            return result == null ? null : Encoding.UTF8.GetString(result);
+        }
+
         /// <summary>
         /// Detects the version of the server on the cluster.
         /// </summary>
