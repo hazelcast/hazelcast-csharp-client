@@ -100,7 +100,7 @@ Hazelcast.Core.SingletonServiceFactory<TService>.Dispose() -> void
 Hazelcast.Core.SingletonServiceFactory<TService>.IsConfigured.get -> bool
 Hazelcast.Core.SingletonServiceFactory<TService>.OwnsService.get -> bool
 Hazelcast.Core.SingletonServiceFactory<TService>.OwnsService.set -> void
-~Hazelcast.Core.SingletonServiceFactory<TService>.Service.get -> TService
+~virtual Hazelcast.Core.SingletonServiceFactory<TService>.Service.get -> TService
 ~Hazelcast.Core.SingletonServiceFactory<TService>.ServiceProvider.get -> System.IServiceProvider
 ~Hazelcast.Core.SingletonServiceFactory<TService>.ServiceProvider.set -> void
 Hazelcast.Core.SingletonServiceFactory<TService>.SingletonServiceFactory() -> void
@@ -1873,3 +1873,14 @@ virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get ->
 ~Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory(System.Func<Microsoft.Extensions.Configuration.IConfiguration, Microsoft.Extensions.Logging.ILoggerFactory> factory) -> Hazelcast.HazelcastOptionsBuilder
 ~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(string key, object value) -> TBuilder
 ~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(string key, object value) -> TBuilder
+~Hazelcast.IHazelcastClient.GetDistributedObjectsAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.DistributedObjectInfo>>
+Hazelcast.Models.DistributedObjectInfo
+override Hazelcast.Models.DistributedObjectInfo.GetHashCode() -> int
+~Hazelcast.Models.DistributedObjectInfo.Equals(Hazelcast.Models.DistributedObjectInfo other) -> bool
+~Hazelcast.Models.DistributedObjectInfo.Name.get -> string
+~Hazelcast.Models.DistributedObjectInfo.ServiceName.get -> string
+~override Hazelcast.Models.DistributedObjectInfo.Equals(object obj) -> bool
+~override Hazelcast.Models.DistributedObjectInfo.ToString() -> string
+~static Hazelcast.Models.DistributedObjectInfo.operator !=(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
+~static Hazelcast.Models.DistributedObjectInfo.operator ==(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
+~override Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.get -> Microsoft.Extensions.Logging.ILoggerFactory

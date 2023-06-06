@@ -149,66 +149,64 @@ namespace Hazelcast.Testing.Remote
         Task<Response> ExecuteOnControllerAsync(string clusterId, string script, Lang lang, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Configure RC to login Hazelcast Cloud API.
+        /// Logs the remote controller into the cloud.
         /// </summary>
-        /// <param name="baseUrl">Cloud URL, i.e. https://uat.hazelcast.cloud</param>
-        /// <param name="apiKey">API Key provided from Hazelcast cloud.</param>
-        /// <param name="apiSecret">API Secret provided from Hazelcast cloud.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns></returns>
-        Task LoginCloudAsync(string baseUrl, string apiKey, string apiSecret, CancellationToken cancellationToken = default);
+        /// <param name="baseUrl">The cloud API url, e.g. https://uat.hazelcast.cloud.</param>
+        /// <param name="apiKey">The API key provided by Hazelcast cloud.</param>
+        /// <param name="apiSecret">The API secret provided by Hazelcast cloud.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        Task LoginToCloudAsync(string baseUrl, string apiKey, string apiSecret, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// RC logins to Hazelcast Cloud API with provided environment variables.
+        /// Logs the remote controller into the cloud, using parameters from environment variables.
         /// <list type="bullet"> 
-        ///   <item>  BASE_URL = Cloud address, i.e. https://uat.hazelcast.cloud</item>
-        ///    <item> API_KEY  = Received from Hazelcast cloud.</item>
-        ///    <item> API_SECRET = Received from Hazelcast cloud. </item>
+        ///   <item>  BASE_URL = The cloud API url, e.g. https://uat.hazelcast.cloud.</item>
+        ///    <item> API_KEY  = The API key provided by Hazelcast cloud.</item>
+        ///    <item> API_SECRET = The API secret provided by Hazelcast cloud. </item>
         /// </list>
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task LoginCloudWithEnvironment(CancellationToken cancellationToken = default);
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        Task LoginToCloudAsync(CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Creates a cluster in the logged in Cloud.
+        /// Creates and starts a cluster in the cloud.
         /// </summary>
-        /// <param name="hazelcastVersion">Version to be used on Members.</param>
-        /// <param name="isTlsEnabled">Whether TLS Enabled on the cluster.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Cloud cluster that is created.</returns>
+        /// <param name="hazelcastVersion">The Hazelcast version for members to run.</param>
+        /// <param name="isTlsEnabled">Whether TLS is enabled on the cluster.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns>The cloud cluster.</returns>
         Task<CloudCluster> CreateCloudClusterAsync(string hazelcastVersion, bool isTlsEnabled, CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Gets the cloud cluster by given cluster id.
+        /// Gets a cluster from the cloud.
         /// </summary>
-        /// <param name="cloudClusterId">Cluster id.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Cloud cluster.</returns>
+        /// <param name="cloudClusterId">The identifier of the cloud cluster.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns>The cloud cluster.</returns>
         Task<CloudCluster> GetCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Gets the cloud cluster by given cluster id. 
+        /// Stops a cluster in the cloud.
         /// </summary>
-        /// <param name="cloudClusterId">Cluster id</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Cloud cluster that is stopped.</returns>
-        Task<CloudCluster> StopCloudCluster(string cloudClusterId, CancellationToken cancellationToken = default);
+        /// <param name="cloudClusterId">The identifier of the cloud cluster.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns>The cloud cluster.</returns>
+        Task<CloudCluster> StopCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Resumes the cloud cluster by given cluster id. 
+        /// Resumes a cluster in the cloud.
         /// </summary>
-        /// <param name="cloudClusterId">Cluster id</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Cloud cluster that is resumed.</returns>
+        /// <param name="cloudClusterId">The identifier of the cloud cluster.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns>The cloud cluster.</returns>
         Task<CloudCluster> ResumeCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Deletes the cloud cluster by given cluster id. 
+        /// Deletes a cluster from the cloud.
         /// </summary>
-        /// <param name="cloudClusterId">Cluster id</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Cloud cluster that is deleted.</returns>
+        /// <param name="cloudClusterId">The identifier of the cloud luster.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns>The cloud cluster.</returns>
         Task DeleteCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default);
     }
 }

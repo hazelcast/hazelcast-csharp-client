@@ -132,7 +132,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <returns>The singleton instance of the service, or null if this service factory has not been configured.</returns>
         // TODO: consider throwing instead of returning null
-        public TService Service => _lazyService?.Value;
+        public virtual TService Service => _lazyService?.Value;
 
         /// <summary>
         /// Clones this service factory.

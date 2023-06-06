@@ -43,21 +43,13 @@ public class ServerlessRemoteTestBase : RemoteTestBase
     {
         // create remote client and cluster
         RcClient = await ConnectToRemoteControllerAsync().CfAwait();
-        try
-        {
-            await RcClient.LoginCloudWithEnvironment();
 
-            _baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+        await RcClient.LoginToCloudAsync();
 
-            if (string.IsNullOrEmpty(_baseUrl))
-                throw new ArgumentNullException("BASE_URL", "BASE_URL of the cloud must be set.");
-        }
-        catch (ServerException e)
-        {
-            // Thrift exceptions are weird and need to be "fixed"
-            e.FixMessage();
-            throw;
-        }
+        _baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+
+        if (string.IsNullOrEmpty(_baseUrl))
+            throw new ArgumentNullException("BASE_URL", "BASE_URL of the cloud must be set.");
     }
 
     /// <summary>

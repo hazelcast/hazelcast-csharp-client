@@ -40,7 +40,6 @@ namespace Hazelcast
         /// default Microsoft configuration system. See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging
         /// for details and documentation.</para>
         /// </remarks>
-
         [BinderIgnore]
         public SingletonLoggerFactoryServiceFactory LoggerFactory { get; } = new SingletonLoggerFactoryServiceFactory();
 

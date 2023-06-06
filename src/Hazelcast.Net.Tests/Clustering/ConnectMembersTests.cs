@@ -22,6 +22,8 @@ using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -31,9 +33,10 @@ namespace Hazelcast.Tests.Clustering
     public class ConnectMembersTests
     {
         [Test]
-        [Repeat(64)] // FIXME trying to get it to fail
         public async Task Test()
         {
+            HConsole.Configure(x => x.ConfigureDefaults(this));
+
             var addresses = new List<NetworkAddress>();
             var mutex = new SemaphoreSlim(1);
 
@@ -42,7 +45,11 @@ namespace Hazelcast.Tests.Clustering
                 return new MemberInfo(Guid.NewGuid(), address, new MemberVersion(0, 0, 0), false, new Dictionary<string, string>());
             }
 
-            var queue = new MemberConnectionQueue(new NullLoggerFactory());
+            var loggerFactory = LoggerFactory.Create(builder => builder
+                .AddFilter(level => true)
+                .AddHConsole());
+            var logger = loggerFactory.CreateLogger("ConnectMembers");
+            var queue = new MemberConnectionQueue(x => true, loggerFactory);
 
             // background task that pretend to connect members
             var dequeuedRequests = 0;
@@ -52,6 +59,7 @@ namespace Hazelcast.Tests.Clustering
                 {
                     dequeuedRequests++;
                     await mutex.WaitAsync().CfAwait();
+                    logger.LogDebug($"Connect request={dequeuedRequests} member={request.Member.Id.ToShortString()} {request.Member.Address}");
                     addresses.Add(request.Member.Address);
                     request.Complete(true);
                     mutex.Release();
@@ -64,6 +72,7 @@ namespace Hazelcast.Tests.Clustering
             queue.Resume(); // the queue is initially suspended, resume
 
             // -- connects
+            HConsole.WriteLine(this, "Connects...");
 
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:1")));
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:2")));
@@ -77,6 +86,7 @@ namespace Hazelcast.Tests.Clustering
 
 
             // -- can suspend while waiting
+            HConsole.WriteLine(this, "Can suspend while waiting...");
 
             await queue.SuspendAsync(); // suspend
 
@@ -94,7 +104,8 @@ namespace Hazelcast.Tests.Clustering
             }, 20_000, 500);
 
 
-            // -- suspending waits for the current connection
+            // -- suspending waits for current connection
+            HConsole.WriteLine(this, "Suspending waits for current connection...");
 
             await mutex.WaitAsync(); // blocks the connections
 
@@ -129,13 +140,15 @@ namespace Hazelcast.Tests.Clustering
             }, 20_000, 500);
 
 
-            // -- can drain empty
+            // -- can drain when empty
+            HConsole.WriteLine(this, "Can drain when empty...");
 
             await queue.SuspendAsync();
             queue.Resume(true);
 
 
-            // -- can drain non-empty
+            // -- can drain when non-empty
+            HConsole.WriteLine(this, "Can drain when non-empty...");
 
             var dr = dequeuedRequests;
 
@@ -172,6 +185,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:9")));
 
             // -- the end
+            HConsole.WriteLine(this, "End");
 
             await queue.DisposeAsync();
             await AssertEx.SucceedsEventually(() => Assert.That(connecting.IsCompleted), 20_000, 500);
@@ -183,29 +197,32 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task TestDelayedQueue()
         {
+            HConsole.Configure(x => x.ConfigureDefaults(this));
+
             static MemberInfo MemberInfo(NetworkAddress address)
             {
                 return new MemberInfo(Guid.NewGuid(), address, new MemberVersion(0, 0, 0), false, new Dictionary<string, string>());
             }
 
-            var queue = new MemberConnectionQueue(new NullLoggerFactory());
+            var loggerFactory = LoggerFactory.Create(builder => builder
+                .AddFilter(level => true)
+                .AddHConsole());
+            var logger = loggerFactory.CreateLogger("ConnectMembers");
+            var queue = new MemberConnectionQueue(x => true, loggerFactory);
             var memberCount = new Dictionary<Guid, int>();
-
-            queue.ConnectionFailed += (_, request) =>
-            {
-                queue.AddAgain(request);
-            };
 
             // background task that pretend to connect members
             var dequeuedRequests = 0;
+            const int successCount = 3; // third try will succeed
             async Task ConnectMembers(MemberConnectionQueue memberConnectionQueue, CancellationToken cancellationToken)
             {
                 await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
                 {
                     dequeuedRequests++;
                     if (!memberCount.TryGetValue(request.Member.Id, out var count)) count = 0;
-                    memberCount[request.Member.Id] = count + 1;
-                    request.Complete(count == 2);
+                    memberCount[request.Member.Id] = ++count;
+                    logger.LogDebug($"Connect request={dequeuedRequests} member={request.Member.Id.ToShortString()} count={count} result={(count == successCount ? "success" : "failed")}");
+                    request.Complete(count == successCount);
                 }
             }
 
@@ -222,7 +239,7 @@ namespace Hazelcast.Tests.Clustering
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(dequeuedRequests, Is.EqualTo(6));
+                Assert.That(dequeuedRequests, Is.EqualTo(2 * successCount));
             }, 30_000, 100);
 
             var elapsed = stopwatch.Elapsed;
@@ -233,10 +250,9 @@ namespace Hazelcast.Tests.Clustering
             // each member retried twice = twice the 1s delay = 2s
             // we should not have completed faster than that, even so the code runs fully in-memory
             Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2)));
-            Console.WriteLine($"Elapsed: {elapsed}");
+            HConsole.WriteLine(this, $"Elapsed: {elapsed}");
 
-            Assert.That(queue.RequestsCount, Is.EqualTo(0));
-            Assert.That(queue.DelayedRequestsCount, Is.EqualTo(0));
+            Assert.That(queue.Count, Is.EqualTo(0));
         }
     }
 }

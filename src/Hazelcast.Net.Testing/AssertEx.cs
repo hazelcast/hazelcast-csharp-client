@@ -63,6 +63,48 @@ namespace Hazelcast.Testing
         /// Verifies that an action succeeds, eventually.
         /// </summary>
         /// <param name="action">The action.</param>
+        /// <param name="abort">A function that determines whether to abort immediately.</param>
+        /// <param name="delayMilliseconds">How long to wait.</param>
+        /// <param name="pollingMilliseconds">How often to try to run the action.</param>
+        /// <returns>A task that will complete when the action succeeds.</returns>
+        public static async ValueTask SucceedsEventually(Action action, Func<bool> abort, int delayMilliseconds, int pollingMilliseconds)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            while (true)
+            {
+                Exception caught;
+                using (new TestExecutionContext.IsolatedContext())
+                {
+                    try
+                    {
+                        action();
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        // catch both AssertionException thrown by NUnit assertions,
+                        // and exceptions thrown by the executing code
+                        caught = e;
+                    }
+                }
+
+                var elapsed = stopwatch.ElapsedMilliseconds;
+
+                if (elapsed > delayMilliseconds - pollingMilliseconds)
+                    throw new Exception($"Action is still failing after {delayMilliseconds}ms.", caught);
+
+                if (abort())
+                    throw new Exception($"Action is still failing after {elapsed}ms and will not succeed (abort condition is met).", caught);
+
+                await Task.Delay(pollingMilliseconds);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that an action succeeds, eventually.
+        /// </summary>
+        /// <param name="action">The action.</param>
         /// <param name="delayMilliseconds">How long to wait.</param>
         /// <param name="pollingMilliseconds">How often to try to run the action.</param>
         /// <returns>A task that will complete when the action succeeds.</returns>
