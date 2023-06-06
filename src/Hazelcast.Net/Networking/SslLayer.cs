@@ -18,7 +18,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -67,7 +66,7 @@ namespace Hazelcast.Networking
 
             if (!_options.Enabled) return stream;
 
-            var clientCertificates = GetClientCertificatesOrDefault();
+            var clientCertificates = GetClientCertificates();
 
             LocalCertificateSelectionCallback? selectCertificate = null;
             // note: OperatingSystem.IsWindows() is n/a in netstandard
@@ -101,6 +100,7 @@ namespace Hazelcast.Networking
                 }
             }
 
+            // note: it *is* OK to pass a null selectCertificate value
             var sslStream = new SslStream(stream, false, ValidateCertificate, selectCertificate);
 
             var targetHost = GetTargetHostNameOrDefault();
@@ -150,14 +150,14 @@ namespace Hazelcast.Networking
 
         /// <summary>
         /// (internal for tests only)
-        /// Gets the client certificate, or a default certificate.
+        /// Gets the client certificate.
         /// </summary>
-        internal X509Certificate2Collection GetClientCertificatesOrDefault()
+        internal X509Certificate2Collection GetClientCertificates()
         {
-            if (_options.CertificatePath == null)
-                return null;
-
             var clientCertificates = new X509Certificate2Collection();
+
+            if (_options.CertificatePath == null) return clientCertificates;
+
             try
             {
                 clientCertificates.Import(_options.CertificatePath, _options.CertificatePassword, _options.KeyStorageFlags);

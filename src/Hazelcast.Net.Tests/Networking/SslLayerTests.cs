@@ -140,8 +140,8 @@ namespace Hazelcast.Tests.Networking
                 CertificatePath = null
             };
             var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
-            var certs = ssl.GetClientCertificatesOrDefault();
-            Assert.That(certs, Is.Null);
+            var certs = ssl.GetClientCertificates();
+            Assert.That(certs, Is.Empty);
         }
 
         [Test]
@@ -160,7 +160,7 @@ namespace Hazelcast.Tests.Networking
                 CertificatePassword = ClientSslTestBase.ClientCertificatePassword
             };
             var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
-            var certs = ssl.GetClientCertificatesOrDefault();
+            var certs = ssl.GetClientCertificates();
             Assert.That(certs, Is.Not.Null);
             Assert.That(certs.Count, Is.EqualTo(1));
         }
@@ -183,7 +183,7 @@ namespace Hazelcast.Tests.Networking
             var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             try
             {
-                ssl.GetClientCertificatesOrDefault();
+                ssl.GetClientCertificates();
                 Assert.Fail("Expected an exception.");
             }
             catch (Exception e)
