@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -136,6 +137,12 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
             _logger.IfDebug()?.LogError(e, "Failed while publishing a message {Message} on topic {Name}. ", message, Name);
             throw;
         }
+    }
+
+    // internal for tests
+    internal bool TryGetExecutor(Guid subscriptionId, [MaybeNullWhen(false)] out ReliableTopicMessageExecutor<TItem> executor)
+    {
+        return _executors.TryGetValue(subscriptionId, out executor);
     }
 
     private async Task AddOrFail(ReliableTopicMessage rtMessage)
