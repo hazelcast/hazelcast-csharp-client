@@ -125,7 +125,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
                 if (lostCount != 0 && !_options.IsLossTolerant)
                 {
-                    _logger.IfWarning()?.LogWarning("The reliable topic subscription is not loss tolerant. Disposing the process...");
+                    _logger.IfWarning()?.LogWarning("The reliable topic subscription [{Id}] is not loss tolerant. {Count} message(s) is lost. Disposing the process...", _id, (-1 * lostCount));
                     await DisposeAsync().CfAwaitNoThrow();
                     return;
                 }
@@ -150,6 +150,8 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                         foreach (var handler in messageHandlers)
                         {
                             if (await DisposeIfCanceledAsync(cancellationToken).CfAwait()) return;
+
+                            if (_options.StoreSequence) _sequence = seq;
 
                             await handler
                                 .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, _stateObject)
