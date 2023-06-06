@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,11 +40,11 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a connection to a cluster member.
     /// </summary>
-    internal class MemberConnection : IAsyncDisposable
+    internal partial class MemberConnection : IAsyncDisposable
     {
         internal static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly ConcurrentDictionary<long, Invocation> _invocations = new ConcurrentDictionary<long, Invocation>();
+        private readonly ConcurrentDictionary<long, Invocation> _invocations = new();
 
         private readonly Authenticator _authenticator;
         private readonly MessagingOptions _messagingOptions;
@@ -52,6 +53,10 @@ namespace Hazelcast.Clustering
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+        private readonly Guid _clientId;
+        private readonly AddressProvider _addressProvider;
+        private readonly NetworkAddress _privateAddress;
+        private readonly object _closedMutex = new();
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<ClientMessage> _receivedEvent;
@@ -63,20 +68,25 @@ namespace Hazelcast.Clustering
         private readonly object _mutex = new();
         private volatile bool _disposed;
         private volatile bool _connected;
+        private bool _closedExecuted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
+        /// <param name="privateAddress">The member private address.</param>
         /// <param name="authenticator">The authenticator.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="networkingOptions">Networking options.</param>
         /// <param name="sslOptions">SSL options.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        /// <param name="clientId">The client identifier.</param>
+        /// <param name="addressProvider">The address provider.</param>
+        public MemberConnection(NetworkAddress address, NetworkAddress privateAddress, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory, Guid clientId, AddressProvider addressProvider)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
+            _privateAddress = privateAddress ?? throw new ArgumentNullException(nameof(privateAddress));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
@@ -84,6 +94,8 @@ namespace Hazelcast.Clustering
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
+            _clientId = clientId;
+            _addressProvider = addressProvider;
 
             MemberAddress = address; // may change after connection is established.
             HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("MBR.CONN"));
@@ -117,6 +129,32 @@ namespace Hazelcast.Clustering
                     throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
                 _closed = value;
             }
+        }
+
+        /// <summary>
+        /// Adds an action that will be executed when the connection has closed.
+        /// </summary>
+        /// <param name="onClosed">The action.</param>
+        public async Task AddClosed(Func<MemberConnection, ValueTask> onClosed)
+        {
+            var execute = false;
+
+            lock (_closedMutex)
+            {
+                if (_closedExecuted) execute = true;
+                else _closed += onClosed;
+            }
+
+            if (execute) await onClosed(this).CfAwait();
+        }
+
+        /// <summary>
+        /// Removes an action that will be executed when the connection has closed.
+        /// </summary>
+        /// <param name="onClosed">The action.</param>
+        public void RemoveClosed(Func<MemberConnection, ValueTask> onClosed)
+        {
+            lock (_closedMutex) _closed -= onClosed;
         }
 
         #endregion
@@ -177,6 +215,19 @@ namespace Hazelcast.Clustering
         public DateTime LastWriteTime => _socketConnection?.LastWriteTime ?? DateTime.MinValue;
 
         /// <summary>
+        /// Gets all <see cref="ClientMessageConnection"/> owned by this connection.
+        /// </summary>
+        /// <returns>All <see cref="ClientMessageConnection"/> owned by this connection.</returns>
+        public IEnumerable<ClientMessageConnection> GetMessageConnections()
+        {
+            yield return _messageConnection;
+
+            var tpcConnections = _tpcConnections;
+            if (tpcConnections == null) yield break;
+            foreach (var tpcConnection in tpcConnections) yield return tpcConnection;
+        }
+
+        /// <summary>
         /// Connects the client to the server.
         /// </summary>
         /// <param name="clusterState">The cluster state.</param>
@@ -232,6 +283,8 @@ namespace Hazelcast.Clustering
             {
                 disposed = _disposed;
                 _connected = !_disposed;
+                if (_connected && _networkingOptions.Tpc.Enabled && result.SupportsTpc) 
+                    ConnectTpc(this, result); // start background task
             }
 
             if (disposed)
@@ -378,6 +431,32 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Sends a message over a specific <see cref="ClientMessageConnection"/>.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="connection">The message connection.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        /// <remarks>
+        /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
+        /// </remarks>
+        public async Task<ClientMessage> SendAsync(ClientMessage message, ClientMessageConnection connection, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            // assign a unique identifier to the message
+            // and send in one fragment, with proper flags
+            message.CorrelationId = _correlationIdSequence.GetNext();
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // create the invocation
+            var invocation = new Invocation(message, _messagingOptions, this);
+
+            // and send
+            return await SendAsyncInternal(invocation, connection, cancellationToken).CfAwait();
+        }
+
+        /// <summary>
         /// Sends an invocation message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
@@ -388,10 +467,10 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken = default)
         {
-            return SendAsyncInternal(invocation, cancellationToken);
+            return SendAsyncInternal(invocation, null, cancellationToken);
         }
 
-        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, ClientMessageConnection connection, CancellationToken cancellationToken)
         {
             if (invocation == null) throw new ArgumentNullException(nameof(invocation));
 
@@ -408,7 +487,13 @@ namespace Hazelcast.Clustering
                 _invocations[invocation.CorrelationId] = invocation;
             }
 
+            var messageConnection = connection ?? 
+                                    (_networkingOptions.Tpc.Enabled && _tpcConnections != null && invocation.TargetPartitionId >= 0
+                                        ? _tpcConnections[invocation.TargetPartitionId % _tpcConnections.Count]
+                                        : _messageConnection);
+
             HConsole.WriteLine(this, $"Send message {Id.ToShortString()}:{invocation.CorrelationId} to {MemberId.ToShortString()} at {Address}" +
+                                     $"{(messageConnection == _messageConnection ? "" : $" TPC:{messageConnection.SocketConnection.RemoteEndPoint.Port}")}" +
                                      HConsole.Lines(this, 1, invocation.RequestMessage.Dump(HConsole.Level(this))));
 
             // actually send the message
@@ -416,7 +501,7 @@ namespace Hazelcast.Clustering
             Exception captured = null;
             try
             {
-                success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
+                success = await messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
             }
             catch (Exception e)
             {
@@ -482,7 +567,16 @@ namespace Hazelcast.Clustering
             try
             {
                 // if we were connected, we need to trigger the closed event
-                if (active) await _closed.AwaitEach(this).CfAwait(); // may throw, never knows
+                if (active)
+                {
+                    Func<MemberConnection, ValueTask> f;
+                    lock (_closedMutex)
+                    {
+                        f = _closed; // copy won't be modified
+                        _closedExecuted = true;
+                    }
+                    await f.AwaitEach(this).CfAwait(); // may throw
+                }
             }
             catch (Exception e)
             {
@@ -501,6 +595,9 @@ namespace Hazelcast.Clustering
                 invocation.TrySetException(new TargetDisconnectedException().SetCurrentStackTrace()); // does not throw
             }
 
+            // then kill TPC connections
+            await DisposeTpc().CfAwait();
+
             // ConnectAsync would deal with the situation
             if (!active) return;
 
@@ -512,6 +609,16 @@ namespace Hazelcast.Clustering
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - DisposeAsync too!
             GC.SuppressFinalize(this);
 #pragma warning restore CA1816
+        }
+
+        private async Task DisposeTpc()
+        {
+            if (_tpcConnections == null) return;
+
+            _connectingTpcCancellation.Cancel();
+            await _connectingTpc.CfAwaitNoThrow();
+            await DisposeTpcConnections(_tpcConnections).CfAwait();
+            _connectingTpcCancellation.Dispose();
         }
 
         private async Task DisposeInnerConnectionAsync()

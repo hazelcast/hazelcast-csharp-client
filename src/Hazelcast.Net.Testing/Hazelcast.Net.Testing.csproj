@@ -53,6 +53,14 @@
       <!--<Link>%(RecursiveDir)%(FileName)%(Extension)</Link>-->
       <Link>Protocol\Codecs\%(FileName)%(Extension)</Link>
     </Compile>
+    <Compile Include="..\Hazelcast.Net\Protocol\CustomCodecs\**\*.cs">
+      <!--<Link>%(RecursiveDir)%(FileName)%(Extension)</Link>-->
+      <Link>Protocol\CustomCodecs\%(FileName)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\Hazelcast.Net\Protocol\TempCodecs\**\*.cs">
+      <!--<Link>%(RecursiveDir)%(FileName)%(Extension)</Link>-->
+      <Link>Protocol\TempCodecs\%(FileName)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
 </Project>

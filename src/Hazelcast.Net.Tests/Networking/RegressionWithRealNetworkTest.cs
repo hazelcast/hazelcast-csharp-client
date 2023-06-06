@@ -28,19 +28,13 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
 {
+    [TestFixture]
+    [Timeout(60_000)]
     public class RegressionWithRealNetworkTest : RemoteTestBase
     {
         private IRemoteControllerClient _rcClient;
-        private readonly ConcurrentDictionary<Guid, Member> _members = new ConcurrentDictionary<Guid, Member>();
+        private readonly ConcurrentDictionary<Guid, Member> _members = new();
         private Cluster _cluster;
-
-        private IDisposable HConsoleForTest()
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel()
-                .Configure().SetMinLevel().EnableTimeStamp(origin: DateTime.Now)
-                .Configure(this).SetMaxLevel().SetPrefix("TEST")
-            );
 
         protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
         {
@@ -60,7 +54,6 @@ namespace Hazelcast.Tests.Networking
             if (_rcClient != null)
                 await _rcClient.ExitAsync().CfAwait();
         }
-
 
         [TearDown]
         public async Task TearDown()
@@ -116,7 +109,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, ReconnectMode.ReconnectSync)]
         public async Task TestClientConnectionBeforeServerReady(bool smartRouting, ReconnectMode reconnectMode)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             await StartCluster(Hazelcast.Testing.Remote.Resources.hazelcast);
 
@@ -147,7 +140,6 @@ namespace Hazelcast.Tests.Networking
         // this test validates that a client can lose its connection to a cluster, and then reconnects,
         // and ends up with one only connection (no leak of the previous connection).
         [Test]
-        [Timeout(20_000)]
         [TestCase(true, "localhost", "127.0.0.1")]
         [TestCase(true, "127.0.0.1", "localhost")]
         [TestCase(true, "localhost", "localhost")]
@@ -158,7 +150,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, "127.0.0.1", "127.0.0.1")]
         public async Task TestConnectionCountAfterClientReconnect(bool smartRouting, string memberAddress, string clientAddress)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             await StartCluster(GetMemberConfigWithAddress(memberAddress));
             var member = await AddMember();
@@ -199,7 +191,6 @@ namespace Hazelcast.Tests.Networking
         // this test validates that event handlers (listeners) that were installed, are correctly
         // installed on a new cluster after the client has disconnected and reconnected.
         [Test]
-        [Timeout(40_000)]
         [TestCase(true, "localhost", "127.0.0.1")]
         [TestCase(true, "127.0.0.1", "localhost")]
         [TestCase(true, "localhost", "localhost")]
@@ -208,7 +199,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, "localhost", "localhost")]
         public async Task TestListenersAfterClientDisconnected(bool smartRouting, string memberAddress, string clientAddress)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             var countOfEvent = 0;
             await StartCluster(GetMemberConfigWithAddress(memberAddress));
@@ -254,7 +245,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, ReconnectMode.ReconnectSync)]
         public async Task TestOperationsContinueWhenClientDisconnected(bool smartRouting, ReconnectMode reconnectMode)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
             await StartCluster(Hazelcast.Testing.Remote.Resources.hazelcast);
             var member1 = await AddMember();
 

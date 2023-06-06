@@ -47,22 +47,21 @@ namespace Hazelcast.Core
         #region Configure
 
         /// <summary>
-        /// Specifies a filename where to write the console text.
+        /// Configures the console writer.
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public HConsoleOptions WithFilename(string filename)
-        {
+        /// <param name="writer">The console writer, or <c>null</c> to not write anything out.</param>
+        /// <returns>The default options to configure.</returns>
+        public HConsoleOptions WithHConsoleWriter(IHConsoleWriter writer = null) {
 #if HZ_CONSOLE
-            Filename = filename;
+            Writer = writer ?? new HConsoleNoopWriter();
 #endif
             return this;
         }
-
+        
         /// <summary>
-        /// Configures default options.
-        /// </summary>
-        /// <returns>The default options to configure.</returns>
+         /// Configures default options.
+         /// </summary>
+         /// <returns>The default options to configure.</returns>
         public HConsoleTargetOptions Configure()
 #if HZ_CONSOLE
             => Configure<object>();
@@ -212,7 +211,7 @@ namespace Hazelcast.Core
             else
                 config = new HConsoleTargetOptions(this);
 
-            var type = source?.GetType();
+            var type = source as Type ?? source?.GetType();
             while (type != null && !config.IsComplete)
             {
                 if (_typeConfigs.TryGetValue(type, out var typeConfig)) config = config.Merge(typeConfig);
@@ -227,9 +226,15 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Gets a filename where to write the console text.
+        /// Gets the console writer.
         /// </summary>
-        public string Filename { get; private set; }
+        public IHConsoleWriter Writer { get; private set; } = new HConsoleNoopWriter();
+
+        private class HConsoleNoopWriter : IHConsoleWriter
+        {
+            public void AppendLine(string text)
+            { }
+        }
 #endif
     }
 }

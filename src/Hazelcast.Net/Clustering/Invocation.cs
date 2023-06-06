@@ -117,7 +117,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the unique identifier of the target partition, if any, otherwise <c>-1</c>.
         /// </summary>
-        public int TargetPartitionId { get; }
+        public int TargetPartitionId { get; } = -1;
 
         /// <summary>
         /// Gets the unique identifier of the target member, if any, otherwise <c>default(Guid)</c>.

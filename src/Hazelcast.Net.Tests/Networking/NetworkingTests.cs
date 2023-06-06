@@ -32,6 +32,7 @@ using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
+using Hazelcast.Testing.Networking;
 using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Networking.NetworkingTests_;
@@ -159,29 +160,13 @@ namespace Hazelcast.Tests.Networking
             return ErrorsServerCodec.EncodeResponse(errorHolders);
         }
 
-        private IDisposable HConsoleForTest(Action<HConsoleOptions> configure = null)
-        {
-            void Configure(HConsoleOptions options)
-            {
-                options
-                    .ClearAll()
-                    .Configure().SetMinLevel()
-                    .Configure<HConsoleLoggerProvider>().SetMaxLevel();
-
-                configure?.Invoke(options);
-            }
-
-            return HConsole.Capture(Configure);
-        }
-
-
         [Test]
         [Timeout(30_000)]
         public async Task CanCancel()
         {
-            var address = NetworkAddress.Parse("127.0.0.1:11001");
+            var address = NetworkAddress.Parse("127.0.0.1:" + TestEndPointPort.GetNext());
 
-            using var console = HConsoleForTest(x => x.Configure(this).SetIndent(0).SetMaxLevel().SetPrefix("TEST"));
+            HConsole.Configure(options => options.ConfigureDefaults(this));
             HConsole.WriteLine(this, "Begin");
 
             // gate the ping response
@@ -221,12 +206,12 @@ namespace Hazelcast.Tests.Networking
             var options = new HazelcastOptionsBuilder()
                 .With(options =>
                     {
-                        options.Networking.Addresses.Add("127.0.0.1:11001");
+                        options.Networking.Addresses.Add(address.ToString());
                         options.Heartbeat.PeriodMilliseconds = -1; // infinite: we don't want heartbeat pings interfering with the test
                     })
                 .WithHConsoleLogger()
                 .Build();
-            var client = (HazelcastClient)await HazelcastClientFactory.StartNewClientAsync(options);
+            await using var client = (await HazelcastClientFactory.StartNewClientAsync(options)).MustBe<HazelcastClient>();
 
             // send ping request - which should be canceled before completing
             HConsole.WriteLine(this, "Send ping request");
@@ -250,8 +235,6 @@ namespace Hazelcast.Tests.Networking
 
             // tear down client and server
             HConsole.WriteLine(this, "Teardown");
-            await client.DisposeAsync().CfAwait();
-            await server.DisposeAsync().CfAwait();
         }
 
         [Test]
@@ -259,7 +242,7 @@ namespace Hazelcast.Tests.Networking
         [KnownIssue(0, "Breaks on GitHub Actions")] // TODO we should deal with this
         public async Task CanRetryAndTimeout()
         {
-            var address = NetworkAddress.Parse("127.0.0.1:11001");
+            var address = NetworkAddress.Parse("127.0.0.1:" + TestEndPointPort.GetNext());
 
             HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
@@ -323,7 +306,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Start client");
             var options = new HazelcastOptionsBuilder().With(options =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add(address.ToString());
             }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
@@ -341,7 +324,7 @@ namespace Hazelcast.Tests.Networking
         [Timeout(20_000)]
         public async Task CanRetryAndSucceed()
         {
-            var address = NetworkAddress.Parse("127.0.0.1:11001");
+            var address = NetworkAddress.Parse("127.0.0.1:" + TestEndPointPort.GetNext());
 
             //using var console = HConsoleForTest(x => x
             //    .Configure(this).SetIndent(0).SetMaxLevel().SetPrefix("TEST")
@@ -375,7 +358,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Start client");
             var options = new HazelcastOptionsBuilder().With(options =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add(address.ToString());
             }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
@@ -394,14 +377,9 @@ namespace Hazelcast.Tests.Networking
         [Timeout(20_000)]
         public async Task TimeoutsAfterMultipleRetries()
         {
-            var address = NetworkAddress.Parse("127.0.0.1:11001");
+            var address = NetworkAddress.Parse("127.0.0.1:" + TestEndPointPort.GetNext());
 
-            using var _ = HConsole.Capture(consoleOptions => consoleOptions
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             HConsole.WriteLine(this, "Begin");
 
@@ -430,7 +408,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Start client");
             var options = new HazelcastOptionsBuilder().With(options =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add(address.ToString());
                 options.Messaging.RetryTimeoutSeconds = 3; // default value is 120s
             }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
@@ -458,7 +436,7 @@ namespace Hazelcast.Tests.Networking
             //var ipAddress = host.AddressList[0];
             //var endpoint = new IPEndPoint(ipAddress, _port);
 
-            var address = NetworkAddress.Parse("127.0.0.1:11001");
+            var address = NetworkAddress.Parse("127.0.0.1:" + TestEndPointPort.GetNext());
 
             HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
@@ -470,7 +448,7 @@ namespace Hazelcast.Tests.Networking
 
             var options = new HazelcastOptionsBuilder().With(options =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add(address.ToString());
             }).Build();
 
             HConsole.WriteLine(this, "Start client 1");

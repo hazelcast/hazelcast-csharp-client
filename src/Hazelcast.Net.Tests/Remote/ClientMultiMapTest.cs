@@ -92,21 +92,9 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(5, (await dictionary.GetEntriesAsync()).Count); // all key-value pairs
         }
 
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET").SetLevel(0)
-                .Configure<ClientMessageConnection>().SetMinLevel()
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<Partitioner>().SetLevel(1));
-
         [Test]
         public async Task TestListener()
         {
-            using var __ = HConsoleForTest();
-
             var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 

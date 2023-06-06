@@ -95,7 +95,6 @@ public class ServerlessRemoteTestBase : RemoteTestBase
                     configure.Networking.Ssl.CertificatePath = cluster.CertificatePath;
                 }
                 configure.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
-                configure.Networking.Reconnect = true;
             });
 
         if (optionAction != default)
