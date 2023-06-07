@@ -26,7 +26,7 @@ namespace Hazelcast.Testing
     public abstract class ClusterRemoteTestBase : RemoteTestBase
     {
         [OneTimeSetUp]
-        public async Task ClusterOneTimeSetUp()
+        public virtual async Task ClusterOneTimeSetUp()
         {
             // create remote client and cluster
             RcClient = await ConnectToRemoteControllerAsync().CfAwait();
@@ -34,7 +34,7 @@ namespace Hazelcast.Testing
         }
 
         [OneTimeTearDown]
-        public async Task ClusterOneTimeTearDown()
+        public virtual async Task ClusterOneTimeTearDown()
         {
             // terminate & remove client and cluster
             if (RcClient != null)
@@ -62,12 +62,12 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the remote controller client.
         /// </summary>
-        protected IRemoteControllerClient RcClient { get; private set; }
+        protected IRemoteControllerClient RcClient { get; set; }
 
         /// <summary>
         /// Gets the remote controller cluster.
         /// </summary>
-        protected Remote.Cluster RcCluster { get; private set; }
+        protected Remote.Cluster RcCluster { get; set; }
 
     }
 }

@@ -46,11 +46,44 @@
     <capacity>100000000</capacity>
   </ringbuffer>
 
+  <ringbuffer name="rtTestTopicBlocking">
+    <capacity>5</capacity>
+    <time-to-live-seconds>1</time-to-live-seconds>
+  </ringbuffer>
+
   <ringbuffer name="rtNotTolerant">
     <capacity>10</capacity>
   </ringbuffer>
   
-  <reliable-topic name="rtTestTopic*">
+  
+  <ringbuffer name="rtNoSpace*">
+    <capacity>10</capacity>
+    <time-to-live-seconds>9999</time-to-live-seconds>
+  </ringbuffer>
+  
+
+  <reliable-topic name="rtNoSpaceError">
+    <topic-overload-policy>ERROR</topic-overload-policy>
+  </reliable-topic>  
+
+  <reliable-topic name="rtNoSpaceDiscardOldest">
+    <topic-overload-policy>DISCARD_OLDEST</topic-overload-policy>
+  </reliable-topic>
+
+  <reliable-topic name="rtNoSpaceDiscardNewest">
+    <topic-overload-policy>DISCARD_NEWEST</topic-overload-policy>
+  </reliable-topic>
+
+  <reliable-topic name="rtNoSpaceBlock">
+    <topic-overload-policy>BLOCK</topic-overload-policy>
+  </reliable-topic>
+  
+  
+ <reliable-topic name="rtTestTopic*">
+    <topic-overload-policy>BLOCK</topic-overload-policy>
+  </reliable-topic>
+
+  <reliable-topic name="rtTestTopicBlocking">
     <topic-overload-policy>BLOCK</topic-overload-policy>
   </reliable-topic>
   

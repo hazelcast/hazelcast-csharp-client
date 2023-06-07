@@ -31,6 +31,7 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// <returns>The handlers.</returns>
     public ReliableTopicEventHandler<T> Message(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
     {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicMessageEventHandler<T>(handler));
         return this;
     }
@@ -42,6 +43,7 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// <returns>The handlers.</returns>
     public ReliableTopicEventHandler<T> Message(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
     {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicMessageEventHandler<T>(handler));
         return this;
     }
@@ -54,6 +56,7 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// <param name="handler">The handler.</param>
     public void Disposed(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
     {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicDisposedEventHandler<T>(handler));
     }
 
@@ -63,6 +66,7 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// <param name="handler">The handler.</param>
     public void Disposed(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
     {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicDisposedEventHandler<T>(handler));
     }
 }

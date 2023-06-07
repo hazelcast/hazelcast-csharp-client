@@ -149,10 +149,11 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     {
         var result = await _ringBuffer.AddAsync(rtMessage, OverflowPolicy.Fail).CfAwait();
 
-        _logger.IfDebug()?.LogError("Failed to publish a message [{Message}] on topic [{Name}]", rtMessage, Name);
-
         if (result == -1)
+        {
+            _logger.IfDebug()?.LogError("Failed to publish a message [{Message}] on topic [{Name}]", rtMessage, Name);
             throw new TopicOverloadException($"Failed to publish a message [{rtMessage}] on topic [{Name}].");
+        }
     }
 
     private async Task AddAsBlockingAsync(ReliableTopicMessage rtMessage, CancellationToken cancellationToken = default)
