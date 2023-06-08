@@ -144,7 +144,7 @@ namespace Hazelcast
 
             var task = _distributedOjects.GetOrCreateAsync<IHReliableTopic<T>, HReliableTopic<T>>(ServiceNames.ReliableTopic, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HReliableTopic<T>(ServiceNames.ReliableTopic, n, factory,  rtOptions,cluster,serializationService, ringBuffer, loggerFactory));
+                    => new HReliableTopic<T>(ServiceNames.ReliableTopic, n, factory,  rtOptions, cluster,serializationService, ringBuffer, loggerFactory));
 
             return await task.CfAwait();
         }

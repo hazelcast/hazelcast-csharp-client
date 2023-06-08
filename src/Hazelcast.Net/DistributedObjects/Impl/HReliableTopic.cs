@@ -189,11 +189,12 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         }
     }
 
-    public new async ValueTask DestroyAsync()
+    public async ValueTask DestroyAsync()
     {
         // Can't destroy if disposed.
         if (_disposed > 0) return;
         await DisposeAsync().CfAwait();
+        await base.DestroyAsync();
         await _ringBuffer.DestroyAsync().CfAwait();
     }
 }

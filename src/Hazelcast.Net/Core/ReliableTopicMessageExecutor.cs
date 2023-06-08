@@ -192,10 +192,10 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
     private async Task<bool> ShouldDisposeAsync(Exception ex)
     {
-        if (ex.GetType() == typeof(ClientOfflineException))
+        if (ex.GetType() == typeof(ClientOfflineException) || ex.GetType() == typeof(ConnectionException))
         {
-            _logger.IfWarning().LogWarning(ex, "Reliable topic message execution is terminating since client is offline. ");
-            return true;
+            _logger.IfWarning().LogWarning(ex, "Reliable topic message execution with subscription {[Id]} is waiting client to be connected. ", _id);
+            return false;
         }
         else if (ex.GetType() == typeof(ArgumentOutOfRangeException) && _options.IsLossTolerant)
         {
@@ -266,7 +266,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
             // Handle Disposed event.
             if (disposedHandler != null)
             {
-                await disposedHandler.HandleAsync(default, default, 0, default, -1, _stateObject).CfAwaitNoThrow();
+                await disposedHandler.HandleAsync(default, default, 0, default, _sequence, _stateObject).CfAwaitNoThrow();
             }
         }
     }

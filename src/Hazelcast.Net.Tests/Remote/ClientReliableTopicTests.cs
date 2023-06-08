@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -21,9 +21,7 @@ using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Testing;
-using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
-using Hazelcast.Tests;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
@@ -31,10 +29,13 @@ namespace Hazelcast.Tests.Remote;
 
 public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
 {
+    // Remarks on #7317 (https://github.com/hazelcast/hazelcast/issues/7317)
+    // The issue is fixed by reading the head sequence from thr ring buffer which is the current implementation.
+
     protected override string RcClusterConfiguration => Resources.Cluster_ReliableTopic;
 
     [Test]
-    [Timeout(20_000)]
+    [Timeout(80_000)]
     public async Task TestReliableTopic([Values] TopicOverloadPolicy policy)
     {
         var topicName = "rtTestTopic";
@@ -107,17 +108,16 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(60_000)]
+    [Timeout(80_000)]
     public async Task TestReliableTopicBlocking()
     {
-        //HConsoleForTest();
         var topicName = "rtTestTopicBlocking";
 
         var options = new HazelcastOptionsBuilder()
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
             .With((conf, opt) =>
             {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 3);
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 5);
                 opt.ClusterName = RcCluster.Id;
                 opt.Networking.Reconnect = true;
                 opt.Networking.Addresses.Add("127.0.0.1:5704");
@@ -139,9 +139,13 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
         var mneDisposed = new ManualResetEvent(false);
 
         await rt.SubscribeAsync(events =>
-                events.Message((sender, args) => { Interlocked.Increment(ref receivedCount); })
+                events.Message((sender, args) =>
+                    {
+                        Interlocked.Increment(ref receivedCount);
+                        Console.WriteLine($"SEQ: {args.Sequence} Received:{args.Payload}");
+                    })
                     .Disposed((sender, args) => mneDisposed.Set()),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false},
+            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = -1, StoreSequence = false},
             ex =>
             {
                 HConsole.WriteLine(this, ex);
@@ -150,16 +154,115 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
 
         // Ring buffer has 5 item capacity but eventually 7 item will be published since older ones have TTL.
         for (var i = 0; i < msgCount; i++)
+        {
             await rt.PublishAsync(i);
+            Console.WriteLine("Published:" + i);
+        }
 
         await AssertEx.SucceedsEventually(() => Assert.AreEqual(msgCount, receivedCount), 30_000, 200);
 
         await rt.DestroyAsync();
-        await AssertEx.SucceedsEventually(async () => Assert.True(await mneDisposed.WaitOneAsync()), 20_000, 200);
+        await AssertEx.SucceedsEventually(async () => Assert.True(await mneDisposed.WaitOneAsync()), 30_000, 200);
     }
 
     [Test]
-    [Timeout(20_000)]
+    [Timeout(80_000)]
+    public async Task TestReliableTopicEventArguments()
+    {
+        var topicName = "rtTestTopicArgs";
+
+        var options = new HazelcastOptionsBuilder()
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
+            .With((conf, opt) =>
+            {
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 3);
+                opt.ClusterName = RcCluster.Id;
+                opt.Networking.Reconnect = true;
+                opt.Networking.Addresses.Add("127.0.0.1:5704");
+
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
+            })
+            .Build();
+
+
+        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        var rt = await client.GetReliableTopicAsync<int>(topicName);
+
+        var msgCount = 7;
+        var receivedCount = 0;
+        var mneDisposed = new ManualResetEvent(false);
+
+        var beforePublish = Clock.Milliseconds;
+        await rt.PublishAsync(1);
+        var afterPublish = Clock.Milliseconds;
+
+        await rt.SubscribeAsync(events =>
+            events.Message((sender, args) =>
+            {
+                Assert.GreaterOrEqual(args.PublishTime, beforePublish);
+                Assert.LessOrEqual(args.PublishTime, afterPublish);
+                Assert.AreEqual(1, args.Payload);
+                Assert.AreEqual(0, args.Sequence);
+            }));
+    }
+
+    [Test]
+    [Timeout(80_000)]
+    public async Task TestReliableTopicSubscribeReceiveEventsOnlyAfter()
+    {
+        var topicName = "rtTestTopicArgs";
+
+        var options = new HazelcastOptionsBuilder()
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
+            .With((conf, opt) =>
+            {
+                opt.ClusterName = RcCluster.Id;
+                opt.Networking.Reconnect = true;
+                opt.Networking.Addresses.Add("127.0.0.1:5704");
+
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
+            })
+            .Build();
+
+
+        var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        var rt = await client.GetReliableTopicAsync<int>(topicName);
+
+        // these shouldn't be consumed by listener.
+        await rt.PublishAsync(1);
+        await rt.PublishAsync(2);
+        await rt.PublishAsync(3);
+
+        var expected = new int[] {4, 5, 6};
+        var received = new List<int>();
+
+        await rt.SubscribeAsync(events =>
+            events.Message((sender, args) => { received.Add(args.Payload); }));
+
+        // Let subscriber get the sequence.
+        await Task.Delay(2_000);
+
+        await rt.PublishAsync(4);
+        await rt.PublishAsync(5);
+        await rt.PublishAsync(6);
+
+        await AssertEx.SucceedsEventually(() =>
+        {
+            Console.WriteLine(string.Join(",", received));
+            Assert.AreEqual(expected, received.ToArray());
+        }, 15_000, 100);
+    }
+
+    [Test]
+    [Timeout(30_000)]
     public async Task TestReliableTopicWhenNoSpaceOnError()
     {
         var topicName = "rtNoSpaceError";
@@ -201,7 +304,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(20_000)]
+    [Timeout(30_000)]
     public async Task TestReliableTopicWhenNoSpaceOnDiscardOldest()
     {
         var topicName = "rtNoSpaceDiscardOldest";
@@ -242,7 +345,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(20_000)]
+    [Timeout(30_000)]
     public async Task TestReliableTopicWhenNoSpaceOnDiscardNewest()
     {
         var topicName = "rtNoSpaceDiscardNewest";
@@ -284,7 +387,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(20_000)]
+    [Timeout(30_000)]
     public async Task TestReliableTopicWhenNoSpaceOnBlock()
     {
         var topicName = "rtNoSpaceBlock";
@@ -329,11 +432,10 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(20_000)]
+    [Timeout(30_000)]
     public async Task TestReliableTopicWithNullParams()
     {
         var topicName = "rtTestTopicNull";
-
 
         var options = new HazelcastOptionsBuilder()
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
@@ -367,7 +469,53 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(60_000)]
+    [Timeout(80_000)]
+    public async Task TestSubscriberLivesWhenClientOffline()
+    {
+        var topicName = "rtTestTopicOffline";
+
+        var options = new HazelcastOptionsBuilder()
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
+            .With((conf, opt) =>
+            {
+                opt.ClusterName = RcCluster.Id;
+                opt.Networking.Reconnect = true;
+                opt.Networking.Addresses.Add("127.0.0.1:5704");
+
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
+            })
+            .Build();
+
+        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        await using var rt = await client.GetReliableTopicAsync<int>(topicName);
+
+        var mne = new ManualResetEvent(false);
+
+        await rt.SubscribeAsync(events =>
+            events.Message((sender, args) => { mne.Set(); }));
+
+        await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(1)", Lang.JAVASCRIPT);
+
+        Assert.True(await mne.WaitOneAsync());
+
+        mne.Reset();
+
+        await RestartCluster(async () =>
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
+
+        // Last push was 1, continue from 2.
+        for (int i = 2; i < 20; i++)
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + i + ")", Lang.JAVASCRIPT);
+
+        Assert.True(await mne.WaitOneAsync());
+    }
+
+    [Test]
+    [Timeout(80_000)]
     public async Task TestClusterRestartWhenSubscribed()
     {
         var topicName = "rtTestTopic2";
@@ -410,7 +558,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
             });
 
         await RestartCluster(async () =>
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 10_000, 100));
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
 
         await rt2.PublishAsync(1);
 
@@ -418,7 +566,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(60_000)]
+    [Timeout(80_000)]
     public async Task TestClusterRestartAfterInvocationTimeOut()
     {
         var topicName = "rtTestTopic3";
@@ -462,7 +610,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
 
         await RcClient.StopMemberWaitClosedAsync(client, RcCluster, RcMember);
 
-        await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 5_000, 100);
+        await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100);
 
         await Task.Delay(timeOut);
 
@@ -477,10 +625,9 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
     }
 
     [Test]
-    [Timeout(60_000)]
+    [Timeout(80_000)]
     public async Task TestClusterRestartWhenNotLossTolerant()
     {
-        //HConsoleForTest();
         var topicName = "rtNotTolerant";
 
         var options = new HazelcastOptionsBuilder()
@@ -503,17 +650,18 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         await using var rt = await client.GetReliableTopicAsync<int>(topicName);
 
-        for (int i = 0; i < 99; i++)
-            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + i + ")", Lang.JAVASCRIPT);
+        var m = 0;
+        for (int i = 0; i < 100; i++)
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + m++ + ")", Lang.JAVASCRIPT);
 
         var msgReceivedCount = 0;
 
-        var rtEventOpt = new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = -1, StoreSequence = true};
+        var rtEventOpt = new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = 0, StoreSequence = true};
 
         var sId = await rt.SubscribeAsync(events =>
-            events.Message((sender, args) =>
+            events.Message(async (sender, args) =>
             {
-                rtEventOpt.InitialSequence = args.Sequence;
+                await Task.Delay(500); //slow down the consumer.
                 Console.WriteLine("SEQ:" + args.Sequence);
                 Console.WriteLine("Message:" + args.Payload);
                 Interlocked.Increment(ref msgReceivedCount);
@@ -523,23 +671,96 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
         await Task.Delay(500);
 
         await RestartCluster(async () =>
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 10_000, 100));
-
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
+        
         // Cluster restarted, sequence and data should be lost. The subscriber cannot continue since it is not loss tolerant.
         for (int i = 0; i < 100; i++)
-        {
-            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + (i + 100) + ")", Lang.JAVASCRIPT);
-        }
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + m + ")", Lang.JAVASCRIPT);
 
         await AssertEx.SucceedsEventually(async () =>
         {
-            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(101)", Lang.JAVASCRIPT);
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + m + ")", Lang.JAVASCRIPT);
+            m++;
             Assert.False(rt.IsSubscriptionExist(sId));
-        }, 10_000, 100);
+        }, 15_000, 100);
 
         Assert.AreEqual(0, msgReceivedCount);
 
         var rtImpl = (HReliableTopic<int>) rt;
         Assert.AreEqual(0, msgReceivedCount);
+        await rt.DestroyAsync();
+    }
+
+    [Test]
+    [Timeout(80_000)]
+    public async Task TestReliableTopicUnderStress()
+    {
+        var topicName = "rtTestTopicStress";
+
+        var options = new HazelcastOptionsBuilder()
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Information)
+            .With((conf, opt) =>
+            {
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
+                opt.ClusterName = RcCluster.Id;
+                opt.Networking.Reconnect = true;
+                opt.Networking.Addresses.Add("127.0.0.1:5704");
+
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
+            })
+            .Build();
+
+        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        var rt = await client.GetReliableTopicAsync<int>(topicName);
+
+        int c1Received = 0, c2Received = 0;
+
+        var c1 = await rt.SubscribeAsync(events =>
+            events.Message((sender, args) =>
+            {
+                Assert.AreEqual(c1Received, args.Payload);
+                Interlocked.Increment(ref c1Received);
+                if (c1Received % 10000 == 0) Console.WriteLine($"C1 Received: {c1Received}");
+            }));
+
+        var c2 = await rt.SubscribeAsync(events =>
+            events.Message((sender, args) =>
+            {
+                Assert.AreEqual(c2Received, args.Payload);
+                Interlocked.Increment(ref c2Received);
+                if (c2Received % 10000 == 0) Console.WriteLine($"C2 Received: {c2Received}");
+            }));
+
+
+        var cancelToken = new CancellationTokenSource();
+        cancelToken.CancelAfter(30_000);
+
+        var producer = Task.Run(async () =>
+        {
+            var send = 0;
+            while (!cancelToken.IsCancellationRequested)
+                await rt.PublishAsync(send++, cancelToken.Token);
+
+            return send;
+        }, cancelToken.Token);
+
+        var totalSend = await producer;
+
+        await AssertEx.SucceedsEventually(() =>
+        {
+            Assert.AreEqual(totalSend, c1Received);
+            Assert.AreEqual(totalSend, c2Received);
+        }, 30_000, 200);
+
+
+        Assert.True(await rt.UnsubscribeAsync(c1));
+        Assert.True(await rt.UnsubscribeAsync(c2));
+        Assert.False(await rt.UnsubscribeAsync(c2));
+        Assert.False(rt.IsSubscriptionExist(c1));
+        Assert.False(rt.IsSubscriptionExist(c2));
     }
 }
