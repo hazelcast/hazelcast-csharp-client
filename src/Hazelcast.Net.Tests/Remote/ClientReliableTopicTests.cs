@@ -30,7 +30,7 @@ namespace Hazelcast.Tests.Remote;
 public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
 {
     // Remarks on #7317 (https://github.com/hazelcast/hazelcast/issues/7317)
-    // The issue is fixed by reading the head sequence from thr ring buffer which is the current implementation.
+    // The issue is fixed by reading the head sequence from the ring buffer which is the current implementation.
 
     protected override string RcClusterConfiguration => Resources.Cluster_ReliableTopic;
 
@@ -593,13 +593,13 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         await using var rt = await client.GetReliableTopicAsync<int>(topicName);
 
-        var mne = new ManualResetEvent(false);
+        var receivedCount = 0;
 
         var sId = await rt.SubscribeAsync(events =>
                 events.Message((sender, args) =>
                 {
                     Console.WriteLine("Message:" + args.Payload);
-                    mne.Set();
+                    Interlocked.Increment(ref receivedCount);
                 }),
             new ReliableTopicEventHandlerOptions() {IsLossTolerant = true},
             ex =>
@@ -608,17 +608,15 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
                 return false;
             });
 
-        await RcClient.StopMemberWaitClosedAsync(client, RcCluster, RcMember);
+        await RestartCluster(async () =>
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
 
-        await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100);
+        await AssertEx.SucceedsEventually(async () =>
+        {
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(99)", Lang.JAVASCRIPT);
+            Assert.Greater(receivedCount, 1);
+        }, 10_000, 100);
 
-        await Task.Delay(timeOut);
-
-        await MemberSetUp();
-
-        await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(99)", Lang.JAVASCRIPT);
-
-        Assert.True(await mne.WaitOneAsync());
         var rtImpl = (HReliableTopic<int>) rt;
         Assert.True(rtImpl.TryGetExecutor(sId, out var exc));
         Assert.False(exc.IsDisposed);
@@ -672,7 +670,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
 
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
-        
+
         // Cluster restarted, sequence and data should be lost. The subscriber cannot continue since it is not loss tolerant.
         for (int i = 0; i < 100; i++)
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + m + ")", Lang.JAVASCRIPT);

@@ -32,7 +32,7 @@ public abstract class SingleClusterNameKeptRemoteBase : ClusterRemoteTestBase
         RcCluster = await RcClient.CreateClusterKeepClusterNameAsync(ServerVersion.DefaultVersion.Version.ToString(), RcClusterConfiguration).CfAwait();
     }
 
-    [SetUp]
+    [OneTimeSetUp]
     public async Task MemberSetUp()
     {
         RcMember = await RcClient.StartMemberAsync(RcCluster);
@@ -49,7 +49,7 @@ public abstract class SingleClusterNameKeptRemoteBase : ClusterRemoteTestBase
         await MemberSetUp();
     }
 
-    [TearDown]
+    [OneTimeTearDown]
     public async Task MemberTearDown()
     {
         // terminate & remove member
