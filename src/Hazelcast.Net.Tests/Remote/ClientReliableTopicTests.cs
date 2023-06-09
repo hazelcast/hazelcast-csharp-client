@@ -152,6 +152,9 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
                 return true;
             });
 
+        // Let listener be ready.
+        await Task.Delay(1_000);
+        
         // Ring buffer has 5 item capacity but eventually 7 item will be published since older ones have TTL.
         for (var i = 0; i < msgCount; i++)
         {
