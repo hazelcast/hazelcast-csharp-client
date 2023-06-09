@@ -32,7 +32,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     internal ConcurrentDictionary<TKey, TimeBasedEntry<TValue>> Cache { get; } = new();
 
     // internal only for tests
-    private readonly SemaphoreSlim _evicting = new(1, 1);
+    private int _evicting;
     private readonly int _capacity;
     private readonly int _threshold;
     private int _disposed;
@@ -117,9 +117,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     private void DoEviction()
     {
         // Don't block if a thread already doing eviction.
-        if (_evicting.CurrentCount == 0) return;
-
-        _evicting.Wait();
+        if (!_evicting.InterlockedZeroToOne()) return;
 
         try
         {
@@ -150,7 +148,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         }
         finally
         {
-            _evicting.Release();
+            Interlocked.Decrement(ref _evicting);
         }
     }
 
@@ -159,7 +157,6 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         if (_disposed.InterlockedZeroToOne())
         {
             Cache.Clear();
-            _evicting.Dispose();    
         }
     }
 }
