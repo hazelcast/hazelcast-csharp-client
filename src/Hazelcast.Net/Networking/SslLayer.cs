@@ -78,7 +78,7 @@ namespace Hazelcast.Networking
 
                 // assume there's only going to be 1 cert with a private key, and pick it
                 // should we work with more than 1 PK certs, we'd need a more complex logic
-                selectCertificate = (sender, host, certificates, certificate, issuers) 
+                selectCertificate = (_, _, certificates, _, _) 
                     => certificates.Cast<X509Certificate2>().FirstOrDefault(x => x.HasPrivateKey);
 
                 // for the whole cert chain to be sent as part of the handshake we need to copy the
@@ -90,7 +90,13 @@ namespace Hazelcast.Networking
                     foreach (var cert in clientCertificates)
                     {
                         _logger.IfDebug()?.LogDebug($"CertFix: {cert.Subject}   (issuer: {cert.Issuer})   {cert.Thumbprint}   [{(cert.HasPrivateKey ? "PK" : "ADD")}]");
-                        if (!cert.HasPrivateKey) store.Add(cert);
+                        if (!cert.HasPrivateKey)
+                        {
+                            _logger.LogInformation($"Adding certificate Subject='{cert.Subject}' Issuer='{cert.Issuer}' to the current user CA"
+                                + " store (at ~/.dotnet/corefx/cryptography/x509stores/ca). This is a mandatory workaround for .NET TLS/SSL to function"
+                                + " on the Linux operating system. Make sure that the store directory is correctly secured.");
+                            store.Add(cert);
+                        }
                     }
                 }
                 finally
