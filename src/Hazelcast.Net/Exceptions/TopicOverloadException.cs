@@ -18,7 +18,7 @@ using System.Runtime.Serialization;
 namespace Hazelcast.Exceptions;
 
 /// <summary>
-/// Represents the exception that is thrown when topic is overflowed.
+/// Represents the exception that is thrown when a topic overflows.
 /// </summary>
 [Serializable]
 public class TopicOverloadException : HazelcastException

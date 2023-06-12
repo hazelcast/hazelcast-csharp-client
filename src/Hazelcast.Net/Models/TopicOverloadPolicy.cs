@@ -16,7 +16,7 @@
 namespace Hazelcast.Models;
 
 /// <summary>
-/// Overload policy for a topic when there is no place to store new message.
+/// Defines the overload policy for a topic when there is no place to store a message.
 /// </summary>
 public enum TopicOverloadPolicy
 {

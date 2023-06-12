@@ -18,7 +18,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.Metrics;
-using Hazelcast.Models;
 using Hazelcast.Sql;
 
 namespace Hazelcast

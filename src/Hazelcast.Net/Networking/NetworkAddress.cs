@@ -19,7 +19,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Serialization;
 
 namespace Hazelcast.Networking
 {
@@ -143,7 +142,7 @@ namespace Hazelcast.Networking
         /// Gets the IP endpoint corresponding to this address.
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        public IPEndPoint IPEndPoint { get; private set; }
+        public IPEndPoint IPEndPoint { get; }
 
         /// <summary>
         /// Whether the address is an IP v4 address.

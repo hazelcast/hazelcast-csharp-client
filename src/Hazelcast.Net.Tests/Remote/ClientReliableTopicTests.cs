@@ -21,18 +21,31 @@ using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote;
 
-public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
+public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 {
     // Remarks on #7317 (https://github.com/hazelcast/hazelcast/issues/7317)
     // The issue is fixed by reading the head sequence from the ring buffer which is the current implementation.
 
     protected override string RcClusterConfiguration => Resources.Cluster_ReliableTopic;
+    protected override bool KeepClusterName => true;
+
+    private async Task RestartCluster(Func<ValueTask> runAfterShutdown = default, Cluster cluster = default)
+    {
+        cluster ??= RcCluster;
+
+        await MemberOneTimeTearDown();
+        await RcClient.ShutdownClusterAsync(cluster.Id);
+        if (runAfterShutdown != default) await runAfterShutdown();
+        RcCluster = await RcClient.CreateClusterKeepClusterNameAsync(ServerVersion.DefaultVersion.Version.ToString(), RcClusterConfiguration).CfAwait();
+        await MemberOneTimeSetUp();
+    }
 
     [Test]
     [Timeout(80_000)]
@@ -154,7 +167,7 @@ public class ClientReliableTopicTests : SingleClusterNameKeptRemoteBase
 
         // Let listener be ready.
         await Task.Delay(1_000);
-        
+
         // Ring buffer has 5 item capacity but eventually 7 item will be published since older ones have TTL.
         for (var i = 0; i < msgCount; i++)
         {

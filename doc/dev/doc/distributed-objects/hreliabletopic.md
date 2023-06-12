@@ -1,12 +1,12 @@
 # HReliableTopic
 
-A `HReliableTopic` topic is the durable version of [HTopic] backed with a [HRingBuffer].
+A `HReliableTopic` topic is the durable version of [HTopic](/htopic.md) backed with a [HRingBuffer](/hringbuffer.md).
 
-The reliable topic behavior can be configured on the server: see the general [List documentation](https://docs.hazelcast.com/imdg/latest/data-structures/reliable-topic) for complete details about reliable topics.
+The reliable topic behavior can be configured on the server: see the general [Documentation](https://docs.hazelcast.com/imdg/latest/data-structures/reliable-topic) for complete details about reliable topics.
 
 ## Defining Topics
 
-Topics are fully identified by their type and unique name, regardless of the types specified for topic messages. In other words, an `HReliableTopic<string>` and an `HReliableTopic<int>` named with the same name are backed by the *same* cluster structure which is a [RingBuffer]. Obviously, refering to a topic with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
+Topics are fully identified by their type and unique name, regardless of the types specified for topic messages. In other words, an `HReliableTopic<string>` and an `HReliableTopic<int>` named with the same name are backed by the *same* cluster structure which is a [RingBuffer](/hringbuffer.md). Obviously, refering to a topic with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
 
 The messages type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the [Serialization](../serialization.md) documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
 
@@ -37,7 +37,7 @@ The `HReliableTopic` structure is completely documented in the associated @Hazel
 
 * `PublishAsync(message)` publishes a message
 
-The `HReliableTopic` structure exposes events is similar to (see events [general documentation](../events.md)) at topic level. Although structure is similar, there are some additions. When a subscription is made to a `HReliableTopic`, a listener is spawn in a seperated thread. The listener keeps listen the messages from backed `HRingBuffer`, and trigers the `Message` event. Each subscription runs on a seperated thread at parallel. Please, avoid unncessary subscriptions.
+The `HReliableTopic` structure exposes events in a way similar to `HTopic`, but with some additions. When a subscription is made to a `HReliableTopic`, a listener is spawn in a seperated thread. The listener keeps listen the messages from backed `HRingBuffer`, and trigers the `Message` event. Each subscription runs on a seperated thread at parallel. Please, avoid unncessary subscriptions.
 
 One of the additions is `Disposed` event. It is triggered when the subscribtion is disposed by disposing the `HReliableTopic` or `await rTopic.UnsubscribeAsync(subscriptionId)` called or subscription is not loss tolerant or provided `shouldTerminate` function returns true.
 
@@ -67,5 +67,4 @@ var id = await topic.SubscribeAsync(events => events
 await rTopic.UnsubscribeAsync(id);
 ```
 
-Note that the handler methods passed to e.g. `Message` can be asynchronous, too.
-
+Note that, as with all events in the .NET client, the handler methods passed when subscribing can be asynchronous.

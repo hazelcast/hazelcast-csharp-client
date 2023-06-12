@@ -15,6 +15,7 @@
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
@@ -30,8 +31,11 @@ namespace Hazelcast.Testing
         {
             // create remote client and cluster
             RcClient = await ConnectToRemoteControllerAsync().CfAwait();
-            RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
+            RcCluster = KeepClusterName
+                ? await RcClient.CreateClusterKeepClusterNameAsync(ServerVersion.DefaultVersion.Version.ToString(), RcClusterConfiguration)
+                : await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
         }
+
 
         [OneTimeTearDown]
         public virtual async Task ClusterOneTimeTearDown()
@@ -68,6 +72,10 @@ namespace Hazelcast.Testing
         /// Gets the remote controller cluster.
         /// </summary>
         protected Remote.Cluster RcCluster { get; set; }
-
+        
+        /// <summary>
+        /// Whether creates the cluster with name provided in the config.
+        /// </summary>
+        protected virtual bool KeepClusterName { get; set; }
     }
 }

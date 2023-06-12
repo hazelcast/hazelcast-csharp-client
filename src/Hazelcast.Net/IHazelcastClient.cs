@@ -212,7 +212,7 @@ namespace Hazelcast
         Task<IHTopic<T>> GetTopicAsync<T>(string name);
         
         /// <summary>
-        /// Gets a reliable <see cref="IHTopic{T}"/> distributed object.
+        /// Gets a see <see cref="IHReliableTopic{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the reliable topic.</param>

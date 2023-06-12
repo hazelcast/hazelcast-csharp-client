@@ -134,11 +134,10 @@ namespace Hazelcast
         /// <inheritdoc />
         public async Task<IHReliableTopic<T>> GetReliableTopicAsync<T>(string name, ReliableTopicOptions option = default)
         {
-            // Prefix is to separate user and system data structures.
-            var ringBuffer = await GetRingBufferAsync<ReliableTopicMessage>("_hz_rb_" + name);
+            // Gets the ring buffer, using system data structures prefix.
+            var ringBuffer = await GetRingBufferAsync<ReliableTopicMessage>("_hz_rb_" + name).CfAwait();
 
             // Reliable topic can be configured with name.
-            // Todo: Think, provide an API that accepts options??
             if (!_options.ReliableTopics.TryGetValue(name, out var rtOptions))
                 rtOptions = new ReliableTopicOptions();
 

@@ -18,11 +18,23 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// The class provides information about publisher address of the topic message.
+/// </summary>
 public class PublisherAddress : IIdentifiedDataSerializable
 {
     private byte _addressType;
+    /// <summary>
+    /// IP and Port information belong to publisher.
+    /// </summary>
     public IPEndPoint IpEndPoint { get; internal set; }
+    /// <summary>
+    /// Whether the publisher address type IP v4 or not.
+    /// </summary>
     public bool IsIpV4 => _addressType == 4 ? true : false;
+    /// <summary>
+    /// Whether the publisher address type IP v6 or not.
+    /// </summary>
     public bool IsIpV6 => _addressType == 6 ? true : false;
 
     /// <inheritdoc />

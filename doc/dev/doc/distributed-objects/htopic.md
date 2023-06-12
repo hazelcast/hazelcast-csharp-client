@@ -2,7 +2,7 @@
 
 A `HTopic` topic is a distributed topic corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/topic.html).
 
-The topic behavior can be configured on the server: see the general [List documentation](https://docs.hazelcast.com/imdg/latest/data-structures/optic.html) for complete details about topics.
+The topic behavior can be configured on the server: see the general [Documentation](https://docs.hazelcast.com/imdg/latest/data-structures/topic.html) for complete details about topics.
 
 ## Defining Topics
 
@@ -43,5 +43,4 @@ var id = await topic.SubscribeAsync(events => events
 await topic.UnsubscribeAsync(id);
 ```
 
-Note that the handler methods passed to e.g. `Message` can be asynchronous, too.
-
+Note that, as with all events in the .NET client, the handler methods passed when subscribing can be asynchronous.

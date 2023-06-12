@@ -17,12 +17,12 @@ using Hazelcast.DistributedObjects;
 namespace Hazelcast.Models;
 
 /// <summary>
-/// Options for a Reliable Topic.
+/// Options for one <see cref="IHReliableTopic{TItem}"/>.
 /// </summary>
 public class ReliableTopicOptions
 {
     /// <summary>
-    /// Initialize new Reliable Topic Options.
+    /// Initialize a new instance of the <see cref="ReliableTopicOptions" /> class.
     /// </summary>
     public ReliableTopicOptions()
     { }
@@ -34,7 +34,7 @@ public class ReliableTopicOptions
     }
 
     /// <summary>
-    /// Initialize new Reliable Topic Options with arguments.
+    /// Initialize a new instance of the <see cref="ReliableTopicOptions" /> class.
     /// </summary>
     /// <param name="policy">Overload policy.</param>
     /// <param name="batchSize">Batch size of read.</param>
@@ -45,12 +45,12 @@ public class ReliableTopicOptions
     }
 
     /// <summary>
-    /// Gets or Sets overload policy of the ring buffer.
+    /// Gets or sets the overload policy of the ring buffer.
     /// </summary>
     public TopicOverloadPolicy Policy { get; set; } = TopicOverloadPolicy.Block;
 
     /// <summary>
-    /// Gets or sets batch size of read.
+    /// Gets or sets the batch size of reads.
     /// </summary>
     public int BatchSize { get; set; } = 10;
     

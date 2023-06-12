@@ -20,27 +20,24 @@ namespace Hazelcast.Models;
 public class ReliableTopicEventHandlerOptions
 {
     /// <summary>
-    /// Initial sequence to start processing to messages.
-    /// <remarks>-1 means start from next published message.</remarks>
-    /// <remarks>For a durable subscription, you continue where you left by using the
-    /// <see cref="ReliableTopicMessageEventArgs{T}.Sequence"/>.
-    /// If provide <see cref="ReliableTopicMessageEventArgs{T}.Sequence"/> without incrementing,
-    /// the same message will be received twice.</remarks>
-    /// </summary>
+    /// Gets or sets the initial sequence to start processing messages.</summary>
+    /// <remarks>-1 means start from next published message.
+    /// <para>For a durable subscription, you continue where you left by using the
+    /// <see cref="ReliableTopicMessageEventArgs{T}.Sequence"/>.</para>
+    /// <para>If <see cref="ReliableTopicMessageEventArgs{T}.Sequence"/> is provided without incrementing,
+    /// the same message will be received twice.</para></remarks>
     public long InitialSequence { get; set; } = -1;
 
     /// <summary>
-    /// Whether this <see cref="ReliableTopicMessageEventHandler{T}"/> is able to deal with message loss.
-    /// Even though the reliable topic promises to be reliable, it can be that a
+    /// Gets or sets this <see cref="ReliableTopicMessageEventHandler{T}"/> is able to deal with message loss.</summary>
+    /// <remarks> Even though the reliable topic promises to be reliable, it can be that a
     /// <see cref="ReliableTopicMessageEventHandler{T}"/> is too slow. Eventually the message won't be available anymore.
-    /// <remarks>
-    /// <see cref="StoreSequence"/> should be set <code>true</code> to dispose the subscriber in a data lost situation. 
+    /// <see cref="StoreSequence"/> should be set <code>true</code> to stop and dispose the subscriber in a data lost situation. 
     /// </remarks>
-    /// </summary>
     public bool IsLossTolerant { get; set; }
 
     /// <summary>
-    /// Stores the sequence of last received message. It provides durability to subscriber.
+    /// Gets or sets whether the subscription stores the sequence of last received message. It provides durability to subscriber.
     /// </summary>
     public bool StoreSequence { get; set; }
 }

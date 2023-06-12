@@ -19,7 +19,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Core;
 
-public class ReliableTopicDataSeriazlierHook:IDataSerializerHook
+public class ReliableTopicDataSeriazlierHook : IDataSerializerHook
 {
     public IDataSerializableFactory CreateFactory()
     {
