@@ -289,7 +289,6 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             })
             .Build();
 
-
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
 
@@ -300,9 +299,16 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         var expected = new int[] {4, 5, 6};
         var received = new List<int>();
-
+        var mneDone = new ManualResetEvent(false);
+        
         await rt.SubscribeAsync(events =>
-            events.Message((sender, args) => { received.Add(args.Payload); }));
+            events.Message((sender, args) =>
+            {
+                received.Add(args.Payload);
+                if (received.Count == 3)
+                    mneDone.Set();
+
+            }));
 
         // Let subscriber get the sequence.
         await Task.Delay(2_000);
@@ -311,11 +317,8 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await rt.PublishAsync(5);
         await rt.PublishAsync(6);
 
-        await AssertEx.SucceedsEventually(() =>
-        {
-            Console.WriteLine(string.Join(",", received));
-            Assert.AreEqual(expected, received.ToArray());
-        }, 15_000, 100);
+        await mneDone.WaitOneAsync();
+        Assert.AreEqual(expected, received.ToArray());
     }
 
     [Test]
