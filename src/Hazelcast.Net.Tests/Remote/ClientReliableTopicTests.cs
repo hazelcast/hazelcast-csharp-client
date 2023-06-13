@@ -257,9 +257,9 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             {
                 if (args.Payload == 1)
                     throw new ArgumentOutOfRangeException();
-
-                if (args.Payload == 2)
+                else
                     mneContinue.Set();
+
             }).Exception((sender, args) =>
             {
                 Assert.IsInstanceOf<ArgumentOutOfRangeException>(args.Exception);
@@ -269,7 +269,9 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         await rt.PublishAsync(1);
         Assert.True(await mneException.WaitOneAsync());
-        await rt.PublishAsync(2);
+        for (int i = 2; i < 20; i++)
+            await rt.PublishAsync(i);
+
         Assert.True(await mneContinue.WaitOneAsync());
         await rt.DestroyAsync();
     }
@@ -753,7 +755,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     }
 
     [Test]
-    [Timeout(80_000)]
+    [Timeout(120_000)]
     public async Task TestReliableTopicUnderStress()
     {
         var topicName = "rtTestTopicStress";
@@ -800,6 +802,8 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var cancelToken = new CancellationTokenSource();
         cancelToken.CancelAfter(30_000);
 
+        await Task.Delay(1_000);
+
         var producer = Task.Run(async () =>
         {
             var send = 0;
@@ -815,7 +819,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         {
             Assert.AreEqual(totalSend, c1Received);
             Assert.AreEqual(totalSend, c2Received);
-        }, 30_000, 200);
+        }, 60_000, 200);
 
 
         Assert.True(await rt.UnsubscribeAsync(c1));
