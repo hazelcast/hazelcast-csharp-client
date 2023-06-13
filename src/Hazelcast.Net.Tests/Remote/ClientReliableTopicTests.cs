@@ -194,26 +194,32 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             })
             .Build();
 
-
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
+  
+        var mne = new ManualResetEvent(false);
 
-        var msgCount = 7;
-        var receivedCount = 0;
-        var mneDisposed = new ManualResetEvent(false);
+        long publishTime = long.MaxValue;
+        await rt.SubscribeAsync(events =>
+            events.Message((sender, args) =>
+            {
+                publishTime = args.PublishTime;
+                Assert.AreEqual(1, args.Payload);
+                Assert.AreEqual(0, args.Sequence);
+                mne.Set();
+            }));
+
+        // Be sure subscription is started.
+        await Task.Delay(1_000);
 
         var beforePublish = Clock.Milliseconds;
         await rt.PublishAsync(1);
         var afterPublish = Clock.Milliseconds;
+        Assert.True(await mne.WaitOneAsync());
+        Assert.GreaterOrEqual(publishTime, beforePublish);
+        Assert.LessOrEqual(publishTime, afterPublish);
 
-        await rt.SubscribeAsync(events =>
-            events.Message((sender, args) =>
-            {
-                Assert.GreaterOrEqual(args.PublishTime, beforePublish);
-                Assert.LessOrEqual(args.PublishTime, afterPublish);
-                Assert.AreEqual(1, args.Payload);
-                Assert.AreEqual(0, args.Sequence);
-            }));
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -265,6 +271,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         Assert.True(await mneException.WaitOneAsync());
         await rt.PublishAsync(2);
         Assert.True(await mneContinue.WaitOneAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -319,6 +326,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         await mneDone.WaitOneAsync();
         Assert.AreEqual(expected, received.ToArray());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -361,6 +369,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         Assert.AreEqual(tail, await rb.GetTailSequenceAsync());
         Assert.AreEqual(head, await rb.GetHeadSequenceAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -402,6 +411,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         Assert.AreEqual(tail + 1, await rb.GetTailSequenceAsync());
         Assert.AreEqual(head + 1, await rb.GetHeadSequenceAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -444,6 +454,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         Assert.AreEqual(tail, await rb.GetTailSequenceAsync());
         Assert.AreEqual(head, await rb.GetHeadSequenceAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -489,6 +500,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         Assert.AreEqual(tail, await rb.GetTailSequenceAsync());
         Assert.AreEqual(head, await rb.GetHeadSequenceAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -526,6 +538,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             ));
 
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await rt.PublishAsync(null));
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -572,6 +585,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + i + ")", Lang.JAVASCRIPT);
 
         Assert.True(await mne.WaitOneAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -618,6 +632,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await rt2.PublishAsync(1);
 
         Assert.True(await mne.WaitOneAsync());
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -670,6 +685,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var rtImpl = (HReliableTopic<int>) rt;
         Assert.True(rtImpl.TryGetExecutor(sId, out var exc));
         Assert.False(exc.IsDisposed);
+        await rt.DestroyAsync();
     }
 
     [Test]
@@ -731,10 +747,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             m++;
             Assert.False(rt.IsSubscription(sId));
         }, 15_000, 100);
-
-        Assert.AreEqual(0, msgReceivedCount);
-
-        var rtImpl = (HReliableTopic<int>) rt;
+        
         Assert.AreEqual(0, msgReceivedCount);
         await rt.DestroyAsync();
     }
@@ -810,5 +823,6 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         Assert.False(await rt.UnsubscribeAsync(c2));
         Assert.False(rt.IsSubscription(c1));
         Assert.False(rt.IsSubscription(c2));
+        await rt.DestroyAsync();
     }
 }
