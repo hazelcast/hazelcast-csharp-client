@@ -226,7 +226,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
             .With((conf, opt) =>
             {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 3);
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
                 opt.ClusterName = RcCluster.Id;
                 opt.Networking.Reconnect = true;
                 opt.Networking.Addresses.Add("127.0.0.1:5704");
@@ -271,7 +271,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     [Timeout(80_000)]
     public async Task TestReliableTopicSubscribeReceiveEventsOnlyAfter()
     {
-        var topicName = "rtTestTopicArgs";
+        var topicName = "rtTestTopicReceiveAfter";
 
         var options = new HazelcastOptionsBuilder()
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)

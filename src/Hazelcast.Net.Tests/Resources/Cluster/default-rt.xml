@@ -43,7 +43,10 @@
   </serialization>
 
   <ringbuffer name="rtTestTopic*">
-    <capacity>200000</capacity>
+    <capacity>1000</capacity>
+  </ringbuffer>
+  <ringbuffer name="rtTestTopicStress">
+    <capacity>500000</capacity>
   </ringbuffer>
 
   <ringbuffer name="rtTestTopicBlocking">
