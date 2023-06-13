@@ -196,7 +196,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
-  
+
         var mne = new ManualResetEvent(false);
 
         long publishTime = long.MaxValue;
@@ -226,7 +226,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     [Timeout(80_000)]
     public async Task TestReliableTopicExceptionEvent()
     {
-        var topicName = "rtTestTopicArgs";
+        var topicName = "rtTestTopicException";
 
         var options = new HazelcastOptionsBuilder()
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
@@ -259,7 +259,6 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                     throw new ArgumentOutOfRangeException();
                 else
                     mneContinue.Set();
-
             }).Exception((sender, args) =>
             {
                 Assert.IsInstanceOf<ArgumentOutOfRangeException>(args.Exception);
@@ -267,7 +266,9 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                 mneException.Set();
             }));
 
-        await rt.PublishAsync(1);
+        for (int i = 0; i < 20; i++)
+            await rt.PublishAsync(1);
+
         Assert.True(await mneException.WaitOneAsync());
         for (int i = 2; i < 20; i++)
             await rt.PublishAsync(i);
@@ -309,14 +310,13 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var expected = new int[] {4, 5, 6};
         var received = new List<int>();
         var mneDone = new ManualResetEvent(false);
-        
+
         await rt.SubscribeAsync(events =>
             events.Message((sender, args) =>
             {
                 received.Add(args.Payload);
                 if (received.Count == 3)
                     mneDone.Set();
-
             }));
 
         // Let subscriber get the sequence.
@@ -749,7 +749,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             m++;
             Assert.False(rt.IsSubscription(sId));
         }, 15_000, 100);
-        
+
         Assert.AreEqual(0, msgReceivedCount);
         await rt.DestroyAsync();
     }
@@ -764,7 +764,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Information)
             .With((conf, opt) =>
             {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 100);
                 opt.ClusterName = RcCluster.Id;
                 opt.Networking.Reconnect = true;
                 opt.Networking.Addresses.Add("127.0.0.1:5704");
