@@ -32,7 +32,8 @@ public interface IReliableTopicEventHandler<T>
     /// <param name="publishTime">The publish time.</param>
     /// <param name="payload">The topic object carried by the message.</param>
     /// <param name="sequence">The sequence of the message in the ring buffer.</param>
+    /// <param name="exception">The exception thrown.</param>
     /// <param name="state">A state object.</param>
     /// <param name="e">Exception occured while processing the event.</param>
-    ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, object state);
+    ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, Exception exception, object state);
 }

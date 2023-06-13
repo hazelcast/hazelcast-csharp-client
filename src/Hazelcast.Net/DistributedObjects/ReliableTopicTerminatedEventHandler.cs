@@ -19,10 +19,10 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="TopicEventTypes.Disposed"/> event.
+    /// Represents a handler for the <see cref="TopicEventTypes.Terminated"/> event.
     /// </summary>
     /// <typeparam name="T">The reliable topic object type.</typeparam>
-    internal class ReliableTopicDisposedEventHandler<T> : IReliableTopicEventHandler<T>
+    internal class ReliableTopicTerminatedEventHandler<T> : IReliableTopicEventHandler<T>
     {
         private readonly Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> _handler;
 
@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects
         /// Initializes a new instance of the <see cref="ReliableTopicMessageEventArgs{T}"/> class.
         /// </summary>
         /// <param name="handler">An action to execute</param>
-        public ReliableTopicDisposedEventHandler(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+        public ReliableTopicTerminatedEventHandler(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
         {
             _handler = (sender, args) =>
             {
@@ -43,13 +43,13 @@ namespace Hazelcast.DistributedObjects
         /// Initializes a new instance of the <see cref="ReliableTopicMessageEventArgs{T}"/> class.
         /// </summary>
         /// <param name="handler">An action to execute</param>
-        public ReliableTopicDisposedEventHandler(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+        public ReliableTopicTerminatedEventHandler(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
         {
             _handler = handler;
         }
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, object state)
+        public ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, Exception exception, object state)
             => _handler(sender, CreateEventArgs(member, publishTime, payload, sequence, state));
 
         /// <summary>

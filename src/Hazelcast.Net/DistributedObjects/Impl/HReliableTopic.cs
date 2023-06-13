@@ -55,7 +55,6 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     /// <inheritdoc />
     public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events,
         ReliableTopicEventHandlerOptions handlerOptions = default,
-        Func<Exception, bool> shouldTerminate = default,
         object state = null)
     {
         if (events == null) throw new ArgumentNullException(nameof(events));
@@ -77,8 +76,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
                 _serializationService,
                 id,
                 _loggerFactory,
-                OnExecutorDisposed,
-                shouldTerminate
+                OnExecutorDisposed
             );
 
         _executors[id] = executor;
@@ -104,7 +102,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     }
 
     /// <inheritdoc />
-    public bool IsSubscriptionExist(Guid subscriptionId)
+    public bool IsSubscription(Guid subscriptionId)
     {
         return _executors.TryGetValue(subscriptionId, out var executor) && !executor.IsDisposed;
     }

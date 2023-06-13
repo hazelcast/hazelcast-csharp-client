@@ -48,25 +48,47 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
         return this;
     }
     
-    // Disposed event is single, no chaining.
-    
     /// <summary>
-    /// Sets the handler which runs when the subscription is disposed.
+    /// Sets the handler which runs after the subscription disposed or canceled.
     /// </summary>
     /// <param name="handler">The handler.</param>
-    public void Disposed(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+    public ReliableTopicEventHandler<T> Terminated(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
-        Add(new ReliableTopicDisposedEventHandler<T>(handler));
+        Add(new ReliableTopicTerminatedEventHandler<T>(handler));
+        return this;
     }
 
     /// <summary>
-    /// Sets the handler which runs when the subscription is disposed.
+    /// Sets the handler which runs after the subscription disposed or canceled.
     /// </summary>
     /// <param name="handler">The handler.</param>
-    public void Disposed(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+    public ReliableTopicEventHandler<T> Terminated(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
-        Add(new ReliableTopicDisposedEventHandler<T>(handler));
+        Add(new ReliableTopicTerminatedEventHandler<T>(handler));
+        return this;
+    }
+    
+    // Exception event is single, no chaining.
+    
+    /// <summary>
+    /// Sets the handler when runs on exception.
+    /// </summary>
+    /// <param name="handler">The handler.</param>
+    public void Exception(Action<IHReliableTopic<T>, ReliableTopicExceptionEventArgs> handler)
+    {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
+        Add(new ReliableTopicExceptionEventHandler<T>(handler));
+    }
+
+    /// <summary>
+    /// Sets the handler when runs on exception.
+    /// </summary>
+    /// <param name="handler">The handler.</param>
+    public void Exception(Func<IHReliableTopic<T>, ReliableTopicExceptionEventArgs, ValueTask> handler)
+    {
+        if (handler is null) throw new ArgumentNullException(nameof(handler));
+        Add(new ReliableTopicExceptionEventHandler<T>(handler));
     }
 }

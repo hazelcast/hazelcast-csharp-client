@@ -34,7 +34,6 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 {
     private BackgroundTask _backgroundTask;
     private IHRingBuffer<ReliableTopicMessage> _ringBuffer;
-    private Func<Exception, bool> _shouldTerminate;
     private Action<ReliableTopicEventHandler<TItem>> _events;
     private readonly object _stateObject;
     private ReliableTopicEventHandler<TItem> _handlers;
@@ -59,8 +58,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         SerializationService serializationService,
         Guid id,
         ILoggerFactory loggerFactory,
-        Action<Guid> onDisposed,
-        Func<Exception, bool> shouldTerminate)
+        Action<Guid> onDisposed)
     {
         _ringBuffer = ringBuffer;
         _events = events;
@@ -74,7 +72,6 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         _stateObject = stateObject;
         _id = id;
         _onDisposed = onDisposed;
-        _shouldTerminate = shouldTerminate;
         _events(_handlers);
         _backgroundTask = BackgroundTask.Run(ExecuteAsync);
     }
@@ -89,8 +86,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         SerializationService serializationService,
         Guid id,
         ILoggerFactory loggerFactory,
-        Action<Guid> onDisposed,
-        Func<Exception, bool> shouldTerminate)
+        Action<Guid> onDisposed)
     {
         return new ReliableTopicMessageExecutor<TItem>(ringBuffer,
             action,
@@ -102,8 +98,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
             serializationService,
             id,
             loggerFactory,
-            onDisposed,
-            shouldTerminate);
+            onDisposed);
     }
 
     private async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -111,7 +106,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         await SetInitialSequenceOnceAsync().CfAwait();
 
         var messageHandlers = _handlers
-            .Where(p => p.GetType() == typeof(ReliableTopicMessageEventHandler<TItem>))
+            .OfType<ReliableTopicMessageEventHandler<TItem>>()
             .ToArray();
 
         while (!cancellationToken.IsCancellationRequested)
@@ -125,7 +120,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
                 if (lostCount != 0 && !_options.IsLossTolerant)
                 {
-                    _logger.IfWarning()?.LogWarning("The reliable topic subscription [{Id}] is not loss tolerant. {Count} message(s) is lost. Disposing the process...", _id, (-1 * lostCount));
+                    _logger.IfWarning()?.LogWarning("The reliable topic subscription [{Id}] is not loss tolerant. {Count} message(s) is lost. Terminating the process...", _id, (-1 * lostCount));
                     await DisposeAsync().CfAwaitNoThrow();
                     return;
                 }
@@ -154,7 +149,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                             if (_options.StoreSequence) _sequence = seq;
 
                             await handler
-                                .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, _stateObject)
+                                .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, default, _stateObject)
                                 .CfAwait();
                         }
                     }
@@ -162,9 +157,17 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                     {
                         _logger.IfDebug()?.LogError(ex, "Something went wrong while handling the event. ");
 
-                        if (cancellationToken.IsCancellationRequested || _shouldTerminate?.Invoke(ex) == true)
+                        // there can be only one exception handler. 
+                        var exceptionHandler = _handlers
+                            .OfType<ReliableTopicExceptionEventHandler<TItem>>()
+                            .FirstOrDefault();
+
+                        if (exceptionHandler != null)
+                            await exceptionHandler.HandleAsync(_topic, default, default, default, _sequence, ex, _stateObject).CfAwait();
+
+                        if (cancellationToken.IsCancellationRequested || exceptionHandler.EventArgs.Cancel)
                         {
-                            _logger.IfWarning()?.LogWarning("Exception {Exception} caused to dispose the reliable topic subscription [{Id}]. ", ex, _id);
+                            _logger.IfWarning()?.LogWarning("Exception {Exception} caused to terminate the reliable topic subscription [{Id}]. ", ex, _id);
                             await DisposeAsync().CfAwaitNoThrow();
                             return;
                         }
@@ -182,7 +185,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
                 if (cancellationToken.IsCancellationRequested || await ShouldDisposeAsync(ex).CfAwait())
                 {
-                    _logger.IfWarning()?.LogWarning("Exception {Exception} caused to dispose the reliable topic subscription [{Id}]. ", ex, _id);
+                    _logger.IfWarning()?.LogWarning("Exception {Exception} caused to terminate the reliable topic subscription [{Id}]. ", ex, _id);
                     await DisposeAsync().CfAwaitNoThrow();
                     return;
                 }
@@ -221,7 +224,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
     {
         if (cancellationToken.IsCancellationRequested)
         {
-            _logger.IfDebug()?.LogDebug("Reliable topic subscription [{Id}] process canceled. Disposing the process... ", _id);
+            _logger.IfDebug()?.LogDebug("Reliable topic subscription [{Id}] process canceled. Terminating the process... ", _id);
             await DisposeAsync().CfAwaitNoThrow();
             return true;
         }
@@ -261,12 +264,12 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
             _onDisposed?.Invoke(_id);
 
             var disposedHandler = _handlers
-                .FirstOrDefault(p => p.GetType() == typeof(ReliableTopicDisposedEventHandler<TItem>));
+                .FirstOrDefault(p => p.GetType() == typeof(ReliableTopicTerminatedEventHandler<TItem>));
 
             // Handle Disposed event.
             if (disposedHandler != null)
             {
-                await disposedHandler.HandleAsync(default, default, 0, default, _sequence, _stateObject).CfAwaitNoThrow();
+                await disposedHandler.HandleAsync(default, default, 0, default, _sequence,default, _stateObject).CfAwaitNoThrow();
             }
         }
     }

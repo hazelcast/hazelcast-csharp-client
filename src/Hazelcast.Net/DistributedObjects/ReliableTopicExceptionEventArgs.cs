@@ -12,52 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
-using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents event data for the reliable topic message.
+    /// Represents event data for the reliable topic exception event.
     /// </summary>
-    /// <typeparam name="T">The reliable topic object type.</typeparam>
     [ExcludeFromCodeCoverage]
-    public sealed class ReliableTopicMessageEventArgs<T> : EventArgsBase
+    public sealed class ReliableTopicExceptionEventArgs : EventArgsBase
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableTopicMessageEventArgs{T}"/> class.
+        /// Initializes a new instance of the <see cref="ReliableTopicExceptionEventArgs"/> class.
         /// </summary>
-        /// <param name="member">The member.</param>
-        /// <param name="publishTime">The publish time.</param>
-        /// <param name="payload">The object.</param>
         /// <param name="sequence">The sequence of the message in the ring buffer.</param>
         /// <param name="state">A state object</param>
-        public ReliableTopicMessageEventArgs(MemberInfo member, long publishTime, T payload, long sequence, object state)
+        public ReliableTopicExceptionEventArgs(Exception exception, long sequence, object state)
             : base(state)
         {
-            Member = member;
-            PublishTime = publishTime;
-            Payload = payload;
             Sequence = sequence;
+            Exception = exception;
         }
-
+        
         /// <summary>
-        /// Gets the member that triggered the event.
+        /// Gets exception that triggers the event.
         /// </summary>
-        public MemberInfo Member { get; }
-
+        public Exception Exception { get; }
+        
         /// <summary>
-        /// Gets the message publish time.
-        /// </summary>
-        public long PublishTime { get; }
-
-        /// <summary>
-        /// Gets the topic object carried by the message.
-        /// </summary>
-        public T Payload { get; }
-
-        /// <summary>
-        /// Gets sequence of the message in the ring buffer.
+        /// Gets last known sequence.
         /// </summary>
         public long Sequence { get; }
 

@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, object state)
+        public ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, Exception exception, object state)
             => _handler(sender, CreateEventArgs(member, publishTime, payload, sequence, state));
 
         /// <summary>

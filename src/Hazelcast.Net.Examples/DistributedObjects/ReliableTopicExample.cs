@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 using Hazelcast.Models;
 
 namespace Hazelcast.Examples.DistributedObjects
@@ -45,23 +46,24 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // subscribe to event
             await topic.SubscribeAsync(on => on
-                .Message((sender, args) =>
-                {
-                    Console.WriteLine($"Got message {args.Payload}");
-                    if (Interlocked.Decrement(ref count) == 0)
-                        counted.Release();
-                })
-                .Disposed((sender, args) =>
-                {
-                    Console.WriteLine("The listener is disposed, and the task at the background is canceled.");
-                }),
+                    .Message((sender, args) =>
+                    {
+                        Console.WriteLine($"Got message {args.Payload}");
+                        if (Interlocked.Decrement(ref count) == 0)
+                            counted.Release();
+                    })
+                    .Terminated((sender, args) =>
+                    {
+                        Console.WriteLine("The listener is disposed, and the task at the background is canceled.");
+                        
+                    }).Exception((sender, args) =>
+                    {
+                        // Terminate the subscription if client goes offline.
+                        if (args.Exception is ClientOfflineException)
+                            args.Cancel = true;
+                    }),
                 // Setting StoreSequence=true and IsLossTolerant=false means listener is durable.
-                new ReliableTopicEventHandlerOptions() {InitialSequence = -1, StoreSequence = true, IsLossTolerant = false},
-                exception =>
-                {
-                    Console.WriteLine($"Exception is occured should terminate the listener? {exception.Message}");
-                    return true;// Terminate the listener.
-                });
+                new ReliableTopicEventHandlerOptions() {InitialSequence = -1, StoreSequence = true, IsLossTolerant = false});
 
             // publish messages
             for (var i = 0; i < 100; i++)

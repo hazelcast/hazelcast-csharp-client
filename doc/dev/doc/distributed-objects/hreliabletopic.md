@@ -20,7 +20,7 @@ var rTopic = await client.GetReliableTopicAsync<string>("my-reliableTopic");
 
 ## Configuring the HReliableTopic
 
-There are three different parts can be configured. One is server side configuration, size of the backed ring buffer, TTL, overflow policy etc. Second is the reliable topic behavior on the client side, such as `ReliableTopicOptions.BatchSize` and `ReliableTopicOptions.Policy`. The batch size sets the number of messages read by the listener at once. And, overflow policy defines the behavior during publishing a message over `HReliableTopic`. Third one is for listener. The subscription is made to a `HReliableTopic` results in a listener. Some of the behaviors of the listener can be configured. For example, Los tolerancy, initial sequnce to start from, storing the sequence of the last read message and a provided function that decides whether terminate the listener in case of an exception.
+There are three different parts can be configured. One is server side configuration, size of the backed ring buffer, TTL, overflow policy etc. Second is the reliable topic behavior on the client side, such as `ReliableTopicOptions.BatchSize` and `ReliableTopicOptions.Policy`. The batch size sets the number of messages read by the listener at once. And, overflow policy defines the behavior during publishing a message over `HReliableTopic`. Third one is for listener. The subscription is made to a `HReliableTopic` results in a listener. Some of the behaviors of the listener can be configured. For example, Los tolerancy, initial sequnce to start from, storing the sequence of the last read message and whether terminate the listener in case of an exception.
 
 > [!NOTE]
 > To have a durable listener, `IsLossTolerant` and `StoreSequence` should be set `true`.
@@ -37,11 +37,9 @@ The `HReliableTopic` structure is completely documented in the associated @Hazel
 
 * `PublishAsync(message)` publishes a message
 
-The `HReliableTopic` structure exposes events in a way similar to `HTopic`, but with some additions. When a subscription is made to a `HReliableTopic`, a listener is spawn in a seperated thread. The listener keeps listen the messages from backed `HRingBuffer`, and trigers the `Message` event. Each subscription runs on a seperated thread at parallel. Please, avoid unncessary subscriptions.
+The `HReliableTopic` structure exposes events in a way similar to `HTopic`, but with some additions. When a subscription is made to a `HReliableTopic`, a listener is spawn in a seperated thread. The listener keeps listen the messages from backed `HRingBuffer`, and trigers the `Message` event.
 
-One of the additions is `Disposed` event. It is triggered when the subscribtion is disposed by disposing the `HReliableTopic` or `await rTopic.UnsubscribeAsync(subscriptionId)` called or subscription is not loss tolerant or provided `shouldTerminate` function returns true.
-
-On top of events, the listener can be configured via `ReliableTopicEventHandlerOptions` and a function `Func<Exception,bool>` which can be terminate the listener according to decision made by provided function.
+One of the additions is `Terminated` event. It is triggered when the subscribtion is disposed by disposing the `HReliableTopic` or `await rTopic.UnsubscribeAsync(subscriptionId)` called or subscription is not loss tolerant or provided `Exception` event sets `args.Cancel` true. On top of events, the listener can be configured via `ReliableTopicEventHandlerOptions`.
 
    
 
@@ -50,17 +48,17 @@ var id = await topic.SubscribeAsync(events => events
     .Message((sender, args) => {
         logger.LogInformation($"Got message {args.Payload} at {args.PublishTime}.");
     })
-    .Disposed((sender, args) =>{
+    .Terminated((sender, args) =>{
         logger.LogInformation($"Listener disposed at sequence {args.Sequence}.");
      }),
-     new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = -1, StoreSequence = false},
-     ex =>
+     .Exception((sender, args) =>
     {
-        if(ex is ClientOfflineExpcetion)
-            return true;
-        else
-            return false;
-    });
+        // Terminate the subscription if client goes offline.
+        if (args.Exception is ClientOfflineException)
+            args.Cancel = true;
+    }),
+    // Setting StoreSequence=true and IsLossTolerant=false means listener is durable.
+    new ReliableTopicEventHandlerOptions() {InitialSequence = -1, StoreSequence = true, IsLossTolerant = false});
 
 // ...
 

@@ -89,18 +89,13 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                     receivedCount++;
                     if (args.Payload == msgCount)
                         mne.Set();
-                }).Disposed((sender, args) =>
+                }).Terminated((sender, args) =>
                     {
                         HConsole.WriteLine(this, "Reliable topic subscription is disposed.");
                         mneDisposed.Set();
                     }
-                ),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false},
-            ex =>
-            {
-                HConsole.WriteLine(this, ex);
-                return true;
-            });
+                ).Exception((sender, args) => { args.Cancel = true; }),
+            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false});
 
         // 0 is not a message.
         for (var i = 1; i <= msgCount; i++)
@@ -157,13 +152,8 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                         Interlocked.Increment(ref receivedCount);
                         Console.WriteLine($"SEQ: {args.Sequence} Received:{args.Payload}");
                     })
-                    .Disposed((sender, args) => mneDisposed.Set()),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = -1, StoreSequence = false},
-            ex =>
-            {
-                HConsole.WriteLine(this, ex);
-                return true;
-            });
+                    .Terminated((sender, args) => mneDisposed.Set()),
+            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = -1, StoreSequence = false});
 
         // Let listener be ready.
         await Task.Delay(1_000);
@@ -224,6 +214,57 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                 Assert.AreEqual(1, args.Payload);
                 Assert.AreEqual(0, args.Sequence);
             }));
+    }
+
+    [Test]
+    [Timeout(80_000)]
+    public async Task TestReliableTopicExceptionEvent()
+    {
+        var topicName = "rtTestTopicArgs";
+
+        var options = new HazelcastOptionsBuilder()
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
+            .With((conf, opt) =>
+            {
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 3);
+                opt.ClusterName = RcCluster.Id;
+                opt.Networking.Reconnect = true;
+                opt.Networking.Addresses.Add("127.0.0.1:5704");
+
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
+            })
+            .Build();
+
+
+        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+        var rt = await client.GetReliableTopicAsync<int>(topicName);
+        var mneException = new ManualResetEvent(false);
+
+        var mneContinue = new ManualResetEvent(false);
+
+        await rt.SubscribeAsync(events =>
+            events.Message((sender, args) =>
+            {
+                if (args.Payload == 1)
+                    throw new ArgumentOutOfRangeException();
+
+                if (args.Payload == 2)
+                    mneContinue.Set();
+            }).Exception((sender, args) =>
+            {
+                Assert.IsInstanceOf<ArgumentOutOfRangeException>(args.Exception);
+                args.Cancel = false;
+                mneException.Set();
+            }));
+
+        await rt.PublishAsync(1);
+        Assert.True(await mneException.WaitOneAsync());
+        await rt.PublishAsync(2);
+        Assert.True(await mneContinue.WaitOneAsync());
     }
 
     [Test]
@@ -478,7 +519,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await rt
             .SubscribeAsync(events => events
                 .Message((sender, args) => { })
-                .Disposed(null)
+                .Terminated(null)
             ));
 
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await rt.PublishAsync(null));
@@ -566,12 +607,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                     Console.WriteLine("Message:" + args.Payload);
                     mne.Set();
                 }),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = true},
-            ex =>
-            {
-                HConsole.WriteLine(this, ex);
-                return false;
-            });
+            new ReliableTopicEventHandlerOptions() {IsLossTolerant = true});
 
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
@@ -617,12 +653,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                     Console.WriteLine("Message:" + args.Payload);
                     Interlocked.Increment(ref receivedCount);
                 }),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = true},
-            ex =>
-            {
-                HConsole.WriteLine(this, ex);
-                return false;
-            });
+            new ReliableTopicEventHandlerOptions() {IsLossTolerant = true});
 
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
@@ -695,7 +726,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         {
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, "instance_0.getReliableTopic(\"" + topicName + "\").publish(" + m + ")", Lang.JAVASCRIPT);
             m++;
-            Assert.False(rt.IsSubscriptionExist(sId));
+            Assert.False(rt.IsSubscription(sId));
         }, 15_000, 100);
 
         Assert.AreEqual(0, msgReceivedCount);
@@ -774,7 +805,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         Assert.True(await rt.UnsubscribeAsync(c1));
         Assert.True(await rt.UnsubscribeAsync(c2));
         Assert.False(await rt.UnsubscribeAsync(c2));
-        Assert.False(rt.IsSubscriptionExist(c1));
-        Assert.False(rt.IsSubscriptionExist(c2));
+        Assert.False(rt.IsSubscription(c1));
+        Assert.False(rt.IsSubscription(c2));
     }
 }
