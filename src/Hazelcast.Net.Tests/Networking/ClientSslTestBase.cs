@@ -311,7 +311,7 @@ namespace Hazelcast.Tests.Networking
 
                 // validate that the certificate is OK
                 var sslLayer = new SslLayer(sslOptions, IPAddress.Any,  new NullLoggerFactory());
-                sslLayer.GetClientCertificatesOrDefault(); // this should not throw
+                sslLayer.GetClientCertificates(); // this should not throw
             }
 
             // note: if we let the test timeout (via the [Timeout] attribute) then HConsole
