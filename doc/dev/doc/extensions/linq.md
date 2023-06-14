@@ -1,6 +1,4 @@
 ﻿# LINQ Provider 
-> [!WARNING]
-> LINQ support is currently in BETA version. There may be breaking changes on further releases.
 
 Hazelcast .Net Client provides a LINQ provider over `IHMap`. Provider is currently in BETA version.
 You can use programmatic LINQ functions instead string SQL statements to query over your distributed map.
