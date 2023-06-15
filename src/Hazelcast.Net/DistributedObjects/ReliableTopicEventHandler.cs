@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects;
 
@@ -47,12 +48,20 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
         Add(new ReliableTopicMessageEventHandler<T>(handler));
         return this;
     }
-    
+
     /// <summary>
-    /// Sets the handler which runs after the subscription disposed or canceled.
+    /// Sets the handler which runs after the subscription is terminated and no further event will be raised.
     /// </summary>
+    /// <remarks>
+    /// Terminated subscription will rise no event. It is triggered after subscription process is terminated completely.
+    /// It can be triggered result of <see cref="IHReliableTopic{T}.UnsubscribeAsync"/>
+    /// or <see cref="IAsyncDisposable.DisposeAsync"/> or <see cref="IDistributedObject.DestroyAsync"/>
+    /// or <see cref="ReliableTopicEventHandlerOptions.IsLossTolerant"/> is <c>False</c>
+    /// or when <see cref="ReliableTopicExceptionEventArgs.Cancel"/> is set <c>True</c> which is default value
+    /// when <see cref="Exception(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs})"/> is triggered. 
+    /// </remarks>
     /// <param name="handler">The handler.</param>
-    public ReliableTopicEventHandler<T> Terminated(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+    public ReliableTopicEventHandler<T> Terminated(Action<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicTerminatedEventHandler<T>(handler));
@@ -60,21 +69,36 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     }
 
     /// <summary>
-    /// Sets the handler which runs after the subscription disposed or canceled.
+    /// Sets the handler which runs after the subscription is terminated and no further event will be raised.
     /// </summary>
+    /// <remarks>
+    /// Terminated subscription will rise no event. It is triggered after subscription process is terminated completely.
+    /// It can be triggered result of <see cref="IHReliableTopic{T}.UnsubscribeAsync"/>
+    /// or <see cref="IAsyncDisposable.DisposeAsync"/> or <see cref="IDistributedObject.DestroyAsync"/>
+    /// or <see cref="ReliableTopicEventHandlerOptions.IsLossTolerant"/> is <c>True</c>
+    /// or when <see cref="ReliableTopicExceptionEventArgs.Cancel"/> is set <c>True</c> which is default value
+    /// when <see cref="Exception(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs})"/> is triggered. 
+    /// </remarks>
     /// <param name="handler">The handler.</param>
-    public ReliableTopicEventHandler<T> Terminated(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+    public ReliableTopicEventHandler<T> Terminated(Func<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs, ValueTask> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicTerminatedEventHandler<T>(handler));
         return this;
     }
-    
+
     // Exception event is single, no chaining.
-    
+
     /// <summary>
     /// Sets the handler when runs on exception.
     /// </summary>
+    /// <remarks>
+    /// The exception event is triggered when an exception is thrown while listening the topic or handling
+    /// the <see cref="Message(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs{T}})"/> event.
+    /// The value of <see cref="ReliableTopicExceptionEventArgs.Cancel"/> -<c>True</c> by default- can terminate the subscription.
+    /// If <see cref="ReliableTopicExceptionEventArgs.Cancel"/> is set <c>False</c>, the subscription will continue to run
+    /// from next message -if any- or continue to listen the ring buffer as usual.
+    /// </remarks>
     /// <param name="handler">The handler.</param>
     public void Exception(Action<IHReliableTopic<T>, ReliableTopicExceptionEventArgs> handler)
     {
@@ -85,6 +109,10 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// <summary>
     /// Sets the handler when runs on exception.
     /// </summary>
+    /// <remarks>
+    /// The exception event is triggered when an exception is thrown while listening the topic or handling
+    /// the <see cref="Message(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs{T}})"/> event.
+    /// </remarks>
     /// <param name="handler">The handler.</param>
     public void Exception(Func<IHReliableTopic<T>, ReliableTopicExceptionEventArgs, ValueTask> handler)
     {

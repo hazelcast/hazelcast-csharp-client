@@ -120,7 +120,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
                 if (lostCount != 0 && !_options.IsLossTolerant)
                 {
-                    _logger.IfWarning()?.LogWarning("The reliable topic subscription [{Id}] is not loss tolerant. {Count} message(s) is lost. Terminating the process...", _id, (-1 * lostCount));
+                    _logger.IfWarning()?.LogWarning("The reliable topic subscription [{Id}] is not loss tolerant. {Count} message(s) is lost. Terminating the subscription...", _id, (-1 * lostCount));
                     await DisposeAsync().CfAwaitNoThrow();
                     return;
                 }
@@ -224,7 +224,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
     {
         if (cancellationToken.IsCancellationRequested)
         {
-            _logger.IfDebug()?.LogDebug("Reliable topic subscription [{Id}] process canceled. Terminating the process... ", _id);
+            _logger.IfDebug()?.LogDebug("Reliable topic subscription [{Id}] is canceled. Terminating the subscription... ", _id);
             await DisposeAsync().CfAwaitNoThrow();
             return true;
         }

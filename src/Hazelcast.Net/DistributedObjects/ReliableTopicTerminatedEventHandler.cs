@@ -24,13 +24,13 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="T">The reliable topic object type.</typeparam>
     internal class ReliableTopicTerminatedEventHandler<T> : IReliableTopicEventHandler<T>
     {
-        private readonly Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> _handler;
+        private readonly Func<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs, ValueTask> _handler;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableTopicMessageEventArgs{T}"/> class.
+        /// Initializes a new instance of the <see cref="ReliableTopicTerminatedEventHandler{T}"/> class.
         /// </summary>
         /// <param name="handler">An action to execute</param>
-        public ReliableTopicTerminatedEventHandler(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+        public ReliableTopicTerminatedEventHandler(Action<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs> handler)
         {
             _handler = (sender, args) =>
             {
@@ -40,27 +40,24 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReliableTopicMessageEventArgs{T}"/> class.
+        /// Initializes a new instance of the <see cref="ReliableTopicTerminatedEventHandler{T}"/> class.
         /// </summary>
         /// <param name="handler">An action to execute</param>
-        public ReliableTopicTerminatedEventHandler(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+        public ReliableTopicTerminatedEventHandler(Func<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs, ValueTask> handler)
         {
             _handler = handler;
         }
 
         /// <inheritdoc />
         public ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, Exception exception, object state)
-            => _handler(sender, CreateEventArgs(member, publishTime, payload, sequence, state));
+            => _handler(sender, CreateEventArgs(sequence, state));
 
         /// <summary>
         /// Creates event arguments.
         /// </summary>
-        /// <param name="member">The member.</param>
-        /// <param name="publishTime">The publish time.</param>
-        /// <param name="payload">The reliable topic object carried by the message.</param>
-        /// <param name="sequence">The sequence of the message in the ring buffer.</param>
+        /// <param name="sequence">The last known sequence in the ring buffer.</param>
         /// <returns>Event arguments.</returns>
-        private static ReliableTopicMessageEventArgs<T> CreateEventArgs(MemberInfo member, long publishTime, T payload, long sequence, object state)
-            => new ReliableTopicMessageEventArgs<T>(member, publishTime, payload, sequence, state);
+        private static ReliableTopicTerminatedEventArgs CreateEventArgs(long sequence, object state)
+            => new ReliableTopicTerminatedEventArgs(sequence, state);
     }
 }
