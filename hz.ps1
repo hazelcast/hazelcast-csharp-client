@@ -1122,7 +1122,7 @@ function ensure-certs {
         $download = $false
         if (test-path "$tmpDir/certs") {
             Write-Output "Detected $tmpDir/certs directory"
-            if ((test-path "$tmpDir/certs/client1.pfx") -and (([DateTime]::Now - (ls "$tmpDir/certs/client1.pfx").CreationTime).Days -gt 7)) {
+            if ((test-path "$tmpDir/certs/client1.pfx") -and (([DateTime]::Now - (get-item "$tmpDir/certs/client1.pfx").CreationTime).Days -lt 7)) {
                 Write-Output "Certificates are not too old"
             }
             else {
