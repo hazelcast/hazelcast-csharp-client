@@ -66,7 +66,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
 
         // Create and register the executor. The executor starts immediately.
         var executor = ReliableTopicMessageExecutor<TItem>
-            .New(_ringBuffer,
+            .StartNew(_ringBuffer,
                 events,
                 state,
                 this,

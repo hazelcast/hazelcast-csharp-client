@@ -76,7 +76,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         _backgroundTask = BackgroundTask.Run(ExecuteAsync);
     }
 
-    public static ReliableTopicMessageExecutor<TItem> New(IHRingBuffer<ReliableTopicMessage> ringBuffer,
+    public static ReliableTopicMessageExecutor<TItem> StartNew(IHRingBuffer<ReliableTopicMessage> ringBuffer,
         Action<ReliableTopicEventHandler<TItem>> action,
         object stateObject,
         IHReliableTopic<TItem> topic,

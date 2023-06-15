@@ -21,7 +21,6 @@ namespace Hazelcast.DistributedObjects
     /// Represents event data for the reliable topic message.
     /// </summary>
     /// <typeparam name="T">The reliable topic object type.</typeparam>
-    [ExcludeFromCodeCoverage]
     public sealed class ReliableTopicMessageEventArgs<T> : EventArgsBase
     {
         /// <summary>

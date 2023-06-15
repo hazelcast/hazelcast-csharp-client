@@ -20,7 +20,6 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     /// Represents event data for the reliable topic exception event.
     /// </summary>
-    [ExcludeFromCodeCoverage]
     public sealed class ReliableTopicExceptionEventArgs : EventArgsBase
     {
         /// <summary>
