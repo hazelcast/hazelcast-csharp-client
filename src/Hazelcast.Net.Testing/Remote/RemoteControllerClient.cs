@@ -174,6 +174,10 @@ namespace Hazelcast.Testing.Remote
             => WithLock(token => createCluster(hzVersion, xmlconfig, token), cancellationToken);
 
         /// <inheritdoc />
+        public Task<Cluster> CreateClusterKeepClusterNameAsync(string serverVersion, string serverConfiguration, CancellationToken cancellationToken = default)
+            => WithLock(token => createClusterKeepClusterName(serverVersion, serverConfiguration, token), cancellationToken);
+
+        /// <inheritdoc />
         public Task<Member> StartMemberAsync(string clusterId, CancellationToken cancellationToken = default)
             => WithLock(token => startMember(clusterId, token), cancellationToken);
 

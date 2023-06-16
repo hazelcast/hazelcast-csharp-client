@@ -51,6 +51,15 @@ namespace Hazelcast.Testing.Remote
         /// <param name="cancellationToken">An optional cancellation token.</param>
         /// <returns>The new cluster.</returns>
         Task<Cluster> CreateClusterAsync(string serverVersion, string serverConfiguration, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Creates a new cluster with name in the provided configuration.
+        /// </summary>
+        /// <param name="serverVersion">The Hazelcast server version.</param>
+        /// <param name="serverConfiguration">The server Xml configuration.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
+        /// <returns></returns>
+        Task<Cluster> CreateClusterKeepClusterNameAsync(string serverVersion, string serverConfiguration, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Starts a new member.

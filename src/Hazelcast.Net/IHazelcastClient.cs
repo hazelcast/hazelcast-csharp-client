@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
@@ -209,7 +210,21 @@ namespace Hazelcast
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IHTopic<T>> GetTopicAsync<T>(string name);
-
+        
+        /// <summary>
+        /// Gets a see <see cref="IHReliableTopic{T}"/> distributed object.
+        /// </summary>
+        /// <typeparam name="T">The type of the topic messages.</typeparam>
+        /// <param name="name">The unique name of the reliable topic.</param>
+        /// <param name="option">Option for the reliable topic.
+        /// If it is not configured with a name in the <see cref="HazelcastOptions"/>, default values will be used.</param>
+        /// <returns>The reliable topic that was retrieved or created.</returns>
+        /// <remarks>
+        /// <para>If an object with the specified <paramref name="name"/> does not
+        /// exist already in the cluster, a new object is created.</para>
+        /// </remarks>
+        Task<IHReliableTopic<T>> GetReliableTopicAsync<T>([NotNull]string name, [MaybeNull]ReliableTopicOptions option = default);
+        
         /// <summary>
         /// Gets an <see cref="IHList{T}"/> distributed object.
         /// </summary>

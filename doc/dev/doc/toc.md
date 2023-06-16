@@ -24,6 +24,7 @@
 ## [HRingBuffer](distributed-objects/hringbuffer.md)
 ## [HSet](distributed-objects/hset.md)
 ## [HTopic](distributed-objects/htopic.md)
+## [HReliableTopic](distributed-objects/hreliabletopic.md)
 ## [AtomicLong](distributed-objects/atomiclong.md)
 ## [AtomicRef](distributed-objects/atomicref.md)
 ## [FlakeIdGenerator](distributed-objects/flakeidgenerator.md)

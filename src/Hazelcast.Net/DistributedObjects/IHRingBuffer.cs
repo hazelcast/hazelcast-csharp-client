@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -172,6 +173,29 @@ namespace Hazelcast.DistributedObjects
         /// or if maxCount larger than 1000 (to prevent overload)
         /// </exception>
         Task<IReadOnlyList<TItem>> ReadManyAsync(long startSequence, int minCount, int maxCount);
+
+        /// <summary>
+        /// Reads a batch of items from the Ringbuffer with sequence information.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="IRingBufferResultSet{TItem}"/> provides information about sequence of the items on top of <see cref="ReadManyAsync"/>.
+        /// NOTE: If number of items available is less than minCount, this call blocks. 
+        /// </remarks>
+        /// <param name="startSequence">the startSequence of the first item to read.</param>
+        /// <param name="minCount">the minimum number of items to read.</param>
+        /// <param name="maxCount">the maximum number of items to read.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>a future containing the items read.</returns>
+        /// <exception cref="System.ArgumentException">
+        /// if startSequence is smaller than 0
+        /// or if startSequence larger than
+        /// <see cref="TailSequence()"/>
+        /// or if minCount smaller than 0
+        /// or if minCount larger than maxCount,
+        /// or if maxCount larger than the capacity of the ringbuffer
+        /// or if maxCount larger than 1000 (to prevent overload)
+        /// </exception>
+        Task<IRingBufferResultSet<TItem>> ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount, CancellationToken cancellationToken=default);
 
         /// <summary>Reads one item from the Ringbuffer.</summary>
         /// <remarks>

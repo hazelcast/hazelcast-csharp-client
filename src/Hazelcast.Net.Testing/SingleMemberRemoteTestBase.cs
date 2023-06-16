@@ -42,6 +42,6 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the remote member.
         /// </summary>
-        protected Remote.Member RcMember { get; private set; }
+        protected Remote.Member RcMember { get; set; }
     }
 }

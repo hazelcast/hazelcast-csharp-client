@@ -29,7 +29,7 @@ namespace Hazelcast.Serialization.Collections
     /// <para>This class is thread-safe for reading, however for performance purposes, some values may
     /// be deserialized multiple times in multi-threaded situations.</para>
     /// </remarks>
-    internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
+    internal class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
     {
         private readonly List<ReadOnlyLazyEntry<TValue>> _content = new();
         private readonly SerializationService _serializationService;
