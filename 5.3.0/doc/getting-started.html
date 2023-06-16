@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Getting Started | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Getting Started | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="getting-started">Getting Started</h1>
+
+<h2 id="quick-start">Quick Start</h2>
+<h4 id="walkthrough">Walkthrough</h4>
+<p>Prepare a .NET console project:</p>
+<pre><code class="lang-shell">mkdir quickstart
+cd quickstart
+dotnet new console
+dotnet add package Hazelcast.Net
+dotnet add package Microsoft.Extensions.Logging.Console
+</code></pre>
+<p>Edit the <code>Program.cs</code> file as you wish. The code below is a minimal example,
+that configures logging to the console, and connects a client to a server running
+on localhost.</p>
+<pre><code class="lang-csharp">public static async Task Main()
+{
+    // create options
+    var options = new HazelcastOptionsBuilder()
+        .WithDefault(&quot;Logging:LogLevel:Default&quot;, LogLevel.None)
+        .WithDefault(&quot;Logging:LogLevel:Hazelcast&quot;, LogLevel.Information)
+        .WithLoggerFactory(configuration =&gt; LoggerFactory.Create(builder =&gt; builder
+            .AddConfiguration(configuration.GetSection(&quot;logging&quot;))
+            .AddSimpleConsole(consoleOptions =&gt; 
+            {
+                consoleOptions.SingleLine = true;
+                consoleOptions.TimestampFormat = &quot;hh:mm:ss.fff &quot;;
+            })))
+        .Build();
+
+    // create and connect a Hazelcast client to a server running on localhost
+    await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+    
+    // the client is disposed and thus disconnected on exit
+}
+</code></pre>
+<p>Run the code with:</p>
+<pre><code class="lang-shell">dotnet build
+dotnet run
+</code></pre>
+<p>You should see the log output in the console.</p>
+<h4 id="running-preview">Running Preview</h4>
+<p>Should you want to use a preview version of the Hazelcast .NET Client, built from source at <code>path/to/Hazelcast.Net</code>, drop a <code>nuget.config</code> file in the <code>quickstart</code> directory containing the following:</p>
+<pre><code class="lang-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;configuration&gt;
+  &lt;packageSources&gt;
+    &lt;add key=&quot;hz&quot; value=&quot;path/to/Hazelcast.Net/temp/output&quot; /&gt;
+  &lt;/packageSources&gt;
+&lt;/configuration&gt;
+</code></pre>
+<p>Then, force the installation of the preview version with:</p>
+<pre><code class="lang-shell">dotnet add package Hazelcast.Net --version 5.3.0-preview.0
+</code></pre>
+<p>You can now run the test program again.</p>
+<h4 id="download-and-install">Download and Install</h4>
+<p>Using the published <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.Net</a> package from NuGet is the prefered way to download and install the client. Refer to the <a href="download-install.html">Download and Install</a> page to learn more about how to download the Hazelcast .NET Client and Server, and how to install it. In addition, this page contains more details about required binding redirects when installing in a <strong>.NET Framework</strong> project.</p>
+<h2 id="using-the-client">Using the client</h2>
+<p>The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static <a class="xref" href="../api/Hazelcast.HazelcastClientFactory.html">HazelcastClientFactory</a>. After it has been used, it needs to be disposed in order to properly close all connections to servers, and release resources.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">var client = await HazelcastClientFactory.StartNewClientAsync();
+// ... use the client ...
+await client.DisposeAsync();
+</code></pre>
+<p>A client is a heavy enough, multi-threaded object. Although a factory can create several, independent clients, it is recommended to store and reuse the client instance, as much as possible.</p>
+<p>Here, the client is configured by default, which means by configuration files and environment variables. For more control, the client can be initialized with an <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> instance, which represents the complete set of options of the Hazelcast client. In fact, the above example is equivalent to:</p>
+<pre><code class="lang-csharp">var options = new HazelcastOptionsBuilder().Build();
+var client = await HazelcastClientFactory.StartNewClientAsync(options);
+// ...
+</code></pre>
+<p>Refer to the <a href="configuration.html">Configuration</a> page for details on the various ways to build an <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> instance, including handling command-line parameters, as well as a list of all the configurable elements.</p>
+<h2 id="distributed-objects">Distributed Objects</h2>
+<p>The client can be used to obtain <em>distributed objects</em> that are managed by the cluster. For instance, the cluster can manage <a class="xref" href="../api/Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> objects, which are an asynchronous equivalent of .NET <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary&lt;TKey, TValue&gt;</a>. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;map-name&quot;);
+await map.SetAsync(&quot;key&quot;, &quot;value&quot;);
+var value = await map.GetAsync(&quot;key&quot;);
+await map.DisposeAsync();
+</code></pre>
+<p>The <a class="xref" href="../api/Hazelcast.IHazelcastClient.GetMapAsync.html">GetMapAsync</a> method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the <a class="xref" href="../api/Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> has been disposed. In order to remove the object from the cluster, one must destroy the object.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;dict-name&quot;);
+await map.DestroyAsync();
+</code></pre>
+<p>or</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;dict-name&quot;);
+await client.DestroyAsync(map);
+</code></pre>
+<h2 id="examples">Examples</h2>
+<p>Complete, working examples are provided in source form in the <a href="https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples">Hazelcast.Net.Examples</a> project, with instruction in the <a href="examples.html">Examples</a> page.</p>
+<h2 id="logging">Logging</h2>
+<p>The Hazelcast .NET client uses the logging abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> namespace. By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.</p>
+<p>See the <a href="logging.html">Logging</a> documentation for details.</p>
+<h2 id="events">Events</h2>
+<p>The client exposes client-level events.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">var subscriptionId = await client.SubscribeAsync(events =&gt; events
+    .StateChanged((sender, args) =&gt; {
+        Console.WriteLine($&quot;Client state changed to: {args.State}.&quot;)
+    })
+);
+
+// ... handle events ...
+
+var success = await client.UnsubscribeAsync(subscriptionId);
+</code></pre>
+<p>The <code>(sender, args)</code> pattern is used to remain consistent with C# events. Here, <code>sender</code> is the object that triggered the event, i.e. <code>client</code>, and <code>args</code> contains the event data.</p>
+<blockquote>
+<p>Note: pure C# events (<code>client.StateChanged += ...</code>) cannot be used here, as subscribing, un-subscribing and handling events all need to support being asynchronous.</p>
+</blockquote>
+<p>Each distributed object also exposes events in the same way.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">var subscriptionId = await dict.SubscribeAsync(events =&gt; events
+    .EntryAdded((sender, args) =&gt; {
+        // ...
+    })
+    .EntryRemoved((sender, args) =&gt; {
+        // ...
+    })
+);
+
+// ... handle events ...
+
+var success = await dict.UnsubscribeAsync(subscriptionId);
+</code></pre>
+<p>Refer to the <a href="events.html">Events</a> page for details.</p>
+<h2 id="transactions">Transactions</h2>
+<p>The client is responsible for creating transactions. Transactions by default follow the Microsoft's transaction pattern: they must be disposed, and commit or roll back depending on whether they have been completed.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">await using (var transaction = await client.BeginTransactionAsync())
+{
+    var map = await transaction.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;);
+    await map.PutAsync(&quot;key&quot;, &quot;value&quot;);
+    transaction.Complete();
+}
+</code></pre>
+<p>Refer to the <a href="transactions.html">Transactions</a> page for details.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

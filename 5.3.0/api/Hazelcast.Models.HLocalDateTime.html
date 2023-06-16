@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>HLocalDateTime Struct
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="HLocalDateTime Struct
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Models.HLocalDateTime">
+
+
+
+  <h1 id="Hazelcast_Models_HLocalDateTime" data-uid="Hazelcast.Models.HLocalDateTime" class="text-break">HLocalDateTime Struct
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Models.html">Models</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents an Hazelcast SQL <code>TIMESTAMP</code> primitive type value.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public readonly struct HLocalDateTime : IEquatable&lt;HLocalDateTime&gt;</code></pre>
+  </div>
+  <div class="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a>&gt;</div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_Models_HLocalDateTime_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>The <code>TIMESTAMP</code> primitive type consists of a <code>DATE</code> <a class="xref" href="Hazelcast.Models.HLocalDateTime.Date.html#Hazelcast_Models_HLocalDateTime_Date">Date</a>
+and a <code>TIME</code> <a class="xref" href="Hazelcast.Models.HLocalDateTime.Time.html#Hazelcast_Models_HLocalDateTime_Time">Time</a>.</p>
+</div>
+  <h3 id="constructors">Constructors
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime__ctor_Hazelcast_Models_HLocalDate_Hazelcast_Models_HLocalTime_" data-uid="Hazelcast.Models.HLocalDateTime.#ctor(Hazelcast.Models.HLocalDate,Hazelcast.Models.HLocalTime)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.-ctor.html#Hazelcast_Models_HLocalDateTime__ctor_Hazelcast_Models_HLocalDate_Hazelcast_Models_HLocalTime_">HLocalDateTime(HLocalDate, HLocalTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> struct.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime__ctor_System_DateTime_" data-uid="Hazelcast.Models.HLocalDateTime.#ctor(System.DateTime)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.-ctor.html#Hazelcast_Models_HLocalDateTime__ctor_System_DateTime_">HLocalDateTime(DateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> struct.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime__ctor_System_Int32_System_Byte_System_Byte_" data-uid="Hazelcast.Models.HLocalDateTime.#ctor(System.Int32,System.Byte,System.Byte)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.-ctor.html#Hazelcast_Models_HLocalDateTime__ctor_System_Int32_System_Byte_System_Byte_">HLocalDateTime(int, byte, byte)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> struct.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime__ctor_System_Int32_System_Byte_System_Byte_System_Byte_System_Byte_System_Byte_System_Int32_" data-uid="Hazelcast.Models.HLocalDateTime.#ctor(System.Int32,System.Byte,System.Byte,System.Byte,System.Byte,System.Byte,System.Int32)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.-ctor.html#Hazelcast_Models_HLocalDateTime__ctor_System_Int32_System_Byte_System_Byte_System_Byte_System_Byte_System_Byte_System_Int32_">HLocalDateTime(int, byte, byte, byte, byte, byte, int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> struct.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Max" data-uid="Hazelcast.Models.HLocalDateTime.Max">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Max.html">Max</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the largest possible value of a <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Min" data-uid="Hazelcast.Models.HLocalDateTime.Min">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Min.html">Min</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the smallest possible value of a <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Date" data-uid="Hazelcast.Models.HLocalDateTime.Date">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Date.html#Hazelcast_Models_HLocalDateTime_Date">Date</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the date value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Day" data-uid="Hazelcast.Models.HLocalDateTime.Day">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Day.html#Hazelcast_Models_HLocalDateTime_Day">Day</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the day value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Hour" data-uid="Hazelcast.Models.HLocalDateTime.Hour">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Hour.html#Hazelcast_Models_HLocalDateTime_Hour">Hour</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the hour value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Minute" data-uid="Hazelcast.Models.HLocalDateTime.Minute">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Minute.html#Hazelcast_Models_HLocalDateTime_Minute">Minute</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the minute value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Month" data-uid="Hazelcast.Models.HLocalDateTime.Month">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Month.html#Hazelcast_Models_HLocalDateTime_Month">Month</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the month value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Nanosecond" data-uid="Hazelcast.Models.HLocalDateTime.Nanosecond">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Nanosecond.html#Hazelcast_Models_HLocalDateTime_Nanosecond">Nanosecond</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the nanosecond value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Second" data-uid="Hazelcast.Models.HLocalDateTime.Second">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Second.html#Hazelcast_Models_HLocalDateTime_Second">Second</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the second value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Time" data-uid="Hazelcast.Models.HLocalDateTime.Time">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Time.html#Hazelcast_Models_HLocalDateTime_Time">Time</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the time value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Year" data-uid="Hazelcast.Models.HLocalDateTime.Year">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Year.html#Hazelcast_Models_HLocalDateTime_Year">Year</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the year value.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Equals_Hazelcast_Models_HLocalDateTime_" data-uid="Hazelcast.Models.HLocalDateTime.Equals(Hazelcast.Models.HLocalDateTime)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Equals.html#Hazelcast_Models_HLocalDateTime_Equals_Hazelcast_Models_HLocalDateTime_">Equals(HLocalDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Indicates whether the current object is equal to another object of the same type.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Equals_System_Object_" data-uid="Hazelcast.Models.HLocalDateTime.Equals(System.Object)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Equals.html#Hazelcast_Models_HLocalDateTime_Equals_System_Object_">Equals(object?)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Indicates whether this instance and a specified object are equal.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_GetHashCode" data-uid="Hazelcast.Models.HLocalDateTime.GetHashCode">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.GetHashCode.html#Hazelcast_Models_HLocalDateTime_GetHashCode">GetHashCode()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the hash code for this instance.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_Parse_System_String_" data-uid="Hazelcast.Models.HLocalDateTime.Parse(System.String)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.Parse.html#Hazelcast_Models_HLocalDateTime_Parse_System_String_">Parse(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the string representation of a date and time to its <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> representation.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_ToDateTime" data-uid="Hazelcast.Models.HLocalDateTime.ToDateTime">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.ToDateTime.html#Hazelcast_Models_HLocalDateTime_ToDateTime">ToDateTime()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the value of this <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> to its <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a> equivalent.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_ToString" data-uid="Hazelcast.Models.HLocalDateTime.ToString">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.ToString.html#Hazelcast_Models_HLocalDateTime_ToString">ToString()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the fully qualified type name of this instance.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_TryParse_System_String_Hazelcast_Models_HLocalDateTime__" data-uid="Hazelcast.Models.HLocalDateTime.TryParse(System.String,Hazelcast.Models.HLocalDateTime@)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.TryParse.html#Hazelcast_Models_HLocalDateTime_TryParse_System_String_Hazelcast_Models_HLocalDateTime__">TryParse(string?, out HLocalDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the string representation of a date and time to its <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> representation.
+A return value indicates whether the operation succeeded.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_TryToDateTime_System_DateTime__" data-uid="Hazelcast.Models.HLocalDateTime.TryToDateTime(System.DateTime@)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.TryToDateTime.html#Hazelcast_Models_HLocalDateTime_TryToDateTime_System_DateTime__">TryToDateTime(out DateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the value of this <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> to its <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a> equivalent.
+A return value indicates whether the operation succeeded.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_op_Equality_Hazelcast_Models_HLocalDateTime_Hazelcast_Models_HLocalDateTime_" data-uid="Hazelcast.Models.HLocalDateTime.op_Equality(Hazelcast.Models.HLocalDateTime,Hazelcast.Models.HLocalDateTime)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.op_Equality.html#Hazelcast_Models_HLocalDateTime_op_Equality_Hazelcast_Models_HLocalDateTime_Hazelcast_Models_HLocalDateTime_">operator ==(HLocalDateTime, HLocalDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the == operator.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_op_Explicit_Hazelcast_Models_HLocalDateTime__System_DateTime" data-uid="Hazelcast.Models.HLocalDateTime.op_Explicit(Hazelcast.Models.HLocalDateTime)~System.DateTime">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.op_Explicit.html#Hazelcast_Models_HLocalDateTime_op_Explicit_Hazelcast_Models_HLocalDateTime__System_DateTime">explicit operator DateTime(HLocalDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> to <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a> conversion.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_op_Explicit_System_DateTime__Hazelcast_Models_HLocalDateTime" data-uid="Hazelcast.Models.HLocalDateTime.op_Explicit(System.DateTime)~Hazelcast.Models.HLocalDateTime">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.op_Explicit.html#Hazelcast_Models_HLocalDateTime_op_Explicit_System_DateTime__Hazelcast_Models_HLocalDateTime">explicit operator HLocalDateTime(DateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a> to <a class="xref" href="Hazelcast.Models.HLocalDateTime.html">HLocalDateTime</a> conversion.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HLocalDateTime_op_Inequality_Hazelcast_Models_HLocalDateTime_Hazelcast_Models_HLocalDateTime_" data-uid="Hazelcast.Models.HLocalDateTime.op_Inequality(Hazelcast.Models.HLocalDateTime,Hazelcast.Models.HLocalDateTime)">
+          <a class="xref" href="Hazelcast.Models.HLocalDateTime.op_Inequality.html#Hazelcast_Models_HLocalDateTime_op_Inequality_Hazelcast_Models_HLocalDateTime_Hazelcast_Models_HLocalDateTime_">operator !=(HLocalDateTime, HLocalDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the != operator.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

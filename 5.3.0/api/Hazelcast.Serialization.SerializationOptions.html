@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>SerializationOptions Class
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="SerializationOptions Class
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Serialization.SerializationOptions">
+
+
+
+  <h1 id="Hazelcast_Serialization_SerializationOptions" data-uid="Hazelcast.Serialization.SerializationOptions" class="text-break">SerializationOptions Class
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Serialization.html">Serialization</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Contains the serialization options</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public sealed class SerializationOptions</code></pre>
+  </div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+    <div class="level1"><span class="xref">SerializationOptions</span></div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_Serialization_SerializationOptions_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p><a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.html">IIdentifiedDataSerializable</a>, <a class="xref" href="Hazelcast.Serialization.IPortable.html">IPortable</a>, custom serializers, and global serializer can be configured using this config.</p>
+</div>
+  <h3 id="constructors">Constructors
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions__ctor" data-uid="Hazelcast.Serialization.SerializationOptions.#ctor">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.-ctor.html#Hazelcast_Serialization_SerializationOptions__ctor">SerializationOptions()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Serialization.SerializationOptions.html">SerializationOptions</a> class.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_ClassDefinitions" data-uid="Hazelcast.Serialization.SerializationOptions.ClassDefinitions">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.ClassDefinitions.html#Hazelcast_Serialization_SerializationOptions_ClassDefinitions">ClassDefinitions</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the collection of <a class="xref" href="Hazelcast.Serialization.IClassDefinition.html">IClassDefinition</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_Compact" data-uid="Hazelcast.Serialization.SerializationOptions.Compact">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.Compact.html#Hazelcast_Serialization_SerializationOptions_Compact">Compact</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the compact serialization options.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_DataSerializableFactories" data-uid="Hazelcast.Serialization.SerializationOptions.DataSerializableFactories">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.DataSerializableFactories.html#Hazelcast_Serialization_SerializationOptions_DataSerializableFactories">DataSerializableFactories</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the collection of <a class="xref" href="Hazelcast.Serialization.FactoryOptions-1.html">FactoryOptions&lt;T&gt;</a> of <a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_EnableClrSerialization" data-uid="Hazelcast.Serialization.SerializationOptions.EnableClrSerialization">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.html#Hazelcast_Serialization_SerializationOptions_EnableClrSerialization">EnableClrSerialization</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether to enable CLR serialization via <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.runtime.serialization.formatters.binary.binaryformatter">BinaryFormatter</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_Endianness" data-uid="Hazelcast.Serialization.SerializationOptions.Endianness">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness">Endianness</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the <a class="xref" href="Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness">Endianness</a>. This value should match the server configuration.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_GlobalSerializer" data-uid="Hazelcast.Serialization.SerializationOptions.GlobalSerializer">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.GlobalSerializer.html#Hazelcast_Serialization_SerializationOptions_GlobalSerializer">GlobalSerializer</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Serialization.GlobalSerializerOptions.html">GlobalSerializerOptions</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_PortableFactories" data-uid="Hazelcast.Serialization.SerializationOptions.PortableFactories">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.PortableFactories.html#Hazelcast_Serialization_SerializationOptions_PortableFactories">PortableFactories</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the collection of <a class="xref" href="Hazelcast.Serialization.FactoryOptions-1.html">FactoryOptions&lt;T&gt;</a> of <a class="xref" href="Hazelcast.Serialization.IPortableFactory.html">IPortableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_PortableVersion" data-uid="Hazelcast.Serialization.SerializationOptions.PortableVersion">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.PortableVersion.html#Hazelcast_Serialization_SerializationOptions_PortableVersion">PortableVersion</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the portable version.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_Serializers" data-uid="Hazelcast.Serialization.SerializationOptions.Serializers">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.Serializers.html#Hazelcast_Serialization_SerializationOptions_Serializers">Serializers</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the collection of <a class="xref" href="Hazelcast.Serialization.SerializerOptions.html">SerializerOptions</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_ValidateClassDefinitions" data-uid="Hazelcast.Serialization.SerializationOptions.ValidateClassDefinitions">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.ValidateClassDefinitions.html#Hazelcast_Serialization_SerializationOptions_ValidateClassDefinitions">ValidateClassDefinitions</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether to check for class definition errors at start,
+and throw an Serialization Exception with error definition.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_AddDataSerializableFactory_System_Int32_Hazelcast_Serialization_IDataSerializableFactory_" data-uid="Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactory(System.Int32,Hazelcast.Serialization.IDataSerializableFactory)">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactory.html#Hazelcast_Serialization_SerializationOptions_AddDataSerializableFactory_System_Int32_Hazelcast_Serialization_IDataSerializableFactory_">AddDataSerializableFactory(int, IDataSerializableFactory)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_AddDataSerializableFactoryClass_System_Int32_System_String_" data-uid="Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactoryClass(System.Int32,System.String)">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactoryClass.html#Hazelcast_Serialization_SerializationOptions_AddDataSerializableFactoryClass_System_Int32_System_String_">AddDataSerializableFactoryClass(int, string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_AddDataSerializableFactoryClass_System_Int32_System_Type_" data-uid="Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactoryClass(System.Int32,System.Type)">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactoryClass.html#Hazelcast_Serialization_SerializationOptions_AddDataSerializableFactoryClass_System_Int32_System_Type_">AddDataSerializableFactoryClass(int, Type)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_AddPortableFactory_System_Int32_Hazelcast_Serialization_IPortableFactory_" data-uid="Hazelcast.Serialization.SerializationOptions.AddPortableFactory(System.Int32,Hazelcast.Serialization.IPortableFactory)">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.AddPortableFactory.html#Hazelcast_Serialization_SerializationOptions_AddPortableFactory_System_Int32_Hazelcast_Serialization_IPortableFactory_">AddPortableFactory(int, IPortableFactory)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="Hazelcast.Serialization.IPortableFactory.html">IPortableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_AddPortableFactory_System_Int32_System_String_" data-uid="Hazelcast.Serialization.SerializationOptions.AddPortableFactory(System.Int32,System.String)">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.AddPortableFactory.html#Hazelcast_Serialization_SerializationOptions_AddPortableFactory_System_Int32_System_String_">AddPortableFactory(int, string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="Hazelcast.Serialization.IPortableFactory.html">IPortableFactory</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializationOptions_AddPortableFactory_System_Int32_System_Type_" data-uid="Hazelcast.Serialization.SerializationOptions.AddPortableFactory(System.Int32,System.Type)">
+          <a class="xref" href="Hazelcast.Serialization.SerializationOptions.AddPortableFactory.html#Hazelcast_Serialization_SerializationOptions_AddPortableFactory_System_Int32_System_Type_">AddPortableFactory(int, Type)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an <a class="xref" href="Hazelcast.Serialization.IPortableFactory.html">IPortableFactory</a>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

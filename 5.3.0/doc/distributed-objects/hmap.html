@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>HMap, HMultiMap, HReplicatedMap | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="HMap, HMultiMap, HReplicatedMap | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../../styles/docfx.css">
+      <link rel="stylesheet" href="../../../styles/main.css">
+      <link rel="stylesheet" href="../../../styles/hz.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="hmap-hmultimap-hreplicatedmap">HMap, HMultiMap, HReplicatedMap</h1>
+
+<p>A <code>HMap</code> map is a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/map.html">Map</a> which can be considered as a distributed implementation of the well-known C# <code>IDictionary&lt;K,V&gt;</code>, with data being partitioned over members of the cluster, thus providing horizontal scalability. It is one of the most important Hazelcast data structures. Additionally, Hazelcast provides the following map-related data structures:</p>
+<ul>
+<li>A <code>HMultiMap</code> map is a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html">MultiMap</a>: a specialized map that supports storing multiple values under a single key.</li>
+<li>A <code>HReplicatedMap</code> map is a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html">ReplicatedMap</a>: a specialized map where data is replicated to all members of the cluster, instead of being partitioned, thus providing faster read/write accesses at the cost of higher server memory consumption.</li>
+</ul>
+<p>The maps behavior can be configured on the server: see the general <a href="https://docs.hazelcast.com/imdg/latest/data-structures/map.html">Map documentation</a> for complete details about maps.</p>
+<h2 id="defining-maps">Defining Maps</h2>
+<p>Maps are fully identified by their type (<code>HMap</code>, <code>HReplicatedMap</code> or <code>HMultiMap</code>) and unique name, regardless of the types specified for keys and values. In other words, an <code>HMap&lt;string, string&gt;</code> and an <code>HMap&lt;int, int&gt;</code> named with the same name are backed by the <em>same</em> cluster structure. Obviously, refering to a map with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.</p>
+<p>Key and value types can be just about any valid .NET type, provided that they can be (de)serialized by the Hazelcast .NET Client (see the <a href="../serialization.html">Serialization</a> documentation). They do not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves (for instance, if in-memory format is configured as <code>OBJECT</code>, or if entries are processed by entry processors), the types must also be (de)serializable by the cluster.</p>
+<p>Because keys may never be de-serialized on the cluster, the cluster always treat them as binary blobs, for comparison purposes. That is to say, two keys are considered identical by the cluster if their serialized representations are identical.</p>
+<h2 id="creating--destroying-maps">Creating &amp; Destroying Maps</h2>
+<p>A map is obtained from the Hazelcast .NET Client, and is created on-demand: if a map with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;);
+</code></pre>
+<p>Maps should be disposed after usage, in order to release their resources. Note that this only releases <em>client-side</em> resources, but the actual data remain available on the cluster for further usage. In order to wipe the map and its data entirely from the cluster, it needs to be destroyed:</p>
+<pre><code class="lang-csharp">await map.DestroyAsync();
+</code></pre>
+<h2 id="using-maps">Using Maps</h2>
+<p>The <code>HMap</code> structure is completely documented in the associated <a class="xref" href="../../api/Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> reference documentation. It provides methods to manipulate entries, such as:</p>
+<ul>
+<li><code>SetAsync(key, value)</code> and <code>PutAsync(key, value)</code> add an entry to the map</li>
+<li><code>GetAsync(key)</code> retrieves the value associated with a key</li>
+<li><code>GetKeysAsync()</code>, <code>GetValuesAsync()</code> retrieve the keys and values</li>
+<li><code>ContainsKeyAsync(key)</code>, <code>ContainsValueAsync(value)</code> determines whether the map contains a key or a value</li>
+<li><code>GetSizeAsync()</code> gets the number of entries, and <code>IsEmptyAsync()</code> determines whether the map is empty</li>
+<li><code>RemoveAsync(key)</code> and <code>DeleteAsync(key)</code> remove an entry</li>
+</ul>
+<p>The <code>HMap</code> structure also supports locks at entry level via methods such as:</p>
+<ul>
+<li><code>LockAsync(key)</code> locks the entry associated with the key</li>
+<li><code>UnlockAsync(key)</code> unlocks an entry that was previously locked</li>
+<li><code>IsLockedAsync(key)</code> determines whether an entry is locked</li>
+</ul>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Note that locks, due to the asynchronous aspect of the API, are not thread-based but context-based. Refer to the <a href="../locking.html">locking</a> documentation for complete details.</p>
+</div>
+<p>The <code>HMap</code> structure exposes events (see events <a href="../events.html">general documentation</a>) both at map level and at entry level. A complete list of events is provided in the <a class="xref" href="../../api/Hazelcast.DistributedObjects.MapEventHandlers-2.html">MapEventHandlers&lt;TKey, TValue&gt;</a> documentation. The following example illustrates how to subscribe, and unsubscribe, to map events:</p>
+<pre><code class="lang-csharp">var id = await map.SubscribeAsync(events =&gt; events
+    .EntryRemoved((sender, args) =&gt; {
+        logger.LogInformation($&quot;Key={args.Key} / value={args.Value} removed.&quot;)
+    })
+    .Cleared((sender, args) =&gt; {
+        logger.LogInformation(&quot;The map has been cleared.&quot;);
+    }));
+
+// ...
+
+await map.UnsubscribeAsync(id);
+</code></pre>
+<p>Note that the handler methods passed to e.g. <code>EntryRemoved</code> or <code>Cleared</code> can be asynchronous, too.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

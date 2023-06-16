@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Distributed Query | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Distributed Query | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="distributed-query">Distributed Query</h1>
+
+<p>Hazelcast partitions your data and spreads it across cluster of members. You can iterate over the map entries and look for certain entries (specified by predicates) you are interested in. However, this is not very efficient because you will have to bring the entire entry set and iterate locally. Instead, Hazelcast allows you to run distributed queries on your distributed map.</p>
+<h2 id="how-distributed-query-works">How Distributed Query Works</h2>
+<ol>
+<li>The requested predicate is sent to each member in the cluster.</li>
+<li>Each member looks at its own local entries and filters them according to the predicate. At this stage, key-value pairs of the entries are deserialized and then passed to the predicate.</li>
+<li>The predicate requester merges all the results coming from each member into a single set.</li>
+</ol>
+<p>Distributed query is highly scalable. If you add new members to the cluster, the partition count for each member is reduced and thus the time spent by each member on iterating its entries is reduced. In addition, the pool of partition threads evaluates the entries concurrently in each member, and the network traffic is also reduced since only filtered data is sent to the requester.</p>
+<p><strong>Predicates Class Operators</strong></p>
+<p>There are many built-in <code>IPredicate</code> implementations for your query requirements available via <code>Hazelcast.Query.Predicates</code> static class. Some of them are explained below.</p>
+<ul>
+<li><code>True()</code>, <code>False()</code>: Predicates returning true and hence including all the entries or false for filtering all out.</li>
+<li><code>EqualTo()</code>, <code>NotEqualTo()</code>: Checks if attribute value is equal or not equal to a given value.</li>
+<li><code>InstanceOf()</code>: Checks if attribute value has a certain type.</li>
+<li><code>Like(), ILike()</code>: Checks if attribute value matches some case-sensitive (like) or case-insensitive (ilike) string pattern. <code>%</code> (percentage sign) is the placeholder for any number of characters, <code>_</code> (underscore) is placeholder a single character.</li>
+<li><code>GreaterThan()</code>, <code>GreaterThanOrEqualTo()</code>, <code>LessThan()</code>, <code>LessThanOrEqualTo()</code>: Checks if attribute value is in specified relation with a value.</li>
+<li><code>Between()</code>: Checks if attribute value is in between two values (both are inclusive).</li>
+<li><code>In()</code>: Checks if attribute value is an element of a certain list.</li>
+<li><code>Not()</code>: Negates a provided predicate result.</li>
+<li><code>Match()</code>: Checks if attribute value matches some regular expression.</li>
+<li><code>Sql()</code>: Query using SQL syntax.</li>
+</ul>
+<p><strong>Example using Predicates</strong></p>
+<p>Please see the below example code for using <code>Predicates</code>.</p>
+<pre><code class="lang-csharp">var users = await client.GetMapAsync&lt;string, User&gt;(&quot;users&quot;);
+// Add some users to the Distributed Map
+
+// Create a Predicate from a SQL-like Where clause
+var sqlQuery = Predicates.Sql(&quot;active AND age BETWEEN 18 AND 21&quot;);
+
+// Creating the same Predicate as above but with a builder
+var criteriaQuery = Predicates.And(
+    Predicates.EqualTo(&quot;active&quot;, true),
+    Predicates.Between(&quot;age&quot;, 18, 21)
+);
+
+// Get result collections using the two different Predicates
+var result1 = await users.GetValuesAsync(sqlQuery);
+var result2 = await users.GetValuesAsync(criteriaQuery);
+</code></pre>
+<h3 id="employee-map-query-examples">Employee Map Query Examples</h3>
+<p>Assume that you have an <code>employee</code> map containing the values of <code>Employee</code>, as coded below.</p>
+<pre><code class="lang-csharp">public class Employee : IPortable
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public bool Active { get; set; }
+    public double Salary { get; set; }
+
+    public int ClassId =&gt; 100;
+    public int FactoryId =&gt; EmployeeSerializableFactory.FactoryId;
+
+    public void ReadPortable(IPortableReader reader)
+    {
+        Name = reader.ReadString(&quot;name&quot;);
+        Age = reader.ReadInt(&quot;age&quot;);
+        Active = reader.ReadBoolean(&quot;active&quot;);
+        Salary = reader.ReadDouble(&quot;salary&quot;);
+    }
+
+    public void WritePortable(IPortableWriter writer)
+    {
+        writer.WriteInt(&quot;age&quot;, Age);
+        writer.WriteString(&quot;name&quot;, Name);
+        writer.WriteBoolean(&quot;active&quot;, Active);
+        writer.WriteDouble(&quot;salary&quot;, Salary);
+    }
+}
+</code></pre>
+<p>Note that <code>Employee</code> is implementing <code>IPortable</code>. As portable types are not deserialized on the server side for querying, you don't need to implement its Java equivalent on the server side.</p>
+<p>For the non-portable types, you need to implement its Java equivalent and its serializable factory on the server side for server to reconstitute the objects from binary formats.
+In this case before starting the server, you need to compile the <code>Employee</code> and related factory classes with server's <code>CLASSPATH</code> and add them to the <code>user-lib</code> directory in the extracted <code>hazelcast-&lt;version&gt;.zip</code> (or <code>tar</code>). See <a href="https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath">Adding User Library to CLASSPATH</a>.</p>
+<blockquote>
+<p><strong>NOTE: Querying with <code>IPortable</code> interface is faster as compared to <code>IIdentifiedDataSerializable</code>.</strong></p>
+</blockquote>
+<h3 id="querying-by-combining-predicates-with-and-or-not">Querying by Combining Predicates with AND, OR, NOT</h3>
+<p>You can combine predicates by using the <code>And</code>, <code>Or</code> and <code>Not</code> operators, as shown in the below example.</p>
+<pre><code class="lang-csharp">var criteriaQuery = Predicates.And(
+    Predicates.EqualTo(&quot;active&quot;, true),
+    Predicates.LessThan(&quot;age&quot;, 30)
+);
+var result = await map.GetValuesAsync(criteriaQuery);
+</code></pre>
+<p>In the above example code, predicate verifies whether the entry is active and its <code>age</code> value is less than 30.
+This method sends the predicate to all cluster members and merges the results coming from them.</p>
+<blockquote>
+<p><strong>NOTE: Predicates can also be applied to <code>keySet</code> and <code>entrySet</code> of the Hazelcast IMDG's distributed map.</strong></p>
+</blockquote>
+<h3 id="querying-with-sql">Querying with SQL</h3>
+<p><code>Sql()</code> predicate takes the regular SQL Where clause. See the following example:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, Employee&gt;(&quot;employee&quot;);
+var employees = await map.GetValuesAsync(Predicates.Sql(&quot;active AND age &lt; 30&quot;));
+</code></pre>
+<h4 id="supported-sql-syntax">Supported SQL Syntax</h4>
+<p><strong>AND/OR:</strong> <code>&lt;expression&gt; AND (&lt;expression&gt; OR &lt;expression&gt;)…</code></p>
+<ul>
+<li><code>active AND age &gt; 30</code></li>
+<li><code>active = false OR age = 45 OR name = 'Joe'</code></li>
+<li><code>active AND ( age &gt; 20 OR salary &lt; 60000 )</code></li>
+</ul>
+<p><strong>Equality:</strong> <code>=, !=, &lt;, ⇐, &gt;, &gt;=</code></p>
+<ul>
+<li><code>&lt;expression&gt; = value</code></li>
+<li><code>age &lt;= 30</code></li>
+<li><code>name = 'Joe'</code></li>
+<li><code>salary != 50000</code></li>
+</ul>
+<p><strong>BETWEEN:</strong> <code>&lt;attribute&gt; [NOT] BETWEEN &lt;value1&gt; AND &lt;value2&gt;</code></p>
+<ul>
+<li><code>age BETWEEN 20 AND 33</code> (same as <code>age &gt;= 20 AND age ⇐ 33</code>)</li>
+<li><code>age NOT BETWEEN 30 AND 40</code> (same as <code>age &lt; 30 OR age &gt; 40</code>)</li>
+</ul>
+<p><strong>IN:</strong> <code>&lt;attribute&gt; [NOT] IN (val1, val2,…)</code></p>
+<ul>
+<li><code>age IN ( 20, 30, 40 )</code></li>
+<li><code>age NOT IN ( 60, 70 )</code></li>
+<li><code>active AND ( salary &gt;= 50000 OR ( age NOT BETWEEN 20 AND 30 ) )</code></li>
+<li><code>age IN ( 20, 30, 40 ) AND salary BETWEEN ( 50000, 80000 )</code></li>
+</ul>
+<p><strong>LIKE/ILIKE:</strong> <code>&lt;attribute&gt; [NOT] LIKE 'expression'</code></p>
+<p>The <code>%</code> (percentage sign) is the placeholder for multiple characters, an <code>_</code> (underscore) is the placeholder for only one character.</p>
+<ul>
+<li><code>name LIKE 'Jo%'</code> (true for 'Joe', 'Josh', 'Joseph' etc.)</li>
+<li><code>name LIKE 'Jo_'</code> (true for 'Joe'; false for 'Josh')</li>
+<li><code>name NOT LIKE 'Jo_'</code> (true for 'Josh'; false for 'Joe')</li>
+<li><code>name LIKE 'J_s%'</code> (true for 'Josh', 'Joseph'; false 'John', 'Joe')</li>
+<li><code>name ILIKE 'Jo%'</code> (true for 'Joe', 'joe', 'jOe','Josh','joSH', etc.)</li>
+<li><code>name ILIKE 'Jo_'</code> (true for 'Joe' or 'jOE'; false for 'Josh')</li>
+</ul>
+<p><strong>REGEX:</strong> <code>&lt;attribute&gt; [NOT] REGEX 'expression'</code></p>
+<ul>
+<li><code>name REGEX 'abc-.*'</code> (true for 'abc-123'; false for 'abx-123')</li>
+</ul>
+<h4 id="querying-examples-with-predicates">Querying Examples with Predicates</h4>
+<p>You can use the <code>__key</code> attribute to perform a predicated search for the entry keys. See the following example:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, Employee&gt;(&quot;employees&quot;);
+await map.PutAsync(&quot;Alice&quot;, new Employee { Name = &quot;Alice&quot;, Age = 35 });
+await map.PutAsync(&quot;Andy&quot;, new Employee { Name = &quot;Andy&quot;, Age = 37 });
+await map.PutAsync(&quot;Bob&quot;, new Employee { Name = &quot;Bob&quot;, Age = 22 });
+// ...
+var predicate = Predicates.Sql(&quot;__key like A%&quot;);
+var startingWithA = await map.GetValuesAsync(predicate);
+</code></pre>
+<p>You can also use <code>Predicates.Key</code> helper method. Here is an example:</p>
+<pre><code class="lang-csharp">//continued from previous example
+var predicate = Predicates.Key().IsLike(&quot;A%&quot;);
+var startingWithA = await map.GetValuesAsync(predicate);
+</code></pre>
+<p>It is also possible to use a complex object as key and make query on key fields.</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;Employee, int&gt;(&quot;employees&quot;);
+await map.PutAsync(new Employee { Name = &quot;Alice&quot;, Age = 35 }, 1);
+await map.PutAsync(new Employee { Name = &quot;Andy&quot;, Age = 37 }, 2);
+await map.PutAsync(new Employee { Name = &quot;Bob&quot;, Age = 22 }, 3);
+// ...
+var predicate = Predicates.Key(&quot;name&quot;).IsLike(&quot;A%&quot;); //identical to sql predicate:&quot;__key#name LIKE A%&quot;
+var startingWithA = await map.GetValuesAsync(predicate);
+</code></pre>
+<p>You can use the <code>this</code> attribute to perform a predicated search for entry values. See the following example:</p>
+<pre><code class="lang-csharp">//continued from previous example
+var predicate=Predicates.IsGreaterThan(&quot;this&quot;, 2);
+var result = employeeMap.Values(predicate);
+//result will include only Bob
+</code></pre>
+<h3 id="querying-with-json-strings">Querying with JSON Strings</h3>
+<p>You can query JSON strings stored inside your Hazelcast clusters. To query the JSON string,
+you first need to create a <code>Hazelcast.Core.HazelcastJsonValue</code> from the JSON string using the <code>HazelcastJsonValue(string jsonString)</code> constructor.
+You can use <code>HazelcastJsonValue</code>s both as keys and values in the distributed data structures.
+Then, it is possible to query these objects using the Hazelcast query methods explained in this section.</p>
+<pre><code class="lang-csharp">var person1 = new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 35 }&quot;);
+var person2 = new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 24 }&quot;);
+var person3 = new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 17 }&quot;);
+
+var idPersonMap = await client.GetMapAsync&lt;int, HazelcastJsonValue&gt;(&quot;jsonValues&quot;);
+
+await idPersonMap.PutAsync(1, person1);
+await idPersonMap.PutAsync(2, person2);
+await idPersonMap.PutAsync(3, person3);
+
+var peopleUnder21 = await idPersonMap.GetValuesAsync(Predicates.LessThan(&quot;age&quot;, 21));
+</code></pre>
+<p>When running the queries, Hazelcast treats values extracted from the JSON documents as Java types so they
+can be compared with the query attribute. JSON specification defines five primitive types to be used in the JSON
+documents: <code>number</code>,<code>string</code>, <code>true</code>, <code>false</code> and <code>null</code>. The <code>string</code>, <code>true/false</code> and <code>null</code> types are treated
+as <code>String</code>, <code>boolean</code> and <code>null</code>, respectively. We treat the extracted <code>number</code> values as <code>long</code>s if they
+can be represented by a <code>long</code>. Otherwise, <code>number</code>s are treated as <code>double</code>s.</p>
+<p>It is possible to query nested attributes and arrays in the JSON documents. The query syntax is the same
+as querying other Hazelcast objects using the Predicates.</p>
+<pre><code class="lang-csharp">/**
+ * Sample JSON object
+ *
+ * {
+ *     &quot;departmentId&quot;: 1,
+ *     &quot;room&quot;: &quot;alpha&quot;,
+ *     &quot;people&quot;: [
+ *         {
+ *             &quot;name&quot;: &quot;Peter&quot;,
+ *             &quot;age&quot;: 26,
+ *             &quot;salary&quot;: 50000
+ *         },
+ *         {
+ *             &quot;name&quot;: &quot;Jonah&quot;,
+ *             &quot;age&quot;: 50,
+ *             &quot;salary&quot;: 140000
+ *         }
+ *     ]
+ * }
+ *
+ *
+ * The following query finds all the departments that have a person named &quot;Peter&quot; working in them.
+ */
+
+var departmentsWithPeter = await departments.GetValuesAsync(Predicates.EqualTo(&quot;people[any].name&quot;, &quot;Peter&quot;));
+
+</code></pre>
+<p><code>HazelcastJsonValue</code> is a lightweight wrapper around your JSON strings. It is used merely as a way to indicate
+that the contained string should be treated as a valid JSON value. Hazelcast does not check the validity of JSON
+strings put into to the maps. Putting an invalid JSON string into a map is permissible. However, in that case
+whether such an entry is going to be returned or not from a query is not defined.</p>
+<h3 id="filtering-with-paging-predicates">Filtering with Paging Predicates</h3>
+<p>The .NET client provides paging for defined predicates. With its <code>Predicates.Page()</code> method, you can get a list of keys, values or entries page by page by filtering them with predicates and giving the size of the pages. Also, you can sort the entries by specifying comparators.</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;int, Student&gt;(&quot;students&quot;);
+var greaterEqual = Predicates.GreaterThanOrEqualTo(&quot;age&quot;, 18);
+var pagingPredicate = Predicates.Page(pageSize: 5, predicate: greaterEqual);
+// Retrieve the first page
+var values = await map.GetValuesAsync(pagingPredicate);
+//...
+// Set up next page
+pagingPredicate.NextPage();
+// Retrieve next page
+values = await map.GetValuesAsync(pagingPredicate);
+</code></pre>
+<p>If you want to sort the result before paging, you need to specify a comparator object that implements the <code>System.Collections.Generic.IComparer&lt;KeyValuePair&lt;object, object&gt;&gt;</code> interface.
+Also, this comparator class should implement' one of <code>IIdentifiedDataSerializable</code> or <code>IPortable</code>. After implementing this class in .NET,
+you need to implement the Java equivalent of it and its factory. The Java equivalent of the comparator should implement <code>java.util.Comparator</code>.
+Note that the <code>Compare</code> function of <code>Comparator</code> on the Java side is the equivalent of the <code>Compare</code> function of <code>IComparer</code> on the .NET side.
+When you implement the <code>Comparator</code> and its factory, you can add them to the <code>CLASSPATH</code> of the server side. See <a href="https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath">Adding User Library to CLASSPATH</a>.</p>
+<p>Also, you can access a specific page more easily with the help of the <code>Page</code> property of returned <code>IPagingPredicate</code>. This way, if you make a query for the 100th page, for example, it will get this page results immediately instead of reaching 100 pages one by one using the <code>NextPage</code> function.</p>
+<h2 id="fast-aggregations">Fast-Aggregations</h2>
+<p>Fast-Aggregations feature provides some aggregate functions, such as <code>sum</code>, <code>average</code>, <code>max</code>, and <code>min</code>, on top of Hazelcast <code>IHMap</code> entries.
+Their performance is perfect since they run in parallel for each partition and are highly optimized for speed and low memory consumption.</p>
+<p>The <code>Hazelcast.Aggregation.Aggregators</code> static class provides a wide variety of built-in aggregators. Some of them are presented below:</p>
+<ul>
+<li><code>Count()</code></li>
+<li><code>BigIntegerSum()</code></li>
+<li><code>DoubleSum()</code>, <code>DoubleAvg()</code></li>
+<li><code>IntegerSum()</code>, <code>IntegerAvg()</code></li>
+<li><code>LongSum()</code>, <code>LongAvg()</code></li>
+<li><code>NumberAvg()</code></li>
+<li><code>FixedPointSum()</code>, <code>FloatingPointSum()</code></li>
+<li><code>Min()</code>, <code>Max()</code></li>
+</ul>
+<p>You can use these aggregators with the <code>IHMap.AggregateAsync(IAggregator&lt;T&gt;)</code> and <code>IHMap.AggregateAsync(IAggregator&lt;T&gt;, IPredicate)</code> methods.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
