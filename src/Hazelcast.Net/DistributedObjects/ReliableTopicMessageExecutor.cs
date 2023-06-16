@@ -165,7 +165,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                         if (exceptionHandler != null)
                             await exceptionHandler.HandleAsync(_topic, default, default, default, _sequence, ex, _stateObject).CfAwait();
 
-                        if (cancellationToken.IsCancellationRequested || exceptionHandler.EventArgs.Cancel)
+                        if (cancellationToken.IsCancellationRequested || !exceptionHandler.EventArgs.Cancel)
                         {
                             _logger.IfWarning()?.LogWarning("Exception {Exception} caused to terminate the reliable topic subscription [{Id}]. ", ex, _id);
                             await DisposeAsync().CfAwaitNoThrow();

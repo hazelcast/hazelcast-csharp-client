@@ -94,7 +94,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                         HConsole.WriteLine(this, "Reliable topic subscription is disposed.");
                         mneDisposed.Set();
                     }
-                ).Exception((sender, args) => { args.Cancel = true; }),
+                ).Exception((sender, args) => { args.Cancel = false; }),
             new ReliableTopicEventHandlerOptions() {IsLossTolerant = false});
 
         // 0 is not a message.
@@ -262,7 +262,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             }).Exception((sender, args) =>
             {
                 Assert.IsInstanceOf<ArgumentOutOfRangeException>(args.Exception);
-                args.Cancel = false;
+                args.Cancel = true;
                 mneException.Set();
             }));
 

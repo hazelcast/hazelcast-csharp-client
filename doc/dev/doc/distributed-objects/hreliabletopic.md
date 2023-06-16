@@ -23,7 +23,7 @@ var rTopic = await client.GetReliableTopicAsync<string>("my-reliableTopic");
 There are three different parts can be configured. One is server side configuration, size of the backed ring buffer, TTL, overflow policy etc. Second is the reliable topic behavior on the client side, such as `ReliableTopicOptions.BatchSize` and `ReliableTopicOptions.Policy`. The batch size sets the number of messages read by the listener at once. And, overflow policy defines the behavior during publishing a message over `HReliableTopic`. Third one is for listener. The subscription is made to a `HReliableTopic` results in a listener. Some of the behaviors of the listener can be configured. For example, Los tolerancy, initial sequnce to start from, storing the sequence of the last read message and whether terminate the listener in case of an exception.
 
 > [!NOTE]
-> To have a durable listener, set `IsLossTolerant` is `false` and `StoreSequence` is `true`.
+> To have a durable listener, set `IsLossTolerant` to `false` and `StoreSequence` to `true`.
 
 Topics should be disposed after usage, in order to release their resources. Note that this only releases *client-side* resources, but the actual data remain available on the cluster for further usage. In order to wipe the topic and its data entirely from the cluster, it needs to be destroyed:
 
@@ -37,9 +37,12 @@ The `HReliableTopic` structure is completely documented in the associated @Hazel
 
 * `PublishAsync(message)` publishes a message
 
-The `HReliableTopic` structure exposes events in a way similar to `HTopic`, but with some additions. When a subscription is made to a `HReliableTopic`, a listener is spawn in a background task. The listener keeps listen the messages from backed `HRingBuffer`, and triggers the `Message` event.
+The `HReliableTopic` structure exposes events in a way similar to `HTopic`, but with some additions. When a subscription is made to a `HReliableTopic`, a background task is spawned. It listens to messages from the backing `HRingBuffer`, and triggers the corresponding `Message` topic events.
 
-One of the additions is `Terminated` event. It is triggered when the subscription is disposed by disposing the `HReliableTopic` or `await rTopic.UnsubscribeAsync(subscriptionId)` called or subscription is not loss tolerant or provided `Exception` event sets `args.Cancel` true which is default. On top of events, the listener can be configured via `ReliableTopicEventHandlerOptions`.
+In addition, 
+* The `Exception` event is raised when a message can not be processed, either because it can not be deserialized, or because an exception is thrown by one of the `Message` event handlers and interrupts the handling of the message. In this situation, by default, the subscription terminates, because it is not supposed to "skip" messages. It is however possible to cancel that termination by setting the `Cancel` event arguments property to `true`, in which case the subscription will move on to the next messages. 
+
+* The `Terminated` event is raised when the subscription terminates, either because of a non-canceled exception (see above), or when anything goes wrong with the underlying buffer (overload, loss...), or when it is actively terminated by e.g. disposing the reliable topic instance. Finally, the behavior of the subscription can be configured via the `ReliableTopicEventHandlerOptions`.
 
    
 

@@ -53,12 +53,10 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// Sets the handler which runs after the subscription is terminated and no further event will be raised.
     /// </summary>
     /// <remarks>
-    /// Terminated subscription will rise no event. It is triggered after subscription process is terminated completely.
-    /// It can be triggered result of <see cref="IHReliableTopic{T}.UnsubscribeAsync"/>
-    /// or <see cref="IAsyncDisposable.DisposeAsync"/> or <see cref="IDistributedObject.DestroyAsync"/>
-    /// or <see cref="ReliableTopicEventHandlerOptions.IsLossTolerant"/> is <c>False</c>
-    /// or when <see cref="ReliableTopicExceptionEventArgs.Cancel"/> is set <c>True</c> which is default value
-    /// when <see cref="Exception(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs})"/> is triggered. 
+    /// The Terminated event is raised when the subscription terminates, either because of a non-canceled exception
+    /// <see cref="Exception(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs})"/>,
+    /// or when anything goes wrong with the underlying buffer (overload, loss...),
+    /// or when it is actively terminated by e.g. disposing the reliable topic instance.
     /// </remarks>
     /// <param name="handler">The handler.</param>
     public ReliableTopicEventHandler<T> Terminated(Action<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs> handler)
@@ -72,12 +70,10 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// Sets the handler which runs after the subscription is terminated and no further event will be raised.
     /// </summary>
     /// <remarks>
-    /// Terminated subscription will rise no event. It is triggered after subscription process is terminated completely.
-    /// It can be triggered result of <see cref="IHReliableTopic{T}.UnsubscribeAsync"/>
-    /// or <see cref="IAsyncDisposable.DisposeAsync"/> or <see cref="IDistributedObject.DestroyAsync"/>
-    /// or <see cref="ReliableTopicEventHandlerOptions.IsLossTolerant"/> is <c>True</c>
-    /// or when <see cref="ReliableTopicExceptionEventArgs.Cancel"/> is set <c>True</c> which is default value
-    /// when <see cref="Exception(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs})"/> is triggered. 
+    /// The Terminated event is raised when the subscription terminates, either because of a non-canceled exception
+    /// <see cref="Exception(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs})"/>,
+    /// or when anything goes wrong with the underlying buffer (overload, loss...),
+    /// or when it is actively terminated by e.g. disposing the reliable topic instance.
     /// </remarks>
     /// <param name="handler">The handler.</param>
     public ReliableTopicEventHandler<T> Terminated(Func<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs, ValueTask> handler)

@@ -35,19 +35,20 @@ namespace Hazelcast.DistributedObjects
         }
         
         /// <summary>
-        /// Gets exception that triggers the event.
+        /// Gets the exception that triggers the event.
         /// </summary>
         public Exception Exception { get; }
         
         /// <summary>
-        /// Gets last known sequence.
+        /// Gets the last known sequence.
         /// </summary>
         public long Sequence { get; }
 
         /// <summary>
-        /// Sets or gets an exception terminates the subscription unless
-        /// the event is canceled by setting Cancel to <code>false</code>
+        /// Whether the event default action, which consists in terminating the subscription,
+        /// should be canceled or not. This is false by default (terminate) and should be set to
+        /// true to prevent the subscription from terminating.
         /// </summary>
-        public bool Cancel { get; set; } = true;
+        public bool Cancel { get; set; }
     }
 }
