@@ -597,7 +597,6 @@ Hazelcast.HazelcastOptions.HazelcastOptions() -> void
 ~Hazelcast.HazelcastOptions.Networking.get -> Hazelcast.Networking.NetworkingOptions
 ~Hazelcast.HazelcastOptions.PatternMatcher.get -> Hazelcast.Core.IPatternMatcher
 ~Hazelcast.HazelcastOptions.PatternMatcher.set -> void
-~Hazelcast.HazelcastOptions.Preview.get -> Hazelcast.PreviewOptions
 ~Hazelcast.HazelcastOptions.Serialization.get -> Hazelcast.Serialization.SerializationOptions
 ~Hazelcast.HazelcastOptions.Subscribers.get -> System.Collections.Generic.IList<Hazelcast.IHazelcastClientEventSubscriber>
 Hazelcast.HazelcastOptionsBase
@@ -651,7 +650,6 @@ Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider) -> void
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(string categoryName) -> Microsoft.Extensions.Logging.ILogger
 Hazelcast.Messaging.MessagingOptions
-~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.get -> int
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.set -> void
 Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.get -> bool
@@ -854,7 +852,6 @@ Hazelcast.Networking.NetworkingOptions
 ~Hazelcast.Networking.NetworkingOptions.ConnectionRetry.get -> Hazelcast.Core.ConnectionRetryOptions
 Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.get -> int
 Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.set -> void
-~Hazelcast.Networking.NetworkingOptions.NetworkingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Networking.NetworkingOptions.Reconnect.get -> bool
 Hazelcast.Networking.NetworkingOptions.Reconnect.set -> void
 Hazelcast.Networking.NetworkingOptions.ReconnectMode.get -> Hazelcast.Networking.ReconnectMode
@@ -905,13 +902,6 @@ Hazelcast.Partitioning.Strategies.IPartitionAware
 ~Hazelcast.Partitioning.Strategies.IPartitionAware.GetPartitionKey() -> object
 Hazelcast.Partitioning.Strategies.IPartitioningStrategy
 ~Hazelcast.Partitioning.Strategies.IPartitioningStrategy.GetPartitionKey(object o) -> object
-Hazelcast.PreviewOptions
-~Hazelcast.PreviewOptions.Clone() -> Hazelcast.PreviewOptions
-Hazelcast.PreviewOptions.EnableNewReconnectOptions.get -> bool
-Hazelcast.PreviewOptions.EnableNewReconnectOptions.set -> void
-Hazelcast.PreviewOptions.EnableNewRetryOptions.get -> bool
-Hazelcast.PreviewOptions.EnableNewRetryOptions.set -> void
-Hazelcast.PreviewOptions.PreviewOptions() -> void
 Hazelcast.Projection.IProjection
 Hazelcast.Projection.Projections
 Hazelcast.Protocol.Models.RemoteError
