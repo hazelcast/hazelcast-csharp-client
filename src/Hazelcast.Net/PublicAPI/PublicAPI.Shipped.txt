@@ -1985,3 +1985,4 @@ Hazelcast.Sql.SqlOptions.SqlOptions() -> void
 ~Hazelcast.Models.ReliableTopicOptions.Clone() -> Hazelcast.Models.ReliableTopicOptions
 ~Hazelcast.Networking.NetworkingOptions.Tpc.get -> Hazelcast.Networking.TpcOptions
 ~Hazelcast.Sql.SqlOptions.Clone() -> Hazelcast.Sql.SqlOptions
+Hazelcast.Models.ReliableTopicEventHandlerOptions.ReliableTopicEventHandlerOptions() -> void
