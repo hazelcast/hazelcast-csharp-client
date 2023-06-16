@@ -29,9 +29,9 @@ public class ReliableTopicEventHandlerOptions
     public long InitialSequence { get; set; } = -1;
 
     /// <summary>
-    /// Gets or sets this <see cref="ReliableTopicMessageEventHandler{T}"/> is able to deal with message loss.</summary>
+    /// Gets or sets this <see cref="ReliableTopicTerminatedMessageEventHandler{T}"/> is able to deal with message loss.</summary>
     /// <remarks> Even though the reliable topic promises to be reliable, it can be that a
-    /// <see cref="ReliableTopicMessageEventHandler{T}"/> is too slow. Eventually the message won't be available anymore.
+    /// <see cref="ReliableTopicTerminatedMessageEventHandler{T}"/> is too slow. Eventually the message won't be available anymore.
     /// <see cref="StoreSequence"/> should be set <code>true</code> to stop and dispose the subscriber in a data lost situation. 
     /// </remarks>
     public bool IsLossTolerant { get; set; }

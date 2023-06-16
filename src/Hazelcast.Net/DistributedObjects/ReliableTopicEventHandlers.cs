@@ -23,14 +23,14 @@ namespace Hazelcast.DistributedObjects;
 /// Represents the event handler for reliable topic.
 /// </summary>
 /// <typeparam name="T">Type of topic message.</typeparam>
-public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTopicEventHandler<T>>
+public sealed class ReliableTopicEventHandlers<T> : EventHandlersBase<IReliableTopicEventHandlerBase>
 {
     /// <summary>
     /// Adds the handler which runs when a message is received.
     /// </summary>
     /// <param name="handler">The handler.</param>
     /// <returns>The handlers.</returns>
-    public ReliableTopicEventHandler<T> Message(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
+    public ReliableTopicEventHandlers<T> Message(Action<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicMessageEventHandler<T>(handler));
@@ -42,7 +42,7 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// </summary>
     /// <param name="handler">The handler.</param>
     /// <returns>The handlers.</returns>
-    public ReliableTopicEventHandler<T> Message(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
+    public ReliableTopicEventHandlers<T> Message(Func<IHReliableTopic<T>, ReliableTopicMessageEventArgs<T>, ValueTask> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicMessageEventHandler<T>(handler));
@@ -59,7 +59,7 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// or when it is actively terminated by e.g. disposing the reliable topic instance.
     /// </remarks>
     /// <param name="handler">The handler.</param>
-    public ReliableTopicEventHandler<T> Terminated(Action<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs> handler)
+    public ReliableTopicEventHandlers<T> Terminated(Action<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicTerminatedEventHandler<T>(handler));
@@ -76,15 +76,13 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// or when it is actively terminated by e.g. disposing the reliable topic instance.
     /// </remarks>
     /// <param name="handler">The handler.</param>
-    public ReliableTopicEventHandler<T> Terminated(Func<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs, ValueTask> handler)
+    public ReliableTopicEventHandlers<T> Terminated(Func<IHReliableTopic<T>, ReliableTopicTerminatedEventArgs, ValueTask> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicTerminatedEventHandler<T>(handler));
         return this;
     }
-
-    // Exception event is single, no chaining.
-
+    
     /// <summary>
     /// Sets the handler when runs on exception.
     /// </summary>
@@ -96,10 +94,11 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// from next message -if any- or continue to listen the ring buffer as usual.
     /// </remarks>
     /// <param name="handler">The handler.</param>
-    public void Exception(Action<IHReliableTopic<T>, ReliableTopicExceptionEventArgs> handler)
+    public ReliableTopicEventHandlers<T> Exception(Action<IHReliableTopic<T>, ReliableTopicExceptionEventArgs> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicExceptionEventHandler<T>(handler));
+        return this;
     }
 
     /// <summary>
@@ -110,9 +109,10 @@ public sealed class ReliableTopicEventHandler<T> : EventHandlersBase<IReliableTo
     /// the <see cref="Message(System.Action{Hazelcast.DistributedObjects.IHReliableTopic{T},Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs{T}})"/> event.
     /// </remarks>
     /// <param name="handler">The handler.</param>
-    public void Exception(Func<IHReliableTopic<T>, ReliableTopicExceptionEventArgs, ValueTask> handler)
+    public ReliableTopicEventHandlers<T> Exception(Func<IHReliableTopic<T>, ReliableTopicExceptionEventArgs, ValueTask> handler)
     {
         if (handler is null) throw new ArgumentNullException(nameof(handler));
         Add(new ReliableTopicExceptionEventHandler<T>(handler));
+        return this;
     }
 }

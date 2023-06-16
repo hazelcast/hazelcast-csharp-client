@@ -53,7 +53,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     }
 
     /// <inheritdoc />
-    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events,
+    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandlers<TItem>> events,
         ReliableTopicEventHandlerOptions handlerOptions = default,
         object state = null)
     {

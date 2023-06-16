@@ -34,9 +34,9 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 {
     private BackgroundTask _backgroundTask;
     private IHRingBuffer<ReliableTopicMessage> _ringBuffer;
-    private Action<ReliableTopicEventHandler<TItem>> _events;
+    private Action<ReliableTopicEventHandlers<TItem>> _events;
     private readonly object _stateObject;
-    private ReliableTopicEventHandler<TItem> _handlers;
+    private ReliableTopicEventHandlers<TItem> _eventHandlers;
     private IHReliableTopic<TItem> _topic;
     private int _disposed;
     private ILogger _logger;
@@ -49,7 +49,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
     private Action<Guid> _onDisposed;
 
     private ReliableTopicMessageExecutor(IHRingBuffer<ReliableTopicMessage> ringBuffer,
-        Action<ReliableTopicEventHandler<TItem>> events,
+        Action<ReliableTopicEventHandlers<TItem>> events,
         object stateObject,
         IHReliableTopic<TItem> topic,
         ReliableTopicEventHandlerOptions options,
@@ -68,16 +68,16 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         _cluster = cluster;
         _serializationService = serializationService;
         _options = options ?? new ReliableTopicEventHandlerOptions();
-        _handlers = new ReliableTopicEventHandler<TItem>();
+        _eventHandlers = new ReliableTopicEventHandlers<TItem>();
         _stateObject = stateObject;
         _id = id;
         _onDisposed = onDisposed;
-        _events(_handlers);
+        _events(_eventHandlers);
         _backgroundTask = BackgroundTask.Run(ExecuteAsync);
     }
 
     public static ReliableTopicMessageExecutor<TItem> StartNew(IHRingBuffer<ReliableTopicMessage> ringBuffer,
-        Action<ReliableTopicEventHandler<TItem>> action,
+        Action<ReliableTopicEventHandlers<TItem>> action,
         object stateObject,
         IHReliableTopic<TItem> topic,
         ReliableTopicEventHandlerOptions options,
@@ -105,8 +105,8 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
     {
         await SetInitialSequenceOnceAsync().CfAwait();
 
-        var messageHandlers = _handlers
-            .OfType<ReliableTopicMessageEventHandler<TItem>>()
+        var messageHandlers = _eventHandlers
+            .OfType<IReliableTopicMessageEventHandler<TItem>>()
             .ToArray();
 
         while (!cancellationToken.IsCancellationRequested)
@@ -149,23 +149,24 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                             if (_options.StoreSequence) _sequence = seq;
 
                             await handler
-                                .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, default, _stateObject)
+                                .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq,  _stateObject)
                                 .CfAwait();
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger.IfDebug()?.LogError(ex, "Something went wrong while handling the event. ");
+                        
+                        var exceptionHandler = _eventHandlers
+                            .OfType<IReliableTopicExceptionEventHandler<TItem>>();
 
-                        // there can be only one exception handler. 
-                        var exceptionHandler = _handlers
-                            .OfType<ReliableTopicExceptionEventHandler<TItem>>()
-                            .FirstOrDefault();
+                        var args = new ReliableTopicExceptionEventArgs(ex, _sequence, _stateObject);
+                        foreach (var handler in exceptionHandler)
+                        {
+                            await handler.HandleAsync(_topic, args).CfAwaitNoThrow();
+                        }
 
-                        if (exceptionHandler != null)
-                            await exceptionHandler.HandleAsync(_topic, default, default, default, _sequence, ex, _stateObject).CfAwait();
-
-                        if (cancellationToken.IsCancellationRequested || !exceptionHandler.EventArgs.Cancel)
+                        if (cancellationToken.IsCancellationRequested || !args.Cancel)
                         {
                             _logger.IfWarning()?.LogWarning("Exception {Exception} caused to terminate the reliable topic subscription [{Id}]. ", ex, _id);
                             await DisposeAsync().CfAwaitNoThrow();
@@ -263,13 +264,13 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
             await _backgroundTask.CompletedOrCancelAsync(true).CfAwaitNoThrow();
             _onDisposed?.Invoke(_id);
 
-            var disposedHandler = _handlers
-                .FirstOrDefault(p => p.GetType() == typeof(ReliableTopicTerminatedEventHandler<TItem>));
+            var terminatedHandler = _eventHandlers
+                .OfType<ReliableTopicTerminatedEventHandler<TItem>>();
 
-            // Handle Disposed event.
-            if (disposedHandler != null)
+            // Handle Terminated event.
+            foreach (var handler in terminatedHandler)
             {
-                await disposedHandler.HandleAsync(default, default, 0, default, _sequence,default, _stateObject).CfAwaitNoThrow();
+                await handler.HandleAsync(default, _sequence,  _stateObject).CfAwaitNoThrow();
             }
         }
     }

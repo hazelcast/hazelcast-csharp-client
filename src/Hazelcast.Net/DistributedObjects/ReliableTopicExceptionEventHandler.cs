@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects
     /// Represents a handler for the <see cref="TopicEventTypes.Exception"/> event.
     /// </summary>
     /// <typeparam name="T">The reliable topic object type.</typeparam>
-    internal class ReliableTopicExceptionEventHandler<T> : IReliableTopicEventHandler<T>
+    internal class ReliableTopicExceptionEventHandler<T> : IReliableTopicExceptionEventHandler<T>
     {
         private readonly Func<IHReliableTopic<T>, ReliableTopicExceptionEventArgs, ValueTask> _handler;
 
@@ -40,11 +40,6 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <summary>
-        /// Gets event arguments of the event. It is useful to check <see cref="ReliableTopicExceptionEventArgs.Cancel"/>.
-        /// </summary>
-        public ReliableTopicExceptionEventArgs EventArgs { get; private set; }
-        
-        /// <summary>
         /// Initializes a new instance of the <see cref="ReliableTopicExceptionEventHandler{T}"/> class.
         /// </summary>
         /// <param name="handler">An action to execute</param>
@@ -54,10 +49,9 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHReliableTopic<T> sender, MemberInfo member, long publishTime, T payload, long sequence, Exception exception, object state)
+        public ValueTask HandleAsync(IHReliableTopic<T> sender, ReliableTopicExceptionEventArgs args)
         {
-            EventArgs = new ReliableTopicExceptionEventArgs(exception, sequence, state);
-            return _handler(sender, EventArgs);
+            return _handler(sender, args);
         }
     }
 }
