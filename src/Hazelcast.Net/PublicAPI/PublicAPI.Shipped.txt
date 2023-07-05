@@ -597,7 +597,6 @@ Hazelcast.HazelcastOptions.HazelcastOptions() -> void
 ~Hazelcast.HazelcastOptions.Networking.get -> Hazelcast.Networking.NetworkingOptions
 ~Hazelcast.HazelcastOptions.PatternMatcher.get -> Hazelcast.Core.IPatternMatcher
 ~Hazelcast.HazelcastOptions.PatternMatcher.set -> void
-~Hazelcast.HazelcastOptions.Preview.get -> Hazelcast.PreviewOptions
 ~Hazelcast.HazelcastOptions.Serialization.get -> Hazelcast.Serialization.SerializationOptions
 ~Hazelcast.HazelcastOptions.Subscribers.get -> System.Collections.Generic.IList<Hazelcast.IHazelcastClientEventSubscriber>
 Hazelcast.HazelcastOptionsBase
@@ -651,7 +650,6 @@ Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider) -> void
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(string categoryName) -> Microsoft.Extensions.Logging.ILogger
 Hazelcast.Messaging.MessagingOptions
-~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.get -> int
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.set -> void
 Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.get -> bool
@@ -854,7 +852,6 @@ Hazelcast.Networking.NetworkingOptions
 ~Hazelcast.Networking.NetworkingOptions.ConnectionRetry.get -> Hazelcast.Core.ConnectionRetryOptions
 Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.get -> int
 Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.set -> void
-~Hazelcast.Networking.NetworkingOptions.NetworkingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Networking.NetworkingOptions.Reconnect.get -> bool
 Hazelcast.Networking.NetworkingOptions.Reconnect.set -> void
 Hazelcast.Networking.NetworkingOptions.ReconnectMode.get -> Hazelcast.Networking.ReconnectMode
@@ -905,13 +902,6 @@ Hazelcast.Partitioning.Strategies.IPartitionAware
 ~Hazelcast.Partitioning.Strategies.IPartitionAware.GetPartitionKey() -> object
 Hazelcast.Partitioning.Strategies.IPartitioningStrategy
 ~Hazelcast.Partitioning.Strategies.IPartitioningStrategy.GetPartitionKey(object o) -> object
-Hazelcast.PreviewOptions
-~Hazelcast.PreviewOptions.Clone() -> Hazelcast.PreviewOptions
-Hazelcast.PreviewOptions.EnableNewReconnectOptions.get -> bool
-Hazelcast.PreviewOptions.EnableNewReconnectOptions.set -> void
-Hazelcast.PreviewOptions.EnableNewRetryOptions.get -> bool
-Hazelcast.PreviewOptions.EnableNewRetryOptions.set -> void
-Hazelcast.PreviewOptions.PreviewOptions() -> void
 Hazelcast.Projection.IProjection
 Hazelcast.Projection.Projections
 Hazelcast.Protocol.Models.RemoteError
@@ -1884,3 +1874,105 @@ override Hazelcast.Models.DistributedObjectInfo.GetHashCode() -> int
 ~static Hazelcast.Models.DistributedObjectInfo.operator !=(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
 ~static Hazelcast.Models.DistributedObjectInfo.operator ==(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
 ~override Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.get -> Microsoft.Extensions.Logging.ILoggerFactory
+Hazelcast.Core.PublisherAddressDataSerializerHook
+Hazelcast.Core.PublisherAddressDataSerializerHook.FactoryId.get -> int
+Hazelcast.Core.PublisherAddressDataSerializerHook.PublisherAddressDataSerializerHook() -> void
+Hazelcast.Core.ReliableTopicDataSeriazlierHook
+Hazelcast.Core.ReliableTopicDataSeriazlierHook.FactoryId.get -> int
+Hazelcast.Core.ReliableTopicDataSeriazlierHook.ReliableTopicDataSeriazlierHook() -> void
+Hazelcast.DistributedObjects.IHReliableTopic<T>
+Hazelcast.DistributedObjects.IHReliableTopic<T>.IsSubscription(System.Guid subscriptionId) -> bool
+Hazelcast.DistributedObjects.IHReliableTopic<T>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+Hazelcast.DistributedObjects.IReliableTopicEventHandlerBase
+Hazelcast.DistributedObjects.IReliableTopicExceptionEventHandler<T>
+Hazelcast.DistributedObjects.IReliableTopicMessageEventHandler<T>
+Hazelcast.DistributedObjects.IReliableTopicTerminatedEventHandler<T>
+Hazelcast.DistributedObjects.IRingBufferResultSet<T>
+Hazelcast.DistributedObjects.IRingBufferResultSet<T>.GetSequence(int index) -> long
+Hazelcast.DistributedObjects.IRingBufferResultSet<T>.NextSequence.get -> long
+Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.ReliableTopicEventHandlers() -> void
+Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs
+Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs.Cancel.get -> bool
+Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs.Cancel.set -> void
+Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs.Sequence.get -> long
+Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>
+Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.Cancel.get -> bool
+Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.Cancel.set -> void
+Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.Payload.get -> T
+Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.PublishTime.get -> long
+Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.Sequence.get -> long
+Hazelcast.DistributedObjects.ReliableTopicTerminatedEventArgs
+Hazelcast.DistributedObjects.ReliableTopicTerminatedEventArgs.Sequence.get -> long
+Hazelcast.Exceptions.TopicOverloadException
+Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException() -> void
+Hazelcast.Messaging.MessagingOptions.MessagingOptions() -> void
+Hazelcast.Models.PublisherAddress
+Hazelcast.Models.PublisherAddress.ClassId.get -> int
+Hazelcast.Models.PublisherAddress.FactoryId.get -> int
+Hazelcast.Models.PublisherAddress.IsIpV4.get -> bool
+Hazelcast.Models.PublisherAddress.IsIpV6.get -> bool
+Hazelcast.Models.PublisherAddress.PublisherAddress() -> void
+Hazelcast.Models.ReliableTopicEventHandlerOptions
+Hazelcast.Models.ReliableTopicEventHandlerOptions.InitialSequence.get -> long
+Hazelcast.Models.ReliableTopicEventHandlerOptions.InitialSequence.set -> void
+Hazelcast.Models.ReliableTopicEventHandlerOptions.IsLossTolerant.get -> bool
+Hazelcast.Models.ReliableTopicEventHandlerOptions.IsLossTolerant.set -> void
+Hazelcast.Models.ReliableTopicEventHandlerOptions.StoreSequence.get -> bool
+Hazelcast.Models.ReliableTopicEventHandlerOptions.StoreSequence.set -> void
+Hazelcast.Models.ReliableTopicOptions
+Hazelcast.Models.ReliableTopicOptions.BatchSize.get -> int
+Hazelcast.Models.ReliableTopicOptions.BatchSize.set -> void
+Hazelcast.Models.ReliableTopicOptions.Policy.get -> Hazelcast.Models.TopicOverloadPolicy
+Hazelcast.Models.ReliableTopicOptions.Policy.set -> void
+Hazelcast.Models.ReliableTopicOptions.ReliableTopicOptions() -> void
+Hazelcast.Models.ReliableTopicOptions.ReliableTopicOptions(Hazelcast.Models.TopicOverloadPolicy policy, int batchSize) -> void
+Hazelcast.Models.TopicOverloadPolicy
+Hazelcast.Models.TopicOverloadPolicy.Block = 2 -> Hazelcast.Models.TopicOverloadPolicy
+Hazelcast.Models.TopicOverloadPolicy.DiscardNewest = 1 -> Hazelcast.Models.TopicOverloadPolicy
+Hazelcast.Models.TopicOverloadPolicy.DiscardOldest = 0 -> Hazelcast.Models.TopicOverloadPolicy
+Hazelcast.Models.TopicOverloadPolicy.Error = 3 -> Hazelcast.Models.TopicOverloadPolicy
+Hazelcast.Networking.NetworkingOptions.NetworkingOptions() -> void
+Hazelcast.Networking.TpcOptions
+Hazelcast.Networking.TpcOptions.Enabled.get -> bool
+Hazelcast.Networking.TpcOptions.Enabled.set -> void
+Hazelcast.Networking.TpcOptions.Required.get -> bool
+Hazelcast.Networking.TpcOptions.Required.set -> void
+Hazelcast.Networking.TpcOptions.TpcOptions() -> void
+Hazelcast.Sql.SqlOptions
+Hazelcast.Sql.SqlOptions.PartitionArgumentIndexCacheSize.get -> int
+Hazelcast.Sql.SqlOptions.PartitionArgumentIndexCacheSize.set -> void
+Hazelcast.Sql.SqlOptions.SqlOptions() -> void
+~Hazelcast.Core.PublisherAddressDataSerializerHook.CreateFactory() -> Hazelcast.Serialization.IDataSerializableFactory
+~Hazelcast.Core.ReliableTopicDataSeriazlierHook.CreateFactory() -> Hazelcast.Serialization.IDataSerializableFactory
+~Hazelcast.DistributedObjects.IHReliableTopic<T>.PublishAsync(T message, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHReliableTopic<T>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>> events, Hazelcast.Models.ReliableTopicEventHandlerOptions handlerOptions = null, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IRingBufferResultSet<TItem>>
+~Hazelcast.DistributedObjects.IReliableTopicExceptionEventHandler<T>.HandleAsync(Hazelcast.DistributedObjects.IHReliableTopic<T> sender, Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs args) -> System.Threading.Tasks.ValueTask
+~Hazelcast.DistributedObjects.IReliableTopicMessageEventHandler<T>.HandleAsync(Hazelcast.DistributedObjects.IHReliableTopic<T> sender, Hazelcast.Models.MemberInfo member, long publishTime, T payload, long sequence, object state) -> System.Threading.Tasks.ValueTask
+~Hazelcast.DistributedObjects.IReliableTopicTerminatedEventHandler<T>.HandleAsync(Hazelcast.DistributedObjects.IHReliableTopic<T> sender, long sequence, object state) -> System.Threading.Tasks.ValueTask
+~Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.Exception(System.Action<Hazelcast.DistributedObjects.IHReliableTopic<T>, Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs> handler) -> Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+~Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.Exception(System.Func<Hazelcast.DistributedObjects.IHReliableTopic<T>, Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+~Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.Message(System.Action<Hazelcast.DistributedObjects.IHReliableTopic<T>, Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>> handler) -> Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+~Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.Message(System.Func<Hazelcast.DistributedObjects.IHReliableTopic<T>, Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+~Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.Terminated(System.Action<Hazelcast.DistributedObjects.IHReliableTopic<T>, Hazelcast.DistributedObjects.ReliableTopicTerminatedEventArgs> handler) -> Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+~Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>.Terminated(System.Func<Hazelcast.DistributedObjects.IHReliableTopic<T>, Hazelcast.DistributedObjects.ReliableTopicTerminatedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReliableTopicEventHandlers<T>
+~Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs.Exception.get -> System.Exception
+~Hazelcast.DistributedObjects.ReliableTopicExceptionEventArgs.ReliableTopicExceptionEventArgs(System.Exception exception, long sequence, object state) -> void
+~Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.Member.get -> Hazelcast.Models.MemberInfo
+~Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.ReliableTopicMessageEventArgs(Hazelcast.Models.MemberInfo member, long publishTime, T payload, long sequence, object state) -> void
+~Hazelcast.DistributedObjects.ReliableTopicTerminatedEventArgs.ReliableTopicTerminatedEventArgs(long sequence, object state) -> void
+~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(string message) -> void
+~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(System.Exception innerException) -> void
+~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.HazelcastOptions.ReliableTopics.get -> System.Collections.Generic.IDictionary<string, Hazelcast.Models.ReliableTopicOptions>
+~Hazelcast.HazelcastOptions.Sql.get -> Hazelcast.Sql.SqlOptions
+~Hazelcast.IHazelcastClient.GetReliableTopicAsync<T>(string name, Hazelcast.Models.ReliableTopicOptions option = null) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHReliableTopic<T>>
+~Hazelcast.Models.PublisherAddress.IpEndPoint.get -> System.Net.IPEndPoint
+~Hazelcast.Models.PublisherAddress.ReadData(Hazelcast.Serialization.IObjectDataInput input) -> void
+~Hazelcast.Models.PublisherAddress.WriteData(Hazelcast.Serialization.IObjectDataOutput output) -> void
+~Hazelcast.Models.ReliableTopicOptions.Clone() -> Hazelcast.Models.ReliableTopicOptions
+~Hazelcast.Networking.NetworkingOptions.Tpc.get -> Hazelcast.Networking.TpcOptions
+~Hazelcast.Sql.SqlOptions.Clone() -> Hazelcast.Sql.SqlOptions
+Hazelcast.Models.ReliableTopicEventHandlerOptions.ReliableTopicEventHandlerOptions() -> void
