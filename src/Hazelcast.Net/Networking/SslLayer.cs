@@ -197,7 +197,7 @@ namespace Hazelcast.Networking
                 }
                 else
                 {
-                    _logger.LogInformation("SSL certificate errors (chain validation) ignored by client configuration.");
+                    _logger.IfDebug().LogDebug("SSL certificate errors (chain validation) ignored by client configuration.");
                 }
             }
 
@@ -216,7 +216,7 @@ namespace Hazelcast.Networking
                 }
                 else
                 {
-                    _logger.LogInformation("SSL certificate errors (name validation) ignored by client configuration.");
+                    _logger.IfDebug().LogDebug("SSL certificate errors (name validation) ignored by client configuration.");
                 }
             }
 
