@@ -72,7 +72,7 @@ namespace Hazelcast.Tests.Networking
         public void ValidateCertificate()
         {
             var text = new StringBuilder();
-            var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text).AddDebug());
 
             var sender = new object();
 #pragma warning disable SYSLIB0026 // X509Certificate empty constructor is obsolete BUT here we DO want to use it to create an empty cert
