@@ -60,7 +60,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4-beta1.22403.2">
       <PrivateAssets>all</PrivateAssets>
@@ -192,6 +191,10 @@
       <PackagePath></PackagePath>
     </None>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' And '$(TargetFramework)' != 'netstandard2.1' ">
+    <Compile Remove="Polyfills\ZLib\*" />
   </ItemGroup>
 
 </Project>
