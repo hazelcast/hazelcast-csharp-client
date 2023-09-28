@@ -16,7 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Hazelcast.Core;
-using Ionic.Zlib;
+using System.IO.Compression;
+using Hazelcast.Polyfills;
 
 namespace Hazelcast.Metrics
 {
@@ -27,19 +28,14 @@ namespace Hazelcast.Metrics
         private const int InitialMetricsBufferSize = 2 << 11; // 4kB
         private const int InitialTempBufferSize = 2 << 8; // 512B
 
-        // about compression
-        // read https://stackoverflow.com/questions/6522778/java-util-zip-deflater-equivalent-in-c-sharp
-        // System.IO.Compression.DeflateStream is *not* Java-compatible!
-        // now using ZlibStream from DotNetZip, would be worth benchmarking against SharpZipLib
-
         // output streams for the blob containing the strings
         private MemoryStream _stringsBuffer;
-        private ZlibStream _stringsCompressStream;
+        private Stream _stringsCompressStream;
         private DataOutputStream _stringsOutput;
 
         // output streams for the blob containing the metrics
         private MemoryStream _metricsBuffer;
-        private ZlibStream _metricsCompressStream;
+        private Stream _metricsCompressStream;
         private DataOutputStream _metricsOutput;
 
         // temporary buffer to avoid fragmented writes to the compressed streams, when
@@ -47,7 +43,7 @@ namespace Hazelcast.Metrics
         private readonly MemoryStream _tempBuffer;
         private readonly DataOutputStream _tempOutput;
 
-        private SortedDictionary<string, int> _strings = new SortedDictionary<string, int>();
+        private SortedDictionary<string, int> _strings = new();
         private int _count;
         private IMetricDescriptor _lastDescriptor;
         private bool _disposed, _closed;
@@ -61,26 +57,33 @@ namespace Hazelcast.Metrics
             _tempOutput = new DataOutputStream(_tempBuffer);
         }
 
-        private static void Reset(ref MemoryStream buffer, ref ZlibStream compress, ref DataOutputStream output, int size)
+        private static void Reset(ref MemoryStream buffer, ref Stream compress, out DataOutputStream output, int size)
         {
             compress?.Dispose();
 
             // shrink if capacity is more than 50% larger than the estimated size
-            if (buffer == null || buffer.Capacity > 3 * size/ 2)
+            if (buffer == null)
             {
-                buffer?.Dispose();
                 buffer = new MemoryStream(size);
             }
+            else if (buffer.Capacity > 3 * size / 2)
+            {
+                buffer.Dispose();
+                buffer = new MemoryStream(size);
+            }
+            else
+            {
+                buffer.Seek(0, SeekOrigin.Begin);
+            }
 
-            buffer.Seek(0, SeekOrigin.Begin);
-            compress = new ZlibStream(buffer, CompressionMode.Compress, CompressionLevel.BestSpeed, true);
+            compress = ZLibStreamFactory.Compress(buffer, true);
             output = new DataOutputStream(compress);
         }
 
         private void Reset(int stringsBufferSize, int metricsBufferSize)
         {
-            Reset(ref _stringsBuffer, ref _stringsCompressStream, ref _stringsOutput, stringsBufferSize);
-            Reset(ref _metricsBuffer, ref _metricsCompressStream, ref _metricsOutput, metricsBufferSize);
+            Reset(ref _stringsBuffer, ref _stringsCompressStream, out _stringsOutput, stringsBufferSize);
+            Reset(ref _metricsBuffer, ref _metricsCompressStream, out _metricsOutput, metricsBufferSize);
 
             _strings = new SortedDictionary<string, int>();
             _count = 0;
