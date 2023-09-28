@@ -47,7 +47,7 @@ namespace Ionic.Crc
 #if !NETCF
     [Interop.ClassInterface(Interop.ClassInterfaceType.AutoDispatch)]
 #endif
-    public class CRC32
+    internal class CRC32
     {
         /// <summary>
         ///   Indicates the total number of bytes applied to the CRC.
@@ -496,7 +496,7 @@ namespace Ionic.Crc
     /// DotNetZip library.
     /// </para>
     /// </remarks>
-    public class CrcCalculatorStream : System.IO.Stream, System.IDisposable
+    internal class CrcCalculatorStream : System.IO.Stream, System.IDisposable
     {
         private static readonly Int64 UnsetLengthLimit = -99;
 
