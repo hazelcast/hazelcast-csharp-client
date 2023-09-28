@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>ICompactReader Interface
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="ICompactReader Interface
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Serialization.Compact.ICompactReader">
+
+
+
+  <h1 id="Hazelcast_Serialization_Compact_ICompactReader" data-uid="Hazelcast.Serialization.Compact.ICompactReader" class="text-break">ICompactReader Interface
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Serialization.html">Serialization</a>.<a class="xref" href="Hazelcast.Serialization.Compact.html">Compact</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Defines methods for reading fields from a compact-serialized blob.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public interface ICompactReader</code></pre>
+  </div>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_GetFieldKind_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.GetFieldKind(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.GetFieldKind.html#Hazelcast_Serialization_Compact_ICompactReader_GetFieldKind_System_String_">GetFieldKind(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Serialization.FieldKind.html">FieldKind</a> of a field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfBoolean_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfBoolean(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfBoolean.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfBoolean_System_String_">ReadArrayOfBoolean(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfBoolean">ArrayOfBoolean</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableBoolean">ArrayOfNullableBoolean</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfCompact__1_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfCompact``1(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfCompact.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfCompact__1_System_String_">ReadArrayOfCompact&lt;T&gt;(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfCompact">ArrayOfCompact</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfDate_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfDate(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfDate.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfDate_System_String_">ReadArrayOfDate(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfDate">ArrayOfDate</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfDecimal_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfDecimal(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfDecimal.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfDecimal_System_String_">ReadArrayOfDecimal(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfDecimal">ArrayOfDecimal</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfFloat32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfFloat32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfFloat32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfFloat32_System_String_">ReadArrayOfFloat32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfFloat32">ArrayOfFloat32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat32">ArrayOfNullableFloat32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfFloat64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfFloat64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfFloat64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfFloat64_System_String_">ReadArrayOfFloat64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfFloat64">ArrayOfFloat64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat64">ArrayOfNullableFloat64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt16_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt16(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt16.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt16_System_String_">ReadArrayOfInt16(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt16">ArrayOfInt16</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt16">ArrayOfNullableInt16</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt32_System_String_">ReadArrayOfInt32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt32">ArrayOfInt32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt32">ArrayOfNullableInt32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt64_System_String_">ReadArrayOfInt64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt64">ArrayOfInt64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt64">ArrayOfNullableInt64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt8_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt8(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt8.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfInt8_System_String_">ReadArrayOfInt8(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt8">ArrayOfInt8</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt8">ArrayOfNullableInt8</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableBoolean_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableBoolean(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableBoolean.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableBoolean_System_String_">ReadArrayOfNullableBoolean(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableBoolean">ArrayOfNullableBoolean</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfBoolean">ArrayOfBoolean</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableFloat32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableFloat32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableFloat32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableFloat32_System_String_">ReadArrayOfNullableFloat32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat32">ArrayOfNullableFloat32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfFloat32">ArrayOfFloat32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableFloat64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableFloat64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableFloat64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableFloat64_System_String_">ReadArrayOfNullableFloat64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableFloat64">ArrayOfNullableFloat64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfFloat64">ArrayOfFloat64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt16_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt16(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt16.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt16_System_String_">ReadArrayOfNullableInt16(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt16">ArrayOfNullableInt16</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt16">ArrayOfInt16</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt32_System_String_">ReadArrayOfNullableInt32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt32">ArrayOfNullableInt32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt32">ArrayOfInt32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt64_System_String_">ReadArrayOfNullableInt64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt64">ArrayOfNullableInt64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt64">ArrayOfInt64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt8_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt8(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt8.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfNullableInt8_System_String_">ReadArrayOfNullableInt8(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfNullableInt8">ArrayOfNullableInt8</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfInt8">ArrayOfInt8</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfString_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfString(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfString.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfString_System_String_">ReadArrayOfString(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfString">ArrayOfString</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfTime_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTime(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTime.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfTime_System_String_">ReadArrayOfTime(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfTime">ArrayOfTime</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfTimeStamp_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTimeStamp(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTimeStamp.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfTimeStamp_System_String_">ReadArrayOfTimeStamp(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfTimeStamp">ArrayOfTimeStamp</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfTimeStampWithTimeZone_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTimeStampWithTimeZone(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTimeStampWithTimeZone.html#Hazelcast_Serialization_Compact_ICompactReader_ReadArrayOfTimeStampWithTimeZone_System_String_">ReadArrayOfTimeStampWithTimeZone(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_ArrayOfTimeStampWithTimeZone">ArrayOfTimeStampWithTimeZone</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadBoolean_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadBoolean(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadBoolean.html#Hazelcast_Serialization_Compact_ICompactReader_ReadBoolean_System_String_">ReadBoolean(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Boolean">Boolean</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableBoolean">NullableBoolean</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadCompact__1_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadCompact``1(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadCompact.html#Hazelcast_Serialization_Compact_ICompactReader_ReadCompact__1_System_String_">ReadCompact&lt;T&gt;(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Compact">Compact</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadDate_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadDate(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadDate.html#Hazelcast_Serialization_Compact_ICompactReader_ReadDate_System_String_">ReadDate(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Date">Date</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadDecimal_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadDecimal(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadDecimal.html#Hazelcast_Serialization_Compact_ICompactReader_ReadDecimal_System_String_">ReadDecimal(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Decimal">Decimal</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadFloat32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadFloat32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadFloat32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadFloat32_System_String_">ReadFloat32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Float32">Float32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableFloat32">NullableFloat32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadFloat64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadFloat64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadFloat64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadFloat64_System_String_">ReadFloat64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Float64">Float64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableFloat64">NullableFloat64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadInt16_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadInt16(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadInt16.html#Hazelcast_Serialization_Compact_ICompactReader_ReadInt16_System_String_">ReadInt16(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int16">Int16</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt16">NullableInt16</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadInt32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadInt32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadInt32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadInt32_System_String_">ReadInt32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int32">Int32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt32">NullableInt32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadInt64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadInt64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadInt64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadInt64_System_String_">ReadInt64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int64">Int64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt64">NullableInt64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadInt8_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadInt8(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadInt8.html#Hazelcast_Serialization_Compact_ICompactReader_ReadInt8_System_String_">ReadInt8(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int8">Int8</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt8">NullableInt8</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableBoolean_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableBoolean(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableBoolean.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableBoolean_System_String_">ReadNullableBoolean(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableBoolean">NullableBoolean</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Boolean">Boolean</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableFloat32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableFloat32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableFloat32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableFloat32_System_String_">ReadNullableFloat32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableFloat32">NullableFloat32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Float32">Float32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableFloat64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableFloat64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableFloat64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableFloat64_System_String_">ReadNullableFloat64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableFloat64">NullableFloat64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Float64">Float64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt16_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt16(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt16.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt16_System_String_">ReadNullableInt16(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt16">NullableInt16</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int16">Int16</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt32_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt32(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt32.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt32_System_String_">ReadNullableInt32(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt32">NullableInt32</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int32">Int32</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt64_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt64(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt64.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt64_System_String_">ReadNullableInt64(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt64">NullableInt64</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int64">Int64</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt8_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt8(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt8.html#Hazelcast_Serialization_Compact_ICompactReader_ReadNullableInt8_System_String_">ReadNullableInt8(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_NullableInt8">NullableInt8</a> or <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Int8">Int8</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadString_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadString(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadString.html#Hazelcast_Serialization_Compact_ICompactReader_ReadString_System_String_">ReadString(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_String">String</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadTime_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadTime(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadTime.html#Hazelcast_Serialization_Compact_ICompactReader_ReadTime_System_String_">ReadTime(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_Time">Time</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadTimeStamp_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadTimeStamp(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadTimeStamp.html#Hazelcast_Serialization_Compact_ICompactReader_ReadTimeStamp_System_String_">ReadTimeStamp(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_TimeStamp">TimeStamp</a> field.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_Compact_ICompactReader_ReadTimeStampWithTimeZone_System_String_" data-uid="Hazelcast.Serialization.Compact.ICompactReader.ReadTimeStampWithTimeZone(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.Compact.ICompactReader.ReadTimeStampWithTimeZone.html#Hazelcast_Serialization_Compact_ICompactReader_ReadTimeStampWithTimeZone_System_String_">ReadTimeStampWithTimeZone(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a <a class="xref" href="Hazelcast.Serialization.FieldKind.html#Hazelcast_Serialization_FieldKind_TimeStampWithTimeZone">TimeStampWithTimeZone</a> field.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

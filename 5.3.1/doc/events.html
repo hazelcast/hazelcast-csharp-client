@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Events | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Events | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="events">Events</h1>
+
+<p>Events in the Hazelcast .NET Client rely on a handler-based model close to the C# <code>event</code> model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. Indeed, the following code has limitations:</p>
+<pre><code class="lang-csharp">thing.Updated += OnThingUpdated;
+thing.Deleted += OnThingDeleted;
+</code></pre>
+<p>Here,</p>
+<ul>
+<li>The operations are distinct, whereas Hazelcast subscriptions can handle multiple events at once</li>
+<li>The subscription is synchronous, whereas Hazelcast needs to notify the members of the subscription</li>
+<li>The handlers (e.g. <code>OnThingUpdated</code>) are synchronous</li>
+</ul>
+<h2 id="hazelcast-events">Hazelcast Events</h2>
+<p>To overcome these limitations, the Hazelcast .NET Client uses the following syntax:</p>
+<pre><code class="lang-csharp">var id = await thing.SubscribeAsync(events =&gt; events
+    .Updated(OnThingUpdated)
+    .Deleted(OnThingDeleted));
+</code></pre>
+<p>Here, the handlers can be synchronous, for instance:</p>
+<pre><code class="lang-csharp">private void OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{ 
+    ...
+}
+</code></pre>
+<p>But they can also be asynchronous, for instance:</p>
+<pre><code class="lang-csharp">private async ValueTask OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{
+    await ...
+}
+</code></pre>
+<p>In the example, the two events are subscribed <em>at once</em> and that subscription is represented by the returned <code>id</code>, which is a <code>Guid</code>. The two events can only be unsubscribed <em>at once</em> too, by passing this <code>id</code> back to the <code>UnsubscribeAsync</code> method:</p>
+<pre><code class="lang-csharp">await thing.UnsubscribeAsync(id);
+</code></pre>
+<p>Subscribing involves exchanging messages with the server, and takes time. Where traditional C# happily does:</p>
+<pre><code class="lang-csharp">thing.Updated += DoThis;
+thing.Updated += AlsoDoThis;
+</code></pre>
+<p>It would be much more efficient to group the two handlers:</p>
+<pre><code class="lang-csharp">var id = await thing.SubscribeAsync(events =&gt; events
+    .Updated((sender, args) =&gt; 
+    {
+        DoThis(sender, args);
+        AlsoDoThis(sender, args);
+    }));
+</code></pre>
+<p>This is also the only way to guarantee the order of execution of the two handlers, as the order in which events trigger is not specified, and should not be relied upon.</p>
+<h2 id="client-events">Client Events</h2>
+<p>The <a class="xref" href="../api/Hazelcast.IHazelcastClient.html">IHazelcastClient</a> exposes the following events:</p>
+<ul>
+<li><code>StateChanged</code> triggers when the client state changes</li>
+<li><code>PartitionLost</code> triggers when a partition is lost</li>
+<li><code>PartitionsUpdated</code> triggers when the partitions table is updated</li>
+<li><code>MembersUpdated</code> triggers when the members list is updated</li>
+<li><code>ObjectCreated</code> triggers when a distributed object is created</li>
+<li><code>ObjectDestroyed</code> triggers when a distributed object is destroyed</li>
+</ul>
+<p>The <a class="xref" href="../api/Hazelcast.IHazelcastClient.html">IHazelcastClient</a> directly supports subscribing to events. For instance:</p>
+<pre><code class="lang-csharp">var id = await client.SubscribeAsync(events =&gt; events
+    .StateChanged((sender, args) =&gt; {
+        System.Console.WriteLine($&quot;New client state: {args.State}&quot;);
+    }));
+</code></pre>
+<h3 id="statechanged">StateChanged</h3>
+<p>The <code>StateChanged</code> event triggers whenever the state of the client changes. Handles receive an instance of the <a class="xref" href="../api/Hazelcast.StateChangedEventArgs.html">StateChangedEventArgs</a> class, which exposes the following property:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.StateChangedEventArgs.State.html#Hazelcast_StateChangedEventArgs_State">State</a>: the new <a class="xref" href="../api/Hazelcast.ClientState.html">ClientState</a></li>
+</ul>
+<p>An <a class="xref" href="../api/Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance goes through the following <a class="xref" href="../api/Hazelcast.ClientState.html">ClientState</a> states:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Starting">Starting</a>: the client is starting and has not started to connect to members yet (transition state)</li>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Started">Started</a>: the client has started, and is now trying to connect to a first member (transition state)</li>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Connected">Connected</a>: the client is connected to at least one member (operational state)</li>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Disconnected">Disconnected</a>: the client has disconnected, due to its last member leaving the cluster, or a network error. Depending on its configuration it will either try to connect again (and transition back to <a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Connected">Connected</a> if successful) or fail and transition to <a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown">Shutdown</a> (transition state)</li>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_ClusterChanged">ClusterChanged</a>: the client switched the cluster, and connected. <code>Connected</code> state will be still reached after <code>ClusterChanged</code>. It occurs only if failover happened.</li>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_ShuttingDown">ShuttingDown</a>: the client has been disposed, i.e. properly requested to shut down, and is shutting down (transition state)</li>
+<li><a class="xref" href="../api/Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown">Shutdown</a>: the client has shut down (final state)</li>
+</ul>
+<h3 id="partitionlost">PartitionLost</h3>
+<p>The <code>PartitionLost</code> event triggers whenever the server notifies the client that a partition has been lost, usually because a member carrying that partition has left the cluster. Handlers receive an instance of the <a class="xref" href="../api/Hazelcast.Events.PartitionLostEventArgs.html">PartitionLostEventArgs</a> class, which exposes the following properties:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.Events.PartitionLostEventArgs.PartitionId.html#Hazelcast_Events_PartitionLostEventArgs_PartitionId">PartitionId</a>: the identifier of the lost partition</li>
+<li><a class="xref" href="../api/Hazelcast.Events.PartitionLostEventArgs.LostBackupCount.html#Hazelcast_Events_PartitionLostEventArgs_LostBackupCount">LostBackupCount</a>: how many backups were lost</li>
+<li><a class="xref" href="../api/Hazelcast.Events.PartitionLostEventArgs.IsAllReplicasInPartitionLost.html#Hazelcast_Events_PartitionLostEventArgs_IsAllReplicasInPartitionLost">IsAllReplicasInPartitionLost</a>: whether all replicas were lost</li>
+<li><a class="xref" href="../api/Hazelcast.Events.PartitionLostEventArgs.Member.html#Hazelcast_Events_PartitionLostEventArgs_Member">Member</a>: the member that was lost</li>
+</ul>
+<h3 id="partitionsupdated">PartitionsUpdated</h3>
+<p>The <code>PartitionsUpdated</code> event triggers whenever the server notifies the client of a new partitions list. This happens when the partitions list changes, but also periodically when the server wants to ensure that clients are aware of partitions. Handlers do not receive any event arguments.</p>
+<h3 id="membersupdated">MembersUpdated</h3>
+<p>The <code>MembersUpdated</code> event triggers whenever the server notifies the client of a new members list. This happens when members are added or removed from the cluster, but also periodically when the server wants to ensure that clients know about members. Handlers receive an instance of the <a class="xref" href="../api/Hazelcast.Events.MembersUpdatedEventArgs.html">MembersUpdatedEventArgs</a> class, which exposes the following properties:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.Events.MembersUpdatedEventArgs.AddedMembers.html#Hazelcast_Events_MembersUpdatedEventArgs_AddedMembers">AddedMembers</a>: a collection of <a class="xref" href="../api/Hazelcast.Models.MemberInfo.html">MemberInfo</a> representing the members that were added to the cluster</li>
+<li><a class="xref" href="../api/Hazelcast.Events.MembersUpdatedEventArgs.RemovedMembers.html#Hazelcast_Events_MembersUpdatedEventArgs_RemovedMembers">RemovedMembers</a>: a collection of <a class="xref" href="../api/Hazelcast.Models.MemberInfo.html">MemberInfo</a> representing the members that were removed from the cluster</li>
+<li><a class="xref" href="../api/Hazelcast.Events.MembersUpdatedEventArgs.Members.html#Hazelcast_Events_MembersUpdatedEventArgs_Members">Members</a>: a collection of <a class="xref" href="../api/Hazelcast.Models.MemberInfo.html">MemberInfo</a> representing all members in the cluster</li>
+</ul>
+<h3 id="objectcreated">ObjectCreated</h3>
+<p>The <code>ObjectCreated</code> event triggers whenever the server notifies the client that a new distributed object has been created (for instance, when the server creates a new map named <code>my-map</code>). Handlers receive an instance of the <a class="xref" href="../api/Hazelcast.Events.DistributedObjectCreatedEventArgs.html">DistributedObjectCreatedEventArgs</a> class, which exposes the following properties:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.Events.DistributedObjectLifecycleEventArgs.ServiceName.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_ServiceName">ServiceName</a>: the internal Hazelcast service name (for instance, for maps, <code>hz:impl:mapService</code>)</li>
+<li><a class="xref" href="../api/Hazelcast.Events.DistributedObjectLifecycleEventArgs.Name.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_Name">Name</a>: the name of the created object (for instance, <code>my-map</code>)</li>
+<li><a class="xref" href="../api/Hazelcast.Events.DistributedObjectLifecycleEventArgs.SourceMemberId.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_SourceMemberId">SourceMemberId</a>: the identifier of the member which triggered the event</li>
+</ul>
+<h3 id="objectdestroyed">ObjectDestroyed</h3>
+<p>The <code>ObjectDestroyed</code> event triggers whenever the server notifies the client that a distributed object has been destroyed (for instance, when the client requests that the server destroys a map named <code>my-map</code>). Handlers receive an instance of the <a class="xref" href="../api/Hazelcast.Events.DistributedObjectDestroyedEventArgs.html">DistributedObjectDestroyedEventArgs</a> class, which exposes the following properties:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.Events.DistributedObjectLifecycleEventArgs.ServiceName.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_ServiceName">ServiceName</a>: the internal Hazelcast service name (for instance, for maps, <code>hz:impl:mapService</code>)</li>
+<li><a class="xref" href="../api/Hazelcast.Events.DistributedObjectLifecycleEventArgs.Name.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_Name">Name</a>: the name of the destroyed object (for instance, <code>my-map</code>)</li>
+<li><a class="xref" href="../api/Hazelcast.Events.DistributedObjectLifecycleEventArgs.SourceMemberId.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_SourceMemberId">SourceMemberId</a>: the identifier of the member which triggered the event</li>
+</ul>
+<h2 id="distributed-objects-events">Distributed Objects Events</h2>
+<p>Each type of distributed object exposes events specific to the type. For instance, <a class="xref" href="../api/Hazelcast.DistributedObjects.IHList-1.html">IHList&lt;T&gt;</a> exposes the <code>ItemAdded</code> event:</p>
+<pre><code class="lang-csharp">var list = await client.GetListAsync(&quot;my-list&quot;);
+var id = await list.SubscribeAsync(events =&gt; events
+    .ItemAdded(async (sender, args) =&gt; 
+    {
+        await DoSomethingWithItem(args.Item);
+        await DoSomethingElseWithItem(args.Item);
+    }))
+</code></pre>
+<p>Refer to each distributed object's documentation for details on events.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

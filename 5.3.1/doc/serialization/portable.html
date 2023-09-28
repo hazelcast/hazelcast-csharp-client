@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Portable Serialization | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Portable Serialization | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../../styles/docfx.css">
+      <link rel="stylesheet" href="../../../styles/main.css">
+      <link rel="stylesheet" href="../../../styles/hz.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="portable-serialization">Portable Serialization</h1>
+
+<p>As an alternative to the existing serialization methods, Hazelcast offers portable serialization. To use it, you need to implement the <code>IPortable</code> interface. Portable serialization has the following advantages:</p>
+<ul>
+<li>Supporting multiversion of the same object type.</li>
+<li>Fetching individual fields without having to rely on the reflection.</li>
+<li>Querying and indexing support without deserialization and/or reflection.</li>
+</ul>
+<p>In order to support these features, a serialized <code>IPortable</code> object contains meta information like the version and concrete location of the each field in the binary data. This way Hazelcast is able to navigate in the binary data and deserialize only the required field without actually deserializing the whole object which improves the query performance.</p>
+<p>With multiversion support, you can have two members where each of them having different versions of the same object, and Hazelcast will store both meta information and use the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.</p>
+<p>Also note that portable serialization is totally language independent and is used as the binary protocol between Hazelcast server and clients.</p>
+<p>A sample portable implementation of a <code>Customer</code> class looks like the following:</p>
+<pre><code class="lang-csharp">public class Customer : IPortable
+{
+    public const int ClassId = 1;
+
+    public string Name { get; set; }
+    public int Id { get; set; }
+    public DateTime LastOrder { get; set; }
+
+    int IPortable.FactoryId =&gt; SamplePortableFactory.FactoryId;
+    int IPortable.ClassId =&gt; ClassId;
+
+    public void WritePortable(IPortableWriter writer)
+    {
+        writer.WriteInt(&quot;id&quot;, Id);
+        writer.WriteString(&quot;name&quot;, Name);
+        writer.WriteLong(&quot;lastOrder&quot;, LastOrder.ToFileTimeUtc());
+    }
+
+    public void ReadPortable(IPortableReader reader)
+    {
+        Id = reader.ReadInt(&quot;id&quot;);
+        Name = reader.ReadString(&quot;name&quot;);
+        LastOrder = DateTime.FromFileTimeUtc(reader.ReadLong(&quot;lastOrder&quot;));
+    }
+}
+</code></pre>
+<p>Similar to <code>IIdentifiedDataSerializable</code>, a Portable object must provide a <code>ClassId</code> and a <code>FactoryId</code> properties. The factory object will be used to create the Portable object given the classId.</p>
+<p>A sample <code>IPortableFactory</code> could be implemented as following:</p>
+<pre><code class="lang-csharp">public class SamplePortableFactory : IPortableFactory
+{
+    public const int FactoryId = 1;
+
+    public IPortable Create(int classId)
+    {
+        if (classId == Customer.ClassId)  return new Customer();
+        return null;
+    }
+}
+</code></pre>
+<p>The last step is to register the <code>IPortableFactory</code> to the <code>SerializationOptions</code>.</p>
+<p><strong>Programmatic Configuration:</strong></p>
+<pre><code class="lang-c#">var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+var factory = new SamplePortableFactory();
+hazelcastOptions.Serialization
+    .AddPortableFactory(SamplePortableFactory.FactoryId, factory);
+</code></pre>
+<p><strong>Declarative Configuration:</strong></p>
+<pre><code class="lang-json">{
+    &quot;hazelcast&quot;: {
+        &quot;serialization&quot;: {
+            &quot;portableFactories&quot;: [
+                {
+                    &quot;id&quot;: 1,
+                    &quot;typeName&quot;: &quot;SamplePortableFactory&quot;
+                }
+            ]
+        }
+    }
+}
+</code></pre>
+<p>Note that the identifier that is passed to the <code>SerializationConfig</code> is same as the value of the <code>FactoryId</code> of the <code>Customer</code> class.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

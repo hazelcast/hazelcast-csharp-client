@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Compact Serialization | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Compact Serialization | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../../styles/docfx.css">
+      <link rel="stylesheet" href="../../../styles/main.css">
+      <link rel="stylesheet" href="../../../styles/hz.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="compact-serialization">Compact Serialization</h1>
+
+<p>As an enhancement to existing serialization methods, Hazelcast offers compact serialization, with the following main features.</p>
+<ul>
+<li>Separates the schema from the data and stores it per type, not per object which results in less memory and bandwidth usage compared to other formats</li>
+<li>Does not require a class to implement an interface or change the source code of the class in any way</li>
+<li>Supports schema evolution which permits adding or removing fields, or changing the types of fields</li>
+<li>Can work with no configuration or any kind of factory/serializer registration for .NET classes and structs</li>
+<li>Platform and language independent</li>
+<li>Supports partial deserialization of fields, without deserializing the whole objects during queries or indexing</li>
+</ul>
+<p>Hazelcast achieves these features by having a well-known schema of objects and replicating them across the cluster which enables members and clients to fetch schemas they don’t have in their local registries. Each serialized object carries just a schema identifier and relies on the schema distribution service or configuration to match identifiers with the actual schema. Once the schemas are fetched, they are cached locally on the members and clients so that the next operations that use the schema do not incur extra costs.</p>
+<p>Schemas help Hazelcast to identify the locations of the fields on the serialized binary data. With this information, Hazelcast can deserialize individual fields of the data, without reading the whole binary. This results in a better query and indexing performance.</p>
+<p>Schemas can evolve freely by adding or removing fields. Even, the types of the fields can be changed. Multiple versions of the schema may live in the same cluster and both the old and new readers may read the compatible parts of the data. This feature is especially useful in rolling upgrade scenarios.</p>
+<p>The Compact serialization does not require any changes in the user classes as it doesn’t need a class to implement a particular interface. Serializers might be implemented and registered separately from the classes.</p>
+<p>It also supports zero-configuration use cases by automatically extracting schemas out of the classes and structs records using reflection, which is cached and reused later, with no extra cost.</p>
+<p>The underlying format of the compact serialized objects is platform and language independent. Native client supports will be added shortly after promoting this feature to stable status.</p>
+<h2 id="zero-configuration">Zero Configuration</h2>
+<p>Compact serialization can be used without registering a serializer for a type. Hazelcast will then try to extract a schema out of the class, using reflection, by inspecting all public properties. If successful, it registers the reflection-based serializer associated with the extracted schema and uses it while serializing and deserializing instances of that class. If the automatic schema extraction fails, Hazelcast throws an exception.</p>
+<p>Currently, most primitive types (<code>bool</code>, <code>int</code>...) are supported, as well as enums, arrays of those types, and nested classes. More advanced classes (e.g. <code>List&lt;T&gt;</code>) are not supported yet. Intefaces are not supported.</p>
+<h2 id="compact-serializer">Compact Serializer</h2>
+<p>Another way to use compact serialization is to implement the <code>ICompactSerializer&lt;T&gt;</code> interface for a type, and register it in the configuration. A basic serializer could look like:</p>
+<pre><code class="lang-csharp">public class EmployeeSerializer : ICompactSerializer&lt;Employee&gt;
+{
+    public string TypeName =&gt; &quot;employee&quot;;
+
+    public Employee Read(ICompactReader reader)
+    {
+        return new Employee
+        {
+            Id = reader.ReadInt64(&quot;id&quot;),
+            Name = reader.ReadString(&quot;name&quot;)
+        }
+    }
+
+    public void Write(ICompactWriter writer, Employee employee)
+    {
+        writer.WriteInt64(&quot;id&quot;, employee.Id);
+        writer.WriteString(&quot;name&quot;, employee.Name);
+    }
+}
+</code></pre>
+<p>Then, that serializer must be registered in the configuration:</p>
+<pre><code class="lang-csharp">options.Serialization.Compact.AddSerializer(new EmployeeSerializer());
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Only programmatic configuration is supported by the .NET client at the moment.</p>
+</div>
+<h2 id="schema-evolution">Schema Evolution</h2>
+<p>Compact serialization permits schemas and classes to evolve by adding or removing fields, or by changing the types of fields. More than one version of a class may live in the same cluster and different clients or members might use different versions of the class.</p>
+<p>Hazelcast handles the versioning internally. So, you don’t have to change anything in the classes or serializers apart from the added, removed, or changed fields.</p>
+<p>Hazelcast achieves this by identifying each version of the class by a unique fingerprint. Any change in a class results in a different fingerprint. Hazelcast uses a 64-bit Rabin Fingerprint to assign identifiers to schemas, which has an extremely low collision rate.</p>
+<p>Different versions of the schema with different identifiers are replicated in the cluster and can be fetched by clients or members internally. That allows old readers to read fields of the classes they know when they try to read data serialized by a new writer. Similarly, new readers might read fields of the classes available in the data, when they try to read data serialized by an old writer.</p>
+<p>This means that for one <em>type name</em>, there can be several schemas.</p>
+<p>In addition, the <code>ICompactReader</code> interface exposes methods such as <code>FieldKind GetFieldKind(string name)</code> which returns the <em>kind</em> (i.e. the actual type) of the field.</p>
+<h2 id="generic-record">Generic Record</h2>
+<p>Compact serialization introduces the <code>IGenericRecord</code> interface, which represents a container object that can be use in place of domain classes. The client always knows how to (de) serialize <code>IGenericRecord</code> instances and therefore does not require any configuration in order to handle them.</p>
+<p>A new record can be created as such:</p>
+<pre><code class="lang-csharp">var rec = GenericRecordBuilder.Compact(&quot;type-name&quot;)
+    .SetBoolean(&quot;field-name-1&quot;, true)
+    .SetInt32(&quot;field-name-2&quot;, 123)
+    .SetString(&quot;field-name-3&quot;, &quot;hello&quot;)
+    .Build();
+
+// assuming map is IHMap&lt;int, IGenericRecord&gt;
+await map.PutAsync(1234, rec);
+</code></pre>
+<p>A generic record can be used as such:</p>
+<pre><code class="lang-csharp">// assuming map is IHMap&lt;int, IGenericRecord&gt;
+var rec = await map.GetAsync(1234);
+var field1 = rec.GetBoolean(&quot;field-name-1&quot;)
+var field2 = rec.GetInt32(&quot;field-name-2&quot;)
+var field3 = rec.GetString(&quot;field-name-3&quot;)
+</code></pre>
+<p>Refer to the general documentation for more details on how to <a href="https://docs.hazelcast.com/hazelcast/latest/clusters/accessing-domain-objects">access domain objects without domain classes</a>.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

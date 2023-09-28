@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>SQL | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="SQL | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="sql">SQL</h1>
+
+<ul>
+<li><a href="#sql">SQL</a>
+<ul>
+<li><a href="#example-how-to-query-an-ihmap-using-sql">Example: How to Query an IHMap using SQL</a></li>
+<li><a href="#querying-ihmap">Querying IHMap</a>
+<ul>
+<li><a href="#map-names">Map Names</a></li>
+<li><a href="#field-names">Field Names</a>
+<ul>
+<li><a href="#key-and-value-objects">Key and Value Objects</a></li>
+<li><a href="#key-and-value-fields">Key and Value Fields</a></li>
+<li><a href="#select--queries">&quot;SELECT *&quot; Queries</a></li>
+</ul>
+</li>
+<li><a href="#special-characters-in-names">Special characters in names</a></li>
+<li><a href="#enumerating-query-result">Enumerating query result</a></li>
+<li><a href="#disposing-query-result">Disposing query result</a></li>
+<li><a href="#cancelling-query-enumeration">Cancelling query enumeration</a></li>
+<li><a href="extensions/linq.html">LINQ Provider</a></li>
+</ul>
+</li>
+<li><a href="#data-types">Data Types</a>
+<ul>
+<li><a href="#decimal-string-format">Decimal String Format</a></li>
+<li><a href="#date-string-format">Date String Format</a></li>
+<li><a href="#time-string-format">Time String Format</a></li>
+<li><a href="#timestamp-string-format">Timestamp String Format</a></li>
+<li><a href="#timestamp-with-timezone-string-format">Timestamp with Timezone String Format</a></li>
+</ul>
+</li>
+<li><a href="#casting">Casting</a>
+<ul>
+<li><a href="#how-to-cast">How to Cast</a></li>
+<li><a href="#casting-between-types">Casting Between Types</a></li>
+<li><a href="#an-example-of-implicit-cast">An Example of Implicit Cast</a></li>
+<li><a href="#an-example-of-explicit-cast">An Example of Explicit Cast</a></li>
+<li><a href="#important-notes-about-comparison-and-casting">Important Notes About Comparison and Casting</a></li>
+</ul>
+</li>
+<li><a href="#select">SELECT</a>
+<ul>
+<li><a href="#synopsis">Synopsis</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#sorting">Sorting</a></li>
+<li><a href="#unsupported-features">Unsupported Features</a></li>
+</ul>
+</li>
+<li><a href="#expressions">Expressions</a></li>
+<li><a href="#lite-members">Lite Members</a></li>
+<li><a href="#more-information">More Information</a></li>
+</ul>
+</li>
+</ul>
+<p>The SQL service provided by Hazelcast .NET client allows you to query data stored in <code>IHMap</code> declaratively.</p>
+<h2 id="example-how-to-query-an-ihmap-using-sql">Example: How to Query an IHMap using SQL</h2>
+<p>This SQL query returns map entries whose key are more than 2:</p>
+<pre><code class="lang-csharp">await using var map = await client.GetMapAsync&lt;int, string&gt;(&quot;MyMap&quot;);
+
+await client.Sql.ExecuteCommandAsync($&quot;CREATE OR REPLACE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='varchar')&quot;);
+
+await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v =&gt; v, v =&gt; $&quot;val-{v}&quot;));
+
+await using var result = await client.Sql.ExecuteQueryAsync($&quot;SELECT __key, this FROM {map.Name} WHERE __key &gt; 2&quot;);
+
+await foreach (var row in result)
+      Console.WriteLine($&quot;{row.GetKey&lt;int&gt;()}: {row.GetValue&lt;string&gt;()}&quot;);
+</code></pre>
+<blockquote>
+<p><strong>NOTE: The column value is deserialized but NOT cached. Each column is deserialized on demand. Avoid getting the value of a column multiple times. Cache it in a local variable.</strong></p>
+</blockquote>
+<h2 id="querying-ihmap">Querying IHMap</h2>
+<p>The following subsections describe how you can access Hazelcast map objects and perform queries on them.</p>
+<blockquote>
+<p>Before querying data in a map, you need to create a mapping to one.
+See <a href="https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping">Hazelcast docs</a></p>
+</blockquote>
+<h3 id="map-names">Map Names</h3>
+<p>The SQL service exposes <code>IHMap</code> objects as tables in the predefined <code>partitioned</code> schema using exact names.
+This schema is in the SQL service search path so that you can access the <code>IHMap</code> objects with or without the schema name.s</p>
+<p>Schema and table names are case-sensitive; you can access the <code>employee</code> map, for example, as employee or <code>partitioned.employee</code>,
+but not as <code>Employee</code>:</p>
+<pre><code class="lang-sql">SELECT * FROM employee
+SELECT * FROM partitioned.employee
+</code></pre>
+<h3 id="field-names">Field Names</h3>
+<p>The SQL service resolves fields accessible from the SQL automatically. The service reads the first local entry pair of the <code>IHMap</code> to construct the list of fields. If the <code>IHMap</code> does not have local entries on the member where the query is started, then the list of fields cannot be resolved, and an exception is thrown.</p>
+<p>Field names are case-sensitive.</p>
+<h4 id="key-and-value-objects">Key and Value Objects</h4>
+<p>An <code>IHMap</code> entry consists of a key and a value. These are accessible through the <code>__key</code> and <code>this</code> aliases. The following
+query returns the keys and values of all entries in a map:</p>
+<pre><code class="lang-sql">SELECT __key, this FROM employee
+</code></pre>
+<h4 id="key-and-value-fields">Key and Value Fields</h4>
+<p>You may also access the nested fields of a key or value. The list of exposed fields depends on the serialization format, as described below:</p>
+<ul>
+<li>For <a href="serialization.html#identifieddataserializable-serialization">IdentifiedDataSerializable</a> objects, you can use public field name or getter names.
+See <a href="https://docs.hazelcast.com/hazelcast/5.0/sql/querying-maps-sql">Hazelcast docs</a> for more information.</li>
+<li>For <a href="serialization.html#portable-serialization">Portable</a> objects, the fields written with <code>IPortableWriter</code> methods are exposed using their exact names.</li>
+<li>For <code>Json</code> objects, the fields can be accessed with <code>JSON_QUERY(..)</code> or <code>JSON_VALUE(..)</code>.</li>
+</ul>
+<p>For example, consider this portable class:</p>
+<pre><code class="lang-csharp">public class Employee : IPortable
+{
+    int IPortable.ClassId =&gt; 123;
+    int IPortable.FactoryId =&gt; 345;
+
+    public int Age { get; set; }
+    public string Name { get; set; }
+
+    public void ReadPortable(IPortableReader reader)
+    {
+        Age = reader.ReadInt(nameof(Age));
+        Name = reader.ReadString(nameof(Name));
+    }
+
+    public void WritePortable(IPortableWriter writer)
+    {
+        writer.WriteInt(nameof(Age), Age);
+        writer.WriteString(nameof(Name), Name);
+    }
+}
+</code></pre>
+<p>The SQL service can access the following fields:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>SQL Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>VARCHAR</td>
+</tr>
+<tr>
+<td>age</td>
+<td>INTEGER</td>
+</tr>
+</tbody>
+</table>
+<p>Together with the key and value objects, you may query the following fields from <code>IHMap&lt;int, Employee&gt;</code>:</p>
+<pre><code class="lang-sql">SELECT __key, this, Name, Age FROM employee
+</code></pre>
+<p>If both the key and value have fields with the same name, then the field of the value is exposed.</p>
+<h4 id="select--queries">&quot;SELECT *&quot; Queries</h4>
+<p>You may use the <code>SELECT * FROM &lt;table&gt;</code> syntax to get all the table fields.</p>
+<p>The <code>__key</code> and <code>this</code> fields are returned by the <code>SELECT *</code> queries if they do not have nested fields. For <code>IHMap&lt;number, Employee&gt;</code>, the following query does not return the <code>this</code> field, because the value has nested fields <code>Name</code> and <code>Age</code>:</p>
+<pre><code class="lang-sql">-- Returns __key, Name, Age
+SELECT * FROM employee
+</code></pre>
+<h3 id="special-characters-in-names">Special characters in names</h3>
+<p>If map or field name contains non-alphanumeric characters or starts with a number, you will need to enclose it in double quotes:</p>
+<pre><code class="lang-sql">SELECT * FROM &quot;my-map&quot;
+SELECT * FROM &quot;2map&quot;
+</code></pre>
+<h3 id="enumerating-query-result">Enumerating query result</h3>
+<p><code>ISqlService.ExecuteQuery</code> returns <code>Hazelcast.Sql.ISqlQueryResult</code> which provides methods to manage current query:</p>
+<pre><code class="lang-csharp">await using var result = await client.Sql.ExecuteQueryAsync(&quot;SELECT Name, Age FROM employee&quot;);
+</code></pre>
+<p>It implements <code>IAsyncEnumerable&lt;SqlRow&gt;</code> as one-off stream of rows and can be enumerated via regular <code>foreach</code> cycle:</p>
+<pre><code class="lang-csharp">await foreach (var row in result)
+    Console.WriteLine(row.GetColumn&lt;string&gt;(&quot;Name&quot;));
+</code></pre>
+<p>Using LINQ over <code>IAsyncEnumerable&lt;T&gt;</code> is also possible but requires installing <a href="https://www.nuget.org/packages/System.Linq.Async">System.Linq.Async</a> package. See <a href="https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs">SqlLinqEnumerationExample</a> as an example.</p>
+<blockquote>
+<p><strong>NOTE: Obtained result is not reusable as <code>IAsyncEnumerable&lt;SqlRow&gt;</code>. It will never restart enumeration but continue where previous one finished.</strong></p>
+</blockquote>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Give attention that filtering and projection is done in local of client in the example. To use LINQ which runs all query on server, please see <a href="extensions/linq.html">LINQ Provider</a>.</p>
+</div>
+<h3 id="disposing-query-result">Disposing query result</h3>
+<p><code>ISqlQueryResult</code> implements <code>IAsyncDisposable</code>. It's <code>DisposeAsync</code> implementation will make sure to cancel the query and free used server resources.</p>
+<p>Because of this, it is recommended to wrap operations with query into <code>await using</code> statement. This will ensure to send Cancel request in case if query is cancelled client-side or exception is thrown before it is completed or all rows are exhausted:</p>
+<pre><code class="lang-csharp">await using (var result = await client.Sql.ExecuteQueryAsync(&quot;SELECT * FROM MyMap&quot;))
+{
+    //...
+}
+</code></pre>
+<h3 id="cancelling-query-enumeration">Cancelling query enumeration</h3>
+<p>You can cancel enumeration of <code>ISqlQueryResult</code>, via <a href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskasyncenumerableextensions.withcancellation">WithCancellation</a> extension method, see <a href="https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql/SqlCancellationExample.cs">SqlCancellationExample</a>.</p>
+<p>If you're using System.Linq.Async package, you can also pass <code>CancellationToken</code> to <code>ToListAsync</code>, <code>ToArrayAsync</code> and related methods.</p>
+<blockquote>
+<p><strong>NOTE: At the moment cancellation doesn't work during server query itself. Cancellation will stop the enumeration before fetching next page or switching to the next row of the current page, but won't stop executing request. This will be fixed in the later versions.</strong></p>
+</blockquote>
+<h2 id="data-types">Data Types</h2>
+<p>The SQL service supports a set of SQL data types represented by <code>Hazelcast.Sql.SqlColumnType</code> enum. The table below shows SQL datatype, and corresponding .NET types:</p>
+<table>
+<thead>
+<tr>
+<th>Column Type</th>
+<th>.NET</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VARCHAR</strong></td>
+<td><code>string</code></td>
+</tr>
+<tr>
+<td><strong>BOOLEAN</strong></td>
+<td><code>bool</code></td>
+</tr>
+<tr>
+<td><strong>TINYINT</strong></td>
+<td><code>byte</code></td>
+</tr>
+<tr>
+<td><strong>SMALLINT</strong></td>
+<td><code>short</code></td>
+</tr>
+<tr>
+<td><strong>INTEGER</strong></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><strong>BIGINT</strong></td>
+<td><code>long</code></td>
+</tr>
+<tr>
+<td><strong>DECIMAL</strong></td>
+<td><code>Hazelcast.Sql.HBigDecimal</code></td>
+</tr>
+<tr>
+<td><strong>REAL</strong></td>
+<td><code>float</code></td>
+</tr>
+<tr>
+<td><strong>DOUBLE</strong></td>
+<td><code>double</code></td>
+</tr>
+<tr>
+<td><strong>DATE</strong></td>
+<td><code>Hazelcast.Sql.HLocalDate</code></td>
+</tr>
+<tr>
+<td><strong>TIME</strong></td>
+<td><code>Hazelcast.Sql.HLocalTime</code></td>
+</tr>
+<tr>
+<td><strong>TIMESTAMP</strong></td>
+<td><code>Hazelcast.Sql.HLocalDateTime</code></td>
+</tr>
+<tr>
+<td><strong>TIMESTAMP_WITH_TIME_ZONE</strong></td>
+<td><code>Hazelcast.Sql.HOffsetDateTime</code></td>
+</tr>
+<tr>
+<td><strong>OBJECT</strong></td>
+<td>Any class</td>
+</tr>
+<tr>
+<td><strong>JSON</strong></td>
+<td><code>Hazelcast.Core.HazelcastJsonValue</code></td>
+</tr>
+<tr>
+<td><strong>NULL</strong></td>
+<td><code>null</code></td>
+</tr>
+</tbody>
+</table>
+<p>All <code>Hazelcast.Sql.*</code> types has conversion to and from their closest built-in counterparts. Table below lists possible conversions:</p>
+<p>| Hazelcast type                  | To .NET Type      | From .NET Type         |
+----------------------------------|-------------------|------------------------|
+| <code>Hazelcast.Sql.HBigDecimal</code>     | <code>decimal</code>**       | <code>decimal</code>              |
+| <code>Hazelcast.Sql.HLocalDate</code>      | <code>DateTime</code>*       | <code>DateTime</code>             |
+| <code>Hazelcast.Sql.HLocalTime</code>      | <code>TimeSpan</code>        | <code>TimeSpan</code>, <code>DateTime</code> |
+| <code>Hazelcast.Sql.HLocalDateTime</code>  | <code>DateTime</code>*       | <code>DateTime</code>             |
+| <code>Hazelcast.Sql.HOffsetDateTime</code> | <code>DateTimeOffset</code>* | <code>DateTimeOffset</code>       |
+<sup>* - Possible <code>ArgumentOutOfRangeException</code> </sup>
+<sup>** - Possible <code>OverflowException</code> </sup>
+|</p>
+<h3 id="decimal-string-format">Decimal String Format</h3>
+<p>SQL <code>DECIMAL</code> type uses dot as separator.</p>
+<p>Examples: <code>12345</code>, <code>123456.789</code>.</p>
+<h3 id="date-string-format">Date String Format</h3>
+<p>SQL <code>DATE</code> type uses <code>yyyy-mm-dd</code> format.</p>
+<p>Examples: <code>2021-07-01</code>, <code>1990-12-31</code>.</p>
+<h3 id="time-string-format">Time String Format</h3>
+<p>SQL <code>TIME</code> uses <code>HH:mm:ss.SSS</code> where <code>HH</code> is in 24-hour format and, <code>SSS</code> represents nanoseconds and can be at most 9 digits long.</p>
+<p>Examples: <code>10:20:30</code>, <code>23:59:59.999999999</code></p>
+<h3 id="timestamp-string-format">Timestamp String Format</h3>
+<p>SQL <code>TIMESTAMP</code> type uses <code>yyyy-mm-dd(T|t)HH:mm:ss.SSS</code> which is the combination of
+<code>DATE</code> and <code>TIME</code> strings. There must be a <code>T</code> or <code>t</code> letter in between.</p>
+<p>Examples: <code>2021-07-01T10:20:30</code>, <code>1990-12-31t23:59:59.999999999</code></p>
+<h3 id="timestamp-with-timezone-string-format">Timestamp with Timezone String Format</h3>
+<p>SQL <code>TIMESTAMP WITH TIMEZONE</code> uses <code>yyyy-mm-dd(T|t)HH:mm:ss.SSS{timezoneString}</code> which is the combination of <code>TIMESTAMP</code> and timezone strings. The timezone string can be one of <code>Z</code>, <code>+hh:mm</code> or <code>-hh:mm</code> where <code>hh</code> represents hour-in-day, and <code>mm</code> represents minutes-in-hour.
+The timezone must be in the range <code>[-18:00, +18:00]</code>.</p>
+<p><code>2021-07-01T10:20:30Z</code>, <code>1990-12-31t23:59:59.999999999+11:30</code></p>
+<h2 id="casting">Casting</h2>
+<p>You may need to use casting when sending parameters for certain types. In general, you should try to send a parameter that has the same data type as the related column.</p>
+<h3 id="how-to-cast">How to Cast</h3>
+<p>Casting syntax: <code>CAST(? AS TYPE)</code></p>
+<p>Example casting:</p>
+<pre><code class="lang-sql">SELECT * FROM someMap WHERE this = CAST(? AS INTEGER)
+</code></pre>
+<h3 id="casting-between-types">Casting Between Types</h3>
+<p>When comparing a column with a parameter, your parameter must be of a compatible type. You can cast string to every SQL type.</p>
+<h3 id="an-example-of-implicit-cast">An Example of Implicit Cast</h3>
+<p>In the example below, Age column is of type <code>INTEGER</code>. We pass parameters as shorts (<code>TINYINT</code>) and they are automatically casted to <code>INTEGER</code> for comparison.</p>
+<pre><code class="lang-csharp">await using var result = await client.Sql.ExecuteQueryAsync(
+    $&quot;SELECT Name FROM {map.Name} WHERE Age &gt; ? AND Age &lt; ?&quot;,
+    (short)20, (short)30
+);
+</code></pre>
+<h3 id="an-example-of-explicit-cast">An Example of Explicit Cast</h3>
+<p>In the example below, Age column is of type <code>INTEGER</code>. We pass parameters as strings (<code>VARCHAR</code>) and cast them to <code>INTEGER</code> for comparison.</p>
+<pre><code class="lang-csharp">await using var result = await client.Sql.ExecuteQueryAsync(
+    $&quot;SELECT Name FROM {map.Name} WHERE Age &gt; CAST(? AS INTEGER) AND Age &lt; CAST(? AS INTEGER)&quot;,
+    &quot;20&quot;, &quot;30&quot;
+);
+</code></pre>
+<h3 id="important-notes-about-comparison-and-casting">Important Notes About Comparison and Casting</h3>
+<ul>
+<li><p>In case of comparison operators (=, &lt;, &lt;&gt;, ...), if one side is <code>?</code>, it's assumed to be exactly the other side's type, except that <code>TINYINT</code>, <code>SMALLINT</code>, <code>INTEGER</code> are all converted to <code>BIGINT</code>. Note, that reverse is not valid as it may lead to value loss.</p>
+</li>
+<li><p>String parameters can be cast to any type. The cast operation may fail though.</p>
+</li>
+<li><p>To send a <code>DECIMAL</code> type, use <code>Hazelcast.Sql.HBigDecimal</code> or an explicit <code>CAST</code> from string or other number type.</p>
+</li>
+<li><p>To send date and time related types, use corresponding <code>Hazelcast.Sql.H*</code> type or a string with an explicit <code>CAST</code>.</p>
+</li>
+</ul>
+<h2 id="select">SELECT</h2>
+<h3 id="synopsis">Synopsis</h3>
+<pre><code class="lang-sql">SELECT [ * | expression [ [ AS ] expression_alias ] [, ...] ]
+FROM table_name [ [ AS ] table_alias ]
+[WHERE condition]
+</code></pre>
+<h3 id="description">Description</h3>
+<p>The <code>SELECT</code> query retrieves rows from a table. A row is a sequence of expressions defined after the <code>SELECT</code> keyword. Expressions may have optional aliases.</p>
+<p><code>table_name</code> refers to a single <code>IHMap</code> data structure. A table may have an optional alias.</p>
+<p>An optional <code>WHERE</code> clause defines a condition, that is any expression that evaluates to a result of type boolean. Any row that doesn’t satisfy the condition is eliminated from the result.</p>
+<h3 id="sorting">Sorting</h3>
+<p>You can use the standard SQL clauses ORDER BY, LIMIT, and OFFSET to sort and limit the result set. In order to do so, you need server configuration. See <a href="https://docs.hazelcast.com/hazelcast/5.0/query/indexing-maps">Hazelcast docs</a> for more.</p>
+<h3 id="unsupported-features">Unsupported Features</h3>
+<p>The following features are <strong>not supported</strong> and are planned for future releases:</p>
+<ul>
+<li>set operators (<code>UNION</code>, <code>INTERSECT</code>, <code>MINUS</code>)</li>
+<li>subqueries (<code>SELECT … FROM table WHERE x = (SELECT …)</code>)</li>
+</ul>
+<h2 id="expressions">Expressions</h2>
+<p>Hazelcast SQL supports logical predicates, <code>IS</code> predicates, comparison operators, mathematical functions and operators, string functions, and special functions.
+Refer to <a href="https://docs.hazelcast.com/hazelcast/5.0/sql/expressions">Hazelcast docs</a> for all possible operations.</p>
+<h2 id="lite-members">Lite Members</h2>
+<p>You cannot start SQL queries on lite members. This limitation will be removed in future releases.</p>
+<h2 id="more-information">More Information</h2>
+<p>Please refer to <a href="https://docs.hazelcast.com/imdg/4.2/sql/distributed-sql.html">Hazelcast SQL docs</a> for more information.</p>
+<p>For basic usage of SQL, see <code>SqlBasicQueryExample</code> and <code>SqlJsonExample</code> in <em>Hazelcast.Net.Examples</em> project.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

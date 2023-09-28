@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Asynchronous Pitfalls | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Asynchronous Pitfalls | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="asynchronous-pitfalls">Asynchronous Pitfalls</h1>
+
+<p>This page gathers common pitfalls and issues when migrating synchronous code to an asynchronous programming model. It is not exhaustive, and we enrich it periodically.</p>
+<h2 id="the-net-framework-aspnet-issue">The .NET Framework ASP.NET Issue</h2>
+<p>A common scenario goes like this: a team had a ASP.NET MVC application, running under .NET Framework 4.8, with a controller using the version 3 of the Hazelcast .NET client and containing method similar to:</p>
+<pre><code class="lang-csharp">public ActionResult Index()
+{
+    var value = GetValue();
+    return Content(value);
+}
+
+private string GetValue()
+{
+    var client = HazelcastClient.NewHazelcastClient(&quot;path/to/config.xml&quot;);
+    var map = client.GetMap&lt;string, string&gt;(&quot;map-name&quot;);
+    var value = map.Get(&quot;key&quot;);
+    return value;
+}
+</code></pre>
+<p>In an attempt to migrate to a newer version of the Hazelcast .NET client, the <code>GetValue</code> method is rewritten as:</p>
+<pre><code class="lang-csharp">private Task&lt;string&gt; GetValue()
+{
+    var options = // ...get options...
+    await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+    await var map = await client.GetMapAsync&lt;string, string&gt;(&quot;map-name&quot;);
+    var value = await map.GetAsync(&quot;key&quot;);
+    return value;
+}
+</code></pre>
+<p>And the <code>Index</code> method is adjusted as:</p>
+<pre><code class="lang-csharp">public ActionResult Index()
+{
+    var task = GetValue();
+    var value = task.Result;
+    return Content(value);
+}
+</code></pre>
+<p>And... the <code>Index</code> method hangs and never returns.</p>
+<h3 id="why-it-fails">Why It Fails</h3>
+<p>On classic ASP.NET, controller methods run in a &quot;synchronization context&quot;, something that is responsible for scheduling the asynchronous Tasks. In console applications, the synchronization context would schedule Tasks on any thread of the ThreadPool. In ASP.NET applications, the synchronization context is special: each request has its synchronization context, which is bound to one thread at the beginning of the request. The purpose of this was backward compatibility, as people used to rely on their entire request being processed by one single thread. The drawback is that the scheduler can run only one Task at a time, since it only has one thread.</p>
+<p>So, here is what happens when the controller's Index method runs:</p>
+<ul>
+<li>The <code>Index</code> method calls <code>GetValue</code>.</li>
+<li><code>GetValue</code> starts connecting a client by invoking <code>StartNewClientAsync</code>.</li>
+<li><code>StartNewClientAsync</code> returns an uncompleted <code>Task</code>, indicating that connection is in-progress.</li>
+<li><code>GetValue</code> awaits that <code>Task</code>, the context is captured and will be used to continue the <code>GetValue</code> method, later. <code>GetValue</code> returns an uncompleted <code>Task</code>, indicating that it is in-progress</li>
+<li>The <code>Index</code> method synchronously block on that <code>Task</code> with the <code>.Result</code> call. This blocks the context (request) unique thread.</li>
+<li>Eventually, the <code>Task</code> for <code>StartNewClientAsync</code> will complete. The continuation for <code>GetValue</code> (the rest of the method) is now ready to run, and it waits for the synchronization context to schedule that work.</li>
+<li>However, the context is busy waiting (see above) and therefore cannot schedule anything, since it can only execute one thing at a time.</li>
+<li>Deadlock.</li>
+</ul>
+<p>This is a classical ASP.NET issue (for instance, you can see it reproduced in <a href="https://gist.github.com/leonardochaia/98ce57bcee39c18d88682424a6ffe305">this Gist</a>) and explained in details on <a href="https://www.c-sharpcorner.com/article/understanding-synchronization-context-task-configureawait-in-action/">this page</a> or <a href="https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html">this page</a>.</p>
+<h3 id="one-dangerous-fix">One (Dangerous) Fix</h3>
+<p>There is a way to tell a method to resume on the default ThreadPool-based synchronization context. Consider this line of code:</p>
+<pre><code class="lang-csharp">await DoSomething();
+</code></pre>
+<p>It will resume execution on the current synchronization context. However, consider this line of code:</p>
+<pre><code class="lang-csharp">await DoSomething().ConfigureAwait(false);
+</code></pre>
+<p>Here, we are specifically instructing .NET to not resume on the current synchronization context but on the default Thead-Pool one. By adding <code>ConfigureAwait(false)</code> to every await statements in <code>GetValue</code>, we could hope to fix the issue (it does fix the issue in simple scenarios). But, the thing is, <em>every single await in the whole chains of calls</em> needs this. This means that every single await in the Hazelcast .NET Client needs it (they should have it, we have checks for this) and every single await in our dependencies (such as Microsoft's internal code) needs it too (we do not control this).</p>
+<p>It turns out that this solutin does <em>not</em> work for us. This means that somewhere in the chain of calls, there is at least one single <code>ConfigureAwait(false)</code> missing. We do check our own code regularly, and are pretty sure it is correct. But this shows that simply relying on this solution to fix the problem is a dangerous thing.</p>
+<h3 id="the-right-way">The Right Way</h3>
+<p>The &quot;right way&quot; to fix the issue is to go full-async. That is, turn the <code>Index</code> method to async, too:</p>
+<pre><code class="lang-csharp">public async Task&lt;ActionResult&gt; Index()
+{
+    var value = await GetValue().ConfigureAwait(false);
+    return Content(value);
+}
+</code></pre>
+<p>As long as your entire codebase is async, you are safe. Controller actions can be turned to async pretty easily. Likewise, console application's <code>Main</code> method can become asynchronous:</p>
+<pre><code class="lang-csharp">public static async Task Main(string[] args)
+{
+    ...
+}
+</code></pre>
+<h3 id="the-other-way">The Other Way</h3>
+<p>In more complex situations, you may hit a point where you <em>cannot</em> propagate the asynchronous programming pattern upwards to the top of the chain. Let us say that the <code>Index</code> method <em>has</em> to remain synchronous, for some reasons. One solution consists in scheduling the asynchronous call on an entirely independent <code>Task</code> factory and scheduler, one that is not limited in the way the ASP.NET one is. You will find an example of such a solution below:</p>
+<pre><code class="lang-csharp">static class AsyncHelper
+{
+    private static readonly TaskFactory HelperTaskFactory =
+        new TaskFactory(CancellationToken.None, TaskCreationOptions.None, TaskContinuationOptions.None, TaskScheduler.Default);
+
+    public static void Run(Func&lt;Task&gt; func)
+        =&gt; HelperTaskFactory.StartNew&lt;Task&gt;(func).Unwrap().GetAwaiter().GetResult();
+
+    public static TResult Run&lt;TResult&gt;(Func&lt;Task&lt;TResult&gt;&gt; func)
+        =&gt; HelperTaskFactory.StartNew&lt;Task&lt;TResult&gt;&gt;(func).Unwrap&lt;TResult&gt;().GetAwaiter().GetResult();
+}
+
+public AsyncResult Index()
+{
+    var value = AsyncHelper.Run(GetValue);
+    return Content(value);
+}
+</code></pre>
+<p>Using this solution <em>may</em> have consequences that we are still investigating, but it unlocks a range of situations.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

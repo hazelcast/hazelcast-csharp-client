@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Distributed Computing | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Distributed Computing | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="distributed-computing">Distributed Computing</h1>
+
+<p>This chapter explains how you can use Hazelcast IMDG's entry processor implementation in the .NET client.</p>
+<h2 id="using-entryprocessor">Using EntryProcessor</h2>
+<p>Hazelcast supports entry processing. An entry processor is a function that executes your code on a map entry in an atomic way.</p>
+<p>An entry processor is a good option if you perform bulk processing on an <code>IHMap</code>. Usually you perform a loop of keys - executing <code>IHMap.GetAsync(key)</code>, mutating the value and finally putting the entry back in the map using <code>IHMap.PutAsync(key,value)</code>. If you perform this process from a client or from a member where the keys do not exist, you effectively perform two network hops for each update: the first to retrieve the data and the second to update the mutated value.</p>
+<p>If you are doing the process described above, you should consider using entry processors. An entry processor executes a read and updates upon the member where the data resides. This eliminates the costly network hops described above.</p>
+<blockquote>
+<p><strong>NOTE: Entry processor is meant to process a single entry per call. Processing multiple entries and data structures in an entry processor is not supported as it may result in deadlocks on the server side.</strong></p>
+</blockquote>
+<p>Hazelcast sends the entry processor to each cluster member and these members apply it to the map entries. Therefore, if you add more members, your processing completes faster.</p>
+<h2 id="processing-entries">Processing Entries</h2>
+<p>The <code>Hazelcast.DistributedObjects.IHMap</code> interface provides the following functions for entry processing:</p>
+<ul>
+<li><code>ExecuteAsync&lt;T&gt;(IEntryProcessor&lt;T&gt;, TKey)</code> processes an entry mapped by a key.</li>
+<li><code>ExecuteAsync&lt;T&gt;(IEntryProcessor&lt;T&gt;, IEnumerable&lt;TKey&gt;)</code> processes entries mapped by a list of keys.</li>
+<li><code>ExecuteAsync&lt;T&gt;(IEntryProcessor&lt;T&gt;, IPredicate)</code> processes all entries in a map with a defined predicate.</li>
+<li><code>ExecuteAsync&lt;T&gt;(IEntryProcessor&lt;T&gt;)</code> processes all entries in a map.</li>
+</ul>
+<p>In the .NET client, an <code>IEntryProcessor</code> should be <code>IIdentifiedDataSerializable</code> or <code>IPortable</code> because the server should be able to deserialize it to process.</p>
+<p>The following is an example for <code>IEntryProcessor</code> which is <code>IIdentifiedDataSerializable</code>.</p>
+<pre><code class="lang-csharp">public class IdentifiedEntryProcessor : IEntryProcessor&lt;string&gt;, IIdentifiedDataSerializable
+{
+    public const int FactoryIdConst = 5; // Id of corresponding IDataSerializableFactory
+    public const int ClassIdConst = 1; // corresponds to Java's IdentifiedEntryProcessor.CLASS_ID
+
+    public int FactoryId =&gt; FactoryIdConst;
+    public int ClassId =&gt; ClassIdConst;
+
+    private string _value;
+
+    public IdentifiedEntryProcessor(string value)
+    {
+        _value = value;
+    }
+
+    public void ReadData(IObjectDataInput input)
+    {
+        _value = input.ReadString();
+    }
+
+    public void WriteData(IObjectDataOutput output)
+    {
+        output.WriteString(_value);
+    }
+}
+</code></pre>
+<p>Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's <code>CLASSPATH</code>, see <a href="https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath">Adding User Library to CLASSPATH</a>.</p>
+<p>The following is the Java equivalent of the entry processor in .NET client given above:</p>
+<pre><code class="lang-java">import com.hazelcast.map.AbstractEntryProcessor;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import java.io.IOException;
+import java.util.Map;
+
+public class IdentifiedEntryProcessor extends AbstractEntryProcessor&lt;String, String&gt; implements IdentifiedDataSerializable {
+     static final int CLASS_ID = 1;
+     private String value;
+
+    public IdentifiedEntryProcessor() {
+    }
+
+     @Override
+    public int getFactoryId() {
+        return IdentifiedFactory.FACTORY_ID;
+    }
+
+     @Override
+    public int getId() {
+        return CLASS_ID;
+    }
+
+     @Override
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeUTF(value);
+    }
+
+     @Override
+    public void readData(ObjectDataInput in) throws IOException {
+        value = in.readUTF();
+    }
+
+     @Override
+    public Object process(Map.Entry&lt;String, String&gt; entry) {
+        entry.setValue(value);
+        return value;
+    }
+}
+</code></pre>
+<p>You can implement the above processor’s factory as follows:</p>
+<pre><code class="lang-java">import com.hazelcast.nio.serialization.DataSerializableFactory;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+
+public class IdentifiedFactory implements DataSerializableFactory {
+    public static final int FACTORY_ID = 5;
+
+     @Override
+    public IdentifiedDataSerializable create(int typeId) {
+        if (typeId == IdentifiedEntryProcessor.CLASS_ID) {
+            return new IdentifiedEntryProcessor();
+        }
+        return null;
+    }
+}
+</code></pre>
+<p>Now you need to configure the <code>hazelcast.xml</code> to add your factory as shown below.</p>
+<pre><code class="lang-xml">&lt;hazelcast&gt;
+    &lt;serialization&gt;
+        &lt;data-serializable-factories&gt;
+            &lt;data-serializable-factory factory-id=&quot;5&quot;&gt;
+                IdentifiedFactory
+            &lt;/data-serializable-factory&gt;
+        &lt;/data-serializable-factories&gt;
+    &lt;/serialization&gt;
+&lt;/hazelcast&gt;
+</code></pre>
+<p>After the above implementations and configuration are done and you start the server where your library is added to its <code>CLASSPATH</code>, you can use the entry processor in the <code>IHMap</code> functions. See the following example.</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;processing-map&quot;);
+await map.ExecuteAsync(new IdentifiedEntryProcessor(&quot;processed&quot;), &quot;key&quot;);
+Console.WriteLine($&quot;Value for key is: {await map.GetAsync(&quot;key&quot;)}&quot;);
+//Output:
+//Value for key is: processed
+</code></pre>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

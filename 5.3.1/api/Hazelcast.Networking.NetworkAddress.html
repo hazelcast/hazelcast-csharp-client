@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>NetworkAddress Class
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="NetworkAddress Class
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.3.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Networking.NetworkAddress">
+
+
+
+  <h1 id="Hazelcast_Networking_NetworkAddress" data-uid="Hazelcast.Networking.NetworkAddress" class="text-break">NetworkAddress Class
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Networking.html">Networking</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents a network address.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public class NetworkAddress : IEquatable&lt;NetworkAddress&gt;</code></pre>
+  </div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+    <div class="level1"><span class="xref">NetworkAddress</span></div>
+  </div>
+  <div class="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a>&gt;</div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+  </div>
+  <h3 id="constructors">Constructors
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress__ctor_System_Net_IPAddress_System_Int32_" data-uid="Hazelcast.Networking.NetworkAddress.#ctor(System.Net.IPAddress,System.Int32)">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.-ctor.html#Hazelcast_Networking_NetworkAddress__ctor_System_Net_IPAddress_System_Int32_">NetworkAddress(IPAddress, int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a> class with an IP address and a port.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress__ctor_System_String_System_Int32_" data-uid="Hazelcast.Networking.NetworkAddress.#ctor(System.String,System.Int32)">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.-ctor.html#Hazelcast_Networking_NetworkAddress__ctor_System_String_System_Int32_">NetworkAddress(string, int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a> class with a hostname and a port.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_HostName" data-uid="Hazelcast.Networking.NetworkAddress.HostName">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.HostName.html#Hazelcast_Networking_NetworkAddress_HostName">HostName</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the host name.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_IPAddress" data-uid="Hazelcast.Networking.NetworkAddress.IPAddress">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.IPAddress.html#Hazelcast_Networking_NetworkAddress_IPAddress">IPAddress</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the IP address corresponding to this address.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_IPEndPoint" data-uid="Hazelcast.Networking.NetworkAddress.IPEndPoint">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.IPEndPoint.html#Hazelcast_Networking_NetworkAddress_IPEndPoint">IPEndPoint</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the IP endpoint corresponding to this address.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_IsIpV4" data-uid="Hazelcast.Networking.NetworkAddress.IsIpV4">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.IsIpV4.html#Hazelcast_Networking_NetworkAddress_IsIpV4">IsIpV4</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether the address is an IP v4 address.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_IsIpV6" data-uid="Hazelcast.Networking.NetworkAddress.IsIpV6">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.IsIpV6.html#Hazelcast_Networking_NetworkAddress_IsIpV6">IsIpV6</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether the address is an IP v6 address.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_IsIpV6GlobalOrScoped" data-uid="Hazelcast.Networking.NetworkAddress.IsIpV6GlobalOrScoped">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.IsIpV6GlobalOrScoped.html#Hazelcast_Networking_NetworkAddress_IsIpV6GlobalOrScoped">IsIpV6GlobalOrScoped</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether the address is an IP v6 address which is global (non-local), or scoped.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_Port" data-uid="Hazelcast.Networking.NetworkAddress.Port">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.Port.html#Hazelcast_Networking_NetworkAddress_Port">Port</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the port.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_Equals_Hazelcast_Networking_NetworkAddress_" data-uid="Hazelcast.Networking.NetworkAddress.Equals(Hazelcast.Networking.NetworkAddress)">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.Equals.html#Hazelcast_Networking_NetworkAddress_Equals_Hazelcast_Networking_NetworkAddress_">Equals(NetworkAddress)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Indicates whether the current object is equal to another object of the same type.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_Equals_System_Object_" data-uid="Hazelcast.Networking.NetworkAddress.Equals(System.Object)">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.Equals.html#Hazelcast_Networking_NetworkAddress_Equals_System_Object_">Equals(object)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether the specified object is equal to the current object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_GetHashCode" data-uid="Hazelcast.Networking.NetworkAddress.GetHashCode">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.GetHashCode.html#Hazelcast_Networking_NetworkAddress_GetHashCode">GetHashCode()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Serves as the default hash function.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_ToString" data-uid="Hazelcast.Networking.NetworkAddress.ToString">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.ToString.html#Hazelcast_Networking_NetworkAddress_ToString">ToString()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns a string that represents the current object.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_op_Equality_Hazelcast_Networking_NetworkAddress_Hazelcast_Networking_NetworkAddress_" data-uid="Hazelcast.Networking.NetworkAddress.op_Equality(Hazelcast.Networking.NetworkAddress,Hazelcast.Networking.NetworkAddress)">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.op_Equality.html#Hazelcast_Networking_NetworkAddress_op_Equality_Hazelcast_Networking_NetworkAddress_Hazelcast_Networking_NetworkAddress_">operator ==(NetworkAddress, NetworkAddress)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Overrides the == operator.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_op_Inequality_Hazelcast_Networking_NetworkAddress_Hazelcast_Networking_NetworkAddress_" data-uid="Hazelcast.Networking.NetworkAddress.op_Inequality(Hazelcast.Networking.NetworkAddress,Hazelcast.Networking.NetworkAddress)">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.op_Inequality.html#Hazelcast_Networking_NetworkAddress_op_Inequality_Hazelcast_Networking_NetworkAddress_Hazelcast_Networking_NetworkAddress_">operator !=(NetworkAddress, NetworkAddress)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Overrides the != operator.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
