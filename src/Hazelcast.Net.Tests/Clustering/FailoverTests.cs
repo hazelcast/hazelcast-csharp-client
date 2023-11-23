@@ -735,14 +735,12 @@ internal class FailoverTests : RemoteTestBase
     public static async Task AssertStateEventually(ConcurrentQueue<ClientState> states, ClientState expectedState, int timeoutMillis = 120_000)
     {
         var state = (ClientState) (-1);
-        try
-        {
-            await AssertEx.SucceedsEventually(() => { Assert.That(states.TryDequeue(out state)); }, timeoutMillis, 1000);
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Failed to get state {expectedState}, state did not change", e);
-        }
+        
+        await AssertEx.SucceedsEventually(
+            () => { Assert.That(states.TryDequeue(out state)); }, 
+            timeoutMillis, 1000,
+            $"Failed to get state {expectedState}, state did not change");
+
         Assert.That(state, Is.EqualTo(expectedState));
     }
 
