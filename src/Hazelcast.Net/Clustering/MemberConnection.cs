@@ -224,7 +224,8 @@ namespace Hazelcast.Clustering
         /// <returns>All <see cref="ClientMessageConnection"/> owned by this connection.</returns>
         public IEnumerable<ClientMessageConnection> GetMessageConnections()
         {
-            yield return _messageConnection;
+            if (_messageConnection != null)
+                yield return _messageConnection;
 
             var tpcConnections = _tpcConnections;
             if (tpcConnections == null) yield break;
