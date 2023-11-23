@@ -790,6 +790,8 @@ namespace Hazelcast.Clustering
 #pragma warning restore CA1801
 #pragma warning restore IDE0060
         {
+            HConsole.WriteLine(this, $"Added connection {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {connection.Address}");
+
             // atomically add the connection and capture known subscriptions
             List<ClusterSubscription> subscriptions;
             lock (_mutex)
@@ -821,6 +823,8 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ValueTask OnConnectionClosed(MemberConnection connection)
         {
+            HConsole.WriteLine(this, $"Removed connection {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {connection.Address}");
+
             // atomically remove the connection and capture known subscriptions
             List<ClusterSubscription> subscriptions;
             lock (_mutex)

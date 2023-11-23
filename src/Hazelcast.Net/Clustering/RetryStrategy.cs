@@ -35,6 +35,7 @@ namespace Hazelcast.Clustering
         private readonly double _multiplier;
         private readonly long _timeoutMilliseconds;
         private readonly double _jitter;
+        private CancellationTokenSource _cancellation;
         private int _currentBackOffMilliseconds;
         private int _attempts;
         private DateTime _begin;
@@ -159,6 +160,17 @@ namespace Hazelcast.Clustering
             _attempts = 0;
             _currentBackOffMilliseconds = Math.Min(_maxBackoffMilliseconds, _initialBackoffMilliseconds);
             _begin = DateTime.UtcNow;
+            _cancellation?.Dispose();
+            _cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(_timeoutMilliseconds));
+        }
+
+        /// <inheritdoc />
+        public CancellationToken CancellationToken => _cancellation.Token;
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _cancellation.Dispose();
         }
     }
 }
