@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.NearCaching
 {
     /// <summary>
@@ -22,21 +24,21 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// No eviction policy.
         /// </summary>
-        None = 0,
+        [Enums.JavaName("NONE")] None = 0,
 
         /// <summary>
         /// Evict least-recently used entries first.
         /// </summary>
-        Lru,
+        [Enums.JavaName("LRU")] Lru,
 
         /// <summary>
         /// Evict least-frequently used entries first.
         /// </summary>
-        Lfu,
+        [Enums.JavaName("LFU")] Lfu,
 
         /// <summary>
         /// Evict random entries.
         /// </summary>
-        Random
+        [Enums.JavaName("RANDOM")] Random
     }
 }

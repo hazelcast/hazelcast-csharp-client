@@ -15,6 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Configuration;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Models
 {
@@ -30,7 +33,7 @@ namespace Hazelcast.Models
     /// the hash function of the indexed field disperses the elements properly.</para>
     /// <para>Bitmap indexes (to be completed).</para>
     /// </remarks>
-    public class IndexOptions
+    public class IndexOptions : IIdentifiedDataSerializable
     {
         public static readonly IndexType DefaultType = IndexType.Sorted;
 
@@ -49,6 +52,18 @@ namespace Hazelcast.Models
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="IndexOptions"/> class.
+        /// </summary>
+        public IndexOptions(IndexOptions indexOptions)
+        {
+            Name = indexOptions.Name;
+            Type = indexOptions.Type;
+            Attributes = new List<string>(indexOptions.Attributes);
+            BitmapIndex = new BitmapIndexOptions(indexOptions.BitmapIndex);
+            BTreeIndex = new BTreeIndexOptions(indexOptions.BTreeIndex);
+        }
+
+        /// <summary>
         /// Gets or sets the name of the index.
         /// </summary>
         public string Name { get; set; }
@@ -61,17 +76,29 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the indexed attributes.
         /// </summary>
-        public IList<string> Attributes { get; } = new List<string>();
+        public IList<string> Attributes { get; set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the bitmap index options.
         /// </summary>
-        public BitmapIndexOptions BitmapIndexOptions { get; set; } = new BitmapIndexOptions();
+        public BitmapIndexOptions BitmapIndex { get; set; } = new();
+
+        // note: cannot remove the property below because it was public already
+
+        /// <summary>
+        /// Gets or sets the bitmap index options.
+        /// </summary>
+        [Obsolete("Use BitmapIndex", false)]
+        public BitmapIndexOptions BitmapIndexOptions
+        {
+            get => BitmapIndex;
+            set => BitmapIndex = value;
+        }
 
         /// <summary>
         /// Gets or sets the btree index options.
         /// </summary>
-        internal BTreeIndexOptions BTreeIndexOptions { get; set; } = new();
+        public BTreeIndexOptions BTreeIndex { get; set; } = new();
 
         /// <summary>
         /// Adds an indexed attribute.
@@ -118,6 +145,32 @@ namespace Hazelcast.Models
 
             if (attributeName.EndsWith(".", StringComparison.Ordinal))
                 throw new ArgumentException($"Attribute name cannot end with dot: {attributeName}", nameof(attributeName));
+        }
+
+        /// <inheritdoc />
+        public int FactoryId => ConfigurationDataSerializerHook.FactoryIdConst;
+
+        /// <inheritdoc />
+        public int ClassId => ConfigurationDataSerializerHook.IndexConfig;
+
+        /// <inheritdoc />
+        public void WriteData(IObjectDataOutput output)
+        {
+            output.WriteString(Name);
+            output.WriteInt((int)Type);
+            output.WriteNullableList(Attributes);
+            output.WriteObject(BitmapIndex);
+            output.WriteObject(BTreeIndex);
+        }
+
+        /// <inheritdoc />
+        public void ReadData(IObjectDataInput input)
+        {
+            Name = input.ReadString();
+            Type = ((IndexType)input.ReadInt()).ThrowIfUndefined();
+            Attributes = input.ReadNullableList<string>();
+            BitmapIndex = input.ReadObject<BitmapIndexOptions>();
+            BTreeIndex = input.ReadObject<BTreeIndexOptions>();
         }
 
         /// <inheritdoc />

@@ -1445,7 +1445,10 @@ function hz-generate-codecs {
     remove-item -force $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs
 
     Write-Output "Generate codecs"
+    $preserve = $pwd
+    cd $slnRoot/protocol # required for python to pick the correct protocol git commit
     python $slnRoot/protocol/generator.py -l cs --no-binary -r $slnRoot
+    cd $preserve
 
     Write-Output "Cleanup codecs"
 

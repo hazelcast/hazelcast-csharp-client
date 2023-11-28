@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
@@ -200,6 +201,9 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public ClientState State => Cluster.State.ClientState;
+
+        /// <inheritdoc />
+        public DynamicOptions DynamicOptions => new(this);
 
         /// <summary>
         /// Gets the <see cref="SerializationService"/>.

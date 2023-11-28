@@ -212,6 +212,21 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Maps a list.
+        /// </summary>
+        /// <typeparam name="T">The source type.</typeparam>
+        /// <typeparam name="R">The destination type.</typeparam>
+        /// <param name="list">The source list.</param>
+        /// <param name="map">The mapping function.</param>
+        /// <returns>The mapped list.</returns>
+        public static List<R> Map<T, R>(this IList<T> list, Func<T, R> map)
+        {
+            var result = new List<R>(list.Count);
+            result.AddRange(list.Select(map));
+            return result;
+        }
+
+        /// <summary>
         /// Filters a sequence of <see cref="KeyValuePair{TKey,TValue}"/> based on a predicate.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
