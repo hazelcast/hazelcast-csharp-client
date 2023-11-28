@@ -79,7 +79,9 @@ namespace Hazelcast.Clustering
             _maxBackoffMilliseconds = maxBackOffMilliseconds;
             if (multiplier <= 0) throw new ConfigurationException("Multiplier must be greater than zero.");
             _multiplier = multiplier;
-            _timeoutMilliseconds = timeoutMilliseconds;
+            //var maxMilliseconds = (long) TimeSpan.MaxValue.TotalMilliseconds; // that would be the max millis in a timespan
+            const int maxMilliseconds = int.MaxValue; // but CancellationTokenSource is even more restrictive
+            _timeoutMilliseconds = Math.Min(timeoutMilliseconds, maxMilliseconds);
             if (jitter < 0 || jitter > 1) throw new ConfigurationException("Jitter must be between zero and one, inclusive.");
             _jitter = jitter;
 
