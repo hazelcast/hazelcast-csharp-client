@@ -63,17 +63,6 @@ public class PredicateOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the name of the class of the predicate.
-    /// </summary>
-    /// <param name="className">The name of the class of the predicate.</param>
-    /// <returns>This instance.</returns>
-    public PredicateOptions SetClassName(string className)
-    {
-        ClassName = className;
-        return this;
-    }
-
-    /// <summary>
     /// Gets or sets the sql string.
     /// </summary>
     public string Sql
@@ -84,17 +73,6 @@ public class PredicateOptions : IIdentifiedDataSerializable
             _sql = value;
             _className = null;
         }
-    }
-
-    /// <summary>
-    /// Sets the sql string.
-    /// </summary>
-    /// <param name="sql">The sql string.</param>
-    /// <returns>This instance.</returns>
-    public PredicateOptions SetSql(string sql)
-    {
-        Sql = sql;
-        return this;
     }
 
     /// <inheritdoc />

@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Models;
-using Hazelcast.Networking;
-using Hazelcast.Serialization;
+using Hazelcast.Core;
 
-namespace Hazelcast.Core;
+namespace Hazelcast.Models;
 
-internal class PublisherAddressDataSerializerHook : IDataSerializerHook
+/// <summary>
+/// Specifies the initial load mode.
+/// </summary>
+public enum LoadMode
 {
-    public IDataSerializableFactory CreateFactory()
-    {
-        var constructors = new Func<IIdentifiedDataSerializable>[2];
-        constructors[1] = () => new PublisherAddress();
+    /// <summary>
+    /// Each partition is loaded when it is first touched.
+    /// </summary>
+    [Enums.JavaName("LAZY")] Lazy,
 
-        return new ArrayDataSerializableFactory(constructors);
-    }
-
-    public int FactoryId { get; } = FactoryIds.PublisherAddressFactoryId;
+    /// <summary>
+    /// GetMap() method does not return until the map is completely loaded.
+    /// </summary>
+    [Enums.JavaName("EAGER")] Eager
 }

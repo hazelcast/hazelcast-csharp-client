@@ -33,7 +33,7 @@ public class EvictionOptions : IIdentifiedDataSerializable
         /// <summary>
         /// Gets the default size.
         /// </summary>
-        public const int Size = 10000; // FIXME int.MaxValue?
+        public const int Size = 10000;
 
         /// <summary>
         /// Gets the default max-size policy.
@@ -43,7 +43,7 @@ public class EvictionOptions : IIdentifiedDataSerializable
         /// <summary>
         /// Gets the default eviction policy.
         /// </summary>
-        public const EvictionPolicy EvictionPolicy = NearCaching.EvictionPolicy.None; // FIXME LRU?
+        public const EvictionPolicy EvictionPolicy = NearCaching.EvictionPolicy.None;
 
         /// <summary>
         /// Gets the default comparator class name.
@@ -99,8 +99,7 @@ public class EvictionOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Gets the <see cref="EvictionStrategyType"/> of this eviction configuration.
     /// </summary>
-    public EvictionStrategyType EvictionStrategyType
-        => EvictionStrategyType.SAMPLING_BASED_EVICTION;
+    public EvictionStrategyType EvictionStrategyType => EvictionStrategyType.SamplingBasedEviction;
 
     /// <summary>
     /// Gets or sets the class name of the configured EvictionPolicyComparator implementation.

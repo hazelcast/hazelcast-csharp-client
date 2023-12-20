@@ -84,22 +84,6 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     private LoadMode _initialLoadMode = Defaults.InitialLoadMode;
 
     /// <summary>
-    /// Specifies the initial load mode.
-    /// </summary>
-    public enum LoadMode
-    {
-        /// <summary>
-        /// Each partition is loaded when it is first touched.
-        /// </summary>
-        [Enums.JavaName("LAZY")] Lazy,
-
-        /// <summary>
-        /// GetMap() method does not return until the map is completely loaded.
-        /// </summary>
-        [Enums.JavaName("EAGER")] Eager
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="MapStoreOptions"/> class.
     /// </summary>
     public MapStoreOptions()
@@ -132,34 +116,12 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the name of the implementation class.
-    /// </summary>
-    /// <param name="className">The name of the implementation class.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetClassName(string className)
-    {
-        ClassName = className;
-        return this;
-    }
-
-    /// <summary>
     /// Gets or sets the name of the map store factory implementation class.
     /// </summary>
     public string FactoryClassName
     {
         get => _factoryClassName;
         set => _factoryClassName = value.ThrowIfNullNorWhiteSpace();
-    }
-
-    /// <summary>
-    /// Sets the name of the map store factory implementation class.
-    /// </summary>
-    /// <param name="factoryClassName">The name of the map store factory implementation class.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetFactoryClassName(string factoryClassName)
-    {
-        FactoryClassName = factoryClassName;
-        return this;
     }
 
     /// <summary>
@@ -172,38 +134,12 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the number of seconds to delay the store writes.
-    /// </summary>
-    /// <param name="writeDelaySeconds">The number of seconds to delay the store writes.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetWriteDelaySeconds(int writeDelaySeconds)
-    {
-        WriteDelaySeconds = writeDelaySeconds;
-        return this;
-    }
-
-    /// <summary>
     /// Gets or sets the number of operations to be included in each batch processing round.
     /// </summary>
     public int WriteBatchSize
     {
         get => _writeBatchSize;
-        set
-        {
-            if (value < 1) throw new ArgumentOutOfRangeException("value must be at least 1.", nameof(value));
-            _writeBatchSize = value;
-        }
-    }
-
-    /// <summary>
-    /// Sets the number of operations to be included in each batch processing round.
-    /// </summary>
-    /// <param name="writeBatchSize">The number of operations to be included in each batch processing round.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetWriteBatchSize(int writeBatchSize)
-    {
-        WriteBatchSize = writeBatchSize;
-        return this;
+        set => _writeBatchSize = value.ThrowIfLessThanOrZero();
     }
 
     /// <summary>
@@ -216,34 +152,12 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets whether this configuration is enabled.
-    /// </summary>
-    /// <param name="enabled">Whether this configuration is enabled.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetEnabled(bool enabled)
-    {
-        Enabled = enabled;
-        return this;
-    }
-
-    /// <summary>
     /// Whether offload behavior is enabled.
     /// </summary>
     public bool Offload
     {
         get => _offload;
         set => _offload = value;
-    }
-
-    /// <summary>
-    /// Sets whether offload behavior is enabled.
-    /// </summary>
-    /// <param name="offload">Whether offload behavior is enabled.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetOffload(bool offload)
-    {
-        Offload = offload;
-        return this;
     }
 
     /// <summary>
@@ -287,34 +201,12 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the initial load mode.
-    /// </summary>
-    /// <param name="initialLoadMode">The initial load mode.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions SetInitialLoadMode(LoadMode initialLoadMode)
-    {
-        InitialLoadMode = initialLoadMode;
-        return this;
-    }
-
-    /// <summary>
     /// Whether write-coalescing is enabled.
     /// </summary>
-    public bool IsWriteCoalescing
+    public bool WriteCoalescing
     {
         get => _writeCoalescing;
         set => _writeCoalescing = value;
-    }
-
-    /// <summary>
-    /// Sets whether write-coalescing is enabled.
-    /// </summary>
-    /// <param name="writeCoalescing">Whether write-coalescing is enabled.</param>
-    /// <returns>This instance.</returns>
-    public MapStoreOptions WriteCoalescing(bool writeCoalescing)
-    {
-        IsWriteCoalescing = writeCoalescing;
-        return this;
     }
 
     /// <inheritdoc />

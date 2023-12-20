@@ -67,22 +67,6 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     }
 #pragma warning restore CA1034
 
-    /// <summary>
-    /// Specifies the local update policy.
-    /// </summary>
-    public enum UpdatePolicy
-    {
-        /// <summary>
-        /// Local put and remove immediately invalidate the cache.
-        /// </summary>
-        [Enums.JavaName("INVALIDATE")] Invalidate,
-
-        /// <summary>
-        /// Local remove immediately invalidates the cache, but local put adds new value to it.
-        /// </summary>
-        [Enums.JavaName("CACHE_ON_UPDATE")] CacheOnUpdate
-    }
-
     private bool _cacheLocalEntries;
     private bool _serializeKeys = Defaults.SerializeKeys;
     private bool _invalidateOnChange = Defaults.InvalidateOnChange;
@@ -203,11 +187,7 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     public int TimeToLiveSeconds
     {
         get => _timeToLiveSeconds;
-        set
-        {
-            if (value < 0) throw new ArgumentOutOfRangeException("value cannot be negative.", nameof(value));
-            _timeToLiveSeconds = value;
-        }
+        set => _timeToLiveSeconds = value.ThrowIfLessThanZero();
     }
 
     /// <summary>
@@ -216,11 +196,7 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     public int MaxIdleSeconds
     {
         get => _maxIdleSeconds;
-        set
-        {
-            if (_maxIdleSeconds < 0) throw new ArgumentException("Value cannot be negative.", nameof(value));
-            _maxIdleSeconds = value;
-        }
+        set => _maxIdleSeconds = value.ThrowIfLessThanZero();
     }
 
     /// <summary>

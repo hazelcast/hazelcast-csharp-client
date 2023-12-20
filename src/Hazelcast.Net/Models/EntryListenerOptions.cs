@@ -71,23 +71,6 @@ public class EntryListenerOptions : ListenerOptions
         => $"EntryListenerConfig{{local={_local}, includeValue={_includeValue}}}";
 
     /// <inheritdoc />
-    public override bool Equals(object obj)
-    {
-        if (!base.Equals(obj)) return false;
-        var other = obj.MustBe<EntryListenerOptions>();
-        return Local == other.Local &&
-               IncludeValue == other.IncludeValue;
-    }
-
-    /// <inheritdoc />
-    public override int GetHashCode()
-    {
-        // ReSharper disable NonReadonlyMemberInGetHashCode
-        return HashCode.Combine(_className, _local, _includeValue);
-        // ReSharper restore NonReadonlyMemberInGetHashCode
-    }
-
-    /// <inheritdoc />
     public override int ClassId => ConfigurationDataSerializerHook.EntryListenerConfig;
 
     /// <inheritdoc />

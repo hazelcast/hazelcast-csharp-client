@@ -42,7 +42,6 @@ public class DiskTierOptions : IIdentifiedDataSerializable
     }
 #pragma warning restore CA1034
 
-    private bool _enabled = Defaults.Enabled;
     private string _deviceName = Defaults.DeviceName;
 
     /// <summary>
@@ -56,18 +55,14 @@ public class DiskTierOptions : IIdentifiedDataSerializable
     /// </summary>
     public DiskTierOptions(DiskTierOptions diskTierConfig)
     {
-        _enabled = diskTierConfig._enabled;
+        Enabled = diskTierConfig.Enabled;
         _deviceName = diskTierConfig._deviceName;
     }
 
     /// <summary>
     /// Whether disk-tier is enabled.
     /// </summary>
-    public bool Enabled
-    {
-        get => _enabled;
-        set => _enabled = value;
-    }
+    public bool Enabled { get; set; } = Defaults.Enabled;
 
     /// <summary>
     /// Gets or sets the device name of this disk tier.
@@ -81,14 +76,14 @@ public class DiskTierOptions : IIdentifiedDataSerializable
     /// <inheritdoc />
     public void WriteData(IObjectDataOutput output)
     {
-        output.WriteBoolean(_enabled);
+        output.WriteBoolean(Enabled);
         output.WriteString(_deviceName);
     }
 
     /// <inheritdoc />
     public void ReadData(IObjectDataInput input)
     {
-        _enabled = input.ReadBoolean();
+        Enabled = input.ReadBoolean();
         _deviceName = input.ReadString();
     }
 
@@ -102,7 +97,7 @@ public class DiskTierOptions : IIdentifiedDataSerializable
     public override string ToString()
     {
         return "DiskTierConfig{"
-            + "enabled=" + _enabled
+            + "enabled=" + Enabled
             + ", deviceName='" + _deviceName + '\''
             + '}';
     }

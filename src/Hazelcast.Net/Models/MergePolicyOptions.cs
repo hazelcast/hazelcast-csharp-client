@@ -67,38 +67,12 @@ public class MergePolicyOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the classname of the split brain merge policy.
-    /// </summary>
-    /// <param name="policy">The classname of the split brain merge policy.</param>
-    /// <returns>This instance.</returns>
-    public MergePolicyOptions SetPolicy(string policy)
-    {
-        Policy = policy;
-        return this;
-    }
-
-    /// <summary>
     /// Gets or sets the batch size.
     /// </summary>
     public int BatchSize
     {
         get => _batchSize;
-        set
-        {
-            if (value < 0) throw new ArgumentOutOfRangeException("Value cannot be negative.", nameof(value));
-            _batchSize = value;
-        }
-    }
-
-    /// <summary>
-    /// Sets the batch size.
-    /// </summary>
-    /// <param name="batchSize">The batch size.</param>
-    /// <returns>This instance.</returns>
-    public MergePolicyOptions SetBatchSize(int batchSize)
-    {
-        BatchSize = batchSize;
-        return this;
+        set => _batchSize = value.ThrowIfLessThanZero();
     }
 
     /// <inheritdoc />

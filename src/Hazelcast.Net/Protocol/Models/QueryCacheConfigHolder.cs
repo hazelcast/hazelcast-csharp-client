@@ -78,27 +78,26 @@ internal class QueryCacheConfigHolder
 
     public QueryCacheOptions ToQueryCacheConfig(SerializationService serializationService)
     {
-        var config = new QueryCacheOptions()
-            .SetBatchSize(BatchSize)
-            .SetBufferSize(BufferSize)
-            .SetCoalesce(IsCoalesce)
-            .SetDelaySeconds(DelaySeconds)
-            .SetEvictionConfig(EvictionConfigHolder.ToEvictionConfig());
-
-        config.EntryListeners = ListenerConfigs is {Count: > 0}
-            ? ListenerConfigs.Map(x => x.ToListenerConfig<EntryListenerOptions>()) 
-            : new();
-
-        config
-            .SetIncludeValue(IsIncludeValue)
-            .SetInMemoryFormat(Enums.ParseJava<InMemoryFormat>(InMemoryFormat))
-            .SetIndexConfigs(IndexConfigs ?? new List<IndexOptions>())
-            .SetName(Name)
-            .SetPredicateConfig(PredicateConfigHolder.ToPredicateConfig())
-            .SetPopulate(IsPopulate);
+        var config = new QueryCacheOptions
+        {
+            BatchSize = BatchSize,
+            BufferSize = BufferSize,
+            Coalesce = IsCoalesce,
+            DelaySeconds = DelaySeconds,
+            Eviction = EvictionConfigHolder.ToEvictionConfig(),
+            EntryListeners = ListenerConfigs is {Count: > 0}
+                ? ListenerConfigs.Map(x => x.ToListenerConfig<EntryListenerOptions>()) 
+                : new(),
+            IncludeValue = IsIncludeValue,
+            InMemoryFormat = Enums.ParseJava<InMemoryFormat>(InMemoryFormat),
+            Indexes = IndexConfigs ?? new List<IndexOptions>(),
+            Name = Name,
+            Predicate = PredicateConfigHolder.ToPredicateConfig(),
+            Populate = IsPopulate
+        };
 
         if (_isSerializeKeys.HasValue)
-            config.IsSerializeKeys = _isSerializeKeys.Value;
+            config.SerializeKeys = _isSerializeKeys.Value;
 
         return config;
     }
@@ -124,8 +123,8 @@ internal class QueryCacheConfigHolder
             holder.ListenerConfigs = config.EntryListeners.Map(ListenerConfigHolder.Of);
 
         holder.PredicateConfigHolder = PredicateConfigHolder.Of(config.Predicate);
-        holder.IsPopulate = config.IsPopulate;
-        holder.IsSerializeKeys = config.IsSerializeKeys;
+        holder.IsPopulate = config.Populate;
+        holder.IsSerializeKeys = config.SerializeKeys;
 
         return holder;
     }

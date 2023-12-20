@@ -98,7 +98,7 @@ namespace Ionic.Zlib
     ///
     /// </remarks>
     /// <seealso cref="Ionic.Zlib.DeflateStream" />
-    public class ParallelDeflateOutputStream : System.IO.Stream
+    internal class ParallelDeflateOutputStream : System.IO.Stream
     {
 
         private static readonly int IO_BUFFER_SIZE_DEFAULT = 64 * 1024;  // 128k

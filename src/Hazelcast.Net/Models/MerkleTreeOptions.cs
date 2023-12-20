@@ -46,7 +46,7 @@ public class MerkleTreeOptions : IIdentifiedDataSerializable
     }
 #pragma warning restore CA1034
 
-    private bool? _enabled = null;
+    private bool? _enabled;
     private int _depth = Defaults.Depth;
 
     /// <summary>

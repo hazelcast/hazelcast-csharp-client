@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Models;
-using Hazelcast.Projection;
-using Hazelcast.Serialization;
+using Hazelcast.Core;
 
-namespace Hazelcast.Core;
+namespace Hazelcast.NearCaching;
 
-public class ReliableTopicDataSeriazlierHook : IDataSerializerHook
+/// <summary>
+/// Specifies the local update policy.
+/// </summary>
+public enum UpdatePolicy
 {
-    public IDataSerializableFactory CreateFactory()
-    {
-        var constructors = new Func<IIdentifiedDataSerializable>[3];
-        constructors[2] = () => new ReliableTopicMessage();
+    /// <summary>
+    /// Local put and remove immediately invalidate the cache.
+    /// </summary>
+    [Enums.JavaName("INVALIDATE")] Invalidate,
 
-        return new ArrayDataSerializableFactory(constructors);
-    }
-
-    public int FactoryId { get; } = FactoryIds.ReliableTopicMessageFactoryId;
+    /// <summary>
+    /// Local remove immediately invalidates the cache, but local put adds new value to it.
+    /// </summary>
+    [Enums.JavaName("CACHE_ON_UPDATE")] CacheOnUpdate
 }

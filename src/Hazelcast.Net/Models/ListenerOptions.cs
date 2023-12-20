@@ -33,9 +33,8 @@ public class ListenerOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Gets the class name.
     /// </summary>
-    // ReSharper disable once InconsistentNaming
-    protected string _className;
-    //protected EventListener _implementation;
+    private string _className;
+    //private EventListener _implementation;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ListenerOptions"/> class.
@@ -96,7 +95,7 @@ public class ListenerOptions : IIdentifiedDataSerializable
     //    }
     //}
 
-    public virtual bool IncludeValue // FIXME rename!
+    public virtual bool IncludeValue
     {
         get => true;
         set => throw new NotSupportedException();
@@ -132,17 +131,5 @@ public class ListenerOptions : IIdentifiedDataSerializable
         ClassName = input.ReadString();
         //Implementation = input.ReadObject();
         _ = input.ReadObject<object>(); // still, be compatible with Java!
-    }
-
-    /// <inheritdoc />
-    public override bool Equals(object obj)
-        => obj is ListenerOptions other &&
-           string.Equals(_className, other._className);
-
-    /// <inheritdoc />
-    public override int GetHashCode()
-    {
-        // ReSharper disable once NonReadonlyMemberInGetHashCode
-        return _className?.GetHashCode() ?? 0;
     }
 }

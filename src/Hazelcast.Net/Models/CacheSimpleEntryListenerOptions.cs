@@ -48,17 +48,6 @@ public class CacheSimpleEntryListenerOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the name of the cache entry listener factory.
-    /// </summary>
-    /// <param name="cacheEntryListenerFactory">The name of the cache entry listener factory.</param>
-    /// <returns>This instance.</returns>
-    public CacheSimpleEntryListenerOptions SetCacheEntryListenerFactory(string cacheEntryListenerFactory)
-    {
-        CacheEntryListenerFactory = cacheEntryListenerFactory;
-        return this;
-    }
-
-    /// <summary>
     /// Gets or sets the name of the cache entry filter factory.
     /// </summary>
     public string CacheEntryEventFilterFactory
@@ -68,54 +57,21 @@ public class CacheSimpleEntryListenerOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the name of the cache entry filter factory.
-    /// </summary>
-    /// <param name="cacheEntryEventFilterFactory">The name of the cache entry filter factory.</param>
-    /// <returns>This instance.</returns>
-    public CacheSimpleEntryListenerOptions SetCacheEntryEventFilterFactory(string cacheEntryEventFilterFactory)
-    {
-        CacheEntryEventFilterFactory = cacheEntryEventFilterFactory;
-        return this;
-    }
-
-    /// <summary>
     /// Whether the old value is required.
     /// </summary>
-    public bool IsOldValueRequired
+    public bool OldValueRequired
     {
         get => _oldValueRequired;
         set => _oldValueRequired = value;
     }
 
     /// <summary>
-    /// Sets whether old value is required.
-    /// </summary>
-    /// <param name="oldValueRequired">Whether old value is required.</param>
-    /// <returns>This instance.</returns>
-    public CacheSimpleEntryListenerOptions SetIsOldValueRequired(bool oldValueRequired)
-    {
-        IsOldValueRequired = oldValueRequired;
-        return this;
-    }
-
-    /// <summary>
     /// Whether this cache entry listener implementation will be called in a synchronous manner.
     /// </summary>
-    public bool IsSynchronous
+    public bool Synchronous
     {
         get => _synchronous;
         set => _synchronous = value;
-    }
-
-    /// <summary>
-    /// Sets whether this cache entry listener implementation will be called in a synchronous manner.
-    /// </summary>
-    /// <param name="synchronous">Whether this cache entry listener implementation will be called in a synchronous manner.</param>
-    /// <returns>This instance.</returns>
-    public CacheSimpleEntryListenerOptions SetIsSynchronous(bool synchronous)
-    {
-        IsSynchronous = synchronous;
-        return this;
     }
 
     /// <inheritdoc />

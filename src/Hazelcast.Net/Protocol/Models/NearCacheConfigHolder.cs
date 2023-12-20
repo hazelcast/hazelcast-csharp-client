@@ -69,7 +69,7 @@ internal class NearCacheConfigHolder
             MaxIdleSeconds = MaxIdleSeconds,
             Eviction = EvictionConfigHolder.ToEvictionConfig(),
             CacheLocalEntries = IsCacheLocalEntries,
-            LocalUpdatePolicy = Enums.ParseJava<NearCacheOptions.UpdatePolicy>(LocalUpdatePolicy),
+            LocalUpdatePolicy = Enums.ParseJava<UpdatePolicy>(LocalUpdatePolicy),
             Preloader = PreloaderConfig
         };
         return config;

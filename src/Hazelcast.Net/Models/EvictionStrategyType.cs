@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Models;
 
 /// <summary>
@@ -22,5 +24,5 @@ public enum EvictionStrategyType
     /// <summary>
     /// Sampling based eviction strategy type.
     /// </summary>
-    SAMPLING_BASED_EVICTION
+    [Enums.JavaName("SAMPLING_BASED_EVICTION")] SamplingBasedEviction
 }

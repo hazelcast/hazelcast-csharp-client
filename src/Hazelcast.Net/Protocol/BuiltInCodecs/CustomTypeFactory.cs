@@ -143,7 +143,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             => new((ExpiryPolicyType) expiryPolicyType, durationConfig);
 
         public static CacheSimpleEntryListenerOptions CreateCacheSimpleEntryListenerConfig(bool oldValueRequired, bool synchronous, string cacheEntryListenerFactory, string cacheEntryEventFilterFactory)
-            => new() {IsOldValueRequired = oldValueRequired, IsSynchronous = synchronous, CacheEntryListenerFactory = cacheEntryListenerFactory, CacheEntryEventFilterFactory = cacheEntryEventFilterFactory};
+            => new() {OldValueRequired = oldValueRequired, Synchronous = synchronous, CacheEntryListenerFactory = cacheEntryListenerFactory, CacheEntryEventFilterFactory = cacheEntryEventFilterFactory};
 
         public static DiskTierOptions CreateDiskTierConfig(bool enabled, string deviceName)
             => new() {Enabled = enabled, DeviceName = deviceName};

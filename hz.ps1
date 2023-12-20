@@ -145,10 +145,13 @@ $params = @(
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "confirms excution of sensitive actions"
     },
-    @{ name="copy-files-source"; type = [string];  default = $null;
+    @{ name = "copy-files-source"; type = [string];  default = $null;
        desc = "source folder to be copied"
     },
-    @{ name="beta"; type = [switch]; default = $false;
+    @{ name = "publicApi"; type = [switch]; default = $false; alias = "public-api";
+       desc = "Whether to enforce Roslyn Public API rules"
+    },
+    @{ name = "beta"; type = [switch]; default = $false;
        desc = "whether to run beta features and tests"
     }
 )
@@ -1574,7 +1577,9 @@ function hz-build {
         $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
 
-    $buildArgs += "-p:ReleaseBranch=$isReleaseBranch"
+    if ($isReleaseBranch -or $options.publicApi) {
+        $buildArgs += "-p:ReleaseBranch=$true"
+    }
 
     $projs | foreach {
         Write-Output ""

@@ -72,7 +72,7 @@ public class BitmapIndexOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public int FactoryId => ConfigurationDataSerializerHook.FactoryIdConst; // FIXME bad dependency!
+    public int FactoryId => ConfigurationDataSerializerHook.FactoryIdConst;
 
     /// <inheritdoc />
     public int ClassId => ConfigurationDataSerializerHook.BitmapIndexOptions;

@@ -14,20 +14,20 @@
 
 using System;
 using Hazelcast.Models;
-using Hazelcast.Networking;
+using Hazelcast.Projection;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Core;
 
-internal class PublisherAddressDataSerializerHook : IDataSerializerHook
+internal class ReliableTopicDataSerializerHook : IDataSerializerHook
 {
     public IDataSerializableFactory CreateFactory()
     {
-        var constructors = new Func<IIdentifiedDataSerializable>[2];
-        constructors[1] = () => new PublisherAddress();
+        var constructors = new Func<IIdentifiedDataSerializable>[3];
+        constructors[2] = () => new ReliableTopicMessage();
 
         return new ArrayDataSerializableFactory(constructors);
     }
 
-    public int FactoryId { get; } = FactoryIds.PublisherAddressFactoryId;
+    public int FactoryId { get; } = FactoryIds.ReliableTopicMessageFactoryId;
 }

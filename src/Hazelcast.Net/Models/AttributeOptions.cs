@@ -71,34 +71,12 @@ public class AttributeOptions : IIdentifiedDataSerializable
     }
 
     /// <summary>
-    /// Sets the name of the attribute extracted by the extractor.
-    /// </summary>
-    /// <param name="name">The name of the attribute extracted by the extractor.</param>
-    /// <returns>This instance.</returns>
-    public AttributeOptions SetName(string name)
-    {
-        Name = name;
-        return this;
-    }
-
-    /// <summary>
     /// Gets or sets the extractor class name.
     /// </summary>
     public string ExtractorClassName
     {
         get => _extractorClassName;
         set => _extractorClassName = value.ThrowIfNullNorWhiteSpace();
-    }
-
-    /// <summary>
-    /// Sets the extractor class name.
-    /// </summary>
-    /// <param name="extractorClassName">The extractor class name.</param>
-    /// <returns>This instance.</returns>
-    public AttributeOptions SetExtractorClassName(string extractorClassName)
-    {
-        ExtractorClassName = extractorClassName;
-        return this;
     }
 
     /// <inheritdoc />

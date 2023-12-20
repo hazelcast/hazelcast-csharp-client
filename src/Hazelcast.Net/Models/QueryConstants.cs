@@ -14,8 +14,7 @@
 
 namespace Hazelcast.Models;
 
-// FIXME in com.hazelcast.query?
-public static class QueryConstants
+internal static class QueryConstants
 {
     /// <summary>
     /// The attribute name of the key.

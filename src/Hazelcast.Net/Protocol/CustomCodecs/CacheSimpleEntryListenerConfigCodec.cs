@@ -47,8 +47,8 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteBoolL(OldValueRequiredFieldOffset, cacheSimpleEntryListenerConfig.IsOldValueRequired);
-            initialFrame.Bytes.WriteBoolL(SynchronousFieldOffset, cacheSimpleEntryListenerConfig.IsSynchronous);
+            initialFrame.Bytes.WriteBoolL(OldValueRequiredFieldOffset, cacheSimpleEntryListenerConfig.OldValueRequired);
+            initialFrame.Bytes.WriteBoolL(SynchronousFieldOffset, cacheSimpleEntryListenerConfig.Synchronous);
             clientMessage.Append(initialFrame);
 
             CodecUtil.EncodeNullable(clientMessage, cacheSimpleEntryListenerConfig.CacheEntryListenerFactory, StringCodec.Encode);

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Models;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.Models;
@@ -43,4 +44,21 @@ internal class RingbufferStoreConfigHolder
     public Dictionary<string, string> Properties { get; }
 
     public bool IsEnabled { get; }
+
+    public static RingbufferStoreConfigHolder Of(RingbufferStoreOptions options)
+    {
+        if (options.ClassName == null && 
+            options.FactoryClassName == null && 
+            options.Enabled)
+        {
+            throw new ArgumentException("Either ClassName or FactoryClassName has to be non-null.", nameof(options));
+        }
+
+        return new RingbufferStoreConfigHolder(
+            options.ClassName,
+            options.FactoryClassName,
+            null, null, // no implementations
+            options.Properties, 
+            options.Enabled);
+    }
 }

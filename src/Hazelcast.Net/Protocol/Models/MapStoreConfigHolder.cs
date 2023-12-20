@@ -79,11 +79,11 @@ internal class MapStoreConfigHolder
         config.Enabled = IsEnabled;
         if (!string.IsNullOrEmpty(FactoryClassName))
             config.FactoryClassName = FactoryClassName;
-        config.InitialLoadMode = Enums.ParseJava<MapStoreOptions.LoadMode>(InitialLoadMode);
+        config.InitialLoadMode = Enums.ParseJava<LoadMode>(InitialLoadMode);
         if (Properties != null)
             config.Properties = Properties;
         config.WriteBatchSize = WriteBatchSize;
-        config.IsWriteCoalescing = IsWriteCoalescing;
+        config.WriteCoalescing = IsWriteCoalescing;
         config.WriteDelaySeconds = WriteDelaySeconds;
         if (_isOffload.HasValue)
             config.Offload = _isOffload.Value;
@@ -103,7 +103,7 @@ internal class MapStoreConfigHolder
             InitialLoadMode = config.InitialLoadMode.ToJavaString(),
             Properties = config.Properties,
             WriteBatchSize = config.WriteBatchSize,
-            IsWriteCoalescing = config.IsWriteCoalescing,
+            IsWriteCoalescing = config.WriteCoalescing,
             WriteDelaySeconds = config.WriteDelaySeconds,
             IsOffload = config.Offload
         };

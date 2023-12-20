@@ -306,7 +306,7 @@ namespace Hazelcast
                 .AddHook<PredicateDataSerializerHook>()
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
-                .AddHook<ReliableTopicDataSeriazlierHook>()
+                .AddHook<ReliableTopicDataSerializerHook>()
                 .AddHook<PublisherAddressDataSerializerHook>()
                 .AddHook<ConfigurationDataSerializerHook>()
 

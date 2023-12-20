@@ -586,8 +586,6 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
      * It is necessary to maintain equality consistency.
      */
 
-    public void MergeConfigs() => Merge(HotRestart, DataPersistence);
-
     private static void Merge(HotRestartOptions hotRestartConfig, DataPersistenceOptions dataPersistenceConfig)
     {
         if (Equals(hotRestartConfig, dataPersistenceConfig))

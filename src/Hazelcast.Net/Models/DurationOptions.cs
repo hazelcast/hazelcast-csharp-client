@@ -23,7 +23,6 @@ namespace Hazelcast.Models;
 /// </summary>
 public class DurationOptions : IIdentifiedDataSerializable
 {
-
     private long _durationAmount;
     private TimeUnit _timeUnit;
 

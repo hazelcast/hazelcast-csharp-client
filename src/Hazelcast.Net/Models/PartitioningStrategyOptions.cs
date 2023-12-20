@@ -23,7 +23,6 @@ namespace Hazelcast.Models;
 public class PartitioningStrategyOptions : IIdentifiedDataSerializable
 {
     // note: Java also supports a PartitioningStrategy implementation class which .NET cannot support
-    private string _partitioningStrategyClass;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PartitioningStrategyOptions"/> class.
@@ -36,7 +35,7 @@ public class PartitioningStrategyOptions : IIdentifiedDataSerializable
     /// </summary>
     public PartitioningStrategyOptions(PartitioningStrategyOptions config)
     {
-        _partitioningStrategyClass = config._partitioningStrategyClass;
+        PartitioningStrategyClass = config.PartitioningStrategyClass;
     }
 
     /// <summary>
@@ -44,24 +43,20 @@ public class PartitioningStrategyOptions : IIdentifiedDataSerializable
     /// </summary>
     public PartitioningStrategyOptions(string partitioningStrategyClass)
     {
-        _partitioningStrategyClass = partitioningStrategyClass;
+        PartitioningStrategyClass = partitioningStrategyClass;
     }
 
     /// <summary>
     /// Gets or sets the name of the class implementing the partitioning strategy.
     /// </summary>
     /// <returns></returns>
-    public string PartitioningStrategyClass
-    {
-        get => _partitioningStrategyClass;
-        set => _partitioningStrategyClass = value;
-    }
+    public string PartitioningStrategyClass { get; set; }
 
     /// <inheritdoc />
     public override string ToString()
     {
         return "PartitioningStrategyConfig{"
-                + "partitioningStrategyClass='" + _partitioningStrategyClass + '\''
+                + "partitioningStrategyClass='" + PartitioningStrategyClass + '\''
                 + ", partitioningStrategy=<not-supported>"
                 + '}';
     }
@@ -75,14 +70,14 @@ public class PartitioningStrategyOptions : IIdentifiedDataSerializable
     /// <inheritdoc />
     public void WriteData(IObjectDataOutput output)
     {
-        output.WriteString(_partitioningStrategyClass);
+        output.WriteString(PartitioningStrategyClass);
         output.WriteObject(null/*partitioningStrategy*/);
     }
 
     /// <inheritdoc />
     public void ReadData(IObjectDataInput input)
     {
-        _partitioningStrategyClass = input.ReadString();
+        PartitioningStrategyClass = input.ReadString();
         _/*partitioningStrategy*/ = input.ReadObject<object>();
     }
 }

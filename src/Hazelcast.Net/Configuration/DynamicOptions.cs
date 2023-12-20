@@ -40,8 +40,6 @@ public class DynamicOptions
     /// <param name="mapOptions">The map configuration.</param>
     public async Task ConfigureMapAsync(MapOptions mapOptions)
     {
-        mapOptions.MergeConfigs();
-
         var requestMessage = DynamicConfigAddMapConfigCodec.EncodeRequest(
             mapOptions.Name,
             mapOptions.BackupCount, mapOptions.AsyncBackupCount,
@@ -66,18 +64,56 @@ public class DynamicOptions
             mapOptions.HotRestart, mapOptions.EventJournal, mapOptions.MerkleTree,
             (int)mapOptions.MetadataPolicy, mapOptions.PerEntryStatsEnabled,
             mapOptions.DataPersistence, mapOptions.TieredStore, mapOptions.PartitioningAttributes);
+
         var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage);
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 
-    public async Task ConfigureMapAsync(string name, Action<MapOptions> configure)
+    /// <summary>
+    /// Dynamically configures a map.
+    /// </summary>
+    /// <param name="name">The name of the map.</param>
+    /// <param name="configure">A function that configures the map.</param>
+    public Task ConfigureMapAsync(string name, Action<MapOptions> configure)
     {
         var mapConfig = new MapOptions(name);
         configure(mapConfig);
-        await ConfigureMapAsync(mapConfig);
+        return ConfigureMapAsync(mapConfig);
     }
 
-    // FIXME: missing plenty!
+    /// <summary>
+    /// Dynamically configures a map.
+    /// </summary>
+    /// <param name="ringbufferOptions">The ring buffer configuration.</param>
+    public async Task ConfigureRingbufferAsync(RingbufferOptions ringbufferOptions)
+    {
+        RingbufferStoreConfigHolder ringbufferStoreConfig = null;
+        if (ringbufferOptions.RingbufferStore is {Enabled: true})
+        {
+            ringbufferStoreConfig = RingbufferStoreConfigHolder.Of(ringbufferOptions.RingbufferStore);
+        }
+        var requestMessage = DynamicConfigAddRingbufferConfigCodec.EncodeRequest(
+            ringbufferOptions.Name, ringbufferOptions.Capacity, ringbufferOptions.BackupCount,
+            ringbufferOptions.AsyncBackupCount, ringbufferOptions.TimeToLiveSeconds,
+            ringbufferOptions.InMemoryFormat.ToJavaString(), ringbufferStoreConfig,
+            ringbufferOptions.SplitBrainProtectionName, ringbufferOptions.MergePolicy.Policy,
+            ringbufferOptions.MergePolicy.BatchSize);
+
+        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage);
+        var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
+    }
+
+    /// <summary>
+    /// Dynamically configures a ring buffer.
+    /// </summary>
+    /// <param name="name">The name of the ring buffer.</param>
+    /// <param name="configure">A function that configures the ring buffer.</param>
+    public Task ConfigureRingbufferAsync(string name, Action<RingbufferOptions> configure)
+    {
+        var ringBufferOptions = new RingbufferOptions(name);
+        configure(ringBufferOptions);
+        return ConfigureRingbufferAsync(ringBufferOptions);
+    }
 
     private List<QueryCacheConfigHolder> MapQueryCacheConfigs(List<QueryCacheOptions> queryCacheConfigs)
     {
