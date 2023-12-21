@@ -475,6 +475,10 @@ namespace Hazelcast.Tests.NearCache
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
+            var cachedMap = dictionary as Hazelcast.DistributedObjects.Impl.HMapWithCache<int, int>;
+            var nearCache = cachedMap.NearCache;
+            var innerCache = nearCache.InnerCache;
+
             var keys = new List<int>();
             for (var i = 0; i < MaxSize; i++)
             {

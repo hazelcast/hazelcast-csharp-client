@@ -51,6 +51,30 @@ public class DynamicConfigureRingBufferTests : DynamicConfigureTestBase
     [Test]
     public async Task DefaultOptionsEncodeToSameMessageAsJava()
     {
+        // CI error: trying to invoke this:
+        // com.hazelcast.client.impl.protocol.codec.DynamicConfigAddRingbufferConfigCodec.encodeRequest(
+        //   String,
+        //   int,int,int,int,
+        //   String,
+        //   RingbufferStoreConfigHolder,
+        //   String,String,
+        //   int,
+        //   String)]
+        //
+        // this what we have in Java codebase:
+        // encodeRequest(
+        //   java.lang.String name,
+        //   int capacity, int backupCount, int asyncBackupCount, int timeToLiveSeconds,
+        //   java.lang.String inMemoryFormat,
+        //   @Nullable com.hazelcast.client.impl.protocol.task.dynamicconfig.RingbufferStoreConfigHolder ringbufferStoreConfig,
+        //   @Nullable java.lang.String splitBrainProtectionName, java.lang.String mergePolicy,
+        //   int mergeBatchSize) {
+        //
+        // now what is the trailing string?!
+        //
+        // in hazelcast-repo 5.4 it's
+        // encodeRequest(..., @Nullable java.lang.String namespace) {
+
         const string script = @"
 
 var serializationService = instance_0.serializationService
@@ -72,7 +96,8 @@ var message = DynamicConfigAddRingbufferConfigCodec.encodeRequest(
     ringbufferConfig.getInMemoryFormat().name(), 
     ringbufferStoreConfig,
     ringbufferConfig.getSplitBrainProtectionName(), ringbufferConfig.getMergePolicyConfig().getPolicy(),
-    ringbufferConfig.getMergePolicyConfig().getBatchSize())
+    ringbufferConfig.getMergePolicyConfig().getBatchSize(),
+    null /*namespace*/)
 
 " + ResultIsJavaMessageBytes;
 
@@ -89,7 +114,8 @@ var message = DynamicConfigAddRingbufferConfigCodec.encodeRequest(
             options.RingbufferStore is { Enabled: true } ? RingbufferStoreConfigHolder.Of(options.RingbufferStore) : null,
             options.SplitBrainProtectionName,
             options.MergePolicy.Policy,
-            options.MergePolicy.BatchSize
+            options.MergePolicy.BatchSize,
+            null /*namespace*/
         );
 
         var dotnetBytes = MessageToBytes(message);

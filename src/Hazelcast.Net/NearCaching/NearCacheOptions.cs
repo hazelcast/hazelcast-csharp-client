@@ -67,12 +67,12 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     }
 #pragma warning restore CA1034
 
+    private string _name = Defaults.Name;
     private bool _cacheLocalEntries;
     private bool _serializeKeys = Defaults.SerializeKeys;
     private bool _invalidateOnChange = Defaults.InvalidateOnChange;
     private int _timeToLiveSeconds = Defaults.TtlSeconds;
     private int _maxIdleSeconds = Defaults.MaxIdleSeconds;
-    private string _name = Defaults.Name;
     private EvictionOptions _evictionConfig = new();
     private InMemoryFormat _inMemoryFormat = Defaults.MemoryFormat;
     private UpdatePolicy _localUpdatePolicy = Defaults.LocalUpdatePolicy;
@@ -98,15 +98,15 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     public NearCacheOptions(NearCacheOptions config)
     {
         _name = config._name;
-        _inMemoryFormat = config._inMemoryFormat;
+        _cacheLocalEntries = config._cacheLocalEntries;
         _serializeKeys = config._serializeKeys;
         _invalidateOnChange = config._invalidateOnChange;
         _timeToLiveSeconds = config._timeToLiveSeconds;
         _maxIdleSeconds = config._maxIdleSeconds;
-        _evictionConfig = config._evictionConfig;
-        _cacheLocalEntries = config._cacheLocalEntries;
+        _evictionConfig = new EvictionOptions(config._evictionConfig);
+        _inMemoryFormat = config._inMemoryFormat;
         _localUpdatePolicy = config._localUpdatePolicy;
-        _preloaderConfig = config._preloaderConfig;
+        _preloaderConfig = new NearCachePreloaderOptions(config._preloaderConfig);
     }
 
     /// <summary>

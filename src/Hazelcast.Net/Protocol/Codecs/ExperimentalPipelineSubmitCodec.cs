@@ -39,43 +39,62 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Returns the capacity of this Ringbuffer.
+    /// The message is used to transfer the declarative pipeline definition and the related resource files from client to the server.
     ///</summary>
 #if SERVER_CODEC
-    internal static class RingbufferCapacityServerCodec
+    internal static class ExperimentalPipelineSubmitServerCodec
 #else
-    internal static class RingbufferCapacityCodec
+    internal static class ExperimentalPipelineSubmitCodec
 #endif
     {
-        public const int RequestMessageType = 1508352; // 0x170400
-        public const int ResponseMessageType = 1508353; // 0x170401
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
+        public const int RequestMessageType = 16580864; // 0xFD0100
+        public const int ResponseMessageType = 16580865; // 0xFD0101
+        private const int RequestResourceBundleChecksumFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestResourceBundleChecksumFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseJobIdFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseJobIdFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// <summary>
-            /// Name of the Ringbuffer
+            /// The name of the submitted Job using this pipeline.
             ///</summary>
-            public string Name { get; set; }
+            public string JobName { get; set; }
+
+            /// <summary>
+            /// The definition of the pipeline steps. It currently uses the YAML format.
+            ///</summary>
+            public string PipelineDefinition { get; set; }
+
+            /// <summary>
+            /// This is the zipped file which contains the user project folders and files. For Python project, it is the Python project files. It is optional in the sense that if the user likes to use a user docker image with all the resources and project files included, this parameter can be null.
+            ///</summary>
+            public byte[] ResourceBundle { get; set; }
+
+            /// <summary>
+            /// This is the CRC32 checksum over the resource bundle bytes.
+            ///</summary>
+            public int ResourceBundleChecksum { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string jobName, string pipelineDefinition, byte[] resourceBundle, int resourceBundleChecksum)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = "Ringbuffer.Capacity"
+                OperationName = "Experimental.PipelineSubmit"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestResourceBundleChecksumFieldOffset, resourceBundleChecksum);
             clientMessage.Append(initialFrame);
-            StringCodec.Encode(clientMessage, name);
+            CodecUtil.EncodeNullable(clientMessage, jobName, StringCodec.Encode);
+            StringCodec.Encode(clientMessage, pipelineDefinition);
+            CodecUtil.EncodeNullable(clientMessage, resourceBundle, ByteArrayCodec.Encode);
             return clientMessage;
         }
 
@@ -84,8 +103,11 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
-            request.Name = StringCodec.Decode(iterator);
+            var initialFrame = iterator.Take();
+            request.ResourceBundleChecksum = initialFrame.Bytes.ReadIntL(RequestResourceBundleChecksumFieldOffset);
+            request.JobName = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            request.PipelineDefinition = StringCodec.Decode(iterator);
+            request.ResourceBundle = CodecUtil.DecodeNullable(iterator, ByteArrayCodec.Decode);
             return request;
         }
 #endif
@@ -94,18 +116,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// the capacity
+            /// This is the unique identifier for the job which is created for this pipeline
             ///</summary>
-            public long Response { get; set; }
+            public long JobId { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(long response)
+        public static ClientMessage EncodeResponse(long jobId)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteLongL(ResponseJobIdFieldOffset, jobId);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -116,7 +138,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadLongL(ResponseResponseFieldOffset);
+            response.JobId = initialFrame.Bytes.ReadLongL(ResponseJobIdFieldOffset);
             return response;
         }
 

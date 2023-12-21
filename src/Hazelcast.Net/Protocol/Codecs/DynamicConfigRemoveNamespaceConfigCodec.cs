@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Publishes the message to all subscribers of this topic
+    /// Removes a namespace configuration.
     ///</summary>
 #if SERVER_CODEC
-    internal static class TopicPublishServerCodec
+    internal static class DynamicConfigRemoveNamespaceConfigServerCodec
 #else
-    internal static class TopicPublishCodec
+    internal static class DynamicConfigRemoveNamespaceConfigCodec
 #endif
     {
-        public const int RequestMessageType = 262400; // 0x040100
-        public const int ResponseMessageType = 262401; // 0x040101
+        public const int RequestMessageType = 1774592; // 0x1B1400
+        public const int ResponseMessageType = 1774593; // 0x1B1401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -57,30 +57,24 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// Name of the Topic
+            /// Namespace configuration name.
             ///</summary>
             public string Name { get; set; }
-
-            /// <summary>
-            /// The message to publish to all subscribers of this topic
-            ///</summary>
-            public IData Message { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData message)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = "Topic.Publish"
+                OperationName = "DynamicConfig.RemoveNamespaceConfig"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, message);
             return clientMessage;
         }
 
@@ -91,7 +85,6 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Message = DataCodec.Decode(iterator);
             return request;
         }
 #endif

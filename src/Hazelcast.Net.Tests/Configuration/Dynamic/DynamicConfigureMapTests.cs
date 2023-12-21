@@ -261,7 +261,8 @@ var message = DynamicConfigAddMapConfigCodec.encodeRequest(
     null/*queryCacheConfigHolders*/, null/*partitioningStrategyClassName*/, null/*partitioningStrategy*/, mapConfig.getHotRestartConfig(),
     mapConfig.getEventJournalConfig(), mapConfig.getMerkleTreeConfig(), mapConfig.getMetadataPolicy().getId(),
     mapConfig.isPerEntryStatsEnabled(), mapConfig.getDataPersistenceConfig(), mapConfig.getTieredStoreConfig(),
-    mapConfig.getPartitioningAttributeConfigs())
+    mapConfig.getPartitioningAttributeConfigs(),
+    null /*namespace*/)
 
 " + ResultIsJavaMessageBytes;
 
@@ -291,7 +292,8 @@ var message = DynamicConfigAddMapConfigCodec.encodeRequest(
             null,
             options.HotRestart, options.EventJournal, options.MerkleTree,
             (int)options.MetadataPolicy, options.PerEntryStatsEnabled,
-            options.DataPersistence, options.TieredStore, options.PartitioningAttributes);
+            options.DataPersistence, options.TieredStore, options.PartitioningAttributes,
+            null /*namespace*/);
 
         var dotnetBytes = MessageToBytes(message);
 

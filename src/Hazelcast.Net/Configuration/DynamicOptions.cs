@@ -63,7 +63,8 @@ public class DynamicOptions
             null,
             mapOptions.HotRestart, mapOptions.EventJournal, mapOptions.MerkleTree,
             (int)mapOptions.MetadataPolicy, mapOptions.PerEntryStatsEnabled,
-            mapOptions.DataPersistence, mapOptions.TieredStore, mapOptions.PartitioningAttributes);
+            mapOptions.DataPersistence, mapOptions.TieredStore, mapOptions.PartitioningAttributes,
+            null /*namespace*/);
 
         var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage);
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
@@ -97,7 +98,8 @@ public class DynamicOptions
             ringbufferOptions.AsyncBackupCount, ringbufferOptions.TimeToLiveSeconds,
             ringbufferOptions.InMemoryFormat.ToJavaString(), ringbufferStoreConfig,
             ringbufferOptions.SplitBrainProtectionName, ringbufferOptions.MergePolicy.Policy,
-            ringbufferOptions.MergePolicy.BatchSize);
+            ringbufferOptions.MergePolicy.BatchSize,
+            null /*namespace*/);
 
         var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage);
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
