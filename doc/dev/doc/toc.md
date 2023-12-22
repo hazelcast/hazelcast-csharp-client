@@ -41,6 +41,7 @@
 # [Events](events.md)
 # [Data Affinity](data-affinity.md)
 # [Transactions](transactions.md)
+# [Dynamic COnfiguration](dynamic-configuration.md)
 # [Examples](examples.md)
 # [Extensions](extensions.md)
 ## [Dependency Injection](extensions/dependency-injection.md)
