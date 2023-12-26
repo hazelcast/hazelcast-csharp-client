@@ -23,17 +23,23 @@ namespace Hazelcast.Sql
     {
         public int Code { get; }
         public string Message { get; }
+
+        public string CauseStackTrace { get; }
+        public bool HasCauseStackTrace { get; set; }
         public Guid OriginatingMemberId { get; }
 
         public string Suggestion { get; }
 
+        //(code, message, originatingMemberId, isSuggestionExists, suggestion, isCauseStackTraceExists, causeStackTrace);
         /// <summary>
         /// Creates a new instance of <see cref="SqlError"/> class.
         /// </summary>
-        public SqlError(int code, string message, Guid originatingMemberId, bool hasSuggestion, string suggestion)
+        public SqlError(int code, string message, Guid originatingMemberId, bool hasSuggestion, string suggestion, bool hasCauseStackTrace, string causeStackTrace)
         {
             Code = code;
             Message = message;
+            HasCauseStackTrace = hasCauseStackTrace;
+            CauseStackTrace = causeStackTrace;
             OriginatingMemberId = originatingMemberId;
             if (hasSuggestion) Suggestion = suggestion;
         }
