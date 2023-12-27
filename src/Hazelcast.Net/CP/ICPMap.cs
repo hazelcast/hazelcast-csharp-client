@@ -20,12 +20,12 @@ namespace Hazelcast.CP;
 
 /// <summary>
 /// CPMap is a key-value store within CP. It supports atomic operations on an entry.
-/// <remarks><para>CPMap is only available in enterprise edition.</para><para>This data structure is not partitioned
+/// <remarks><para>CPMap is only available in <b>enterprise</b> cluster.</para><para>This data structure is not partitioned
 /// across members in the cluster. It lives in one of the members.</para></remarks> 
 /// </summary>
 /// <typeparam name="TKey">Type of key in the map.</typeparam>
 /// <typeparam name="TValue">Type of value in the map.</typeparam>
-public interface ICPMap<TKey, TValue> : IDistributedObject
+public interface ICPMap<TKey, TValue> : ICPDistributedObject
 {
     /// <summary>
     /// Sets <paramref name="key"/> to <paramref name="value"/>.

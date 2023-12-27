@@ -63,7 +63,7 @@ namespace Hazelcast
 
             _distributedOjects = new DistributedObjectFactory(Cluster, SerializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, SerializationService, loggerFactory, options.NearCache);
-            CPSubsystem = new CPSubsystem(cluster, SerializationService);
+            CPSubsystem = new CPSubsystem(cluster, SerializationService, _distributedOjects, loggerFactory);
 
             // This option is internal and bound to SmartRouting for now.
             options.Sql.ArgumentIndexCachingEnabled = options.Networking.SmartRouting;

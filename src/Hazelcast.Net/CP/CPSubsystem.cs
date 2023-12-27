@@ -14,12 +14,15 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP
 {
@@ -31,6 +34,8 @@ namespace Hazelcast.CP
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
         private readonly ConcurrentDictionary<string, IFencedLock> _fencedLocks = new ConcurrentDictionary<string, IFencedLock>();
+        private readonly DistributedObjectFactory _objectFactory;
+        private readonly ILoggerFactory _loggerFactory;
 
         // ReSharper disable once InconsistentNaming - internal for tests
         internal readonly CPSessionManager _cpSubsystemSession;
@@ -40,11 +45,15 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
-        public CPSubsystem(Cluster cluster, SerializationService serializationService)
+        /// <param name="objectFactory">Distributed object factory.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
+        public CPSubsystem(Cluster cluster, SerializationService serializationService, DistributedObjectFactory objectFactory, ILoggerFactory loggerFactory)
         {
             _cluster = cluster;
             _serializationService = serializationService;
             _cpSubsystemSession = new CPSessionManager(cluster);
+            _objectFactory = objectFactory;
+            _loggerFactory = loggerFactory;
         }
 
         // NOTES
@@ -126,6 +135,22 @@ namespace Hazelcast.CP
             }
         }
 
+        /// <inheritdoc />
+        public async Task<ICPMap<TKey, TValue>> GetMap<TKey, TValue>([NotNull]string name)
+        {
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            var task = _objectFactory
+                .GetOrCreateAsync<ICPMap<TKey, TValue>, CPMap<TKey, TValue>>(ServiceNames.CPMap, objectName, true,
+                    (n, f, c, sr, lf)
+                        => new CPMap<TKey, TValue>(ServiceNames.CPMap, n, f, c, sr, lf, groupId));
+
+            return await task.CfAwait();
+        }
+
         // see: ClientRaftProxyFactory.java
 
         private async Task<CPGroupId> GetGroupIdAsync(string proxyName)
@@ -179,6 +204,7 @@ namespace Hazelcast.CP
 
             return (groupName, objectName, fullName);
         }
+
 
         public async ValueTask DisposeAsync()
         {
