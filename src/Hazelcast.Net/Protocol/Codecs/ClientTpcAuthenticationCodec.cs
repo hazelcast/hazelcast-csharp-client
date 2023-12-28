@@ -39,52 +39,49 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Returns current lock ownership status of the given FencedLock instance.
+    /// Makes an authentication request to TPC channels.
     ///</summary>
 #if SERVER_CODEC
-    internal static class FencedLockGetLockOwnershipServerCodec
+    internal static class ClientTpcAuthenticationServerCodec
 #else
-    internal static class FencedLockGetLockOwnershipCodec
+    internal static class ClientTpcAuthenticationCodec
 #endif
     {
-        public const int RequestMessageType = 459776; // 0x070400
-        public const int ResponseMessageType = 459777; // 0x070401
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseFenceFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseLockCountFieldOffset = ResponseFenceFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseSessionIdFieldOffset = ResponseLockCountFieldOffset + BytesExtensions.SizeOfInt;
-        private const int ResponseThreadIdFieldOffset = ResponseSessionIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = ResponseThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        public const int RequestMessageType = 5632; // 0x001600
+        public const int ResponseMessageType = 5633; // 0x001601
+        private const int RequestUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestUuidFieldOffset + BytesExtensions.SizeOfCodecGuid;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// <summary>
-            /// CP group id of this FencedLock instance
+            /// UUID of the client.
             ///</summary>
-            public Hazelcast.CP.CPGroupId GroupId { get; set; }
+            public Guid Uuid { get; set; }
 
             /// <summary>
-            /// Name of this FencedLock instance
+            /// Authentication token bytes for the TPC channels
             ///</summary>
-            public string Name { get; set; }
+            public byte[] Token { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name)
+        public static ClientMessage EncodeRequest(Guid uuid, byte[] token)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = "FencedLock.GetLockOwnership"
+                OperationName = "Client.TpcAuthentication"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(RequestUuidFieldOffset, uuid);
             clientMessage.Append(initialFrame);
-            RaftGroupIdCodec.Encode(clientMessage, groupId);
-            StringCodec.Encode(clientMessage, name);
+            ByteArrayCodec.Encode(clientMessage, token);
             return clientMessage;
         }
 
@@ -93,47 +90,23 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
-            request.GroupId = RaftGroupIdCodec.Decode(iterator);
-            request.Name = StringCodec.Decode(iterator);
+            var initialFrame = iterator.Take();
+            request.Uuid = initialFrame.Bytes.ReadGuidL(RequestUuidFieldOffset);
+            request.Token = ByteArrayCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// <summary>
-            /// Fence token of the lock
-            ///</summary>
-            public long Fence { get; set; }
-
-            /// <summary>
-            /// Reentrant lock count
-            ///</summary>
-            public int LockCount { get; set; }
-
-            /// <summary>
-            /// Id of the session that holds the lock
-            ///</summary>
-            public long SessionId { get; set; }
-
-            /// <summary>
-            /// Id of the thread that holds the lock
-            ///</summary>
-            public long ThreadId { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(long fence, int lockCount, long sessionId, long threadId)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteLongL(ResponseFenceFieldOffset, fence);
-            initialFrame.Bytes.WriteIntL(ResponseLockCountFieldOffset, lockCount);
-            initialFrame.Bytes.WriteLongL(ResponseSessionIdFieldOffset, sessionId);
-            initialFrame.Bytes.WriteLongL(ResponseThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -143,11 +116,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Fence = initialFrame.Bytes.ReadLongL(ResponseFenceFieldOffset);
-            response.LockCount = initialFrame.Bytes.ReadIntL(ResponseLockCountFieldOffset);
-            response.SessionId = initialFrame.Bytes.ReadLongL(ResponseSessionIdFieldOffset);
-            response.ThreadId = initialFrame.Bytes.ReadLongL(ResponseThreadIdFieldOffset);
+            iterator.Take(); // empty initial frame
             return response;
         }
 
