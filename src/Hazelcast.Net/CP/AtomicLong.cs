@@ -17,6 +17,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP
 {
@@ -31,8 +32,9 @@ namespace Hazelcast.CP
         /// <param name="name">The unique name.</param>
         /// <param name="groupId">The CP group identifier.</param>
         /// <param name="cluster">The cluster.</param>
-        public AtomicLong(string name, CPGroupId groupId, Cluster cluster)
-            : base(ServiceNames.AtomicLong, name, groupId, cluster)
+        /// <param name="serializationService">The serialization service.</param>
+        public AtomicLong(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
+            : base(ServiceNames.AtomicLong, name, groupId, cluster, serializationService)
         { }
 
         /// <inheritdoc />
@@ -94,13 +96,5 @@ namespace Hazelcast.CP
 
         /// <inheritdoc />
         public Task SetAsync(long value) => GetAndSetAsync(value);
-
-        /// <inheritdoc />
-        public override async ValueTask DestroyAsync()
-        {
-            var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
-        }
     }
 }

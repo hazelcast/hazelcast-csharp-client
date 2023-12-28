@@ -80,7 +80,7 @@ namespace Hazelcast.CP
             var (groupName, objectName, _) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            return new AtomicLong(objectName, groupId, _cluster);
+            return new AtomicLong(objectName, groupId, _cluster, _serializationService);
         }
 
         public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
@@ -127,28 +127,22 @@ namespace Hazelcast.CP
                 // and we need to verify that the group ID of the lock we get is correct (in case
                 // we don't add but just get the one that was added by the other task) - if it does
                 // not match then refresh the group ID and return - we want to be consistent
-                fencedLock = _fencedLocks.GetOrAdd(fullName, _ => new FencedLock(fullName, objectName, groupId, _cluster, _cpSubsystemSession));
+                fencedLock = _fencedLocks.GetOrAdd(fullName, _ => new FencedLock(fullName, objectName, groupId,
+                    _cluster, _cpSubsystemSession, _serializationService));
                 if (fencedLock.GroupId.Equals(groupId))
                     return fencedLock;
 
                 groupId = await GetGroupIdAsync(groupName).CfAwait();
             }
         }
-
-        /// <inheritdoc />
-        public async Task<ICPMap<TKey, TValue>> GetMap<TKey, TValue>([NotNull]string name)
+        
+        public async Task<ICPMap<TKey, TValue>> GetMapAsync<TKey, TValue>([NotNull] string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
-
             var (groupName, objectName, fullName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            var task = _objectFactory
-                .GetOrCreateAsync<ICPMap<TKey, TValue>, CPMap<TKey, TValue>>(ServiceNames.CPMap, objectName, true,
-                    (n, f, c, sr, lf)
-                        => new CPMap<TKey, TValue>(ServiceNames.CPMap, n, f, c, sr, lf, groupId));
-
-            return await task.CfAwait();
+            return new CPMap<TKey, TValue>(ServiceNames.CPMap, objectName, _cluster,
+                _serializationService, groupId);
         }
 
         // see: ClientRaftProxyFactory.java

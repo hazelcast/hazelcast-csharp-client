@@ -65,6 +65,6 @@ namespace Hazelcast.CP
         /// <param name="name">The unique name of the map. It can contain the group name like <code>"myMap@group1"</code></param>
         /// <typeparam name="TKey">Type of the key.</typeparam>
         /// <typeparam name="TValue">Type of the value.</typeparam>
-        Task<ICPMap<TKey, TValue>> GetMap<TKey, TValue>(string name);
+        Task<ICPMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name);
     }   
 }

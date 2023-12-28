@@ -15,34 +15,25 @@
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP;
 
-class CPMap<TKey, TValue> : DistributedObjectBase, ICPMap<TKey, TValue>
+class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
 {
-    private readonly CPGroupId _cpGroupId;
-    public ICPGroupId GroupId => _cpGroupId;
-
     public CPMap(string serviceName,
         string name,
-        DistributedObjectFactory factory,
         Cluster cluster,
         SerializationService serializationService,
-        ILoggerFactory loggerFactory,
-        CPGroupId cpGroupId) : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
-    {
-        _cpGroupId = cpGroupId;
-    }
+        CPGroupId cpGroupId) : base(serviceName, name, cpGroupId, cluster, serializationService)
+    { }
 
     public async Task<TValue> PutAsync(TKey key, TValue value)
     {
         var keyData = ToSafeData(key);
         var valueData = ToSafeData(value);
-        var message = CPMapPutCodec.EncodeRequest(_cpGroupId, Name, keyData, valueData);
+        var message = CPMapPutCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
         var response = await Cluster.Messaging.SendAsync(message).CfAwait();
         var responseData = CPMapPutCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
@@ -52,7 +43,7 @@ class CPMap<TKey, TValue> : DistributedObjectBase, ICPMap<TKey, TValue>
     {
         var keyData = ToSafeData(key);
         var valueData = ToSafeData(value);
-        var message = CPMapSetCodec.EncodeRequest(_cpGroupId, Name, keyData, valueData);
+        var message = CPMapSetCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
         var response = await Cluster.Messaging.SendAsync(message).CfAwait();
         _ = CPMapSetCodec.DecodeResponse(response);
     }
@@ -60,7 +51,7 @@ class CPMap<TKey, TValue> : DistributedObjectBase, ICPMap<TKey, TValue>
     public async Task<TValue> GetAsync(TKey key)
     {
         var keyData = ToSafeData(key);
-        var message = CPMapGetCodec.EncodeRequest(_cpGroupId, Name, keyData);
+        var message = CPMapGetCodec.EncodeRequest(CPGroupId, Name, keyData);
         var response = await Cluster.Messaging.SendAsync(message).CfAwait();
         var responseData = CPMapGetCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
@@ -69,7 +60,7 @@ class CPMap<TKey, TValue> : DistributedObjectBase, ICPMap<TKey, TValue>
     public async Task<TValue> RemoveAsync(TKey key)
     {
         var keyData = ToSafeData(key);
-        var message = CPMapRemoveCodec.EncodeRequest(_cpGroupId, Name, keyData);
+        var message = CPMapRemoveCodec.EncodeRequest(CPGroupId, Name, keyData);
         var response = await Cluster.Messaging.SendAsync(message).CfAwait();
         var responseData = CPMapRemoveCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
@@ -78,7 +69,7 @@ class CPMap<TKey, TValue> : DistributedObjectBase, ICPMap<TKey, TValue>
     public async Task DeleteAsync(TKey key)
     {
         var keyData = ToSafeData(key);
-        var message = CPMapDeleteCodec.EncodeRequest(_cpGroupId, Name, keyData);
+        var message = CPMapDeleteCodec.EncodeRequest(CPGroupId, Name, keyData);
         var response = await Cluster.Messaging.SendAsync(message).CfAwait();
         _ = CPMapDeleteCodec.DecodeResponse(response);
     }
@@ -88,9 +79,9 @@ class CPMap<TKey, TValue> : DistributedObjectBase, ICPMap<TKey, TValue>
         var keyData = ToSafeData(key);
         var expectedValueData = ToSafeData(expectedValue);
         var newValueData = ToSafeData(newValue);
-        var message = CPMapCompareAndSetCodec.EncodeRequest(_cpGroupId, Name, keyData, expectedValueData, newValueData);
+        var message = CPMapCompareAndSetCodec.EncodeRequest(CPGroupId, Name, keyData, expectedValueData, newValueData);
         var response = await Cluster.Messaging.SendAsync(message).CfAwait();
-        var responseData = CPMapRemoveCodec.DecodeResponse(response).Response;
-        return await ToObjectAsync<bool>(responseData).CfAwait();
+        return CPMapCompareAndSetCodec.DecodeResponse(response).Response;
     }
+
 }

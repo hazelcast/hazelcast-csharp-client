@@ -22,6 +22,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP
 {
@@ -39,8 +40,8 @@ namespace Hazelcast.CP
         private int _destroyed;
         public const long InvalidFence = 0;
 
-        public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession)
-            : base(ServiceNames.FencedLock, objectName, groupId, cluster)
+        public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession, SerializationService serializationService)
+            : base(ServiceNames.FencedLock, objectName, groupId, cluster, serializationService)
         {
             _fullName = fullName; // TODO: this should be a base class property
             _groupId = groupId;
@@ -518,7 +519,7 @@ namespace Hazelcast.CP
         {
             if (!_destroyed.InterlockedZeroToOne()) return;
 
-            await RequestDestroyAsync().CfAwait();
+            await base.DestroyAsync().CfAwait();
 
             // note: still needs to be disposed to clear the _contextLocker
         }
