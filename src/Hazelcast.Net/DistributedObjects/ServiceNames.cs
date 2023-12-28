@@ -75,6 +75,11 @@ namespace Hazelcast.DistributedObjects
         public const string AtomicRef = "hz:raft:atomicRefService";
 
         /// <summary>
+        /// The name of the raft semaphore service.
+        /// </summary>
+        public const string Semaphore = "hz:raft:semaphoreService";
+
+        /// <summary>
         /// The name of the Flake ID Generator service.
         /// </summary>
         public const string FlakeIdGenerator = "hz:impl:flakeIdGeneratorService";
