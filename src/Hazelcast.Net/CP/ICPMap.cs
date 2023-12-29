@@ -14,7 +14,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.CP;
 

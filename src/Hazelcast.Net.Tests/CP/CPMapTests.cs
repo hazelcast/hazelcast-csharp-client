@@ -64,9 +64,8 @@ public class CPMapTests : MultiMembersRemoteTestBase
         Assert.AreEqual(ServiceNames.CPMap, doBase.ServiceName);
         Assert.AreEqual(_defaultMapName, doBase.Name);
         Assert.IsNull(doBase.PartitionKey);
-
-        var cpObject = (ICPDistributedObject) map;
-        Assert.AreEqual(CPSubsystem.DefaultGroupName, cpObject.GroupId.Name);
+        
+        Assert.AreEqual(CPSubsystem.DefaultGroupName, map.GroupId.Name);
     }
 
     [Test]

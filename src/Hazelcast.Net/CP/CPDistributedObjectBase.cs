@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
@@ -78,7 +79,7 @@ namespace Hazelcast.CP
         public virtual async ValueTask DestroyAsync()
         {
             var message = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
-            var response = await Cluster.Messaging.SendAsync(message);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
             _ = CPGroupDestroyCPObjectCodec.DecodeResponse(response);
         }
 
