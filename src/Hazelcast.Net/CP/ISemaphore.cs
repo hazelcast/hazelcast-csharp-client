@@ -114,7 +114,9 @@ public interface ISemaphore : ICPDistributedObject
     /// <remarks>
     /// <para>This method differs from <see cref="AcquireAsync"/> as it does not block until
     /// permits become available. Similarly, if the caller has acquired some permits,
-    /// they are not released with this call.</para>
+    /// they are not released with this call. In other words, this method arbitrarily
+    /// decreases the available permits count (can even make it negative) without affecting
+    /// the already acquired permits.</para>
     /// </remarks>
     Task ReducePermitsAsync(int delta);
 
@@ -124,8 +126,10 @@ public interface ISemaphore : ICPDistributedObject
     /// <param name="delta">The number of permits to increase.</param>
     /// <remarks>
     /// <para>If there are some threads waiting for permits to become available, they
-    /// will be notified.Moreover, if the caller has acquired some permits,
-    /// they are not released with this call.</para>
+    /// will be notified. Moreover, if the caller has acquired some permits,
+    /// they are not released with this call. In other words, this method arbitrarily
+    /// increases the available permits count and, if some acquire operations are pending,
+    /// satisfies them.</para>
     /// </remarks>
     Task IncreasePermitsAsync(int delta);
 }

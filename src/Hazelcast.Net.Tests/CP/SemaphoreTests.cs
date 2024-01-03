@@ -183,11 +183,25 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
         Assert.That(await semaphore.TryAcquireAsync(4));
 
         // increasing permits unlocks waiters
-        var acquiring = semaphore.TryAcquireAsync(1, 8_000);
+        Task<bool> acquiring; // acquire - in a different async flow
+        using (AsyncContext.New()) acquiring = semaphore.TryAcquireAsync(1, 8_000);
         await Task.Delay(200);
         Assert.That(acquiring.IsCompleted, Is.False);
         await semaphore.IncreasePermitsAsync(1); // total 9 permits
-        Assert.That(await acquiring);
+
+        // note: it's important to acquire and increase permits in different async flows,
+        // as we are not supposed to perform concurrent operations on the semaphore from
+        // the same "thread" - and we would get either acquiring returning false on some
+        // occasions, or throwing about the acquisition operation being cancelled because
+        // of another operation.
+        Assert.That(await acquiring); 
+    }
+
+    [Test]
+    public async Task TroubleshootThreads()
+    {
+        await using var semaphore = await GetSemaphore();
+
     }
 
     [Test]

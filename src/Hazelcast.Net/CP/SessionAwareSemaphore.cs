@@ -23,19 +23,25 @@ using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.CP;
 
-internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISemaphore
+internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 {
     public const int DrainSessionAcqCount = 1024;
 
+    private readonly CPSessionManager _sessionManager;
+
     public SessionAwareSemaphore(string name, CPGroupId groupId, Cluster cluster, CPSessionManager sessionManager)
-        : base(ServiceNames.Semaphore, name, groupId, cluster, sessionManager)
-    { }
+        : base(ServiceNames.Semaphore, name, groupId, cluster)
+    {
+        _sessionManager = sessionManager;
+    }
 
     // this semaphore is session-aware, therefore it can use a plain "thread id" in the
     // client request messages - and for semaphores, this has to be a somewhat not constant
     // yet not totally random number, which is used internally by the cluster to manage
-    // queues and stuff - so, using the .NET managed thread id is a safe bet.
-    private static long GetThreadId() => Environment.CurrentManagedThreadId;
+    // queues and stuff - but, two simultaneous operations on the same "thread id" can
+    // interrupt each other, so this id has to somehow represent the .NET async flow (cannot
+    // be the plain .NET managed thread) and therefore we use the AsyncContext.
+    private static long GetThreadId() => AsyncContext.Current.Id;
 
     public async Task<bool> InitializeAsync(int permits = 1)
     {
@@ -54,7 +60,7 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
 
         for (;;)
         {
-            var sessionId = await AcquireSessionAsync(permits).CfAwait();
+            var sessionId = await _sessionManager.AcquireSessionAsync(CPGroupId, permits).CfAwait();
 
             try
             {
@@ -67,19 +73,18 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
             }
             catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
             {
-                InvalidateSession(sessionId);
+                _sessionManager.InvalidateSession(CPGroupId, sessionId);
                 // try again
             }
             catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
             {
-                ReleaseSession(sessionId, permits);
+                _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
                 throw new InvalidOperationException(
-                    "Could not acquire semaphore {Name} because the acquisition operation was cancelled, " +
-                    "possibly because of another operation on the same lock context.");
+                    $"Could not acquire semaphore {Name} because the acquisition operation was cancelled, possibly because of another operation.");
             }
             catch (Exception)
             {
-                ReleaseSession(sessionId, permits);
+                _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
                 throw;
             }
         }
@@ -95,7 +100,7 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
 
         for (;;)
         {
-            var sessionId = await AcquireSessionAsync(permits).CfAwait();
+            var sessionId = await _sessionManager.AcquireSessionAsync(CPGroupId, permits).CfAwait();
 
             try
             {
@@ -104,22 +109,22 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
                     countdown.RemainingMilliseconds);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
                 var acquired = SemaphoreAcquireCodec.DecodeResponse(responseMessage).Response;
-                if (!acquired) ReleaseSession(sessionId, permits);
+                if (!acquired) _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
                 return acquired;
             }
             catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
             {
-                InvalidateSession(sessionId);
+                _sessionManager.InvalidateSession(CPGroupId, sessionId);
                 if (countdown.Elapsed) return false; // else try again
             }
             catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
             {
-                ReleaseSession(sessionId, permits);
+                _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
                 return false;
             }
             catch (Exception)
             {
-                ReleaseSession(sessionId, permits);
+                _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
                 throw;
             }
         }
@@ -131,7 +136,7 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
         var invocationUid = Guid.NewGuid();
         var threadId = GetThreadId();
 
-        var sessionId = GetSession();
+        var sessionId = _sessionManager.GetSessionId(CPGroupId);
         if (sessionId == CPSessionManager.NoSessionId)
             throw new InvalidOperationException("No CP session.");
 
@@ -143,14 +148,13 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
         }
         catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
         {
-            InvalidateSession(sessionId);
+            _sessionManager.InvalidateSession(CPGroupId, sessionId);
             throw new InvalidOperationException(
-                $"Could not release semaphore {Name} because the release operation was cancelled, " +
-                "possibly because of another operation on the same lock context.");
+                $"Could not release semaphore {Name} because the release operation was cancelled, possibly because of another operation.");
         }
         finally
         {
-            ReleaseSession(sessionId, permits);
+            _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
         }
     }
 
@@ -168,22 +172,22 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
 
         for (;;)
         {
-            var sessionId = await AcquireSessionAsync(DrainSessionAcqCount).CfAwait();
+            var sessionId = await _sessionManager.AcquireSessionAsync(CPGroupId, DrainSessionAcqCount).CfAwait();
             try
             {
                 var requestMessage = SemaphoreDrainCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
                 var count = SemaphoreDrainCodec.DecodeResponse(responseMessage).Response;
-                ReleaseSession(sessionId, DrainSessionAcqCount - count);
+                _sessionManager.ReleaseSession(CPGroupId, sessionId, DrainSessionAcqCount - count);
                 return count;
             }
             catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
             {
-                InvalidateSession(sessionId);
+                _sessionManager.InvalidateSession(CPGroupId, sessionId);
             }
             catch (Exception)
             {
-                ReleaseSession(sessionId, DrainSessionAcqCount);
+                _sessionManager.ReleaseSession(CPGroupId, sessionId, DrainSessionAcqCount);
                 throw;
             }
         }
@@ -198,7 +202,7 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
         var invocationUid = Guid.NewGuid();
         var threadId = GetThreadId();
 
-        var sessionId = await AcquireSessionAsync().CfAwait();
+        var sessionId = await _sessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
 
         try
         {
@@ -208,14 +212,13 @@ internal class SessionAwareSemaphore : CPSessionAwareDistributedObjectBase, ISem
         }
         catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
         {
-            InvalidateSession(sessionId);
+            _sessionManager.InvalidateSession(CPGroupId, sessionId);
             throw new InvalidOperationException(
-                $"Could not change semaphore {Name} because the change operation was cancelled, " +
-                "possibly because of another operation on the same lock context.");
+                $"Could not change semaphore {Name} because the change operation was cancelled, possibly because of another operation.");
         }
         finally
         {
-            ReleaseSession(sessionId);
+            _sessionManager.ReleaseSession(CPGroupId, sessionId);
         }
     }
 

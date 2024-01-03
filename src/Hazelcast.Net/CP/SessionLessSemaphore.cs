@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -24,20 +23,26 @@ using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.CP;
 
-internal class SessionLessSemaphore : CPSessionAwareDistributedObjectBase, ISemaphore
+internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
 {
+    private readonly CPSessionManager _sessionManager;
+
     public SessionLessSemaphore(string name, CPGroupId groupId, Cluster cluster, CPSessionManager sessionManager) 
-        : base(ServiceNames.Semaphore, name, groupId, cluster, sessionManager)
-    { }
+        : base(ServiceNames.Semaphore, name, groupId, cluster)
+    {
+        _sessionManager = sessionManager;
+    }
 
     // this semaphore is session-less, and cannot simply use a plain "thread id" in
     // the client request messages - as there can be other threads with that same id
     // in other clients - therefore we have to request a unique "thread id" from the
     // cluster, which is identified by (group id, local thread id) - now for local
     // thread id, it has to be a somewhat not constant yet not totally random number,
-    // which is used internally by the cluster to manage queues and stuff - so, using
-    // the .NET managed thread id is a safe bet.
-    private ValueTask<long> GetThreadId() => GetOrCreateUniqueThreadIdAsync(Environment.CurrentManagedThreadId);
+    // which is used internally by the cluster to manage queues and stuff - but, two
+    // simultaneous operations on the same "thread id" can interrupt each other, so
+    // this id has to somehow represent the .NET async flow (cannot be the plain .NET
+    // managed thread) and therefore we use the AsyncContext.
+    private ValueTask<long> GetThreadId() => _sessionManager.GetOrCreateUniqueThreadIdAsync(CPGroupId, AsyncContext.Current.Id);
 
     public async Task<bool> InitializeAsync(int permits = 1)
     {
@@ -72,8 +77,7 @@ internal class SessionLessSemaphore : CPSessionAwareDistributedObjectBase, ISema
         catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
         {
             throw new InvalidOperationException(
-                $"Could not acquire semaphore {Name} because the acquisition operation was cancelled, " +
-                "possibly because of another operation on the same lock context.");
+                $"Could not acquire semaphore {Name} because the acquisition operation was cancelled, possibly because of another operation.");
         }
     }
 
@@ -93,8 +97,7 @@ internal class SessionLessSemaphore : CPSessionAwareDistributedObjectBase, ISema
         catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
         {
             throw new InvalidOperationException(
-                $"Could not release semaphore {Name} because the release operation was cancelled, " +
-                "possibly because of another operation on the same lock context.");
+                $"Could not release semaphore {Name} because the release operation was cancelled, possibly because of another operation.");
         }
     }
 
@@ -134,8 +137,7 @@ internal class SessionLessSemaphore : CPSessionAwareDistributedObjectBase, ISema
         catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
         {
             throw new InvalidOperationException(
-                $"Could not change semaphore {Name} because the change operation was cancelled, " +
-                "possibly because of another operation on the same lock context.");
+                $"Could not change semaphore {Name} because the change operation was cancelled, possibly because of another operation.");
         }
     }
 
