@@ -322,8 +322,21 @@ namespace Hazelcast.Clustering
 
             ClientState state;
             HConsole.WriteLine(this, "Waiting for state change...");
-            try { state = await wait.Task.CfAwait(); } catch { state = 0; }
-            HConsole.WriteLine(this, $"State changed to {state}");
+            try
+            {
+                state = await wait.Task.CfAwait();
+                HConsole.WriteLine(this, $"State changed to {state}");
+            }
+            catch (OperationCanceledException)
+            {
+                state = 0;
+                HConsole.WriteLine(this, $"Connection operation was canceled");
+            }
+            catch (Exception ex)
+            {
+                state = 0;
+                HConsole.WriteLine(this, $"{ex.GetType().Name}: {ex.Message}");
+            }
 
             connection.RemoveClosed(OnConnectionClosed);
             return state == ClientState.Connected;

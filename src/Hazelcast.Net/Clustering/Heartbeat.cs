@@ -165,7 +165,7 @@ namespace Hazelcast.Clustering
 
             var tasks = cold
                 .TakeWhile(_ => !cancellationToken.IsCancellationRequested)
-                .Select(x => PingAsync(x.MemberConnection, x.MessageConnection));
+                .Select(x => PingAsync(x.MemberConnection, x.MessageConnection, cancellationToken));
 
             await ParallelRunner.Run(tasks, new ParallelRunner.Options { Count = _parallelCount });
         }
@@ -194,7 +194,7 @@ namespace Hazelcast.Clustering
             return cold;
         }
 
-        private async Task PingAsync(MemberConnection memberConnection, ClientMessageConnection messageConnection)
+        private async Task PingAsync(MemberConnection memberConnection, ClientMessageConnection messageConnection, CancellationToken cancellationToken)
         {
             // TODO: better logging everywhere
             _logger.IfDebug()?.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", 
@@ -205,7 +205,7 @@ namespace Hazelcast.Clustering
                 // ping should complete within the default invocation timeout
                 var requestMessage = ClientPingCodec.EncodeRequest();
                 requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
-                var responseMessage = await memberConnection.SendAsync(requestMessage, messageConnection).CfAwait();
+                var responseMessage = await memberConnection.SendAsync(requestMessage, messageConnection, cancellationToken).CfAwait();
                 _ = ClientPingCodec.DecodeResponse(responseMessage); // just to be sure everything is ok
             }
             catch (ClientOfflineException)

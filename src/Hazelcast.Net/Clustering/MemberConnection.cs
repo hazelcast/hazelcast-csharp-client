@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +41,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a connection to a cluster member.
     /// </summary>
+    [DebuggerDisplay("{DebuggerDisplay}")]
     internal partial class MemberConnection : IAsyncDisposable
     {
         internal static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
@@ -100,6 +102,8 @@ namespace Hazelcast.Clustering
             MemberAddress = address; // may change after connection is established.
             HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("MBR.CONN"));
         }
+
+        private string DebuggerDisplay => $"{Id.ToShortString()} to {MemberId.ToShortString()} at {Address}";
 
         #region Events
 
@@ -220,7 +224,8 @@ namespace Hazelcast.Clustering
         /// <returns>All <see cref="ClientMessageConnection"/> owned by this connection.</returns>
         public IEnumerable<ClientMessageConnection> GetMessageConnections()
         {
-            yield return _messageConnection;
+            if (_messageConnection != null)
+                yield return _messageConnection;
 
             var tpcConnections = _tpcConnections;
             if (tpcConnections == null) yield break;
