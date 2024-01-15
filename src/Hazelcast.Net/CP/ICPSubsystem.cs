@@ -51,5 +51,14 @@ namespace Hazelcast.CP
         /// exist already in the cluster, a new object is created.</para>
         /// <returns></returns>
         Task<IFencedLock> GetLockAsync(string name);
+
+        /// <summary>
+        /// Gets an <see cref="ICountDownLatch"/> distributed object.
+        /// </summary>
+        /// <param name="name">The unique name of the countdown latch.</param>
+        /// <para>If an object with the specified <paramref name="name"/> does not
+        /// exist already in the cluster, a new object is created.</para>
+        /// <returns>The countdown latch.</returns>
+        Task<ICountDownLatch> GetCountDownLatchAsync(string name);
     }
 }

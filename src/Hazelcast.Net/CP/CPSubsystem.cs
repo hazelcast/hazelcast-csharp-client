@@ -126,6 +126,14 @@ namespace Hazelcast.CP
             }
         }
 
+        public async Task<ICountDownLatch> GetCountDownLatchAsync(string name)
+        {
+            var (groupName, objectName, _) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            return new CountDownLatch(objectName, groupId, _cluster);
+        }
+
         // see: ClientRaftProxyFactory.java
 
         private async Task<CPGroupId> GetGroupIdAsync(string proxyName)
