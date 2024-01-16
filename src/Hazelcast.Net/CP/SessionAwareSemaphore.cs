@@ -149,8 +149,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
         catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
         {
             _sessionManager.InvalidateSession(CPGroupId, sessionId);
-            throw new InvalidOperationException(
-                $"Could not release semaphore {Name} because the release operation was cancelled, possibly because of another operation.");
+            throw;
         }
         finally
         {
@@ -213,8 +212,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
         catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
         {
             _sessionManager.InvalidateSession(CPGroupId, sessionId);
-            throw new InvalidOperationException(
-                $"Could not change semaphore {Name} because the change operation was cancelled, possibly because of another operation.");
+            throw;
         }
         finally
         {
