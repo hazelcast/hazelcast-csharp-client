@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Defines a retry strategy.
     /// </summary>
-    internal interface IRetryStrategy
+    internal interface IRetryStrategy : IDisposable
     {
         /// <summary>
         /// Determines whether it is possible to retry, optionally waiting for some time.
@@ -33,5 +34,11 @@ namespace Hazelcast.Core
         /// Restarts the strategy.
         /// </summary>
         void Restart();
+
+        /// <summary>
+        /// Gets the <see cref="CancellationToken"/> that will cancel when the timeout is reached.
+        /// </summary>
+        /// <returns>The <see cref="CancellationToken"/> that will cancel when the timeout is reached.</returns>
+        CancellationToken CancellationToken { get; }
     }
 }
