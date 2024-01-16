@@ -39,7 +39,7 @@ namespace Hazelcast.CP
             Name = name;
             CPGroupId = groupId;
             Cluster = cluster;
-            SerializationService = serializationService;
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
         }
 
         protected SerializationService SerializationService { get; }

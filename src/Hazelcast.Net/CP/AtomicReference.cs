@@ -25,7 +25,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Provides the <see cref="IAtomicReference{T}"/> implementation.
     /// </summary>
-    internal class AtomicReference<T>: CPDistributedObjectBase, IAtomicReference<T>
+    internal class AtomicReference<T> : CPDistributedObjectBase, IAtomicReference<T>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomicReference{T}"/> class.
@@ -36,11 +36,7 @@ namespace Hazelcast.CP
         /// <param name="serializationService">The serialization service.</param>
         public AtomicReference(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
             : base(ServiceNames.AtomicRef, name, groupId, cluster, serializationService)
-        {
-            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
-        }
-
-        protected SerializationService SerializationService { get; }
+        { }
 
         /// <inheritdoc />
         public async Task<bool> CompareAndSetAsync(T comparand, T value)

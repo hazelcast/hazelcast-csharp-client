@@ -34,7 +34,6 @@ namespace Hazelcast.CP
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
         private readonly ConcurrentDictionary<string, IFencedLock> _fencedLocks = new ConcurrentDictionary<string, IFencedLock>();
-        private readonly DistributedObjectFactory _objectFactory;
         private readonly ILoggerFactory _loggerFactory;
 
         // ReSharper disable once InconsistentNaming - internal for tests
@@ -45,14 +44,12 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
-        /// <param name="objectFactory">Distributed object factory.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public CPSubsystem(Cluster cluster, SerializationService serializationService, DistributedObjectFactory objectFactory, ILoggerFactory loggerFactory)
+        public CPSubsystem(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster;
             _serializationService = serializationService;
             _cpSubsystemSession = new CPSessionManager(cluster);
-            _objectFactory = objectFactory;
             _loggerFactory = loggerFactory;
         }
 
