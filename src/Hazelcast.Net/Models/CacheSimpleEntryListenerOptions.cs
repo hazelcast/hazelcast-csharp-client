@@ -18,7 +18,7 @@ using System;
 
 namespace Hazelcast.Models;
 
-public class CacheSimpleEntryListenerOptions : IIdentifiedDataSerializable
+internal class CacheSimpleEntryListenerOptions : IIdentifiedDataSerializable
 {
 
     private string _cacheEntryListenerFactory;
