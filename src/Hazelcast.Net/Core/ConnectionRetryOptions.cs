@@ -55,6 +55,10 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets or sets the timeout in milliseconds.
         /// </summary>
+        /// <remarks>
+        /// <p>Use <code>-1</code> to indicate an infinite timeout.</p>
+        /// <p>This value must be smaller than <c>TimeSpan.MaxValue.TotalMilliseconds</c>.</p>
+        /// </remarks>
         public long ClusterConnectionTimeoutMilliseconds { get; set; } = -1; // infinite
 
         /// <summary>
