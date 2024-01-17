@@ -325,7 +325,7 @@ public class FailoverTests2 : HazelcastTestBase
                     var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
                     var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                         0, address, memberId, SerializationService.SerializerVersion,
-                        "4.0", partitionsCount, request.Server.ClusterId, true);
+                        "4.0", partitionsCount, request.Server.ClusterId, true,Array.Empty<int>(), Array.Empty<byte>());
                     await request.RespondAsync(authResponse).CfAwait();
                     break;
                 }

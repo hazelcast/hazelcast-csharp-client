@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP
 {
@@ -29,13 +33,16 @@ namespace Hazelcast.CP
         /// <param name="name">The unique name of the object.</param>
         /// <param name="groupId">The CP group identifier of the object.</param>
         /// <param name="cluster">A cluster.</param>
-        protected CPDistributedObjectBase(string serviceName, string name, CPGroupId groupId, Cluster cluster)
+        protected CPDistributedObjectBase(string serviceName, string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
         {
             ServiceName = serviceName;
             Name = name;
             CPGroupId = groupId;
             Cluster = cluster;
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
         }
+
+        protected SerializationService SerializationService { get; }
 
         /// <inheritdoc />
         public string ServiceName { get; }
@@ -53,8 +60,28 @@ namespace Hazelcast.CP
 
         protected Cluster Cluster { get; }
 
+        protected ValueTask<TObject> ToObjectAsync<TObject>(IData valueData)
+        {
+            return SerializationService.TryToObject<TObject>(valueData, out var obj, out var state)
+                ? new ValueTask<TObject>(obj)
+                : SerializationService.ToObjectAsync<TObject>(valueData, state);
+        }
+        
+        protected IData ToSafeData(object o1)
+        {
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
+
+            var data1 = SerializationService.ToData(o1);
+            return data1;
+        }
+
         /// <inheritdoc />
-        public abstract ValueTask DestroyAsync();
+        public virtual async ValueTask DestroyAsync()
+        {
+            var message = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            _ = CPGroupDestroyCPObjectCodec.DecodeResponse(response);
+        }
 
         /// <summary>
         /// Frees resources used by this instance.
