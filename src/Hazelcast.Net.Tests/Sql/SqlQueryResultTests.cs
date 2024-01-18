@@ -235,5 +235,30 @@ namespace Hazelcast.Tests.Sql
             await map.DestroyAsync();
         }
 
+        [Test]
+        public async Task NullColumnsDontThrowWhileReading()
+        {
+            // Reproduce Github Issue #854.
+
+            var map = await Client.GetMapAsync<int, HazelcastJsonValue>("jsonFlatMap");
+            await Client.Sql.ExecuteCommandAsync($"CREATE OR REPLACE MAPPING {map.Name}  (__key INT, name VARCHAR, number_field double) TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='json-flat')");
+
+            await Client.Sql.ExecuteCommandAsync($"INSERT INTO {map.Name} VALUES (1, 'Random Name', 8)");
+            await Client.Sql.ExecuteCommandAsync($"INSERT INTO {map.Name} VALUES (2, 'Random Name', null)");
+            //await Client.Sql.ExecuteCommandAsync($"INSERT INTO {map.Name} VALUES (3, null, null)");
+
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE __key IN (1,2)");
+
+            await foreach (var row in result)
+            {
+//                Assert.DoesNotThrow(()=> row.GetColumn<double>("number_field"));
+                //              Assert.DoesNotThrow(()=> row.GetColumn<string>("name"));
+
+                if (row.GetColumn<double?>("number_field") != null)
+                {
+                    Assert.AreEqual(8, row.GetColumn<double?>("number_field"));
+                }
+            }
+        }
     }
 }

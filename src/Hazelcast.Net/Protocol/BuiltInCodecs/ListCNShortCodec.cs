@@ -20,7 +20,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class ListCNShortCodec
     {
-        public static IList<short> Decode(IEnumerator<Frame> iterator)
+        public static IList<short?> Decode(IEnumerator<Frame> iterator)
         {
             return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfShort, BytesExtensions.ReadShortL);
         }

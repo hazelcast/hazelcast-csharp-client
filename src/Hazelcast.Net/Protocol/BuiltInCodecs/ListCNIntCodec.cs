@@ -20,7 +20,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class ListCNIntCodec
     {
-        public static IList<int> Decode(IEnumerator<Frame> iterator)
+        public static IList<int?> Decode(IEnumerator<Frame> iterator)
         {
             return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfInt, BytesExtensions.ReadIntL);
         }

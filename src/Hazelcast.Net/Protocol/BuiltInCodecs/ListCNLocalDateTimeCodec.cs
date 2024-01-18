@@ -21,7 +21,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class ListCNLocalDateTimeCodec
     {
-        public static IList<HLocalDateTime> Decode(IEnumerator<Frame> iterator)
+        public static IList<HLocalDateTime?> Decode(IEnumerator<Frame> iterator)
         {
             return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfLocalDateTime, BytesExtensions.ReadLocalDateTime);
         }

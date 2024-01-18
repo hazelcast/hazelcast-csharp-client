@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using JetBrains.Annotations;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
@@ -27,45 +28,60 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         private const int HeaderSize = BytesExtensions.SizeOfByte + BytesExtensions.SizeOfInt;
         private const int ItemsPerBitmask = 8;
 
-        public static IList<T> Decode<T>(Frame frame, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc)
+        public static IList<T?> Decode<T>(Frame frame, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc) where T : struct
         {
             var type = frame.Bytes.ReadByte(0);
             var count = frame.Bytes.ReadInt(1, Endianness.LittleEndian);
 
             return type switch
             {
-                TypeNullOnly => new List<T>(count),
+                TypeNullOnly => DecodeNullOnly<T>(count),
                 TypeNotNullOnly => DecodeNotNullOnly(frame.Bytes, itemSizeInBytes, decodeFunc, count),
                 TypeMixed => DecodeMixed(frame.Bytes, itemSizeInBytes, decodeFunc, count),
                 _ => throw new NotSupportedException($"Type #{type} is not supported")
             };
         }
 
-        private static IList<T> DecodeNotNullOnly<T>(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count)
+        private static IList<T?> DecodeNullOnly<T>(int count) where T : struct
         {
-            var res = new List<T>(count);
+            var result = new List<T?>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(null);
+
+            return result;
+        }
+
+        [ItemCanBeNull]
+        private static IList<T?> DecodeNotNullOnly<T>(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count) where T : struct
+        {
+            var res = new List<T?>(count);
             for (var i = 0; i < count; i++)
                 res.Add(decodeFunc(bytes, HeaderSize + i * itemSizeInBytes));
 
             return res;
         }
 
-        private static IList<T> DecodeMixed<T>(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count)
+        [ItemCanBeNull]
+        private static IList<T?> DecodeMixed<T>(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count) where T : struct
         {
             var position = HeaderSize;
             var readCount = 0;
 
-            var res = new List<T>(count);
+            var res = new List<T?>(count);
             while (readCount < count)
             {
-                var bitmask = bytes.ReadByte(position);
+                var bitmask = bytes.ReadByte(position++);
                 for (var i = 0; i < ItemsPerBitmask && readCount < count; i++)
                 {
                     var mask = 1 << i;
                     if ((bitmask & mask) == mask)
                     {
-                        res[readCount] = decodeFunc(bytes, position);
+                        res.Add(decodeFunc(bytes, position));
                         position += itemSizeInBytes;
+                    }
+                    else
+                    {
+                        res.Add(null);
                     }
 
                     readCount++;
