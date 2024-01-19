@@ -224,7 +224,7 @@ The SQL service supports a set of SQL data types represented by `Hazelcast.Sql.S
 
 All `Hazelcast.Sql.*` types has conversion to and from their closest built-in counterparts. Table below lists possible conversions:
 
-<supp>* The types support nullable. If the column is type of one of these and may contain null value, then,
+<supp>* The types support nullable. If the column type is one of these and may contain null value, then,
 it should be read as nullable. Otherwise, you may get `NullReferenceException` while trying to read a null value.</sup>
 
 
