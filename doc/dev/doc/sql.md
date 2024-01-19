@@ -203,26 +203,30 @@ If you're using System.Linq.Async package, you can also pass `CancellationToken`
 
 The SQL service supports a set of SQL data types represented by `Hazelcast.Sql.SqlColumnType` enum. The table below shows SQL datatype, and corresponding .NET types:
 
-| Column Type                  | .NET                      |
-|------------------------------|---------------------------------|
-| **VARCHAR**                  | `string`                        |
-| **BOOLEAN**                  | `bool`                          |
-| **TINYINT**                  | `byte`                          |
-| **SMALLINT**                 | `short`                         |
-| **INTEGER**                  | `int`                           |
-| **BIGINT**                   | `long`                          |
-| **DECIMAL**                  | `Hazelcast.Sql.HBigDecimal`     |
-| **REAL**                     | `float`                         |
-| **DOUBLE**                   | `double`                        |
-| **DATE**                     | `Hazelcast.Sql.HLocalDate`      |
-| **TIME**                     | `Hazelcast.Sql.HLocalTime`      |
-| **TIMESTAMP**                | `Hazelcast.Sql.HLocalDateTime`  |
-| **TIMESTAMP_WITH_TIME_ZONE** | `Hazelcast.Sql.HOffsetDateTime` |
-| **OBJECT**                   | Any class                       |
-| **JSON**                     | `Hazelcast.Core.HazelcastJsonValue`|
-| **NULL**                     | `null`                          |
+| Column Type                  | .NET                                |
+|------------------------------|-------------------------------------|
+| **VARCHAR**                  | `string`*                           |
+| **BOOLEAN**                  | `bool`*                             |
+| **TINYINT**                  | `byte`*                             |
+| **SMALLINT**                 | `short`*                            |
+| **INTEGER**                  | `int`*                              |
+| **BIGINT**                   | `long`*                             |
+| **DECIMAL**                  | `Hazelcast.Sql.HBigDecimal`         |
+| **REAL**                     | `float`*                            |
+| **DOUBLE**                   | `double`*                           |
+| **DATE**                     | `Hazelcast.Sql.HLocalDate`*         |
+| **TIME**                     | `Hazelcast.Sql.HLocalTime`*         |
+| **TIMESTAMP**                | `Hazelcast.Sql.HLocalDateTime`*     |
+| **TIMESTAMP_WITH_TIME_ZONE** | `Hazelcast.Sql.HOffsetDateTime`*    |
+| **OBJECT**                   | Any class                           |
+| **JSON**                     | `Hazelcast.Core.HazelcastJsonValue` |
+| **NULL**                     | `null`                              |
 
 All `Hazelcast.Sql.*` types has conversion to and from their closest built-in counterparts. Table below lists possible conversions:
+
+<supp>* The types support nullable. If the column is type of one of these and may contain null value, then,
+it should be read as nullable. Otherwise, you may get `NullReferenceException` while trying to read a null value.</sup>
+
 
 | Hazelcast type                  | To .NET Type      | From .NET Type         |
 ----------------------------------|-------------------|------------------------|
