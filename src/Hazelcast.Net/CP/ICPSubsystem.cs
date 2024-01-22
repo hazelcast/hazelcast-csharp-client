@@ -53,6 +53,20 @@ namespace Hazelcast.CP
         Task<IFencedLock> GetLockAsync(string name);
 
         /// <summary>
+        /// Gets an <see cref="ICPMap{TKey,TValue}"/> distributed object.
+        /// <remarks><para>CPMap is only available in <b>enterprise</b> cluster.</para>
+        /// <para>The map will be created in <b>DEFAULT</b> CP group if no group name provided within <paramref name="name"/>.
+        /// If a group name provided, first, the group will be initialized,
+        /// if does not exist. Then, <see cref="ICPMap{TKey,TValue}"/> instance will be created on this group.
+        /// </para>
+        /// </remarks>
+        /// </summary>
+        /// <param name="name">The unique name of the map. It can contain the group name like <code>"myMap@group1"</code></param>
+        /// <typeparam name="TKey">Type of the key.</typeparam>
+        /// <typeparam name="TValue">Type of the value.</typeparam>
+        Task<ICPMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name);
+
+        /// <summary>
         /// Gets an <see cref="ICountDownLatch"/> distributed object.
         /// </summary>
         /// <param name="name">The unique name of the countdown latch.</param>
@@ -60,5 +74,5 @@ namespace Hazelcast.CP
         /// exist already in the cluster, a new object is created.</para>
         /// <returns>The countdown latch.</returns>
         Task<ICountDownLatch> GetCountDownLatchAsync(string name);
-    }
+    }   
 }

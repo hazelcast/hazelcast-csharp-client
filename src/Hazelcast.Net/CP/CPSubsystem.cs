@@ -14,12 +14,15 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP
 {
@@ -31,6 +34,7 @@ namespace Hazelcast.CP
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
         private readonly ConcurrentDictionary<string, IFencedLock> _fencedLocks = new ConcurrentDictionary<string, IFencedLock>();
+        private readonly ILoggerFactory _loggerFactory;
 
         // ReSharper disable once InconsistentNaming - internal for tests
         internal readonly CPSessionManager _cpSubsystemSession;
@@ -40,11 +44,13 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
-        public CPSubsystem(Cluster cluster, SerializationService serializationService)
+        /// <param name="loggerFactory">A logger factory.</param>
+        public CPSubsystem(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster;
             _serializationService = serializationService;
             _cpSubsystemSession = new CPSessionManager(cluster);
+            _loggerFactory = loggerFactory;
         }
 
         // NOTES
@@ -71,7 +77,7 @@ namespace Hazelcast.CP
             var (groupName, objectName, _) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            return new AtomicLong(objectName, groupId, _cluster);
+            return new AtomicLong(objectName, groupId, _cluster, _serializationService);
         }
 
         public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
@@ -118,12 +124,22 @@ namespace Hazelcast.CP
                 // and we need to verify that the group ID of the lock we get is correct (in case
                 // we don't add but just get the one that was added by the other task) - if it does
                 // not match then refresh the group ID and return - we want to be consistent
-                fencedLock = _fencedLocks.GetOrAdd(fullName, _ => new FencedLock(fullName, objectName, groupId, _cluster, _cpSubsystemSession));
+                fencedLock = _fencedLocks.GetOrAdd(fullName, _ => new FencedLock(fullName, objectName, groupId,
+                    _cluster, _cpSubsystemSession, _serializationService));
                 if (fencedLock.GroupId.Equals(groupId))
                     return fencedLock;
 
                 groupId = await GetGroupIdAsync(groupName).CfAwait();
             }
+        }
+        
+        public async Task<ICPMap<TKey, TValue>> GetMapAsync<TKey, TValue>([NotNull] string name)
+        {
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            return new CPMap<TKey, TValue>(ServiceNames.CPMap, objectName, _cluster,
+                _serializationService, groupId);
         }
 
         public async Task<ICountDownLatch> GetCountDownLatchAsync(string name)
@@ -187,6 +203,7 @@ namespace Hazelcast.CP
 
             return (groupName, objectName, fullName);
         }
+
 
         public async ValueTask DisposeAsync()
         {

@@ -35,6 +35,7 @@ namespace Hazelcast.Clustering
         private readonly double _multiplier;
         private readonly long _timeoutMilliseconds;
         private readonly double _jitter;
+        private CancellationTokenSource _cancellation;
         private int _currentBackOffMilliseconds;
         private int _attempts;
         private DateTime _begin;
@@ -78,7 +79,9 @@ namespace Hazelcast.Clustering
             _maxBackoffMilliseconds = maxBackOffMilliseconds;
             if (multiplier <= 0) throw new ConfigurationException("Multiplier must be greater than zero.");
             _multiplier = multiplier;
-            _timeoutMilliseconds = timeoutMilliseconds;
+            //var maxMilliseconds = (long) TimeSpan.MaxValue.TotalMilliseconds; // that would be the max millis in a timespan
+            const int maxMilliseconds = int.MaxValue; // but CancellationTokenSource is even more restrictive
+            _timeoutMilliseconds = Math.Min(timeoutMilliseconds, maxMilliseconds);
             if (jitter < 0 || jitter > 1) throw new ConfigurationException("Jitter must be between zero and one, inclusive.");
             _jitter = jitter;
 
@@ -159,6 +162,17 @@ namespace Hazelcast.Clustering
             _attempts = 0;
             _currentBackOffMilliseconds = Math.Min(_maxBackoffMilliseconds, _initialBackoffMilliseconds);
             _begin = DateTime.UtcNow;
+            _cancellation?.Dispose();
+            _cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(_timeoutMilliseconds));
+        }
+
+        /// <inheritdoc />
+        public CancellationToken CancellationToken => _cancellation.Token;
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _cancellation.Dispose();
         }
     }
 }
