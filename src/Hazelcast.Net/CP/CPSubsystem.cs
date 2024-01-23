@@ -147,7 +147,7 @@ namespace Hazelcast.CP
             var (groupName, objectName, _) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            return new CountDownLatch(objectName, groupId, _cluster);
+            return new CountDownLatch(objectName, groupId, _cluster, _serializationService);
         }
 
         // see: ClientRaftProxyFactory.java

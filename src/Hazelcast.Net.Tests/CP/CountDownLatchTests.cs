@@ -58,4 +58,11 @@ public class CountDownLatchTests : SingleMemberClientRemoteTestBase
             Assert.That(waiting.IsCompleted && waiting.Result == false);
         }, 4_000, 500);
     }
+
+    [Test]
+    public async Task DestroyTest()
+    {
+        var cdl = await Client.CPSubsystem.GetCountDownLatchAsync(CreateUniqueName());
+        await cdl.DestroyAsync();
+    }
 }

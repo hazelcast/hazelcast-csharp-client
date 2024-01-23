@@ -20,13 +20,14 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP;
 
 internal class CountDownLatch : CPDistributedObjectBase, ICountDownLatch
 {
-    public CountDownLatch(string name, CPGroupId groupId, Cluster cluster)
-        : base(ServiceNames.CountDownLatch, name, groupId, cluster)
+    public CountDownLatch(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
+        : base(ServiceNames.CountDownLatch, name, groupId, cluster, serializationService)
     { }
 
     public async Task<bool> AwaitAsync(TimeSpan timeout)
@@ -84,12 +85,5 @@ internal class CountDownLatch : CPDistributedObjectBase, ICountDownLatch
         var requestMessage = CountDownLatchTrySetCountCodec.EncodeRequest(CPGroupId, Name, count);
         var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         return CountDownLatchTrySetCountCodec.DecodeResponse(responseMessage).Response;
-    }
-
-    public override async ValueTask DestroyAsync()
-    {
-        var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceNames.CountDownLatch, Name);
-        var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-        CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
     }
 }
