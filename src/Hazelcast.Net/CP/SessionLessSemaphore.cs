@@ -20,6 +20,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP;
 
@@ -27,8 +28,8 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
 {
     private readonly CPSessionManager _sessionManager;
 
-    public SessionLessSemaphore(string name, CPGroupId groupId, Cluster cluster, CPSessionManager sessionManager) 
-        : base(ServiceNames.Semaphore, name, groupId, cluster)
+    public SessionLessSemaphore(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService, CPSessionManager sessionManager) 
+        : base(ServiceNames.Semaphore, name, groupId, cluster, serializationService)
     {
         _sessionManager = sessionManager;
     }
@@ -139,11 +140,5 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
             throw new InvalidOperationException(
                 $"Could not change semaphore {Name} because the change operation was cancelled, possibly because of another operation.");
         }
-    }
-
-    public override async ValueTask DestroyAsync()
-    {
-        var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceNames.Semaphore, Name);
-        await Cluster.Messaging.SendAsync(requestMessage).CfAwaitNoThrow();
     }
 }

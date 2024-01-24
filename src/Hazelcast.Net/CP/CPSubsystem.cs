@@ -81,8 +81,8 @@ namespace Hazelcast.CP
             var noSession = SemaphoreGetSemaphoreTypeCodec.DecodeResponse(responseMessage).Response;
 
             return noSession
-                ? new SessionLessSemaphore(objectName, groupId, _cluster, _cpSubsystemSession)
-                : new SessionAwareSemaphore(objectName, groupId, _cluster, _cpSubsystemSession);
+                ? new SessionLessSemaphore(objectName, groupId, _cluster, _serializationService, _cpSubsystemSession)
+                : new SessionAwareSemaphore(objectName, groupId, _cluster, _serializationService, _cpSubsystemSession);
         }
 
         /// <inheritdoc />

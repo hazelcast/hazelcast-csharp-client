@@ -20,6 +20,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP;
 
@@ -29,8 +30,8 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 
     private readonly CPSessionManager _sessionManager;
 
-    public SessionAwareSemaphore(string name, CPGroupId groupId, Cluster cluster, CPSessionManager sessionManager)
-        : base(ServiceNames.Semaphore, name, groupId, cluster)
+    public SessionAwareSemaphore(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService, CPSessionManager sessionManager)
+        : base(ServiceNames.Semaphore, name, groupId, cluster, serializationService)
     {
         _sessionManager = sessionManager;
     }
@@ -218,11 +219,5 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
         {
             _sessionManager.ReleaseSession(CPGroupId, sessionId);
         }
-    }
-
-    public override async ValueTask DestroyAsync()
-    {
-        var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceNames.Semaphore, Name);
-        await Cluster.Messaging.SendAsync(requestMessage).CfAwaitNoThrow();
     }
 }
