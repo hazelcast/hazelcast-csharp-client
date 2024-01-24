@@ -93,5 +93,15 @@ namespace Hazelcast.DistributedObjects
         /// The name of the Fenced Lock service.
         /// </summary>
         public const string FencedLock = "hz:raft:lockService";
+
+        /// <summary>
+        /// The name of the CPMap service.
+        /// </summary>
+        public const string CPMap = "hz:raft:mapService";
+
+        /// <summary>
+        /// The name of the CountDown Latch service.
+        /// </summary>
+        public const string CountDownLatch = "hz:raft:countDownLatchService";
     }
 }

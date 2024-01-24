@@ -12,4 +12,6 @@ Currently, the C# client CP SubSystem implements the following services:
 * [AtomicLong](distributed-objects/atomiclong.md)
 * [AtomicRef](distributed-objects/atomicref.md)
 * [FencedLock](distributed-objects/fencedlock.md)
+* [CPMap](distributed-objects/cpmap.md)
+* [CountDownLatch](distributed-objects/countdownlatch.md)
 * [Semaphore](distributed-objects/semaphore.md)

@@ -25,6 +25,7 @@ using Hazelcast.Networking;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
@@ -409,6 +410,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> ConnectFirstAndWaitForConnectedAsync(CancellationToken cancellationToken)
         {
             // establishes the first connection, throws if it fails
+            // this restarts the retry strategy ie re-initializes the timeout
             var connection = await ConnectFirstAsync(cancellationToken).CfAwait();
 
             // TODO: consider *not* waiting for this and running directly on the member we're connected to?
@@ -418,7 +420,15 @@ namespace Hazelcast.Clustering
             // which in turn should change the state to Connected - unless something
             // goes wrong
 
-            var connected = await _clusterState.WaitForConnectedAsync(connection, cancellationToken).CfAwait();
+            // combine with retry strategy timeout cancellation token, we cannot wait forever
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _connectRetryStrategy.CancellationToken);
+            var connected = await _clusterState.WaitForConnectedAsync(connection, cancellation.Token).CfAwait();
+
+            if (!connected)
+            {
+                // make sure we clean things up
+                await connection.DisposeAsync();
+            }
 
             return connected;
         }
@@ -431,6 +441,34 @@ namespace Hazelcast.Clustering
         private async Task ReconnectAsync(CancellationToken cancellationToken)
         {
             bool tryNextCluster;
+
+            void HandleConnectionFailure(Exception e = null)
+            {
+                // we *have* retried and failed
+                if (_clusterState.Failover.Enabled)
+                {
+                    // try to failover to next cluster
+                    if (_clusterState.Failover.TryNextCluster())
+                    {
+                        // ok to try the next cluster!
+                        tryNextCluster = true;
+                        _logger.LogWarning(e, "Failed to connect to cluster, failover to next cluster.");
+                    }
+                    else
+                    {
+                        // this is hopeless, shutdown, and log (we are a background task!)
+                        _clusterState.RequestShutdown();
+                        _logger.LogError(e, "Failed to connect to cluster, and exhausted failover options.");
+                    }
+                }
+                else
+                {
+                    // this is hopeless, shutdown, and log (we are a background task!)
+                    _clusterState.RequestShutdown();
+                    _logger.LogError(e, "Failed to reconnect.");
+                }
+            }
+
             do
             {
                 tryNextCluster = false;
@@ -441,41 +479,19 @@ namespace Hazelcast.Clustering
                     if (!connected)
                     {
                         // we are a background task and cannot throw!
-                        _logger.LogError("Failed to reconnect.");
+                        HandleConnectionFailure();
                     }
                     else
                     {
                         _logger.IfDebug()?.LogDebug("Reconnected");
-                    }
 
-                    // we have been reconnected (rejoice) - of course, nothing guarantees that it
-                    // will last, but then OnConnectionClosed will deal with it
+                        // we have been reconnected (rejoice) - of course, nothing guarantees that it
+                        // will last, but then OnConnectionClosed will deal with it
+                    }
                 }
-                catch (Exception e) // could be ClientNotAllowedInClusterException
+                catch (Exception e) // could be ClientNotAllowedInClusterException...
                 {
-                    // we *have* retried and failed
-                    if (_clusterState.Failover.Enabled)
-                    {
-                        // try to failover to next cluster
-                        if (_clusterState.Failover.TryNextCluster())
-                        {
-                            // ok to try the next cluster!
-                            tryNextCluster = true;
-                            _logger.LogWarning(e, "Failed to connect to cluster, failover to next cluster.");
-                        }
-                        else
-                        {
-                            // this is hopeless, shutdown, and log (we are a background task!)
-                            _clusterState.RequestShutdown();
-                            _logger.LogError(e, "Failed to connect to cluster, and exhausted failover options.");
-                        }
-                    }
-                    else
-                    {
-                        // this is hopeless, shutdown, and log (we are a background task!)
-                        _clusterState.RequestShutdown();
-                        _logger.LogError(e, "Failed to reconnect.");
-                    }
+                    HandleConnectionFailure(e);
                 }
             } while (tryNextCluster);
 
@@ -954,6 +970,8 @@ namespace Hazelcast.Clustering
             lock (_mutex) connections = _connections.Values;
             foreach (var connection in connections)
                 await connection.DisposeAsync().CfAwait();
+
+            _connectRetryStrategy.Dispose();
         }
     }
 }

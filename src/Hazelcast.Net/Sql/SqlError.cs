@@ -29,7 +29,11 @@ namespace Hazelcast.Sql
 
         public string Suggestion { get; }
 
+        public bool HasSuggestion => !string.IsNullOrEmpty(Suggestion);
+
         public string CauseStackTrace { get; }
+        
+        public bool HasCauseStackTrace => !string.IsNullOrEmpty(CauseStackTrace);
 
         /// <summary>
         /// Creates a new instance of <see cref="SqlError"/> class.
