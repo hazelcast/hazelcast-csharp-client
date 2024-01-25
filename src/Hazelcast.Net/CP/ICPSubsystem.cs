@@ -74,5 +74,16 @@ namespace Hazelcast.CP
         /// exist already in the cluster, a new object is created.</para>
         /// <returns>The countdown latch.</returns>
         Task<ICountDownLatch> GetCountDownLatchAsync(string name);
+
+        /// <summary>
+        /// Gets a <see cref="ISemaphore"/> distributed object.
+        /// </summary>
+        /// <param name="name">The unique name of the semaphore.</param>
+        /// <remarks>
+        /// <para>If an object with the specified <paramref name="name"/> does not
+        /// exist already in the cluster, a new object with that name is created.</para>
+        /// </remarks>
+        /// <returns>The semaphore distributed object that was retrieved or created.</returns>
+        Task<ISemaphore> GetSemaphore(string name);
     }   
 }

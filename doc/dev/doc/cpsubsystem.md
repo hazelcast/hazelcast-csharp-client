@@ -14,3 +14,4 @@ Currently, the C# client CP SubSystem implements the following services:
 * [FencedLock](distributed-objects/fencedlock.md)
 * [CPMap](distributed-objects/cpmap.md)
 * [CountDownLatch](distributed-objects/countdownlatch.md)
+* [Semaphore](distributed-objects/semaphore.md)

@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
-using NUnit.Framework;
 
-namespace Hazelcast.Tests.Core
+namespace Hazelcast.Core
 {
-    [TestFixture]
-    public class HSemaphoreTests
+    /// <summary>
+    /// Defines a semaphore.
+    /// </summary>
+    /// <remarks>
+    /// <para>This exposes <see cref="SemaphoreSlim"/> as an interface that can be mocked.</para>
+    /// </remarks>
+    internal interface ISemaphoreSlim : IDisposable
     {
-        [Test]
-        public async Task Test()
-        {
-            using IHSemaphore semaphore = new HSemaphore(1, 1);
+        public Task WaitAsync(CancellationToken cancellationToken);
 
-            await semaphore.WaitAsync(default);
-            semaphore.Release();
-        }
+        public void Release();
     }
 }

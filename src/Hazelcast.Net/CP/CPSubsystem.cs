@@ -62,7 +62,7 @@ namespace Hazelcast.CP
         // These objects are therefore IDistributedObject but *not* DistributedObjectBase, and *not*
         // managed by the DistributedObjectFactory.
         //
-        // The are destroyed via ClientProxy.destroy, which is getContext().getProxyManager().destroyProxy(this),
+        // They are destroyed via ClientProxy.destroy, which is getContext().getProxyManager().destroyProxy(this),
         // which means they are destroyed by ProxyManager aka DistributedObjectFactory, which would try to
         // remove them from cache (always missing) and end up doing proxy.destroyLocally() which eventually
         // calls into the object's onDestroy() method.
@@ -70,6 +70,20 @@ namespace Hazelcast.CP
         // But... this is convoluted? For now, our objects inherit from CPObjectBase which is simpler than
         // DistributedObjectBase, they do not hit DistributedObjectFactory at all, and implement their
         // own destroy method.
+
+        /// <inheritdoc />
+        public async Task<ISemaphore> GetSemaphore(string name)
+        {
+            var (groupName, objectName, _) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var requestMessage = SemaphoreGetSemaphoreTypeCodec.EncodeRequest(objectName);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
+            var noSession = SemaphoreGetSemaphoreTypeCodec.DecodeResponse(responseMessage).Response;
+
+            return noSession
+                ? new SessionLessSemaphore(objectName, groupId, _cluster, _serializationService, _cpSubsystemSession)
+                : new SessionAwareSemaphore(objectName, groupId, _cluster, _serializationService, _cpSubsystemSession);
+        }
 
         /// <inheritdoc />
         public async Task<IAtomicLong> GetAtomicLongAsync(string name)
@@ -80,6 +94,7 @@ namespace Hazelcast.CP
             return new AtomicLong(objectName, groupId, _cluster, _serializationService);
         }
 
+        /// <inheritdoc />
         public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
         {
             var (groupName, objectName, _) = ParseName(name);
@@ -88,6 +103,7 @@ namespace Hazelcast.CP
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
         }
 
+        /// <inheritdoc />
         public async Task<IFencedLock> GetLockAsync(string name)
         {
             var (groupName, objectName, fullName) = ParseName(name);
@@ -151,6 +167,7 @@ namespace Hazelcast.CP
         }
 
         // see: ClientRaftProxyFactory.java
+        // which also accepts an objectName parameter - but it's only use in toString() = we don't need it
 
         private async Task<CPGroupId> GetGroupIdAsync(string proxyName)
         {

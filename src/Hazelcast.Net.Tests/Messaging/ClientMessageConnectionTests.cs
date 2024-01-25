@@ -383,7 +383,7 @@ namespace Hazelcast.Tests.Messaging
             Assert.That(sent, Is.False);
         }
 
-        private class TestSemaphore : IHSemaphore
+        private class TestSemaphore : ISemaphoreSlim
         {
             private readonly Action _waitAsync;
 

@@ -12,22 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Defines a semaphore.
+    /// Implements <see cref="ISemaphoreSlim"/> with an actual <see cref="SemaphoreSlim"/>.
     /// </summary>
-    /// <remarks>
-    /// <para>This mimics <see cref="SemaphoreSlim"/> but can be mocked.</para>
-    /// </remarks>
-    internal interface IHSemaphore : IDisposable
+    internal sealed class SemaphoreSlimImpl : ISemaphoreSlim
     {
-        public Task WaitAsync(CancellationToken cancellationToken);
+        private readonly SemaphoreSlim _semaphore;
 
-        public void Release();
+        public SemaphoreSlimImpl(int initialCount, int maxCount)
+        {
+            _semaphore = new SemaphoreSlim(initialCount, maxCount);
+        }
+
+        public Task WaitAsync(CancellationToken cancellationToken) => _semaphore.WaitAsync(cancellationToken);
+
+        public void Release() => _semaphore.Release();
+
+        public void Dispose() => _semaphore.Dispose();
     }
 }

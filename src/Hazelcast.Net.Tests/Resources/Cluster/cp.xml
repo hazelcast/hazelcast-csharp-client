@@ -95,6 +95,12 @@
         <lock-acquire-limit>1</lock-acquire-limit>
       </fenced-lock>
     </locks>
+    <semaphores>
+      <semaphore>
+        <name>semaphore-jdk-*</name>
+        <jdk-compatible>true</jdk-compatible>
+      </semaphore>
+    </semaphores>
   </cp-subsystem>
 
   <queue name="ClientQueueTest*">
