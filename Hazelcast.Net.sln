@@ -26,8 +26,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.JetBrainsAnno
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5-472C-4D9B-898A-820577F2F9C7}"
 	ProjectSection(SolutionItems) = preProject
-		build\build.proj = build\build.proj
 		build\AnalysisRules.props = build\AnalysisRules.props
+		build\build.proj = build\build.proj
 		build\certs-root-ca.conf = build\certs-root-ca.conf
 		build\certs-sub-ca.conf = build\certs-sub-ca.conf
 		build\certs.ps1 = build\certs.ps1
@@ -57,17 +57,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\assign-milestones.js = .github\workflows\assign-milestones.js
 		.github\workflows\assign-milestones.yml = .github\workflows\assign-milestones.yml
-		.github\workflows\build-branch.yml = .github\workflows\build-branch.yml
 		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
-		.github\workflows\build-release.yml = .github\workflows\build-release.yml
+		.github\workflows\build-branch.yml = .github\workflows\build-branch.yml
 		.github\workflows\build-guest-pr.yml = .github\workflows\build-guest-pr.yml
 		.github\workflows\build-pr.yml = .github\workflows\build-pr.yml
+		.github\workflows\build-release.yml = .github\workflows\build-release.yml
 		.github\workflows\create-checks.yml = .github\workflows\create-checks.yml
 		.github\workflows\get-frameworks.yml = .github\workflows\get-frameworks.yml
 		.github\workflows\jira-label.yml = .github\workflows\jira-label.yml
 		.github\workflows\release-scripts.js = .github\workflows\release-scripts.js
-		.github\workflows\trigger-release.yml = .github\workflows\trigger-release.yml
 		.github\workflows\report-guest-pr.yml = .github\workflows\report-guest-pr.yml
+		.github\workflows\trigger-release.yml = .github\workflows\trigger-release.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}"
@@ -97,11 +97,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "install", "install", "{7A5D
 		.github\actions\install\action.yml = .github\actions\install\action.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Linq.Async", "src\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj", "{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Linq.Async", "src\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj", "{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Caching", "src\Hazelcast.Net.Caching\Hazelcast.Net.Caching.csproj", "{21FAFF1E-B0D6-46E0-8EE3-1D7D1C67CBC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Caching", "src\Hazelcast.Net.Caching\Hazelcast.Net.Caching.csproj", "{21FAFF1E-B0D6-46E0-8EE3-1D7D1C67CBC8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.CodeGenerator", "src\Hazelcast.Net.CodeGenerator\Hazelcast.Net.CodeGenerator.csproj", "{91211959-EC26-4FC9-84A8-E8C924300BF7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protocol", "protocol", "{3950534A-4217-4138-A7D7-05C0E828221C}"
+	ProjectSection(SolutionItems) = preProject
+		protocol\cs\__init__.py = protocol\cs\__init__.py
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -171,6 +176,7 @@ Global
 		{3C970CF6-DF19-4FD0-9BE3-F63EE72AC4CC} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 		{295E2764-401E-4604-8C2E-E20B99171705} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 		{7A5DDB5C-A126-4A4E-914E-87E7E54941DB} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
+		{3950534A-4217-4138-A7D7-05C0E828221C} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}

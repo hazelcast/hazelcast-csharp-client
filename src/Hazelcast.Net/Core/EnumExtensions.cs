@@ -23,6 +23,18 @@ namespace Hazelcast.Core
     internal static class EnumExtensions
     {
         /// <summary>
+        /// Ensures that the specified value is a defined value for its enum type.
+        /// </summary>
+        /// <typeparam name="TEnum">The enum type.</typeparam>
+        /// <param name="value">The value.</param>
+        /// <returns>The value, if it is a defined value for the type.</returns>
+        /// <exception cref="ArgumentException">The value is not a defined value for the type.</exception>
+        public static TEnum ThrowIfUndefined<TEnum>(this TEnum value) where TEnum : Enum
+            => Enum.IsDefined(typeof(TEnum), value) 
+                ? value 
+                : throw new ArgumentException($"Not a valid {typeof(TEnum).Name} value.",  nameof(value));
+
+        /// <summary>
         /// Determines whether one or more bit fields are set in the current instance.
         /// </summary>
         /// <typeparam name="T">The type of the enumeration.</typeparam>

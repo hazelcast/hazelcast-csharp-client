@@ -157,10 +157,10 @@ namespace Hazelcast.Tests.Data
             Assert.That(x.Attributes, Does.Contain("bbb"));
             Assert.That(x.Attributes, Does.Contain("ccc"));
 
-            Assert.That(x.BitmapIndexOptions, Is.Not.Null);
+            Assert.That(x.BitmapIndex, Is.Not.Null);
             var y = new BitmapIndexOptions();
-            x.BitmapIndexOptions = y;
-            Assert.That(x.BitmapIndexOptions, Is.SameAs(y));
+            x.BitmapIndex = y;
+            Assert.That(x.BitmapIndex, Is.SameAs(y));
 
             IndexOptions.ValidateAttribute(x, "flub");
 

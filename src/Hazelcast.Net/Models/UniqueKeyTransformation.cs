@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Models
 {
     /// <summary>
@@ -25,7 +27,7 @@ namespace Hazelcast.Models
         /// The unique key value is interpreted as an object value.
         /// Non-negative unique ID is assigned to every distinct object value.
         /// </summary>
-        Object = 0,
+        [Enums.JavaName("OBJECT")] Object = 0,
 
         /// <summary>
         /// The unique key value is interpreted as a whole integer value of
@@ -33,14 +35,14 @@ namespace Hazelcast.Models
         /// long (if necessary) and unique non-negative ID is assigned to every
         /// distinct value.
         /// </summary>
-        Long = 1,
+        [Enums.JavaName("LONG")] Long = 1,
 
         /// <summary>
         /// The unique key value is interpreted as a whole integer value of
         /// byte, short, int or long type. The extracted value is upcasted to
         /// long (if necessary) and the resulting value is used directly as an ID.
         /// </summary>
-        Raw = 2
+        [Enums.JavaName("RAW")] Raw = 2
 
 #pragma warning restore CA1720
     }

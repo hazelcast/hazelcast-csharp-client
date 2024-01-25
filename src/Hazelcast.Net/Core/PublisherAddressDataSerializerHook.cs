@@ -19,7 +19,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Core;
 
-public class PublisherAddressDataSerializerHook : IDataSerializerHook
+internal class PublisherAddressDataSerializerHook : IDataSerializerHook
 {
     public IDataSerializableFactory CreateFactory()
     {

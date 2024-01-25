@@ -12,21 +12,82 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Configuration;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
+
 namespace Hazelcast.Models;
 
 /// <summary>
 /// Configures indexing options for <see cref="IndexType.Bitmap"/> indexes.
 /// </summary>
-public class BitmapIndexOptions
+public class BitmapIndexOptions : IIdentifiedDataSerializable
 {
+    private string _uniqueKey = Query.Predicates.KeyName;
+    private UniqueKeyTransformation _transformation = UniqueKeyTransformation.Object;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BitmapIndexOptions"/> class.
+    /// </summary>
+    public BitmapIndexOptions()
+    { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BitmapIndexOptions"/> class.
+    /// </summary>
+    public BitmapIndexOptions(BitmapIndexOptions bitmapIndexOptions)
+    {
+        UniqueKey = bitmapIndexOptions.UniqueKey;
+        UniqueKeyTransformation = bitmapIndexOptions.UniqueKeyTransformation;
+    }
+
     /// <summary>
     /// Gets or sets the unique key.
     /// </summary>
-    public string UniqueKey { get; set; } = Query.Predicates.KeyName;
+    public string UniqueKey
+    {
+        get => _uniqueKey;
+        set => _uniqueKey = value.ThrowIfNull();
+    }
+
+    /// <summary>
+    /// Sets the unique key.
+    /// </summary>
+    /// <param name="uniqueKey">The unique key.</param>
+    /// <returns>This instance.</returns>
+    public BitmapIndexOptions SetUniqueKey(string uniqueKey)
+    {
+        UniqueKey = uniqueKey;
+        return this;
+    }
 
     /// <summary>
     /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be
     /// applied to the <see cref="UniqueKey"/> value.
     /// </summary>
-    public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
+    public UniqueKeyTransformation UniqueKeyTransformation
+    {
+        get => _transformation;
+        set => _transformation = value.ThrowIfUndefined();
+    }
+
+    /// <inheritdoc />
+    public int FactoryId => ConfigurationDataSerializerHook.FactoryIdConst;
+
+    /// <inheritdoc />
+    public int ClassId => ConfigurationDataSerializerHook.BitmapIndexOptions;
+
+    /// <inheritdoc />
+    public void WriteData(IObjectDataOutput output)
+    {
+        output.WriteString(_uniqueKey);
+        output.WriteInt((int) _transformation);
+    }
+
+    /// <inheritdoc />
+    public void ReadData(IObjectDataInput input)
+    {
+        _uniqueKey = input.ReadString();
+        _transformation = ((UniqueKeyTransformation) input.ReadInt()).ThrowIfUndefined();
+    }
 }

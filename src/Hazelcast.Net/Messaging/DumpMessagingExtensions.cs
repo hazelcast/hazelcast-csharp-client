@@ -27,6 +27,18 @@ namespace Hazelcast.Messaging
     internal static class DumpMessagingExtensions
     {
         /// <summary>
+        /// Gets the zero-based index of the last frame of the message.
+        /// </summary>
+        public static int LastFrameIndex(this ClientMessage message)
+        {
+            var index = 0;
+#if DEBUG
+            for (var frame = message.FirstFrame; frame != null; frame = frame.Next, index++) ;
+#endif
+            return index;
+        }
+
+        /// <summary>
         /// Dumps a client message into a readable string.
         /// </summary>
         /// <param name="message">The client message.</param>

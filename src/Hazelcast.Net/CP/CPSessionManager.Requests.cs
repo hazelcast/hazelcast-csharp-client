@@ -41,7 +41,7 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="groupId"></param>
         /// <returns>CPSession and heartbeat milliseconds</returns>
-        private async Task<(CPSession, long)> RequestNewSessionAsync(CPGroupId groupId)
+        private async Task<(CPSession Session, long HeartbeatMillis)> RequestNewSessionAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, _cluster.ClientId.ToString());
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();

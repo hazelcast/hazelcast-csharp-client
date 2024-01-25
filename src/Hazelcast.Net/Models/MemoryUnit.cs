@@ -12,30 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Models;
 
 /// <summary>
 /// Represents a memory size unit.
 /// </summary>
-internal enum MemoryUnit
+public enum MemoryUnit
 {
     /// <summary>
-    /// Memory size in bytes.
+    /// Bytes.
     /// </summary>
-    Bytes = 0,
+    [Enums.JavaName("BYTES")] Bytes = 0,
 
     /// <summary>
-    /// Memory size in kilobytes.
+    /// Kilobytes.
     /// </summary>
-    KiloBytes = 1,
+    [Enums.JavaName("KILOBYTES")] KiloBytes = 1,
 
     /// <summary>
-    /// Memory size in megabytes.
+    /// MegaBytes.
     /// </summary>
-    MegaBytes = 2,
+    [Enums.JavaName("MEGABYTES")] MegaBytes = 2,
 
     /// <summary>
-    /// MemorySize in gigabytes.
+    /// GigaBytes.
     /// </summary>
-    GigaBytes = 3
+    [Enums.JavaName("GIGABYTES")] GigaBytes = 3,
 }

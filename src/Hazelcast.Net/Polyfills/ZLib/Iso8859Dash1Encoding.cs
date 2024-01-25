@@ -9,7 +9,7 @@ namespace Ionic.Encoding
     /// for platforms that do not support it, for example on Silverlight or some
     /// Compact Framework platforms.
     /// </summary>
-    public class Iso8859Dash1Encoding : System.Text.Encoding
+    internal class Iso8859Dash1Encoding : System.Text.Encoding
     {
         /// <summary>
         /// Gets the name registered with the

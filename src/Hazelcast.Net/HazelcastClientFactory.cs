@@ -302,14 +302,13 @@ namespace Hazelcast
                 .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
                 .SetCompactSchemas(schemas) // transfer ownership, schemas will be disposed by serialization service
 
-                // add hooks that construct and provide IIdentifiedDataSerialization factories for more
-                // built-in types such as predicates, aggregators or projections.
+                // add hooks that construct and provide IIdentifiedDataSerialization factories for more built-in types
                 .AddHook<PredicateDataSerializerHook>()
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
-                
-                .AddHook<ReliableTopicDataSeriazlierHook>()
+                .AddHook<ReliableTopicDataSerializerHook>()
                 .AddHook<PublisherAddressDataSerializerHook>()
+                .AddHook<ConfigurationDataSerializerHook>()
 
                 // add a hook that constructs and provides the compact IIdentifiedDataSerialization factory
                 // because some basic compact functionality such as schema distribution don't use compact

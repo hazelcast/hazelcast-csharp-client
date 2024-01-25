@@ -55,10 +55,56 @@
 
   <PropertyGroup Condition="'$(ReleaseBranch)'=='True'">
     <!-- 
-      treat all documented Roslyn Public Analyzer warnings as errors 
+      treat some documented Roslyn Public Analyzer warnings as errors 
       source: https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/Microsoft.CodeAnalysis.PublicApiAnalyzers.md
     -->
-    <WarningsAsErrors>$(WarningsAsErrors);RS0016;RS0017;RS0022;RS0024;RS0025;RS0026;RS0027;RS0036;RS0037;RS0041;RS0048;RS0050;RS0051;RS0052;RS0053;RS0054;RS0055;RS0056;RS0057;RS0058;RS0059;RS0060;RS0061</WarningsAsErrors>
+    <!-- Add public types and members to the declared API -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0016</WarningsAsErrors>
+    <!-- Remove deleted types and members from the declared API -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0017</WarningsAsErrors>
+    <!--Constructor make noninheritable base class inheritable -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0022</WarningsAsErrors>
+    <!-- The contents of the public API files are invalid -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0024</WarningsAsErrors>
+    <!-- Do not duplicate symbols in public API files -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0025</WarningsAsErrors>
+    <!-- Do not add multiple public overloads with optional parameters -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0026</WarningsAsErrors>
+    <!-- API with optional parameter(s) should have the most parameters amongst its public overloads -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0027</WarningsAsErrors>
+    <!-- Annotate nullability of public types and members in the declared API -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0036</WarningsAsErrors>
+    <!-- Enable tracking of nullability of reference types in the declared API -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0037</WarningsAsErrors>
+    <!-- Public members should not use oblivious types -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0041</WarningsAsErrors>
+    <!-- Missing shipped or unshipped public API file -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0048</WarningsAsErrors>
+    <!-- API is marked as removed but it exists in source code -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0050</WarningsAsErrors>
+
+    <!-- Add internal types and members to the declared API -->
+    <!--<WarningsAsErrors>$(WarningsAsErrors);RS0051</WarningsAsErrors>-->
+    <!-- Remove deleted types and members from the declared internal API -->
+    <!--<WarningsAsErrors>$(WarningsAsErrors);RS0052</WarningsAsErrors>-->
+    <!-- The contents of the internal API files are invalid -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0053</WarningsAsErrors>
+    <!-- Do not duplicate symbols in internal API files -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0054</WarningsAsErrors>
+    <!-- Annotate nullability of internal types and members in the declared API -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0055</WarningsAsErrors>
+    <!-- Enable tracking of nullability of reference types in the declared API -->
+    <!--<WarningsAsErrors>$(WarningsAsErrors);RS0056</WarningsAsErrors>-->
+    <!-- Internal members should not use oblivious types -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0057</WarningsAsErrors>
+    <!-- Missing shipped or unshipped internal API file -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0058</WarningsAsErrors>
+    <!-- Do not add multiple public overloads with optional parameters -->
+    <!--<WarningsAsErrors>$(WarningsAsErrors);RS0059</WarningsAsErrors>-->
+    <!-- API with optional parameter(s) should have the most parameters amongst its public overloads -->
+    <!--<WarningsAsErrors>$(WarningsAsErrors);RS0060</WarningsAsErrors>-->
+    <!-- Constructor make noninheritable base class inheritable -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0061</WarningsAsErrors>
   </PropertyGroup>
 
 </Project>
