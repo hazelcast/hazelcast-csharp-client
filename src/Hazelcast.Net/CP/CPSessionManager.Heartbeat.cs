@@ -29,80 +29,76 @@ namespace Hazelcast.CP
     /// </summary>
     internal partial class CPSessionManager
     {
-        private readonly CancellationTokenSource _cancel; // initialized in ctor
-
-        private Task _heartbeating = Task.CompletedTask;
-
-        private int _heartbeatState;
-
         /// <summary>
-        /// Schedules the session heartbeat requests. It does not require to check state of the heartbeat
-        /// <para>Use only the method to run heartbeat.</para>
+        /// Ensures that heartbeat is running by starting it if it is not already running.
         /// </summary>
-        internal void ScheduleHeartbeat(TimeSpan period)
+        internal void EnsureHeartbeat(TimeSpan period)
         {
-            if (_disposed == 0 && Interlocked.CompareExchange(ref _heartbeatState, 1, 0) == 0)
-            {
-                _heartbeating = BeatAsync(period, _cancel.Token);
-            }
+            if (_heartbeatRunning.InterlockedZeroToOne())
+                _heartbeatTask = BeatAsync(period, _heartbeatCancel.Token);
         }
 
+        /// <summary>
+        /// Runs the heartbeat background task.
+        /// </summary>
         private async Task BeatAsync(TimeSpan period, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(period, cancellationToken).CfAwait();
-
-                if (cancellationToken.IsCancellationRequested) break;
-
-                await RunAllAsync(cancellationToken).CfAwait();
-            }
-        }
-
-        /// <summary>
-        /// Runs for all sessions
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task RunAllAsync(CancellationToken cancellationToken)
-        {
-            _logger.LogDebug("Run CP Session Heartbeat");
-
-            if (_sessions.IsEmpty) return;
-
-            IEnumerable<(CPGroupId, CPSession)> sessions;
-            lock (_mutex) sessions = _sessions.Select(p => (p.Key, p.Value));
-
-            await sessions.ParallelForEachAsync((p, cancellationToken) =>
-            {
-                if (!p.Item2.IsInUse) return default;
-                return RunAsync(p.Item1, p.Item2, cancellationToken);
-
-            }, cancellationToken).CfAwait();
-
-        }
-
-        /// <summary>
-        /// Runs for a given session
-        /// </summary>
-        /// <param name="groupId"></param>
-        /// <param name="sessionState"></param>
-        /// <param name="cancellationToken"></param>
-        private async Task RunAsync(CPGroupId groupId, CPSession sessionState, CancellationToken cancellationToken)
         {
             try
             {
-                await RequestSessionHeartbeat(groupId, sessionState.Id).CfAwait();
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(period, cancellationToken).CfAwait();
+                    if (cancellationToken.IsCancellationRequested) break;
+                    await RunAsync(cancellationToken).CfAwait();
+                }
+            }
+            catch (Exception)
+            {
+                // exception observed
+            }
+        }
+
+        /// <summary>
+        /// Runs for all sessions.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        private async Task RunAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug("Run CP Session Heartbeat");
+
+            // capture sessions
+            List<KeyValuePair<CPGroupId, CPSession>> sessions;
+            using (var _ = await _lock.ReadLockAsync(/*cancellationToken*/))
+            {
+                sessions = new List<KeyValuePair<CPGroupId, CPSession>>(_groupSessions);
+            }
+
+            await sessions.ParallelForEachAsync((entry, token) =>
+            {
+                var (groupId, session) = entry;
+                return session.IsInUse 
+                    ? BeatSessionAsync(groupId, session)
+                    : default;
+            }, cancellationToken);
+        }
+
+        /// <summary>
+        /// Runs for a session.
+        /// </summary>
+        /// <param name="groupId">The CP group identifier.</param>
+        /// <param name="session">The CP session.</param>
+        private async Task BeatSessionAsync(CPGroupId groupId, CPSession session)
+        {
+            try
+            {
+                await RequestSessionHeartbeat(groupId, session.Id).CfAwait();
             }
             catch (Exception e)
             {
-        // FIXME refactor with C# 9
-#pragma warning disable CA1508
-                if (e is RemoteException { Error: RemoteError.SessionExpiredException } ||
-                    e is RemoteException { Error: RemoteError.CpGroupDestroyedException })
-#pragma warning restore CA1508
+                if (e is RemoteException { Error: RemoteError.SessionExpiredException } or 
+                         RemoteException { Error: RemoteError.CpGroupDestroyedException })
                 {
-                    InvalidateSession(groupId, sessionState.Id);
+                    InvalidateSession(groupId, session.Id);
                 }
 
                 _logger.LogWarning(e, "CP Session Heartbeat has thrown an exception, but will continue.");

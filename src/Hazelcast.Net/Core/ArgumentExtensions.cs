@@ -52,6 +52,15 @@ internal static class ArgumentExtensions
             : throw new ArgumentOutOfRangeException(name ?? nameof(value), "Value cannot be negative.");
 
     /// <summary>
+    /// Ensures that a numeric value is not less than zero.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static long ThrowIfLessThanZero(this long value, string name = null)
+        => value >= 0
+            ? value
+            : throw new ArgumentOutOfRangeException(name ?? nameof(value), "Value cannot be negative.");
+
+    /// <summary>
     /// Ensures that a numeric value is not less than or equal to zero.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

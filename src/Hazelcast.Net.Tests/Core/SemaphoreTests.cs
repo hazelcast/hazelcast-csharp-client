@@ -12,27 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using NUnit.Framework;
 
-namespace Hazelcast.Core
+namespace Hazelcast.Tests.Core
 {
-    /// <summary>
-    /// Implements <see cref="IHSemaphore"/> with an <see cref="SemaphoreSlim"/>.
-    /// </summary>
-    internal sealed class HSemaphore : IHSemaphore
+    [TestFixture]
+    public class SemaphoreTests
     {
-        private readonly SemaphoreSlim _semaphore;
-
-        public HSemaphore(int initialCount, int maxCount)
+        [Test]
+        public async Task Test()
         {
-            _semaphore = new SemaphoreSlim(initialCount, maxCount);
+            using ISemaphoreSlim semaphore = new SemaphoreSlimImpl(1, 1);
+
+            await semaphore.WaitAsync(default);
+            semaphore.Release();
         }
-
-        public Task WaitAsync(CancellationToken cancellationToken) => _semaphore.WaitAsync(cancellationToken);
-
-        public void Release() => _semaphore.Release();
-
-        public void Dispose() => _semaphore.Dispose();
     }
 }

@@ -47,14 +47,7 @@ namespace Hazelcast.CP
             var response = FencedLockUnlockCodec.DecodeResponse(responseMessage);
             return response.Response;
         }
-
-        protected async Task RequestDestroyAsync()
-        {
-            var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var _ = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
-        }
-
+        
         protected async Task<FencedLock.LockOwnershipState> RequestLockOwnershipStateAsync()
         {
             var requestMessage = FencedLockGetLockOwnershipCodec.EncodeRequest(CPGroupId, Name);

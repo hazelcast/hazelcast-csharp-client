@@ -22,19 +22,23 @@ namespace Hazelcast.Core
     internal static class TaskParallelExtensions
     {
         /// <summary>
-        /// Loop on <see cref="IEnumerable<T>"/> at parallel async. The method does not observe exceptions.
+        /// Loops on a <see cref="IEnumerable{T}"/> and execute async tasks. The method does not observe exceptions.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumerable"></param>
-        /// <param name="action">The action will be run for each element</param>
-        /// <param name="cancellationToken"></param>
-        /// <param name="parallelTask">Number of tasks at parallel</param>
-        /// <returns></returns>
-        public static async Task ParallelForEachAsync<T>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task> action, CancellationToken cancellationToken, int parallelTask = 4)
+        /// <typeparam name="T">The type of the enumerated values.</typeparam>
+        /// <param name="enumerable">The enumerated values.</param>
+        /// <param name="action">The action that will be run for each element.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <param name="parallelTask">Number of concurrent tasks.</param>
+        /// <remarks>
+        /// <para>By default, this method runs one task per processor, i.e. <paramref name="parallelTask"/>
+        /// defaults to <c>Environment.ProcessorCount</c>.</para>
+        /// </remarks>
+        public static async Task ParallelForEachAsync<T>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task> action, CancellationToken cancellationToken = default, int parallelTask = 0)
         {
             var tasks = new List<Task>();
 
-            var enumerator = enumerable.GetEnumerator();
+            using var enumerator = enumerable.GetEnumerator();
+            if (parallelTask <= 0) parallelTask = Environment.ProcessorCount;
 
             void StartCurrent()
             {
@@ -44,11 +48,11 @@ namespace Hazelcast.Core
                     tasks.Add(currentTask);
             }
 
-            //Start tasks as much as possible.
+            // start tasks
             while (tasks.Count < parallelTask && enumerator.MoveNext() && !cancellationToken.IsCancellationRequested)
                 StartCurrent();
 
-            // when a tasks completes, try to add next one.
+            // when a task completes, try to add next one.
             while (tasks.Count > 0)
             {
                 var completed = await Task.WhenAny(tasks).CfAwait();
@@ -58,6 +62,5 @@ namespace Hazelcast.Core
                     StartCurrent();
             }
         }
-
     }
 }

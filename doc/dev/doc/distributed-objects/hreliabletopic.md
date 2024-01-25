@@ -44,7 +44,7 @@ In addition,
 
 * The `Terminated` event is raised when the subscription terminates, either because of a non-canceled exception (see above), or when anything goes wrong with the underlying buffer (overload, loss...), or when it is actively terminated by e.g. disposing the reliable topic instance. Finally, the behavior of the subscription can be configured via the `ReliableTopicEventHandlerOptions`.
 
-   
+>[!NOTE] The similar event exist in other Hazelcast clients as the `onCancel` function callback at the listener interface.
 
 ```csharp
 var id = await topic.SubscribeAsync(events => events

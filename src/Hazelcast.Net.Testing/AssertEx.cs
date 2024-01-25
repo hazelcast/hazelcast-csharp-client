@@ -29,8 +29,9 @@ namespace Hazelcast.Testing
         /// <param name="action">The action.</param>
         /// <param name="delayMilliseconds">How long to wait.</param>
         /// <param name="pollingMilliseconds">How often to try to run the action.</param>
+        /// <param name="message">The optional message that will be displayed on failure</param>
         /// <returns>A task that will complete when the action succeeds.</returns>
-        public static async ValueTask SucceedsEventually(Action action, int delayMilliseconds, int pollingMilliseconds)
+        public static async ValueTask SucceedsEventually(Action action, int delayMilliseconds, int pollingMilliseconds, string message = null)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -53,7 +54,11 @@ namespace Hazelcast.Testing
                 }
 
                 if (stopwatch.ElapsedMilliseconds > delayMilliseconds - pollingMilliseconds)
+                {
+                    if (!string.IsNullOrWhiteSpace(message))
+                        throw new Exception(message);
                     throw new Exception($"Action is still failing after {delayMilliseconds}ms.", caught);
+                }
 
                 await Task.Delay(pollingMilliseconds);
             }

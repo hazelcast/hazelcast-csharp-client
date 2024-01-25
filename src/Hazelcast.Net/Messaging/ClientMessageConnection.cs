@@ -34,7 +34,7 @@ namespace Hazelcast.Messaging
     {
         private readonly Dictionary<long, ClientMessage> _messages = new();
         private readonly SocketConnectionBase _connection;
-        private readonly IHSemaphore _writer;
+        private readonly ISemaphoreSlim _writer;
         private readonly ILogger _logger;
 
         private int _disposed;
@@ -50,7 +50,7 @@ namespace Hazelcast.Messaging
         /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public ClientMessageConnection(SocketConnectionBase connection, ILoggerFactory loggerFactory)
-            : this(connection, new HSemaphore(1, 1), loggerFactory)
+            : this(connection, new SemaphoreSlimImpl(1, 1), loggerFactory)
         { }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Hazelcast.Messaging
         /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
         /// <param name="writerSemaphore">A writer-controlling semaphore.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        internal ClientMessageConnection(SocketConnectionBase connection, IHSemaphore writerSemaphore, ILoggerFactory loggerFactory)
+        internal ClientMessageConnection(SocketConnectionBase connection, ISemaphoreSlim writerSemaphore, ILoggerFactory loggerFactory)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _connection.OnReceiveMessageBytes = ReceiveMessageBytesAsync;

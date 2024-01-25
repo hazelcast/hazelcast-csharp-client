@@ -25,7 +25,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Provides the <see cref="IAtomicReference{T}"/> implementation.
     /// </summary>
-    internal class AtomicReference<T>: CPDistributedObjectBase, IAtomicReference<T>
+    internal class AtomicReference<T> : CPDistributedObjectBase, IAtomicReference<T>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomicReference{T}"/> class.
@@ -35,12 +35,8 @@ namespace Hazelcast.CP
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
         public AtomicReference(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
-            : base(ServiceNames.AtomicRef, name, groupId, cluster)
-        {
-            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
-        }
-
-        protected SerializationService SerializationService { get; }
+            : base(ServiceNames.AtomicRef, name, groupId, cluster, serializationService)
+        { }
 
         /// <inheritdoc />
         public async Task<bool> CompareAndSetAsync(T comparand, T value)
@@ -103,13 +99,6 @@ namespace Hazelcast.CP
             return response;
         }
 
-        /// <inheritdoc />
-        public override async ValueTask DestroyAsync()
-        {
-            var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
-        }
 
         protected IData ToData(T value) => SerializationService.ToData(value);
 
