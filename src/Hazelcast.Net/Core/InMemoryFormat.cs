@@ -26,12 +26,17 @@ namespace Hazelcast.Core
         /// <summary>
         /// Binary (serialized <see cref="IData"/>) format.
         /// </summary>
-        Binary,
+        [Enums.JavaName("BINARY")] Binary,
 
         /// <summary>
         /// Object (de-serialized) format.
         /// </summary>
-        Object
+        [Enums.JavaName("OBJECT")] Object,
+
+        /// <summary>
+        /// Native storage.
+        /// </summary>
+        [Enums.JavaName("NATIVE")] Native,
 
 #pragma warning restore CA1720
     }

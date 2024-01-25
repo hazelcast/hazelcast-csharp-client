@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Models;
-using Hazelcast.Projection;
-using Hazelcast.Serialization;
+using Hazelcast.Configuration;
 
-namespace Hazelcast.Core;
+namespace Hazelcast.Models;
 
-public class ReliableTopicDataSeriazlierHook : IDataSerializerHook
+public class MapPartitionLostListenerOptions : ListenerOptions
 {
-    public IDataSerializableFactory CreateFactory()
-    {
-        var constructors = new Func<IIdentifiedDataSerializable>[3];
-        constructors[2] = () => new ReliableTopicMessage();
+    public MapPartitionLostListenerOptions()
+    { }
 
-        return new ArrayDataSerializableFactory(constructors);
-    }
+    public MapPartitionLostListenerOptions(string className)
+        : base(className)
+    { }
 
-    public int FactoryId { get; } = FactoryIds.ReliableTopicMessageFactoryId;
+    public MapPartitionLostListenerOptions(MapPartitionLostListenerOptions config)
+        : base(config)
+    { }
+
+    /// <inheritdoc />
+    public override int ClassId => ConfigurationDataSerializerHook.MapPartitionLostListenerConfig;
 }

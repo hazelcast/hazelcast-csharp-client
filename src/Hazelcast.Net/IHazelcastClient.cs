@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
@@ -283,5 +284,11 @@ namespace Hazelcast
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name);
+
+        /// <summary>
+        /// Gets a service that can dynamically configure cluster-side objects.
+        /// </summary>
+        /// <returns>A service that can dynamically configure cluster-side objects.</returns>
+        DynamicOptions DynamicOptions { get; }
     }
 }

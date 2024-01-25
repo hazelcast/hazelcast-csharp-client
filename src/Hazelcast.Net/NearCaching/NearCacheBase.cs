@@ -65,11 +65,12 @@ namespace Hazelcast.NearCaching
 
             _lastExpire = Clock.Never;
 
-            _maxSize = nearCacheOptions.MaxSize;
             _maxIdleMilliseconds = nearCacheOptions.MaxIdleSeconds * 1000;
             InMemoryFormat = nearCacheOptions.InMemoryFormat;
             _timeToLive = nearCacheOptions.TimeToLiveSeconds * 1000;
-            _evictionPolicy = nearCacheOptions.EvictionPolicy;
+
+            _maxSize = nearCacheOptions.Eviction.Size; // nearCacheOptions.MaxSize;
+            _evictionPolicy = nearCacheOptions.Eviction.EvictionPolicy; // nearCacheOptions.EvictionPolicy;
             _evictionComparer = GetEvictionComparer(_evictionPolicy);
             _evictionPercentage = nearCacheOptions.EvictionPercentage;
             _cleanupInterval = nearCacheOptions.CleanupPeriodSeconds * 1000;

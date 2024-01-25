@@ -14,17 +14,36 @@
 
 #nullable enable
 
+using Hazelcast.Configuration;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
+
 namespace Hazelcast.Models;
 
 // Configures indexing options for <see cref="IndexType.BTree"/> indexes.
-internal class BTreeIndexOptions
+public class BTreeIndexOptions : IIdentifiedDataSerializable
 {
     private Capacity? _pageSize;
 
     /// <summary>
     /// Gets the default page size.
     /// </summary>
-    public Capacity DefaultPageSize { get; } = new(16, MemoryUnit.KiloBytes);
+    public static Capacity DefaultPageSize { get; } = new(16, MemoryUnit.KiloBytes);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BTreeIndexOptions"/> class.
+    /// </summary>
+    public BTreeIndexOptions()
+    { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BTreeIndexOptions"/> class.
+    /// </summary>
+    public BTreeIndexOptions(BTreeIndexOptions indexOptions)
+    {
+        PageSize = indexOptions.PageSize;
+        MemoryTier = new MemoryTierOptions(indexOptions.MemoryTier);
+    }
 
     /// <summary>
     /// Gets or sets the page size.
@@ -38,5 +57,26 @@ internal class BTreeIndexOptions
     /// <summary>
     /// Gets or sets the memory tier options.
     /// </summary>
-    public MemoryTierOptions MemoryTierOptions { get; set; } = new();
+    public MemoryTierOptions MemoryTier { get; set; } = new();
+
+    /// <inheritdoc />
+    public void WriteData(IObjectDataOutput output)
+    {
+        output.WriteLong(PageSize.Value);
+        output.WriteString(PageSize.Unit.ToJavaString());
+        output.WriteObject(MemoryTier);
+    }
+
+    /// <inheritdoc />
+    public void ReadData(IObjectDataInput input)
+    {
+        PageSize = Capacity.Of(input.ReadLong(), Enums.ParseJava<MemoryUnit>(input.ReadString()));
+        MemoryTier = input.ReadObject<MemoryTierOptions>();
+    }
+
+    /// <inheritdoc />
+    public int FactoryId => ConfigurationDataSerializerHook.FactoryIdConst;
+
+    /// <inheritdoc />
+    public int ClassId => ConfigurationDataSerializerHook.BtreeIndexConfig;
 }

@@ -16,6 +16,11 @@
     <DefineConstants>$(DefineConstants);SERVER_CODEC</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- no XML documentation here -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ApacheThrift" Version="0.15.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

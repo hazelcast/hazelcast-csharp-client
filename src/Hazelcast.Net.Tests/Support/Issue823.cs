@@ -24,17 +24,6 @@ using System.Linq;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Testing;
 using Microsoft.Extensions.Configuration;
-
-/* Unmerged change from project 'Hazelcast.Net.Tests (net462)'
-Before:
-using Microsoft.Extensions.Logging;
-After:
-using Microsoft.Extensions.Logging;
-using Hazelcast;
-using Hazelcast.Tests;
-using Hazelcast.Tests.Configuration;
-using Hazelcast.Tests.Support;
-*/
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Tests.Support;

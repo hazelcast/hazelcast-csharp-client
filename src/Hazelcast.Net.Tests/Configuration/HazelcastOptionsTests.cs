@@ -582,6 +582,8 @@ namespace Hazelcast.Tests.Configuration
                 var oValue = property.GetValue(obj);
                 var eValue = property.GetValue(expected);
 
+                if (oValue == eValue) continue; // same, obviously
+
                 if (type == typeof(string)) // string is enumerable, must test first
                 {
                     Assert.That(oValue, Is.EqualTo(eValue), $"{type}::{property.Name}");

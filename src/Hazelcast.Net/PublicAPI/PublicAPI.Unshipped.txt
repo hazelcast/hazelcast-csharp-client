@@ -1,8 +1,1 @@
 ﻿#nullable enable
-~Hazelcast.IHazelcastClient.GetDistributedObjectsAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.DistributedObjectInfo>>
-Hazelcast.Sql.SqlOptions
-Hazelcast.Sql.SqlOptions.PartitionArgumentIndexCacheSize.get -> int
-Hazelcast.Sql.SqlOptions.PartitionArgumentIndexCacheSize.set -> void
-Hazelcast.Sql.SqlOptions.SqlOptions() -> void
-~Hazelcast.HazelcastOptions.Sql.get -> Hazelcast.Sql.SqlOptions
-~Hazelcast.Sql.SqlOptions.Clone() -> Hazelcast.Sql.SqlOptions

@@ -18,6 +18,7 @@ using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
+using Hazelcast.NearCaching;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -70,8 +71,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static IndexOptions CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions, bool bTreeIndexConfigExists, BTreeIndexOptions bTreeIndexConfig)
         {
-            var options = new IndexOptions(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
-            if (bTreeIndexConfigExists) options.BTreeIndexOptions = bTreeIndexConfig;
+            var options = new IndexOptions(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndex = bitmapIndexOptions };
+            if (bTreeIndexConfigExists) options.BTreeIndex = bTreeIndexConfig;
             return options;
         }
 
@@ -111,6 +112,40 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             => new() { Capacity = capacity };
 
         public static BTreeIndexOptions CreateBTreeIndexConfig(Capacity pageSize, MemoryTierOptions options)
-            => new() { PageSize = pageSize, MemoryTierOptions = options };
+            => new() { PageSize = pageSize, MemoryTier = options };
+
+        public static DataPersistenceOptions CreateDataPersistenceConfig(bool enabled, bool fsync) 
+            => new() {Enabled = enabled, Fsync = fsync};
+
+        public static DurationOptions CreateDurationConfig(long durationAmount, int timeUnit)
+            => new(durationAmount, (TimeUnit) timeUnit);
+
+        public static MerkleTreeOptions CreateMerkleTreeConfig(bool enabled, int depth, bool isEnabledSetExists, bool enabledSet)
+        {
+            var config = new MerkleTreeOptions { Depth = depth };
+            if (!isEnabledSetExists || enabledSet) config.Enabled = enabled;
+            return config;
+        }
+
+        public static EventJournalOptions CreateEventJournalConfig(bool enabled, int capacity, int timeToLiveSeconds)
+            => new() {Enabled = enabled, Capacity = capacity, TimeToLiveSeconds = timeToLiveSeconds};
+
+        public static TieredStoreOptions CreateTieredStoreConfig(bool enabled, MemoryTierOptions memoryTierConfig, DiskTierOptions diskTierConfig)
+            => new() {Enabled = enabled, MemoryTier = memoryTierConfig, DiskTier = diskTierConfig};
+
+        public static HotRestartOptions CreateHotRestartConfig(bool enabled, bool fsync)
+            => new() {Enabled = enabled, Fsync = fsync};
+
+        public static NearCachePreloaderOptions CreateNearCachePreloaderConfig(bool enabled, string directory, int storeInitialDelaySeconds, int storeIntervalSeconds)
+            => new() { Enabled = enabled, Directory = directory, StoreInitialDelaySeconds = storeInitialDelaySeconds, StoreIntervalSeconds = storeIntervalSeconds};
+
+        public static TimedExpiryPolicyFactoryOptions CreateTimedExpiryPolicyFactoryConfig(int expiryPolicyType, DurationOptions durationConfig)
+            => new((ExpiryPolicyType) expiryPolicyType, durationConfig);
+
+        public static CacheSimpleEntryListenerOptions CreateCacheSimpleEntryListenerConfig(bool oldValueRequired, bool synchronous, string cacheEntryListenerFactory, string cacheEntryEventFilterFactory)
+            => new() {OldValueRequired = oldValueRequired, Synchronous = synchronous, CacheEntryListenerFactory = cacheEntryListenerFactory, CacheEntryEventFilterFactory = cacheEntryEventFilterFactory};
+
+        public static DiskTierOptions CreateDiskTierConfig(bool enabled, string deviceName)
+            => new() {Enabled = enabled, DeviceName = deviceName};
     }
 }

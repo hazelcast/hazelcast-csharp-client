@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Models
 {
     /// <summary>
@@ -24,16 +26,16 @@ namespace Hazelcast.Models
         /// <summary>
         /// Sorted index. Can be used with equality and range predicates.
         /// </summary>
-        Sorted = 0,
+        [Enums.JavaName("SORTED")] Sorted = 0,
 
         /// <summary>
         /// Hash index. Can be used with equality predicates.
         /// </summary>
-        Hashed = 1,
+        [Enums.JavaName("HASHED")] Hashed = 1,
 
         /// <summary>
         /// Bitmap index. Can be used with equality predicates.
         /// </summary>
-        Bitmap = 2
+        [Enums.JavaName("BITMAP")] Bitmap = 2
     }
 }

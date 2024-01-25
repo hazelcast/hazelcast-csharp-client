@@ -69,7 +69,7 @@ namespace Hazelcast
         public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
 
         /// <summary>
-        /// Gets the dictionary which contains the <see cref="NearCacheOptions"/> for each near cache.
+        /// Gets the dictionary which contains the <see cref="NearCaching.NearCacheOptions"/> for each near cache.
         /// </summary>
         public IDictionary<string, NearCacheOptions> NearCaches { get; } = new Dictionary<string, NearCacheOptions>();
 

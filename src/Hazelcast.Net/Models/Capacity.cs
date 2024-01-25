@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
 using System;
 
 namespace Hazelcast.Models;
@@ -19,7 +20,7 @@ namespace Hazelcast.Models;
 /// <summary>
 /// Represents a memory capacity.
 /// </summary>
-internal class Capacity
+public class Capacity
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Capacity"/> class.
@@ -38,15 +39,8 @@ internal class Capacity
     {
         if (value < 0) throw new ArgumentException("Value must be greater than or equal to zero.", nameof(value));
 
-        Value = value;
-        Unit = unit switch
-        {
-            MemoryUnit.Bytes or
-            MemoryUnit.KiloBytes or
-            MemoryUnit.MegaBytes or
-            MemoryUnit.GigaBytes => unit,
-            _ => throw new ArgumentException("Value must be a valid MemoryUnit.", nameof(unit))
-        };
+        Value = value.ThrowIfLessThanOrZero();
+        Unit = unit.ThrowIfUndefined();
     }
 
     /// <summary>
@@ -59,7 +53,106 @@ internal class Capacity
     /// </summary>
     public MemoryUnit Unit { get; }
 
-    // NOTE:
-    // not implementing all the conversion logic for now
-    // (see Capacity.java and MemoryUnit.java)
+    /// <summary>
+    /// Gets the value of the capacity in bytes.
+    /// </summary>
+    public long Bytes => MemoryUnitExtensions.Convert(MemoryUnit.Bytes, Unit, Value);
+
+    /// <summary>
+    /// Gets the value of the capacity in kilo-bytes.
+    /// </summary>
+    public long KiloBytes => MemoryUnitExtensions.Convert(MemoryUnit.KiloBytes, Unit, Value);
+
+    /// <summary>
+    /// Gets the value of the capacity in mega-bytes.
+    /// </summary>
+    public long MegaBytes => MemoryUnitExtensions.Convert(MemoryUnit.MegaBytes, Unit, Value);
+
+    /// <summary>
+    /// Gets the value of the capacity in giga-bytes.
+    /// </summary>
+    public long GigaBytes => MemoryUnitExtensions.Convert(MemoryUnit.GigaBytes, Unit, Value);
+
+    /// <summary>
+    /// Creates a new instance of the <see cref="Capacity"/> class.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <param name="unit">The unit.</param>
+    /// <returns>The new <see cref="Capacity"/> instance.</returns>
+    public static Capacity Of(long value, MemoryUnit unit) => new Capacity(value, unit);
+
+    /// <summary>
+    /// Parses the string representation of a capacity.
+    /// </summary>
+    /// <param name="value">The string representation of a capacity.</param>
+    /// <returns>The capacity.</returns>
+    public static Capacity Parse(string value) => Parse(value, MemoryUnit.Bytes);
+
+    /// <summary>
+    /// Parses the string representation of a capacity.
+    /// </summary>
+    /// <param name="value">The string representation of a capacity.</param>
+    /// <param name="defaultUnit">The unit to use if none is specified in the string.</param>
+    /// <returns>The capacity.</returns>
+    public static Capacity Parse(string value, MemoryUnit defaultUnit)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return new Capacity(0, MemoryUnit.Bytes);
+
+        var unitChar = value[^1];
+        var hasUnit = !char.IsDigit(unitChar);
+
+        var unit = defaultUnit;
+        if (hasUnit)
+            unit = unitChar switch
+            {
+                'b' or 'B' => MemoryUnit.Bytes,
+                'k' or 'K' => MemoryUnit.KiloBytes,
+                'm' or 'M' => MemoryUnit.MegaBytes,
+                'g' or 'G' => MemoryUnit.GigaBytes,
+                _ => throw new ArgumentException($"Invalid unit specifier '{unitChar}'.", nameof(value))
+            };
+
+        return new Capacity(long.Parse(hasUnit ? value[..^1] : value), unit);
+    }
+
+    /// <summary>
+    /// Formats this capacity.
+    /// </summary>
+    /// <returns>The formatted capacity.</returns>
+    public string ToPrettyString() => ToPrettyString(Value, Unit);
+
+    /// <inheritdoc />
+    public override string ToString() => $"{Value} {Unit}";
+
+    /// <summary>
+    /// Formats the capacity.
+    /// </summary>
+    /// <param name="capacity">The capacity.</param>
+    /// <returns>The formatted capacity.</returns>
+    public static string ToPrettyString(long capacity)
+    {
+        return ToPrettyString(capacity, MemoryUnit.Bytes);
+    }
+
+    /// <summary>
+    /// Formats the capacity.
+    /// </summary>
+    /// <param name="capacity">The capacity.</param>
+    /// <param name="unit">The capacity unit.</param>
+    /// <returns>The formatted capacity.</returns>
+    public static string ToPrettyString(long capacity, MemoryUnit unit)
+    {
+        // following Java's pattern
+
+        var bytes = MemoryUnitExtensions.Convert(MemoryUnit.Bytes, unit, capacity);
+        return bytes switch
+        {
+            >= 10_000_000_000 => To(MemoryUnit.GigaBytes),
+            >= 10_000_000 => To(MemoryUnit.MegaBytes),
+            >= 10_000 => To(MemoryUnit.KiloBytes),
+            _ => To(MemoryUnit.Bytes)
+        };
+
+        string To(MemoryUnit toUnit) => $"{MemoryUnitExtensions.Convert(toUnit, unit, capacity)} {toUnit.Abbrev()}";
+    }
 }
