@@ -20,7 +20,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class ListCNDoubleCodec
     {
-        public static IList<double> Decode(IEnumerator<Frame> iterator)
+        public static IList<double?> Decode(IEnumerator<Frame> iterator)
         {
             return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfDouble, BytesExtensions.ReadDoubleL);
         }

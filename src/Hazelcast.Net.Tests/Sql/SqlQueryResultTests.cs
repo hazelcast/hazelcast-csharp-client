@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Sql;
 using Hazelcast.Testing;
@@ -235,5 +236,124 @@ namespace Hazelcast.Tests.Sql
             await map.DestroyAsync();
         }
 
+        [Test]
+        public async Task NullColumnsDontThrowWhileReading()
+        {
+            // Reproduce Github Issue #854.
+
+            var map = await Client.GetMapAsync<int, HazelcastJsonValue>("jsonFlatMap");
+            await Client.Sql.ExecuteCommandAsync($"CREATE OR REPLACE MAPPING {map.Name}  " +
+                                                 $"(__key INT," +
+                                                 $"string_field VARCHAR," +
+                                                 $"int_field INT," +
+                                                 $"bool_field BOOLEAN," +
+                                                 $"tint_field TINYINT," +
+                                                 $"sint_field SMALLINT," +
+                                                 $"bint_field BIGINT," +
+                                                 $"decimal_field DECIMAL," +
+                                                 $"float_field REAL," +
+                                                 $"double_field double," +
+                                                 $"date_field DATE," +
+                                                 $"time_field TIME," +
+                                                 $"times_field TIMESTAMP," +
+                                                 $"times_zone_field TIMESTAMP WITH TIME ZONE) " +
+                                                 $"TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='json-flat')");
+
+            void AssertColumns(SqlRow row, string checkingFor)
+            {
+                if (checkingFor == "null")
+                {
+                    Assert.IsNull(row.GetColumn<string?>("string_field"));
+                    Assert.IsNull(row.GetColumn<int?>("int_field"));
+                    Assert.IsNull(row.GetColumn<bool?>("bool_field"));
+                    Assert.IsNull(row.GetColumn<byte?>("tint_field"));
+                    Assert.IsNull(row.GetColumn<short?>("sint_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<HBigDecimal>("decimal_field"));
+                    Assert.IsNull(row.GetColumn<float?>("float_field"));
+                    Assert.IsNull(row.GetColumn<double?>("double_field"));
+                    Assert.IsNull(row.GetColumn<HLocalDate?>("date_field"));
+                    Assert.IsNull(row.GetColumn<HLocalTime?>("time_field"));
+                    Assert.IsNull(row.GetColumn<HLocalDateTime?>("times_field"));
+                    Assert.IsNull(row.GetColumn<HOffsetDateTime?>("times_zone_field"));
+                }
+                else if (checkingFor == "notnull")
+                {
+                    Assert.NotNull(row.GetColumn<string?>("string_field"));
+                    Assert.NotNull(row.GetColumn<int?>("int_field"));
+                    Assert.NotNull(row.GetColumn<bool?>("bool_field"));
+                    Assert.NotNull(row.GetColumn<byte?>("tint_field"));
+                    Assert.NotNull(row.GetColumn<short?>("sint_field"));
+                    Assert.NotNull(row.GetColumn<long?>("bint_field"));
+                    var decimalField = row.GetColumn<HBigDecimal>("decimal_field");
+                    Assert.True(decimalField.TryToDecimal(out _));
+                    Assert.NotNull(row.GetColumn<float?>("float_field"));
+                    Assert.NotNull(row.GetColumn<double?>("double_field"));
+                    Assert.NotNull(row.GetColumn<HLocalDate?>("date_field"));
+                    Assert.NotNull(row.GetColumn<HLocalTime?>("time_field"));
+                    Assert.NotNull(row.GetColumn<HLocalDateTime?>("times_field"));
+                    Assert.NotNull(row.GetColumn<HOffsetDateTime?>("times_zone_field"));
+
+                    Assert.NotNull(row.GetColumn<string>("string_field"));
+                    Assert.NotNull(row.GetColumn<int>("int_field"));
+                    Assert.NotNull(row.GetColumn<bool>("bool_field"));
+                    Assert.NotNull(row.GetColumn<byte>("tint_field"));
+                    Assert.NotNull(row.GetColumn<short>("sint_field"));
+                    Assert.NotNull(row.GetColumn<long>("bint_field"));
+                    decimalField = row.GetColumn<HBigDecimal>("decimal_field");
+                    Assert.True(decimalField.TryToDecimal(out _));
+                    Assert.NotNull(row.GetColumn<float>("float_field"));
+                    Assert.NotNull(row.GetColumn<double>("double_field"));
+                    Assert.NotNull(row.GetColumn<HLocalDate>("date_field"));
+                    Assert.NotNull(row.GetColumn<HLocalTime>("time_field"));
+                    Assert.NotNull(row.GetColumn<HLocalDateTime>("times_field"));
+                    Assert.NotNull(row.GetColumn<HOffsetDateTime>("times_zone_field"));
+                }
+                else if (checkingFor == "mixed")
+                {
+                    Assert.DoesNotThrow(() => row.GetColumn<string?>("string_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<int?>("int_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<bool?>("bool_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<byte?>("tint_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<short?>("sint_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<long?>("bint_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<HBigDecimal>("decimal_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<float?>("float_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<double?>("double_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<HLocalDate?>("date_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<HLocalTime?>("time_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<HLocalDateTime?>("times_field"));
+                    Assert.DoesNotThrow(() => row.GetColumn<HOffsetDateTime?>("times_zone_field"));
+                }
+                else
+                {
+                    Assert.Fail("Unknown assertion request.");
+                }
+            }
+
+            // record with values
+            await Client.Sql.ExecuteCommandAsync($"INSERT INTO {map.Name} VALUES " +
+                                                 $"(1, 'some  string', 10,false,11,12,13,14.1,15.1,16.1,'2024-01-29'," +
+                                                 $" '10:15:30','2024-01-29 10:11:00','2024-01-29T10:11:00+03:00')");
+
+            // record with null values
+            await Client.Sql.ExecuteCommandAsync($"INSERT INTO {map.Name} VALUES " +
+                                                 $"(2, null, null,null,null,null,null,null,null,null,null," +
+                                                 $" null,null,null)");
+
+
+            await using var notNullResult = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE __key = 1");
+            await foreach (var row in notNullResult)
+                AssertColumns(row, "notnull");
+
+
+            await using var nullResult = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE __key = 2");
+            await foreach (var row in nullResult)
+                AssertColumns(row, "null");
+
+
+            await using var mixedResult = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE __key IN (1, 2)");
+            await foreach (var row in mixedResult)
+                AssertColumns(row, "mixed");
+        }
     }
 }
