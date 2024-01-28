@@ -17,7 +17,7 @@ using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -90,7 +90,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.SetTypeName<DifferentThing>("thing");
 
             // but then an explicit serializer is required
-            options.ReflectionSerializer = Mock.Of<ICompactSerializer<object>>();
+            options.ReflectionSerializer = Substitute.For<ICompactSerializer<object>>();
             Assert.Throws<ConfigurationException>(() => options.GetRegistrations().ToList());
 
             // indeed,
@@ -158,7 +158,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.SetSchema<DifferentThing>(SchemaBuilder.For("thing").Build(), false);
 
             // but then an explicit serializer is required
-            options.ReflectionSerializer = Mock.Of<ICompactSerializer<object>>();
+            options.ReflectionSerializer = Substitute.For<ICompactSerializer<object>>();
             Assert.Throws<ConfigurationException>(() => options.GetRegistrations().ToList());
 
             // with an explicit serializer, it works
@@ -168,7 +168,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.SetTypeName<Thing>(serializer.TypeName);
             options.SetTypeName<DifferentThing>(serializer.TypeName);
             options.AddSerializer<IThing, Thing>(serializer);
-            options.ReflectionSerializer = Mock.Of<ICompactSerializer<object>>();
+            options.ReflectionSerializer = Substitute.For<ICompactSerializer<object>>();
 
             var registrations = options.GetRegistrations().ToList();
             Assert.That(registrations.Count, Is.EqualTo(2));
@@ -334,7 +334,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void GetRegistrations()
         {
             var options = new CompactOptions();
-            options.ReflectionSerializer = Mock.Of<ICompactSerializer<object>>();
+            options.ReflectionSerializer = Substitute.For<ICompactSerializer<object>>();
 
             Assert.That(options.GetRegistrations(), Is.Empty);
 
@@ -343,14 +343,14 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             options = new CompactOptions
             {
-                ReflectionSerializer = Mock.Of<ICompactSerializer<object>>()
+                ReflectionSerializer = Substitute.For<ICompactSerializer<object>>()
             };
             options.SetSchema(SchemaBuilder.For("System.Object").Build(), true);
             Assert.That(options.GetRegistrations().Count(), Is.EqualTo(1));
 
             options = new CompactOptions
             {
-                ReflectionSerializer = Mock.Of<ICompactSerializer<object>>()
+                ReflectionSerializer = Substitute.For<ICompactSerializer<object>>()
             };
             options.AddType<object>();
             Assert.That(options.GetRegistrations().Count(), Is.EqualTo(1));

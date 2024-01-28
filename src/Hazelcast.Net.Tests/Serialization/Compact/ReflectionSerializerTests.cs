@@ -21,7 +21,7 @@ using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -471,10 +471,10 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.Throws<ArgumentNullException>(() => serializer.Write(null!, null!));
 
-            var notCompactReader = Mock.Of<ICompactReader>();
+            var notCompactReader = Substitute.For<ICompactReader>();
             Assert.Throws<ArgumentException>(() => serializer.Read(notCompactReader));
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var compactReader = new CompactReader(
                 orw,
                 new ObjectDataInput(Array.Empty<byte>(), orw, Endianness.BigEndian),

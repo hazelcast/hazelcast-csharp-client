@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Events;
 using Hazelcast.Models;
 using Hazelcast.Networking;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Events
@@ -41,7 +41,7 @@ namespace Hazelcast.Tests.Events
                 return new ValueTask();
             });
 
-            var client = Mock.Of<IHazelcastClient>();
+            var client = Substitute.For<IHazelcastClient>();
             var args = new StateChangedEventArgs(ClientState.Connected);
             await handler.HandleAsync(client, args);
 
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Events
                 return new ValueTask();
             });
 
-            var client = Mock.Of<IHazelcastClient>();
+            var client = Substitute.For<IHazelcastClient>();
             var memberInfo = new MemberInfo(Guid.NewGuid(), NetworkAddress.Parse("127.0.0.1:88"), new MemberVersion(1, 1, 1), false, new Dictionary<string, string>());
             var args = new PartitionLostEventArgs(12, 13, true, memberInfo);
             await handler.HandleAsync(client, args);
@@ -88,7 +88,7 @@ namespace Hazelcast.Tests.Events
                 return default;
             });
 
-            var client = Mock.Of<IHazelcastClient>();
+            var client = Substitute.For<IHazelcastClient>();
             var args = new ConnectionOpenedEventArgs(null, false);
             await handler.HandleAsync(client, args);
 
