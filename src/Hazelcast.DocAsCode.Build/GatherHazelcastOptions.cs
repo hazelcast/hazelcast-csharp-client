@@ -17,10 +17,10 @@ using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
-using Microsoft.DocAsCode.Build.Common;
-using Microsoft.DocAsCode.Build.ManagedReference;
-using Microsoft.DocAsCode.Common;
-using Microsoft.DocAsCode.Plugins;
+using Docfx.Build.Common;
+using Docfx.Build.ManagedReference;
+using Docfx.Common;
+using Docfx.Plugins;
 
 namespace Hazelcast.DocAsCode.Build;
 

@@ -112,6 +112,7 @@ namespace Hazelcast.Core
             }
         }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Creates a <see cref="Dictionary{TKey,TValue}"/> from an <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/>.
         /// </summary>
@@ -131,6 +132,7 @@ namespace Hazelcast.Core
         /// <returns>A <see cref="Dictionary{TKey,TValue}"/> that contains values provided by <paramref name="source"/>.</returns>
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey Key, TValue Value)> source)
             => source.ToDictionary(x => x.Key, x => x.Value);
+#endif
 
         /// <summary>
         /// Enumerates <paramref name="source"/> to a new <see cref="List{T}"/> starting from <paramref name="initialCapacity"/> size.

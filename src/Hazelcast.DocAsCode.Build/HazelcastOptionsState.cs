@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading;
-using Microsoft.DocAsCode.Plugins;
+using Docfx.Plugins;
 
 namespace Hazelcast.DocAsCode.Build;
 
