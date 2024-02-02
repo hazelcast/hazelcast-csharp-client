@@ -16,6 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Query
@@ -121,6 +122,13 @@ namespace Hazelcast.Query
             _anchorList ??= new List<KeyValuePair<int, KeyValuePair<object, object>>>();
             _anchorList.Clear();
             _anchorList.AddRange(anchors);
+        }
+
+        internal async Task UpdateAnchors(IAsyncEnumerable<KeyValuePair<int, KeyValuePair<object, object>>> anchors)
+        {
+            _anchorList ??= new List<KeyValuePair<int, KeyValuePair<object, object>>>();
+            _anchorList.Clear();
+            await foreach (var anchor in anchors) _anchorList.Add(anchor);
         }
 
         /// <inheritdoc />

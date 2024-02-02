@@ -62,11 +62,14 @@ internal class Schemas : ISchemas
         _replicationDelay = options.SchemaReplicationDelay;
     }
 
+    // internal for tests
+    internal ConcurrentDictionary<long, SchemaInfo> SchemaCache => _schemas;
+
     /// <inheritdoc />
     public void Dispose()
     { }
 
-    private class SchemaInfo
+    internal class SchemaInfo
     {
         public SchemaInfo(Schema schema, bool isPublished = false)
         {

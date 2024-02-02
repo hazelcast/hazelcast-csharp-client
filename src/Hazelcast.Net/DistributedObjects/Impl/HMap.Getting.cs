@@ -212,7 +212,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
+                await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService));
                 var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
                 await result.AddAsync(response.Response).CfAwait();
                 return result;
@@ -261,7 +261,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
+                await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService));
                 var result = new ReadOnlyLazyList<TKey>(SerializationService);
                 await result.AddAsync(response.Response).CfAwait();
                 return result;
@@ -310,9 +310,15 @@ namespace Hazelcast.DistributedObjects.Impl
                 var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
+
+                // async - ensure we can deserialize
+                await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService));
+
+                // that is something else
+                // we add 'async' because we ensure that we can deserialize
                 var result = new ReadOnlyLazyList<TValue>(SerializationService);
                 await result.AddAsync(response.Response).CfAwait();
+
                 return result;
             }
 

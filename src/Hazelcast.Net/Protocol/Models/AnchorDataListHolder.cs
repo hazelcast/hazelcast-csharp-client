@@ -45,5 +45,24 @@ namespace Hazelcast.Protocol.Models
                 yield return new KeyValuePair<int, KeyValuePair<object, object>>(pageNumber, entry);
             }
         }
+
+        internal async IAsyncEnumerable<KeyValuePair<int, KeyValuePair<object, object>>> AsAnchorAsyncIterator(SerializationService serializationService)
+        {
+            using var dataEntryIterator = AnchorDataList.GetEnumerator();
+            foreach (var pageNumber in AnchorPageList)
+            {
+                dataEntryIterator.MoveNext();
+
+                var (keyData, valueData) = dataEntryIterator.Current;
+
+                if (!serializationService.TryToObject<object>(keyData, out var key, out var keyToObjectState))
+                    key = await serializationService.ToObjectAsync<object>(keyData, keyToObjectState);
+                if (!serializationService.TryToObject<object>(valueData, out var value, out var valueToObjectState))
+                    key = await serializationService.ToObjectAsync<object>(valueData, valueToObjectState);
+
+                var entry = new KeyValuePair<object, object>(key, value);
+                yield return new KeyValuePair<int, KeyValuePair<object, object>>(pageNumber, entry);
+            }
+        }
     }
 }
