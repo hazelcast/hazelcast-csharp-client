@@ -1968,6 +1968,10 @@ function stop-remote-controller() {
 	}
     else {
         Write-Output "Remote controller is not running."
+        Write-Output "STDOUT:"
+        cat $tmpDir/rc/stdout-$serverVersion.log
+        Write-Output "STDERR:"
+        cat $tmpDir/rc/stderr-$serverVersion.log
 	}
 }
 
