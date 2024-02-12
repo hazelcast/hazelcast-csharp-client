@@ -1288,15 +1288,6 @@ function ensure-java {
             `
             "--add-opens",   "java.base/java.io=ALL-UNNAMED" `
         )
-
-        # "Scripting is currently unsupported for Java 15 and newer. These versions
-        #  of Java do not come with a JavaScript engine, which is necessary for this
-        #  feature to work."
-        $pos = $javaVersion.IndexOf('.')
-        $javaMajor = $javaVersion.SubString(0, $pos)
-        if (-not ($javaVersion -lt "12") ) {
-            Die "Java version >11 not supported (JavaScript scripting not supported)"
-        }
 	}
 }
 
