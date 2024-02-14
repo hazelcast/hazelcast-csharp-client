@@ -34,7 +34,6 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, true, false, true)]
         [TestCase(false, false, true, false)]
         [TestCase(false, false, false, true)]
-
         public async Task MutualAuth(bool required, bool knowsClient, bool withCert, bool succeeds)
         {
             async ValueTask TryStartClientAsync()
@@ -51,6 +50,7 @@ namespace Hazelcast.Tests.Networking
                     validateCertificateName: false,
                     clientCertificatePath: clientCertPath,
                     clientCertificatePassword: ClientCertificatePassword,
+                    serverCertificateName: ServerCertificateValidName,
                     failFast: !succeeds // when we expect to fail, reduce timeouts, no point retrying
                 );
             }
@@ -70,7 +70,6 @@ namespace Hazelcast.Tests.Networking
         [TestCase(true, false)]
         [TestCase(false, true)]
         [TestCase(false, false)]
-
         public async Task MutualAuthDisabled(bool knowsClient, bool withCert)
         {
             var clientCertNumber = knowsClient ? 1 : 2;
@@ -83,6 +82,7 @@ namespace Hazelcast.Tests.Networking
                 enableSsl: true,
                 validateCertificateChain: true,
                 validateCertificateName: null,
+                serverCertificateName: withCert ? ServerCertificateValidName : ServerCertificateInvalidName,
                 clientCertificatePath: clientCertPath,
                 clientCertificatePassword: ClientCertificatePassword);
         }
