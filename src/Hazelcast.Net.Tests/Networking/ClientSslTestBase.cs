@@ -95,7 +95,7 @@ namespace Hazelcast.Tests.Networking
 
 #if SSLCERTS_JAVA
         public const string ServerCertificateValidName = "foobar.hazelcast.com";
-        public const string ServerCertificateInvalidName = "meh";
+        public const string ServerCertificateInvalidName = "meh.meh";
         public const string ClientCertificatePassword = "password";
         public const string ClientCertificatePath = "Certificates";
         public const string ClientCertificatePrefix = "java.";
@@ -111,7 +111,7 @@ namespace Hazelcast.Tests.Networking
 
 #if SSLCERTS_MIXED
         public const string ServerCertificateValidName = "foobar.hazelcast.com";
-        public const string ServerCertificateInvalidName = "meh";
+        public const string ServerCertificateInvalidName = "meh.meh";
         public const string ClientCertificatePassword = "123456";
         public const string ClientCertificatePath = "temp:certs/clients";
         public const string ClientCertificatePrefix = "";
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Networking
 
 #if SSLCERTS_CUSTOM
         public const string ServerCertificateValidName = "hz-2ef34a78.net";
-        public const string ServerCertificateInvalidName = "meh";
+        public const string ServerCertificateInvalidName = "meh.meh";
         public const string ClientCertificatePassword = "123456";
         public const string ClientCertificatePath = "temp:certs";
         public const string ClientCertificatePrefix = "";
