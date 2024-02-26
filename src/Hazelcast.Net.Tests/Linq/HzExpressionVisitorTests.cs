@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
@@ -62,16 +62,21 @@ namespace Hazelcast.Tests.Linq
 
             var projection = new ProjectionExpression(selectExp, projector.Projector, typeof(DummyType));
 
-            var moqVisitor = new Mock<HzExpressionVisitor>();
-            moqVisitor.CallBase = true;
+            var moqVisitor = Substitute.ForPartsOf<HzExpressionVisitor>();
 
-            var visitedNode = moqVisitor.Object.Visit(projection);
+            var visitedNode = moqVisitor.Visit(projection);
 
             //We don't expect any change since HzExpressionVisitor is kinda router for custom HZ expressions.
             Assert.AreEqual(projection, visitedNode);
-            moqVisitor.Verify(p => p.VisitProjection(projection), Times.Once(), "Projection not visited.");
-            moqVisitor.Verify(p => p.VisitSelect(projection.Source), Times.Once(), "Select not visited.");
-            moqVisitor.Verify(p => p.VisitJoin((JoinExpression)projection.Source.From), Times.Once(), "Join not visited.");
+            moqVisitor
+                .Received(1) // exactly once
+                .VisitProjection(projection); // ensure projection has been visited
+            moqVisitor
+                .Received(1) // exactly once
+                .VisitSelect(projection.Source); // ensure select has been visited
+            moqVisitor
+                .Received(1) // exactly once
+                .VisitJoin((JoinExpression)projection.Source.From); // ensure join has been visited
         }
     }
 }

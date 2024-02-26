@@ -17,7 +17,7 @@ using System.Linq;
 using Hazelcast.Linq;
 using Hazelcast.Sql;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 
 namespace Hazelcast.Testing.Linq
 {
@@ -25,7 +25,7 @@ namespace Hazelcast.Testing.Linq
     {
         public static IAsyncQueryable<T> AsTestingAsyncQueryable<T>(this List<T> list)
         {
-            return new QueryableMap<T>(new QueryProvider(Mock.Of<ISqlService>(), typeof(T), NullLoggerFactory.Instance), typeof(T).Name);
+            return new QueryableMap<T>(new QueryProvider(Substitute.For<ISqlService>(), typeof(T), NullLoggerFactory.Instance), typeof(T).Name);
         }
     }
 }

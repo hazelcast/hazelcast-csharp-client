@@ -17,7 +17,7 @@ using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotWriteOnceCompleted()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = new Schema();
             var writer = new CompactWriter(orw, output, schema);
@@ -40,7 +40,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void OkToCompleteMultipleTimes()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = new Schema();
             var writer = new CompactWriter(orw, output, schema);
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void TimeStampWithTimeZonePrecision()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = SchemaBuilder.For("type").WithField("name", FieldKind.TimeStampWithTimeZone).Build();
             var writer = new CompactWriter(orw, output, schema);
@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void Exceptions()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = SchemaBuilder.For("type").WithField("name", FieldKind.String).Build();
             var writer = new CompactWriter(orw, output, schema);
@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanWriteArrayOfCompactOfSameType()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
             var writer = new CompactWriter(orw, output, schema);
@@ -91,7 +91,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotWriteArrayOfCompactOfDifferentTypes()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
             var writer = new CompactWriter(orw, output, schema);
@@ -104,7 +104,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotWriteArrayOfCompactOfDerivedTypes()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
             var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
             var writer = new CompactWriter(orw, output, schema);

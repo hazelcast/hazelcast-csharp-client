@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
@@ -27,6 +28,40 @@ namespace Hazelcast.Tests.Linq
     public class QueryFormatterTests
     {
         private const string QueryBase = "SELECT m0.\"ColumnString\", m0.\"ColumnDouble\", m0.\"ColumnFloat\", m0.\"ColumnInt\", m0.\"ColumnLong\", m0.\"ColumnBool\", m0.\"ColumnEnum\" FROM DummyType m0";
+
+        private static readonly string ExpressionMustBeReducibleExceptionMessage;
+        private static bool IsExpressionMustBeReducible(Exception e)
+            => e is ArgumentException && e.Message == ExpressionMustBeReducibleExceptionMessage;
+
+        private static readonly string DummyExpressionCastExceptionMessage;
+        private static bool IsDummyExpressionCastException(Exception e)
+            => e is InvalidCastException && e.Message.StartsWith(DummyExpressionCastExceptionMessage);
+
+        internal class NonReducibleExpression : Expression { }
+
+        static QueryFormatterTests()
+        {
+            // get whatever is going to be thrown
+            try
+            {
+                _ = (string)(object)new DummyExpression(ExpressionType.Negate);
+            }
+            catch (Exception e)
+            {
+                var pos = e.Message.IndexOf("DummyExpression");
+                DummyExpressionCastExceptionMessage = e.Message.Substring(0, pos + "DummyExpression".Length);
+            }
+
+            // get whatever is going to be thrown
+            try
+            {
+                _ = new NonReducibleExpression().ReduceAndCheck();
+            }
+            catch (Exception e)
+            {
+                ExpressionMustBeReducibleExceptionMessage = e.Message;
+            }
+        }
 
         private static string CreateQuery(string clause = null) => string.IsNullOrWhiteSpace(clause) ? QueryBase : (QueryBase + " WHERE (" + clause + ")");
 
@@ -61,6 +96,7 @@ namespace Hazelcast.Tests.Linq
         {
             var exp = new DummyExpression(nodeType);
 
+
             try
             {
                 QueryFormatter.Format(exp);
@@ -69,10 +105,14 @@ namespace Hazelcast.Tests.Linq
             {
                 // We expect that because our dummy node type is too dummy to be visited.
                 // If we got the exception, then means that the type is supported but couldn't be visited.
-                if ((ex is ArgumentException && ex.Message == "must be reducible node")
-                    || (ex is InvalidCastException &&
-                        ex.Message.StartsWith("Unable to cast object of type 'DummyExpression'")))
+                if (IsExpressionMustBeReducible(ex) || IsDummyExpressionCastException(ex))
                     return true;
+
+                if (ex is InvalidCastException)
+                {
+                    Console.WriteLine("--> " + ex.Message);
+                    Console.WriteLine("--> " + DummyExpressionCastExceptionMessage);
+                }
 
                 if (ex is NotSupportedException)
                     return false;
