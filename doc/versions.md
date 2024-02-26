@@ -6,7 +6,7 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 
 ### Current Version
 
-* <curdoc>5.2.2 [general documentation](xref:doc-index-5-2-2) and [API reference](xref:api-index-5-2-2)</curdoc>
+* <curdoc>5.3.1 [general documentation](xref:doc-index-5-3-1) and [API reference](xref:api-index-5-3-1)</curdoc>
 
 ### Preview
 
@@ -15,6 +15,9 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 ### Previous Versions
 
 <prevdoc></prevdoc>
+* 5.3.0 [general documentation](xref:doc-index-5-3-0) and [API reference](xref:api-index-5-3-0)
+* *5.2.2* [general documentation](xref:doc-index-5-2-2) and [API reference](xref:api-index-5-2-2)
+* 5.2.1 [general documentation](xref:doc-index-5-2-1) and [API reference](xref:api-index-5-2-1)
 * 5.2.0 [general documentation](xref:doc-index-5-2-0) and [API reference](xref:api-index-5-2-0)
 * **5.1.1** [general documentation](xref:doc-index-5-1-1) and [API reference](xref:api-index-5-1-1)
 * 5.1.0 [general documentation](xref:doc-index-5-1-0) and [API reference](xref:api-index-5-1-0)
