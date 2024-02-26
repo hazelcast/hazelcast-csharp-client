@@ -18,7 +18,7 @@ using System;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         private static byte[] Write(Schema schema, Endianness endianness, Action<ICompactWriter> write)
         {
             // should not be invoked, a dummy mock is all we need
-            var objectsReaderWriter = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var objectsReaderWriter = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             const int initialBufferSize = 1024;
 
@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         private static void Read(Schema schema, Endianness endianness, byte[] bytes, Action<ICompactReader> read)
         {
             // should not be invoked, a dummy mock is all we need
-            var objectsReaderWriter = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var objectsReaderWriter = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             
             var input = new ObjectDataInput(bytes, objectsReaderWriter, endianness);
             var reader = new CompactReader(objectsReaderWriter, input, schema, typeof(object));

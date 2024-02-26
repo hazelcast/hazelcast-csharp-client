@@ -26,7 +26,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Caching;
@@ -98,10 +98,10 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     [Test]
     public void ProvidedCacheExceptions()
     {
-        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCache(Mock.Of<IOptions<HazelcastOptions>>(), null!));
-        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCache(null!, Mock.Of<IOptions<HazelcastCacheOptions>>()));
-        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCacheWithFailover(Mock.Of<IOptions<HazelcastFailoverOptions>>(), null!));
-        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCacheWithFailover(null!, Mock.Of<IOptions<HazelcastCacheOptions>>()));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCache(Substitute.For<IOptions<HazelcastOptions>>(), null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCache(null!, Substitute.For<IOptions<HazelcastCacheOptions>>()));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCacheWithFailover(Substitute.For<IOptions<HazelcastFailoverOptions>>(), null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCacheWithFailover(null!, Substitute.For<IOptions<HazelcastCacheOptions>>()));
     }
 
     [Test]

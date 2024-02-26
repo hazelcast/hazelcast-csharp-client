@@ -33,7 +33,7 @@ using Hazelcast.Testing.Networking;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Clustering
@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Clustering
                 .HandleFallback(ServerHandler);
             await server.StartAsync();
 
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
@@ -76,7 +76,7 @@ namespace Hazelcast.Tests.Clustering
                 options.Messaging, options.Networking, options.Networking.Ssl,
                 correlationIdSequence,
                 loggerFactory, Guid.NewGuid(), 
-                new AddressProvider(Mock.Of<IAddressProviderSource>(), Mock.Of<ILoggerFactory>()));
+                new AddressProvider(Substitute.For<IAddressProviderSource>(), Substitute.For<ILoggerFactory>()));
 
             var memberConnectionHasClosed = false;
             memberConnection.Closed += connection =>
@@ -139,13 +139,13 @@ namespace Hazelcast.Tests.Clustering
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
-            var loggerFactoryMock = new Mock<ILoggerFactory>();
-            var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(h => h.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
-            loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
+            var loggerFactoryMock = Substitute.For<ILoggerFactory>();
+            var loggerMock = Substitute.For<ILogger>();
+            loggerMock.IsEnabled(Arg.Any<LogLevel>()).Returns(true);
+            loggerFactoryMock.CreateLogger(Arg.Any<string>()).Returns(loggerMock);
 
-            var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactoryMock.Object);
-            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactoryMock.Object));
+            var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactoryMock);
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactoryMock));
 
             var memberList = new List<MemberInfo> { NewMemberInfo(true), NewMemberInfo(true) };
 
@@ -156,14 +156,14 @@ namespace Hazelcast.Tests.Clustering
             await clusterMembers.SetMembersAsync(3, memberList);//will print since list new -> 2
             await clusterMembers.SetMembersAsync(3, memberList);//won't print since list steady
             
-            loggerMock.Verify(m =>
-                    m.Log<It.IsAnyType>(LogLevel.Information,
-                        0,
-                        It.IsAny<It.IsAnyType>(),
-                        null,
-                        It.IsAny<Func<It.IsAnyType, Exception, string>>()),
-                    Times.Exactly(2),
-          "Member list prints too verbose.");
+            // logged exactly twice - else member list prints is too verbose
+            loggerMock
+                .Received(2)
+                .Log<Arg.AnyType>(LogLevel.Information,
+                0,
+                Arg.Any<Arg.AnyType>(),
+                null,
+                Arg.Any<Func<Arg.AnyType, Exception, string>>());
         }
 
         [Test]
@@ -217,7 +217,7 @@ namespace Hazelcast.Tests.Clustering
                 .Build();
 
             var loggerFactory = NullLoggerFactory.Instance;
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
@@ -262,7 +262,7 @@ namespace Hazelcast.Tests.Clustering
             await server.StartAsync();
 
             var options = new HazelcastOptionsBuilder().Build();
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
@@ -272,7 +272,7 @@ namespace Hazelcast.Tests.Clustering
                 options.Messaging, options.Networking, options.Networking.Ssl,
                 correlationIdSequence,
                 loggerFactory, Guid.NewGuid(),
-                new AddressProvider(Mock.Of<IAddressProviderSource>(), Mock.Of<ILoggerFactory>()));
+                new AddressProvider(Substitute.For<IAddressProviderSource>(), Substitute.For<ILoggerFactory>()));
 
             const string clusterName = "dev";
             const string clientName = "client";
@@ -389,7 +389,7 @@ namespace Hazelcast.Tests.Clustering
             var connection = new MemberConnection(member.Address, member.Address,
                 authenticator, new MessagingOptions(), new NetworkingOptions(),
                 new SslOptions(), new Int64Sequence(), loggerFactory, Guid.NewGuid(),
-                new AddressProvider(Mock.Of<IAddressProviderSource>(), Mock.Of<ILoggerFactory>())
+                new AddressProvider(Substitute.For<IAddressProviderSource>(), Substitute.For<ILoggerFactory>())
             );
 
             connection.Accessor().Connected = true;

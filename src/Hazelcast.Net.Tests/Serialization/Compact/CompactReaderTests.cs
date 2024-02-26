@@ -15,7 +15,7 @@
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableAsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.Int8).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableBooleanAsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.Boolean).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableNotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableInt8).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -86,7 +86,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableNotNullBooleanAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableBoolean).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -106,7 +106,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableInt8).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -126,7 +126,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableNullBooleanAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableBoolean).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -146,7 +146,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfBooleanAsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfBoolean).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -171,7 +171,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfBooleanNotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableBoolean).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -196,7 +196,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfBooleanNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableBoolean).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -216,7 +216,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfInt8AsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt8).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -241,7 +241,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfInt8NotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt8).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -266,7 +266,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfInt8NullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt8).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -286,7 +286,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfInt16AsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt16).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -311,7 +311,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfInt16NotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt16).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -336,7 +336,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfInt16NullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt16).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -356,7 +356,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfInt32AsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt32).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -381,7 +381,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfInt32NotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt32).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -406,7 +406,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfInt32NullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt32).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -426,7 +426,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfInt64AsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt64).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -451,7 +451,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfInt64NotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt64).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -476,7 +476,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfInt64NullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt64).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -496,7 +496,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfFloat32AsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfFloat32).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -521,7 +521,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfFloat32NotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat32).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -546,7 +546,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfFloat32NullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat32).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -566,7 +566,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNonNullableArrayOfFloat64AsNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfFloat64).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -591,7 +591,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullableArrayOfFloat64NotNullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat64).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -616,7 +616,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CannotReadNullableArrayOfFloat64NullAsNonNullable()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat64).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -636,7 +636,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void CanReadNullArrays()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type")
                 .WithField("field0", FieldKind.ArrayOfBoolean)
@@ -671,7 +671,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void Exceptions()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.String).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
@@ -698,7 +698,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void FieldNameAndKind()
         {
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.String).Build();
             var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);

@@ -23,7 +23,7 @@ using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact;
@@ -77,7 +77,7 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
         Assert.Throws<SerializationException>(() => rec2.NewBuilderWithClone().SetInt32("other", 567).Build());
 
         Assert.Throws<ArgumentException>(() =>
-            GenericRecordBuilder.Compact("xxx").SetGenericRecord("xxx", Mock.Of<IGenericRecord>()).Build());
+            GenericRecordBuilder.Compact("xxx").SetGenericRecord("xxx", Substitute.For<IGenericRecord>()).Build());
     }
 
     [Test]
@@ -283,7 +283,7 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
         Assert.Throws<ArgumentException>(() =>
             recordBuilder.SetArrayOfGenericRecord("field-x", new[]
             {
-                Mock.Of<IGenericRecord>()
+                Substitute.For<IGenericRecord>()
             }));
 
         // can set all fields once

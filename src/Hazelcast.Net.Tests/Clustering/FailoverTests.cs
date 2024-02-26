@@ -26,7 +26,7 @@ using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Partitioner = Hazelcast.Partitioning.Partitioner;
 
@@ -151,7 +151,8 @@ internal class FailoverTests : RemoteTestBase
 
     private static ClusterState MockClusterState(HazelcastOptions options)
     {
-        return new ClusterState(options, "clusterName", "clientName", Mock.Of<Partitioner>(), new NullLoggerFactory());
+        var partitioner = Substitute.For<Partitioner>();
+        return new ClusterState(options, "clusterName", "clientName", partitioner, new NullLoggerFactory());
     }
 
     [Test]
