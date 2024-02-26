@@ -26,7 +26,7 @@ using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Tests.Serialization.Compact.SchemasRemoteTestsLocal;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var obj = new SomeClass { Value = 12 };
 
             var options = new CompactOptions();
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var schemas = new Schemas(messaging, options);
             const Endianness endianness = Endianness.LittleEndian;
             var ss = new CompactSerializationSerializer(options, schemas, endianness);
@@ -134,7 +134,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var obj = new SomeClass { Value = 12 };
 
             var options = new CompactOptions();
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var schemas = new Schemas(messaging, options);
             const Endianness endianness = Endianness.LittleEndian;
             var ss = new CompactSerializationSerializer(options, schemas, endianness);

@@ -20,7 +20,7 @@ using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void SerializerConstants()
         {
-            var serializer = new CompactSerializationSerializer(new CompactOptions(), Mock.Of<ISchemas>(), Endianness.BigEndian);
+            var serializer = new CompactSerializationSerializer(new CompactOptions(), Substitute.For<ISchemas>(), Endianness.BigEndian);
             var adapter = new CompactSerializationSerializerAdapter(serializer, false);
 
             Assert.That(adapter.Serializer, Is.SameAs(serializer));
@@ -42,31 +42,31 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void TryRead_Exceptions()
         {
-            var serializer = new CompactSerializationSerializer(new CompactOptions(), Mock.Of<ISchemas>(), Endianness.BigEndian);
+            var serializer = new CompactSerializationSerializer(new CompactOptions(), Substitute.For<ISchemas>(), Endianness.BigEndian);
 
             Assert.Throws<ArgumentException>(() => serializer.TryRead(null!, typeof(object), false, out _, out _));
 
-            var bogusObjectDataInput = Mock.Of<IObjectDataInput>();
+            var bogusObjectDataInput = Substitute.For<IObjectDataInput>();
             Assert.Throws<ArgumentException>(() => serializer.TryRead(bogusObjectDataInput, typeof(object), false, out _, out _));
 
-            var objectDataInput = new ObjectDataInput(Array.Empty<byte>(), Mock.Of<IReadObjectsFromObjectDataInput>(), Endianness.LittleEndian);
+            var objectDataInput = new ObjectDataInput(Array.Empty<byte>(), Substitute.For<IReadObjectsFromObjectDataInput>(), Endianness.LittleEndian);
             Assert.Throws<ArgumentNullException>(() => serializer.TryRead(objectDataInput, null, false, out _, out _));
         }
 
         [Test]
         public async Task EnsureSchemas1()
         {
-            var schemas = Mock.Of<ISchemas>();
+            var schemas = Substitute.For<ISchemas>();
             var schema = SchemaBuilder.For("thing").Build();
 
             // getOrFetch will always return null
-            Mock.Get(schemas)
-                .Setup(x => x.GetOrFetchAsync(It.IsAny<long>()))
+            schemas
+                .GetOrFetchAsync(Arg.Any<long>())
                 .Returns(new ValueTask<Schema?>((Schema?)null));
 
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
             output.WriteLong(schema.Id);
 
@@ -77,17 +77,17 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task EnsureSchemas2()
         {
-            var schemas = Mock.Of<ISchemas>();
+            var schemas = Substitute.For<ISchemas>();
             var schema = SchemaBuilder.For("thing").Build();
 
             // getOrFetch will return the schema
-            Mock.Get(schemas)
-                .Setup(x => x.GetOrFetchAsync(It.IsAny<long>()))
-                .Returns<long>(id => new ValueTask<Schema?>(id == schema.Id ? schema : null));
+            schemas
+                .GetOrFetchAsync(Arg.Any<long>())
+                .Returns(call => new ValueTask<Schema?>(call.Arg<long>() == schema.Id ? schema : null));
 
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
             output.WriteLong(schema.Id);
 
@@ -98,7 +98,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task EnsureNestedSchemas1()
         {
-            var schemas = Mock.Of<ISchemas>();
+            var schemas = Substitute.For<ISchemas>();
             var schema = SchemaBuilder
                 .For("thing")
                 .WithField("nested0", FieldKind.Compact)
@@ -108,16 +108,16 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema1 = SchemaBuilder.For("thing1").Build();
 
             // getOrFetch will return the schemas
-            Mock.Get(schemas)
-                .Setup(x => x.GetOrFetchAsync(It.IsAny<long>()))
-                .Returns<long>(id => new ValueTask<Schema?>(
-                    id == schema.Id ? schema :
-                    id == schema1.Id ? schema1 :
+            schemas
+                .GetOrFetchAsync(Arg.Any<long>())
+                .Returns(call => new ValueTask<Schema?>(
+                    call.Arg<long>() == schema.Id ? schema :
+                    call.Arg<long>() == schema1.Id ? schema1 :
                     null));
 
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
 
             output.WriteLong(schema.Id);
@@ -153,7 +153,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [TestCase(ushort.MaxValue)]
         public async Task EnsureNestedSchemas2(int datalength)
         {
-            var schemas = Mock.Of<ISchemas>();
+            var schemas = Substitute.For<ISchemas>();
             var schema = SchemaBuilder
                 .For("thing")
                 .WithField("nested0", FieldKind.Compact)
@@ -161,16 +161,16 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema1 = SchemaBuilder.For("thing1").Build();
 
             // getOrFetch will return the schemas
-            Mock.Get(schemas)
-                .Setup(x => x.GetOrFetchAsync(It.IsAny<long>()))
-                .Returns<long>(id => new ValueTask<Schema?>(
-                    id == schema.Id ? schema :
-                    id == schema1.Id ? schema1 :
+            schemas
+                .GetOrFetchAsync(Arg.Any<long>())
+                .Returns(call => new ValueTask<Schema?>(
+                    call.Arg<long>() == schema.Id ? schema :
+                    call.Arg<long>() == schema1.Id ? schema1 :
                     null));
 
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
 
             output.WriteLong(schema.Id);
@@ -195,11 +195,11 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void ReadUnknownSchema()
         {
-            var schemas = Mock.Of<ISchemas>();
+            var schemas = Substitute.For<ISchemas>();
 
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
 
             output.WriteLong(666L);
@@ -212,20 +212,26 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public void ReadImpossibleType()
         {
-            var schemas = Mock.Of<ISchemas>();
+            var schemas = Substitute.For<ISchemas>();
             var schema = SchemaBuilder
                 .For(CompactOptions.GetDefaultTypeName<ImpossibleType>())
                 .WithField("value", FieldKind.Int32)
                 .Build();
 
             // getOrFetch will return the schemas
-            Mock.Get(schemas)
-                .Setup(x => x.TryGet(It.IsAny<long>(), out schema))
-                .Returns<long, Schema>((_, _) => true);
+            schemas
+                .TryGet(Arg.Any<long>(), out Arg.Any<Schema>())
+                .Returns(call =>
+                {
+                    if (call.ArgAt<long>(0) != schema.Id) return false;
+                    call[1] = schema;
+                    return true;
+
+                });
 
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
-            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
 
             output.WriteLong(schema.Id);
