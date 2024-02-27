@@ -18,15 +18,15 @@ using System.Composition;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.DocAsCode.Build.Common;
-using Microsoft.DocAsCode.Build.ConceptualDocuments;
-using Microsoft.DocAsCode.Common;
-using Microsoft.DocAsCode.DataContracts.ManagedReference;
-using Microsoft.DocAsCode.Plugins;
+using Docfx.Build.Common;
+using Docfx.Common;
+using Docfx.DataContracts.ManagedReference;
+using Docfx.Plugins;
 
 namespace Hazelcast.DocAsCode.Build;
 
-[Export(nameof(ConceptualDocumentProcessor), typeof(IDocumentBuildStep))]
+// ConceptualDocumentProcessor is internal = must use name
+[Export("ConceptualDocumentProcessor", typeof(IDocumentBuildStep))]
 // ReSharper disable once UnusedMember.Global -- injected
 public class BuildHazelcastOptions : BaseDocumentBuildStep
 {
