@@ -22,7 +22,7 @@ using Hazelcast.Serialization.Compact;
 using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization
@@ -50,7 +50,7 @@ namespace Hazelcast.Tests.Serialization
                     false,
                     new NullPartitioningStrategy(),
                     1024,
-                    Mock.Of<ISchemas>(),
+                    Substitute.For<ISchemas>(),
                     new NullLoggerFactory()
                 )
             );

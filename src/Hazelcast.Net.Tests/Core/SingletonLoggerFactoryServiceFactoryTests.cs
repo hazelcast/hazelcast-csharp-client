@@ -15,7 +15,7 @@
 using Hazelcast.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Core
@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Core
                 Creator = () => NullLoggerFactory.Instance
             };
 
-            var mockProvider = Mock.Of<IMyProvider>();
+            var mockProvider = Substitute.For<IMyProvider>();
             
             f.AddProvider(mockProvider);
 

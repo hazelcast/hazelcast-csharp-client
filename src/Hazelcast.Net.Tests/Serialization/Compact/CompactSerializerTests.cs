@@ -18,7 +18,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Compact.SetSchema<Thing>(thingSchema, false);
 
             // create the entire serialization service
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
 
             // and then, create a Thing instance, serialize it to data, and de-serialize it back to object
@@ -129,7 +129,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Compact.AddSerializer(new ThingNestCompactSerializer());
             options.Compact.SetSchema<ThingNest>(thingNestSchema, false);
 
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
 
             var nest = new ThingNest
@@ -165,7 +165,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void Adapter_Exceptions()
         {
             Assert.Throws<ArgumentNullException>(() => CompactSerializerAdapter.Create(null));
-            Assert.Throws<ArgumentException>(() => CompactSerializerAdapter.Create(Mock.Of<ICompactSerializer>()));
+            Assert.Throws<ArgumentException>(() => CompactSerializerAdapter.Create(Substitute.For<ICompactSerializer>()));
         }
 
         [Test]
@@ -179,7 +179,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void Extensions_Exceptions()
         {
             Assert.Throws<ArgumentNullException>(() => ((ICompactSerializer)null).GetSerializedType());
-            Assert.Throws<ArgumentException>(() => Mock.Of<ICompactSerializer>().GetSerializedType());
+            Assert.Throws<ArgumentException>(() => Substitute.For<ICompactSerializer>().GetSerializedType());
 
             Assert.Throws<ArgumentNullException>(() => ((ICompactSerializer)null).IsICompactSerializerOfTSerialized(out _));
             Assert.Throws<ArgumentNullException>(() => ((Type)null).IsICompactSerializerOfTSerialized(out _));
@@ -192,7 +192,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Compact.AddSerializer(new ThingCompactSerializer()); // Thing is explicit
 
             // create the entire serialization service
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
 
             var inner = new Thing
@@ -222,7 +222,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Compact.AddSerializer(new ThingNestCompactSerializer()); // ThingNest is explicit
 
             // create the entire serialization service
-            var messaging = Mock.Of<IClusterMessaging>();
+            var messaging = Substitute.For<IClusterMessaging>();
             var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
 
             var inner = new Thing

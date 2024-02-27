@@ -220,7 +220,7 @@ namespace Ionic.Zlib
         /// </code>
         /// </example>
         /// <param name="stream">The stream to which compressed data will be written.</param>
-        public ParallelDeflateOutputStream(System.IO.Stream stream)
+        internal ParallelDeflateOutputStream(System.IO.Stream stream)
             : this(stream, CompressionLevel.Default, CompressionStrategy.Default, false)
         {
         }
@@ -234,7 +234,7 @@ namespace Ionic.Zlib
         /// </remarks>
         /// <param name="stream">The stream to which compressed data will be written.</param>
         /// <param name="level">A tuning knob to trade speed for effectiveness.</param>
-        public ParallelDeflateOutputStream(System.IO.Stream stream, CompressionLevel level)
+        internal ParallelDeflateOutputStream(System.IO.Stream stream, CompressionLevel level)
             : this(stream, level, CompressionStrategy.Default, false)
         {
         }
@@ -251,7 +251,7 @@ namespace Ionic.Zlib
         /// <param name="leaveOpen">
         ///    true if the application would like the stream to remain open after inflation/deflation.
         /// </param>
-        public ParallelDeflateOutputStream(System.IO.Stream stream, bool leaveOpen)
+        internal ParallelDeflateOutputStream(System.IO.Stream stream, bool leaveOpen)
             : this(stream, CompressionLevel.Default, CompressionStrategy.Default, leaveOpen)
         {
         }
@@ -269,7 +269,7 @@ namespace Ionic.Zlib
         /// <param name="leaveOpen">
         ///    true if the application would like the stream to remain open after inflation/deflation.
         /// </param>
-        public ParallelDeflateOutputStream(System.IO.Stream stream, CompressionLevel level, bool leaveOpen)
+        internal ParallelDeflateOutputStream(System.IO.Stream stream, CompressionLevel level, bool leaveOpen)
             : this(stream, CompressionLevel.Default, CompressionStrategy.Default, leaveOpen)
         {
         }
@@ -293,7 +293,7 @@ namespace Ionic.Zlib
         /// <param name="leaveOpen">
         ///    true if the application would like the stream to remain open after inflation/deflation.
         /// </param>
-        public ParallelDeflateOutputStream(System.IO.Stream stream,
+        internal ParallelDeflateOutputStream(System.IO.Stream stream,
                                            CompressionLevel level,
                                            CompressionStrategy strategy,
                                            bool leaveOpen)

@@ -65,7 +65,7 @@
 using System;
 namespace Ionic.Zlib
 {
-    sealed class InflateBlocks
+    internal sealed class InflateBlocks
     {
         private const int MANY = 1440;
 
