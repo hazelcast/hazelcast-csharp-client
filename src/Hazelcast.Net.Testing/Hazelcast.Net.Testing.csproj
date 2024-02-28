@@ -21,6 +21,11 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- NOTE this is for .NET 8, but in .NET 9 binary formatter is entirely gone -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ApacheThrift" Version="0.15.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

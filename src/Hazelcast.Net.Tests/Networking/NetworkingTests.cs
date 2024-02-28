@@ -88,7 +88,9 @@ namespace Hazelcast.Tests.Networking
                         var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
                             0, server.Address, server.MemberId, SerializationService.SerializerVersion,
                             "4.0", 1, server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>());
+                            Array.Empty<int>(), Array.Empty<byte>(),
+                            0, Array.Empty<MemberInfo>(),
+                            0, Array.Empty<KeyValuePair<Guid, IList<int>>>());
                         await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
                         break;
                     }
@@ -274,7 +276,9 @@ namespace Hazelcast.Tests.Networking
                             var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                                 0, address, Guid.NewGuid(), SerializationService.SerializerVersion,
                                 "4.0", 1, Guid.NewGuid(), false,
-                                Array.Empty<int>(), Array.Empty<byte>());
+                                Array.Empty<int>(), Array.Empty<byte>(),
+                                0, Array.Empty<MemberInfo>(),
+                                0, Array.Empty<KeyValuePair<Guid, IList<int>>>());
                             await ResponseAsync(authResponse).CfAwait();
                             break;
 
