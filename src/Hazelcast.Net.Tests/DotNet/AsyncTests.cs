@@ -205,7 +205,7 @@ namespace Hazelcast.Tests.DotNet
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
 
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
+            Assert.ThrowsAsync<OperationCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
             await Task.Delay(100, CancellationToken.None).CfAwait();
 
             Assert.IsTrue(task1.IsCanceled);
