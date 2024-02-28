@@ -318,7 +318,9 @@ namespace Hazelcast.Tests.Clustering
                         var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                             0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
                             "4.0", partitionsCount, request.Server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>());
+                            Array.Empty<int>(), Array.Empty<byte>(),
+                            0, Array.Empty<MemberInfo>(),
+                            0, Array.Empty<KeyValuePair<Guid, IList<int>>>());
                         await request.RespondAsync(authResponse).CfAwait();
                         break;
                     }
