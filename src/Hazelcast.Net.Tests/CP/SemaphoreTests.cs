@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.CP;
@@ -194,14 +195,13 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
         // the same "thread" - and we would get either acquiring returning false on some
         // occasions, or throwing about the acquisition operation being cancelled because
         // of another operation.
-        Assert.That(await acquiring); 
+        Assert.That(await acquiring);
     }
 
     [Test]
     public async Task TroubleshootThreads()
     {
         await using var semaphore = await GetSemaphore();
-
     }
 
     [Test]
@@ -254,7 +254,7 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
             await semaphore.ReleaseAsync(3);
             await semaphore.AcquireAsync(4);
             await semaphore.ReleaseAsync(37);
-            Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(12+1+3-4+37));
+            Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(12 + 1 + 3 - 4 + 37));
         }
         else
         {
@@ -266,5 +266,47 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
             await semaphore.ReleaseAsync(3);
             await AssertEx.ThrowsAsync<Exception>(async () => await semaphore.ReleaseAsync(3));
         }
+    }
+
+    [Test]
+    public async Task CanAcquireAtParallel([Values] bool sessionLess)
+    {
+        await using var semaphore = await GetSemaphore(sessionLess);
+
+        Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(0));
+        await semaphore.InitializeAsync(2);
+        Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(2));
+
+        var workerCount = 5;
+        var workDone = 0;
+        var smName = semaphore.Name;
+
+        async Task DoSomeWork()
+        {
+            // Each run will bw in different thread. So, new context is a must.
+            AsyncContext.New();
+
+            var sm = await _client.CPSubsystem.GetSemaphore(smName);
+
+            var acquired = await sm.TryAcquireAsync(1, 5_00);
+
+            if (acquired)
+            {
+                Interlocked.Increment(ref workDone);
+                // Do some work
+                await Task.Delay(200);
+                await sm.ReleaseAsync();
+            }
+        }
+
+        var tasks = new List<Task>();
+
+        for (int i = 0; i < workerCount; i++)
+        {
+            tasks.Add(Task.Run(async () => await DoSomeWork()));
+        }
+
+        await Task.WhenAll(tasks);
+        Assert.That(workDone, Is.EqualTo(workerCount));
     }
 }
