@@ -27,7 +27,9 @@ namespace Hazelcast.Exceptions
     /// case retrying an operation will not succeed. Or, it may be temporarily disconnected and trying
     /// to reconnect, in which case retrying an operation may eventually succeed.</para>
     /// </remarks>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class ClientOfflineException : HazelcastException
     {
         // NOTE: as per CA1032 we implement all constructors, but... keep them private.
@@ -123,12 +125,13 @@ namespace Hazelcast.Exceptions
         {
             State = state;
         }
-
+#if !NET8_0_OR_GREATER 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private ClientOfflineException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -143,7 +146,7 @@ namespace Hazelcast.Exceptions
             info.AddValue("state", State);
             base.GetObjectData(info, context);
         }
-
+#endif
         /// <summary>
         /// Gets the client state.
         /// </summary>

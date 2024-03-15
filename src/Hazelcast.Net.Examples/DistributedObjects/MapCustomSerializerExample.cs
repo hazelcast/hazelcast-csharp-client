@@ -25,6 +25,8 @@ namespace Hazelcast.Examples.DistributedObjects
     {
         public static async Task Main(string[] args)
         {
+            Console.WriteLine("NOTE: BinaryFormatter is obsolete and should not be used. This example is for demonstration purposes only.");
+            
             var options = new HazelcastOptionsBuilder()
                 .With(args)
                 .WithConsoleLogger()

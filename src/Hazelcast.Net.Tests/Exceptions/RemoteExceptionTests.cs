@@ -46,7 +46,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.Retryable, Is.True);
             Assert.That(e.Error, Is.EqualTo(RemoteError.AccessControl));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
