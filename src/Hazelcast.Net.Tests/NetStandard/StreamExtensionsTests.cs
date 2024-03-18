@@ -51,9 +51,12 @@ namespace Hazelcast.Tests.NetStandard
 
             stream = new MemoryStream(Encoding.UTF8.GetBytes("Lorem."));
             memory = new Memory<byte>(new byte[16]);
-
+#if NET8_0_OR_GREATER
+            Assert.ThrowsAsync<OperationCanceledException>(async () => _ = await stream.ReadAsync(memory, new CancellationToken(true)));
+#else
             // for memory streams, the read operation itself cancels
             Assert.ThrowsAsync<TaskCanceledException>(async () => { await stream.ReadAsync(memory, new CancellationToken(true)); });
+#endif
         }
 
         [Test]
@@ -70,9 +73,11 @@ namespace Hazelcast.Tests.NetStandard
             var task = stream.ReadAsync(memory, new CancellationToken(true));
             await Task.Delay(100);
             stream.CompleteRead();
-
+#if NET8_0_OR_GREATER
+            Assert.ThrowsAsync<OperationCanceledException>(async () => _ = await task);
+#else
             Assert.ThrowsAsync<TaskCanceledException>(async () => { await task; });
-
+#endif
             // and, the exception thrown by the stream is observed (this is an observing test)
         }
 
@@ -89,7 +94,7 @@ namespace Hazelcast.Tests.NetStandard
             public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 await Task.Yield();
-                 _ev.Wait();
+                _ev.Wait();
                 throw new Exception("bang");
             }
         }

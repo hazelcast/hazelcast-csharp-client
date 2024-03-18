@@ -83,33 +83,33 @@ namespace Hazelcast.Tests.Networking
             {
                 // handle authentication
                 case ClientAuthenticationServerCodec.RequestMessageType:
-                    {
-                        var request = ClientAuthenticationServerCodec.DecodeRequest(requestMessage);
-                        var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
-                            0, server.Address, server.MemberId, SerializationService.SerializerVersion,
-                            "4.0", 1, server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>());
-                        await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
-                        break;
-                    }
+                {
+                    var request = ClientAuthenticationServerCodec.DecodeRequest(requestMessage);
+                    var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
+                        0, server.Address, server.MemberId, SerializationService.SerializerVersion,
+                        "4.0", 1, server.ClusterId, false,
+                        Array.Empty<int>(), Array.Empty<byte>());
+                    await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
+                    break;
+                }
 
                 // handle events
                 case ClientAddClusterViewListenerServerCodec.RequestMessageType:
-                    {
-                        var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
-                        var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
+                {
+                    var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
+                    var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                    await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
 
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(500).CfAwait();
-                            var memberVersion = new MemberVersion(4, 0, 0);
-                            var memberInfo = new MemberInfo(server.MemberId, server.Address, memberVersion, false, new Dictionary<string, string>());
-                            var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[] { memberInfo });
-                            await connection.SendEventAsync(requestMessage, eventMessage).CfAwait();
-                        });
-                        break;
-                    }
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(500).CfAwait();
+                        var memberVersion = new MemberVersion(4, 0, 0);
+                        var memberInfo = new MemberInfo(server.MemberId, server.Address, memberVersion, false, new Dictionary<string, string>());
+                        var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[] {memberInfo});
+                        await connection.SendEventAsync(requestMessage, eventMessage).CfAwait();
+                    });
+                    break;
+                }
 
                 // handle others
                 default:
@@ -206,10 +206,10 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Start client");
             var options = new HazelcastOptionsBuilder()
                 .With(options =>
-                    {
-                        options.Networking.Addresses.Add(address.ToString());
-                        options.Heartbeat.PeriodMilliseconds = -1; // infinite: we don't want heartbeat pings interfering with the test
-                    })
+                {
+                    options.Networking.Addresses.Add(address.ToString());
+                    options.Heartbeat.PeriodMilliseconds = -1; // infinite: we don't want heartbeat pings interfering with the test
+                })
                 .WithHConsoleLogger()
                 .Build();
             await using var client = (await HazelcastClientFactory.StartNewClientAsync(options)).MustBe<HazelcastClient>();
@@ -306,18 +306,18 @@ namespace Hazelcast.Tests.Networking
             await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
-            var options = new HazelcastOptionsBuilder().With(options =>
-            {
-                options.Networking.Addresses.Add(address.ToString());
-            }).Build();
+            var options = new HazelcastOptionsBuilder().With(options => { options.Networking.Addresses.Add(address.ToString()); }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
+#if NET8_0_OR_GREATER
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
+#else
             await AssertEx.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
-
+#endif
             // TODO dispose the client, the server
             await server.StopAsync().CfAwait();
         }
@@ -352,16 +352,14 @@ namespace Hazelcast.Tests.Networking
                         response = CreateErrorMessage(RemoteError.RetryableHazelcast);
                         response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                     }
+
                     response.CorrelationId = msg.CorrelationId;
                     await conn.SendAsync(response).CfAwait();
                 }), LoggerFactory);
             await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
-            var options = new HazelcastOptionsBuilder().With(options =>
-            {
-                options.Networking.Addresses.Add(address.ToString());
-            }).Build();
+            var options = new HazelcastOptionsBuilder().With(options => { options.Networking.Addresses.Add(address.ToString()); }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
@@ -448,10 +446,7 @@ namespace Hazelcast.Tests.Networking
                 => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
             await server.StartAsync().CfAwait();
 
-            var options = new HazelcastOptionsBuilder().With(options =>
-            {
-                options.Networking.Addresses.Add(address.ToString());
-            }).Build();
+            var options = new HazelcastOptionsBuilder().With(options => { options.Networking.Addresses.Add(address.ToString()); }).Build();
 
             HConsole.WriteLine(this, "Start client 1");
             await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
@@ -608,16 +603,10 @@ namespace Hazelcast.Tests.Networking
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
             // server is not listening, connecting results in timeout after 1s
-            Assert.ThrowsAsync<TimeoutException>(async () =>
-            {
-                await socket.ConnectAsync(NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint, 500).CfAwait();
-            });
+            Assert.ThrowsAsync<TimeoutException>(async () => { await socket.ConnectAsync(NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint, 500).CfAwait(); });
 
             // socket has been properly closed and disposed
-            Assert.Throws<ObjectDisposedException>(() =>
-            {
-                socket.Send(Array.Empty<byte>());
-            });
+            Assert.Throws<ObjectDisposedException>(() => { socket.Send(Array.Empty<byte>()); });
 
             // can dispose multiple times
             socket.Close();
@@ -646,10 +635,7 @@ namespace Hazelcast.Tests.Networking
             }
 
             // socket is not ready (but not disposed)
-            Assert.Throws<SocketException>(() =>
-            {
-                socket.Send(Array.Empty<byte>());
-            });
+            Assert.Throws<SocketException>(() => { socket.Send(Array.Empty<byte>()); });
         }
     }
 }

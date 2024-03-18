@@ -30,7 +30,9 @@ namespace Hazelcast.Sql
     internal class SqlService : ISqlService
     {
         private readonly Cluster _cluster;
+
         private readonly SerializationService _serializationService;
+
         // internal for tests only
         internal readonly ReadOptimizedLruCache<string, int> _queryPartitionArgumentCache;
         private readonly ILogger<SqlService> _logger;
@@ -62,6 +64,16 @@ namespace Hazelcast.Sql
             {
                 (metadata, firstPage, partitionId) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
             }
+#if NET8_0_OR_GREATER
+            catch (OperationCanceledException)
+            {
+                // maybe, the server is running the query, so better notify it
+                // for any other exception: assume that the query did not start
+
+                await CloseAsync(queryId).CfAwaitNoThrow(); // swallow the exception, nothing we can do really
+                throw;
+            }
+#else
             catch (TaskCanceledException)
             {
                 // maybe, the server is running the query, so better notify it
@@ -70,6 +82,7 @@ namespace Hazelcast.Sql
                 await CloseAsync(queryId).CfAwaitNoThrow(); // swallow the exception, nothing we can do really
                 throw;
             }
+#endif
 
             return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, partitionId, cancellationToken);
         }
@@ -140,10 +153,10 @@ namespace Hazelcast.Sql
                 responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             else
                 responseMessage = await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
-            
+
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
-            
-            if(response.IsPartitionArgumentIndexExists)
+
+            if (response.IsPartitionArgumentIndexExists)
                 SetArgumentIndex(sql, response.PartitionArgumentIndex);
 
             if (response.Error != null)
@@ -202,10 +215,10 @@ namespace Hazelcast.Sql
         private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize, int partitionId, CancellationToken cancellationToken)
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
-            var responseMessage = partitionId == -1 ?
-                await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait()
-                :await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
-            
+            var responseMessage = partitionId == -1
+                ? await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait()
+                : await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
             if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
