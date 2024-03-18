@@ -145,11 +145,8 @@ namespace Hazelcast.Tests.DotNet
         public async Task DelayCancel()
         {
             var cancellation = new CancellationTokenSource(100);
-#if NET8_0_OR_GREATER
-            Assert.ThrowsAsync<OperationCanceledException>(async () => await Task.Delay(2_000, cancellation.Token).CfAwait());
-#else            
+          
             Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token).CfAwait());
-#endif
             await Task.Delay(100, CancellationToken.None).CfAwait();
 
             // TaskCancelledException inherits from OperationCancelledException
@@ -289,11 +286,7 @@ namespace Hazelcast.Tests.DotNet
             {
                 Assert.AreEqual(1, ae.InnerExceptions.Count);
                 var e = ae.InnerExceptions[0];
-#if NET8_0_OR_GREATER
-                Assert.AreEqual(typeof(OperationCanceledException), e.GetType());
-#else
                 Assert.AreEqual(typeof(TaskCanceledException), e.GetType());
-#endif
             }
         }
 
@@ -465,11 +458,8 @@ namespace Hazelcast.Tests.DotNet
             cancellation.Token.Register(() => completion.TrySetCanceled());
             cancellation.Cancel();
             completion.TrySetResult(42);
-#if NET8_0_OR_GREATER
-            Assert.ThrowsAsync<OperationCanceledException>(async () => _ = await completion.Task);
-#else
+
             Assert.ThrowsAsync<TaskCanceledException>(async () => _ = await completion.Task);
-#endif
         }
 
         [Test]
