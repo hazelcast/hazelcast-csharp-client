@@ -86,11 +86,7 @@ namespace Hazelcast.Tests.DotNet
                 new TaskCompletionSource<object>(),
             };
 
-            var wait = Task.Run(async () =>
-            {
-
-                return await Task.WhenAll(sources.Select(x => x.Task)).CfAwait();
-            });
+            var wait = Task.Run(async () => { return await Task.WhenAll(sources.Select(x => x.Task)).CfAwait(); });
 
             static void Throw(int j)
                 => throw new Exception("bang_" + j);
@@ -204,8 +200,13 @@ namespace Hazelcast.Tests.DotNet
 
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
-
+#if NET8_0_OR_GREATER
+            // see https://github.com/dotnet/runtime/issues/83382 the exception type changed in .NET 8.0
+            Assert.ThrowsAsync<OperationCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
+#else
             Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
+#endif
+
             await Task.Delay(100, CancellationToken.None).CfAwait();
 
             Assert.IsTrue(task1.IsCanceled);
@@ -284,7 +285,7 @@ namespace Hazelcast.Tests.DotNet
             {
                 Assert.AreEqual(1, ae.InnerExceptions.Count);
                 var e = ae.InnerExceptions[0];
-                Assert.AreEqual(typeof (TaskCanceledException), e.GetType());
+                Assert.AreEqual(typeof(TaskCanceledException), e.GetType());
             }
         }
 
@@ -522,6 +523,7 @@ namespace Hazelcast.Tests.DotNet
             {
                 Id = _idSequence++;
             }
+
             public int Id { get; }
 
             public static bool HasCurrent => CurrentAsyncLocal.Value != null;
@@ -662,13 +664,14 @@ namespace Hazelcast.Tests.DotNet
             var v = 0;
 
             // get an IAsyncEnumerable<> that does not throw when the enumeration is canceled
-            var asyncEnumerable = new AsyncEnumerable<int>(new[] { 1, 2, 3, 4 }, throwOnCancel: false);
+            var asyncEnumerable = new AsyncEnumerable<int>(new[] {1, 2, 3, 4}, throwOnCancel: false);
 
             // can enumerate
             await foreach (var i in asyncEnumerable)
             {
                 Console.WriteLine(v = i);
             }
+
             Assert.That(v, Is.EqualTo(4));
             Console.WriteLine("/");
 
@@ -679,17 +682,19 @@ namespace Hazelcast.Tests.DotNet
                 Console.WriteLine(v = i);
                 if (i == 3) cancel.Cancel();
             }
+
             Assert.That(v, Is.EqualTo(3));
             Console.WriteLine("/");
 
             // get an IAsyncEnumerable<> that throws when the enumeration is canceled
-            asyncEnumerable = new AsyncEnumerable<int>(new[] { 1, 2, 3, 4 });
+            asyncEnumerable = new AsyncEnumerable<int>(new[] {1, 2, 3, 4});
 
             // can enumerate
             await foreach (var i in asyncEnumerable)
             {
                 Console.WriteLine(v = i);
             }
+
             Assert.That(v, Is.EqualTo(4));
             Console.WriteLine("/");
 
@@ -713,17 +718,19 @@ namespace Hazelcast.Tests.DotNet
                 Console.WriteLine(v = i);
                 if (i == 3) cancel.Cancel();
             }
+
             Assert.That(v, Is.EqualTo(3));
             Console.WriteLine("/");
 
             // repeat with bare enumerable
-            var bareEnumerable = new BareAsyncEnumerable<int>(new[] { 1, 2, 3, 4 });
+            var bareEnumerable = new BareAsyncEnumerable<int>(new[] {1, 2, 3, 4});
 
             // can enumerate
             await foreach (var i in bareEnumerable)
             {
                 Console.WriteLine(v = i);
             }
+
             Assert.That(v, Is.EqualTo(4));
             Console.WriteLine("/");
 
@@ -747,9 +754,9 @@ namespace Hazelcast.Tests.DotNet
                 Console.WriteLine(v = i);
                 if (i == 3) cancel.Cancel();
             }
+
             Assert.That(v, Is.EqualTo(3));
             Console.WriteLine("/");
-
         }
 
         // provides something that can be async-enumerated without implementing IAsyncEnumerable<>
