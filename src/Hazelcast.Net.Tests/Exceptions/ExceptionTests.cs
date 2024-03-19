@@ -36,7 +36,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
@@ -55,13 +57,15 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
         }
-        
+
         [Test]
         public void ClientNotAllowedInClusterExceptionConstructors()
         {
@@ -74,13 +78,15 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
         }
-        
+
         [Test]
         public void RemoteExceptionConstructors()
         {
@@ -92,7 +98,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
@@ -111,13 +119,15 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
         }
-        
+
         [Test]
         public void UnknownCompactSchemaExceptionConstructors()
         {
@@ -125,7 +135,9 @@ namespace Hazelcast.Tests.Exceptions
 
             Assert.True(e.Message.StartsWith("Unknown compact"));
             Assert.AreEqual(1, e.SchemaId);
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.True(e.Message.StartsWith("Unknown compact"));
             Assert.AreEqual(1, e.SchemaId);
@@ -145,7 +157,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
             Assert.That(e.State, Is.EqualTo(ClientState.Shutdown));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
@@ -165,7 +179,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
@@ -184,7 +200,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
@@ -202,7 +220,9 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+            #if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);

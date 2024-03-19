@@ -21,7 +21,9 @@ namespace Hazelcast.Configuration
     /// <summary>
     /// Represents the exception that is throw when the Hazelcast configuration is incorrect.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class ConfigurationException : HazelcastException
     {
         /// <summary>
@@ -59,7 +61,7 @@ namespace Hazelcast.Configuration
         public ConfigurationException(string message, Exception innerException)
             : base(message, innerException)
         { }
-
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationException"/> class with serialized data.
         /// </summary>
@@ -67,8 +69,10 @@ namespace Hazelcast.Configuration
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private ConfigurationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
     }
 }

@@ -397,7 +397,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(parent.timestamp, reader.ReadLong("child.timestamp"));
             Assert.AreEqual(child.timestamp, reader.ReadLong("child.child.timestamp"));
         }
-
+#if !NET8_0_OR_GREATER
         [Test]
         public void TestWriteObjectWithCustomSerializable()
         {
@@ -420,7 +420,7 @@ namespace Hazelcast.Tests.Serialization
             var objectCarryingPortable2 = serializationService.ToObject<ObjectCarryingPortable>(data);
             Assert.AreEqual(objectCarryingPortable1, objectCarryingPortable2);
         }
-
+#endif
         [Test]
         public void TestWriteObjectWithIdentifiedDataSerializable()
         {

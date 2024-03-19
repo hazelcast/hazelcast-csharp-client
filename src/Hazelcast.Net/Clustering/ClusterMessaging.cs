@@ -151,7 +151,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken = default)
+            Task<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -180,7 +180,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken = default)
+            Task<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
@@ -209,7 +209,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, bool raiseEvents, CancellationToken cancellationToken = default)
+            Task<ClientMessage> SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, bool raiseEvents, CancellationToken cancellationToken = default)
         {
             var task = SendAsyncInternal(message, connection, targetPartitionId, targetMemberId, _clusterState.GetNextCorrelationId(), raiseEvents, cancellationToken);
 
@@ -237,12 +237,12 @@ namespace Hazelcast.Clustering
 
             // fail fast, if the cluster is not active
             _clusterState.ThrowIfNotActive();
-            
+
             // NOTE: *every* invocation sent to the cluster goes through the code below
 
             // trigger event
             if (raiseEvents) await _sendingMessage.AwaitEach(message).CfAwait();
-            
+
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
             message.CorrelationId = correlationId;
@@ -250,9 +250,9 @@ namespace Hazelcast.Clustering
 
             // create the invocation
             var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
-                             targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
-                             targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
-                             new Invocation(message, _clusterState.Options.Messaging);
+                targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
+                targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
+                new Invocation(message, _clusterState.Options.Messaging);
 
             return await SendAsyncInternal(invocation, cancellationToken).CfAwait();
         }
@@ -286,11 +286,19 @@ namespace Hazelcast.Clustering
                     connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                     return await connection.SendAsync(invocation, cancellationToken).CfAwait();
                 }
+#if NET8_0_OR_GREATER
+                catch (OperationCanceledException)
+                {
+                    HConsole.WriteLine(this, "Canceled.");
+                    throw;
+                }
+#else
                 catch (TaskCanceledException)
                 {
                     HConsole.WriteLine(this, "Canceled.");
                     throw;
                 }
+#endif
                 catch (Exception exception)
                 {
                     HConsole.WriteLine(this, $"Exception ({connection?.Id.ToShortString() ?? "null"}):{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)} {exception}");

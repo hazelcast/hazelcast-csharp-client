@@ -503,11 +503,17 @@ namespace Hazelcast.Tests.Core
             Assert.That(configuredTaskAwaiterField, Is.Not.Null);
             var configuredTaskAwaiter = configuredTaskAwaiterField.GetValue(awaitable);
 
-            var continueOnCapturedContextField = configuredTaskAwaiter.GetType().GetField("m_continueOnCapturedContext", BindingFlags.Instance | BindingFlags.NonPublic);
+#if NET8_0_OR_GREATER
+            var continueOnCapturedContextField = configuredTaskAwaiter.GetType().GetField("m_options", BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.That(continueOnCapturedContextField, Is.Not.Null);
-            var continueOnCapturedContext = (bool)continueOnCapturedContextField.GetValue(configuredTaskAwaiter);
-
-            return continueOnCapturedContext;
+            var continueOnCapturedContext = (ConfigureAwaitOptions) continueOnCapturedContextField.GetValue(configuredTaskAwaiter);
+            return continueOnCapturedContext != ConfigureAwaitOptions.None;
+#else
+            var continueOnCapturedContextField = configuredTaskAwaiter.GetType().GetField("m_continueOnCapturedContext", BindingFlags.Instance | BindingFlags.NonPublic);
+             Assert.That(continueOnCapturedContextField, Is.Not.Null);
+             var continueOnCapturedContext = (bool)continueOnCapturedContextField.GetValue(configuredTaskAwaiter);
+             return continueOnCapturedContext;
+#endif
         }
 
         private static bool GetValueTaskContinueOnCapturedContext(object awaitable)
