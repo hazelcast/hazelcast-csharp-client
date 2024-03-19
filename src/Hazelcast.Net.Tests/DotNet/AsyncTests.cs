@@ -197,7 +197,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var semaphore = new SemaphoreSlim(0);
 
-            var cancellation = new CancellationTokenSource(100);
+            var cancellation = new CancellationTokenSource(500);
 
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
