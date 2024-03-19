@@ -59,8 +59,11 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConfiguredTaskAwaitable CfAwait([NotNull] this Task task)
+#if NET8_0_OR_GREATER
+            => task.ConfigureAwait(continueOnCapturedContext: false);
+#else
             => task.ConfigureAwait(false);
-
+#endif
         /// <summary>
         /// Configures an awaiter used to await this <see cref="Task{TResult}"/>, continuing on
         /// any synchronization context.
@@ -283,7 +286,6 @@ namespace Hazelcast.Core
         }
 
 #if !NET6_0_OR_GREATER
-
         // .NET 6 introduced the built-in WaitAsync method so let use use it everywhere,
         // and for pre-.NET 6 let us use MS' own code from https://github.com/dotnet/runtime/pull/48842
 
@@ -380,7 +382,10 @@ namespace Hazelcast.Core
             {
                 // this is where we swallowed the task's possible exception
                 // still, must observe the exception else it remains unobserved
-                if (!_task.IsCompletedSuccessfully()) { _ = _task.Exception; }
+                if (!_task.IsCompletedSuccessfully())
+                {
+                    _ = _task.Exception;
+                }
             }
 
             // ConfiguredTaskAwaitable is a simple class that just returns a
@@ -530,7 +535,10 @@ namespace Hazelcast.Core
                 // exception, if there's an exception then there has to be
                 // an underlying task holding the exception
 
-                if (!_task.IsCompletedSuccessfully) { _ = _task.AsTask().Exception; }
+                if (!_task.IsCompletedSuccessfully)
+                {
+                    _ = _task.AsTask().Exception;
+                }
             }
 
             // see notes in ConfiguredTaskNoThrowAwaitable
