@@ -309,4 +309,43 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
         await Task.WhenAll(tasks);
         Assert.That(workDone, Is.EqualTo(workerCount));
     }
+    
+    [Test]
+    public async Task CanAcquireAtParallelOnSameSemaphoreObject([Values] bool sessionLess)
+    {
+        await using var semaphore = await GetSemaphore(sessionLess);
+
+        Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(0));
+        await semaphore.InitializeAsync(2);
+        Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(2));
+
+        var workerCount = 5;
+        var workDone = 0;
+
+        async Task DoSomeWork()
+        {
+            // Each run will bw in different thread. So, new context is a must.
+            AsyncContext.New();
+
+            var acquired = await semaphore.TryAcquireAsync(1, 5_00);
+
+            if (acquired)
+            {
+                Interlocked.Increment(ref workDone);
+                // Do some work
+                await Task.Delay(200);
+                await semaphore.ReleaseAsync();
+            }
+        }
+
+        var tasks = new List<Task>();
+
+        for (int i = 0; i < workerCount; i++)
+        {
+            tasks.Add(Task.Run(async () => await DoSomeWork()));
+        }
+
+        await Task.WhenAll(tasks);
+        Assert.That(workDone, Is.EqualTo(workerCount));
+    }
 }
