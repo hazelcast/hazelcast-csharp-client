@@ -15,11 +15,8 @@
 // ReSharper disable LocalizableElement
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Testing.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.CP
 {
@@ -27,15 +24,10 @@ namespace Hazelcast.Examples.CP
     {
         public static async Task Main(string[] args)
         {
-            HConsole.Configure(options => options
-                .WithHConsoleWriter(new HConsoleFileWriter("./log-semaphore.txt"))
-                .Configure()
-                .SetMaxLevel()
-                .EnableTimeStamp(true, DateTime.Now));
 
             var options = new HazelcastOptionsBuilder()
                 .With(args)
-                .With(hazelcastOptions => { hazelcastOptions.LoggerFactory.Creator = () => LoggerFactory.Create(builder => builder.AddHConsole()); })
+                .WithConsoleLogger()
                 .Build();
 
             // create an Hazelcast client and connect to a server running on localhost
