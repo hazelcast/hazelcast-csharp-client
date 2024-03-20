@@ -85,7 +85,9 @@ namespace Hazelcast.Serialization
             var serializer = LookupKnownSerializer(typeOfObj, withSchemas) ??   // 2a. compact, identified, portable
                              LookupConstantSerializer(typeOfObj) ??             // 2b. primitive, string, etc
                              LookupCustomSerializer(typeOfObj) ??               // 3.  custom, registered by user
+#if !NET8_0_OR_GREATER                             
                              LookupSerializableSerializer(typeOfObj) ??         // 4.  .NET BinaryFormatter for [Serializable] types
+#endif                             
                              LookupGlobalSerializer(typeOfObj) ??               // 5.  global, if registered by user
                              LookupCompactSerializer(typeOfObj, withSchemas);   // 6.  compact
 

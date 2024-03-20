@@ -70,7 +70,6 @@ namespace Hazelcast.Tests.NetStandard
             var task = stream.ReadAsync(memory, new CancellationToken(true));
             await Task.Delay(100);
             stream.CompleteRead();
-
             Assert.ThrowsAsync<TaskCanceledException>(async () => { await task; });
 
             // and, the exception thrown by the stream is observed (this is an observing test)
@@ -89,7 +88,7 @@ namespace Hazelcast.Tests.NetStandard
             public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 await Task.Yield();
-                 _ev.Wait();
+                _ev.Wait();
                 throw new Exception("bang");
             }
         }

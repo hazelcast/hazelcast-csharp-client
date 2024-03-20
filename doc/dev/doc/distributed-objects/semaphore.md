@@ -51,8 +51,7 @@ finally
 }
 ```
 
-Hazelcast FencedLock provides, and requires, an implicit `AsyncContext` object. Every Semaphore operation
-executes within such a context. See the [Locking](../locking.md) documentation section for more infos about
+Every Semaphore operation executes within such a context. See the [Locking](../locking.md) documentation section for more infos about
 the `AsyncContext`, and how and when to use it.
 
 ## Example

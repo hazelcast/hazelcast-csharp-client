@@ -23,6 +23,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization
 {
+    #if !NET8_0_OR_GREATER
     [TestFixture]
     public class ClientCustomSerializationTest
     {
@@ -213,4 +214,5 @@ namespace Hazelcast.Tests.Serialization
             return list;
         }
     }
+#endif
 }

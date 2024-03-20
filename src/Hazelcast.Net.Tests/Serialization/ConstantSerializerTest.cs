@@ -201,7 +201,8 @@ namespace Hazelcast.Tests.Serialization
             //strip nanos as they will not be serialized
             AssertSerialization(list, order);
         }
-
+// CLR Serialization is not supported in .NET 8.0+        
+#if !NET8_0_OR_GREATER
         [Test, TestCaseSource(nameof(Endiannesses))]
         public void TestSerializable(Endianness order)
         {
@@ -217,7 +218,7 @@ namespace Hazelcast.Tests.Serialization
 
             AssertSerialization(p, order, true);
         }
-
+#endif
         [Test, TestCaseSource(nameof(Endiannesses))]
         public void TestBigInteger(Endianness order)
         {

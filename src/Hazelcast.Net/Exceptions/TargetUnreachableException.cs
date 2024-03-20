@@ -20,7 +20,9 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Represents the exception that is thrown when the target of an invocation is not reachable.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public class TargetUnreachableException : HazelcastException
     {
         /// <summary>
@@ -58,7 +60,7 @@ namespace Hazelcast.Exceptions
         public TargetUnreachableException(string message, Exception innerException)
             : base(message, innerException)
         { }
-
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="TargetUnreachableException"/> class with serialized data.
         /// </summary>
@@ -66,9 +68,11 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         protected TargetUnreachableException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
 
     }
 }

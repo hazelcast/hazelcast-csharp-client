@@ -20,7 +20,9 @@ namespace Hazelcast.Exceptions;
 /// <summary>
 /// Represents the exception that is thrown when a topic overflows.
 /// </summary>
-[Serializable]
+#if !NET8_0_OR_GREATER
+    [Serializable]
+#endif
 public class TopicOverloadException : HazelcastException
 {
     /// <summary>
@@ -54,7 +56,7 @@ public class TopicOverloadException : HazelcastException
     /// reference if no inner exception is specified.</param>
     public TopicOverloadException(string message, Exception innerException) : base(message, innerException)
     { }
-
+#if !NET8_0_OR_GREATER
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicOverloadException"/> class with serialized data.
     /// </summary>
@@ -62,6 +64,8 @@ public class TopicOverloadException : HazelcastException
     /// about the exception being thrown.</param>
     /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
     /// about the source or destination.</param>v
+    [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
     protected TopicOverloadException(SerializationInfo info, StreamingContext context) : base(info, context)
     { }
+#endif
 }
