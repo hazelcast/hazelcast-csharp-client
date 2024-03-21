@@ -19,7 +19,9 @@ namespace Hazelcast.Security
     /// <summary>
     /// Implements <see cref="ITokenCredentials"/> for simple token-based protocols.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public class TokenCredentials : ITokenCredentials
     {
         /// <summary>

@@ -23,7 +23,9 @@ namespace Hazelcast.Sql
     /// <summary>
     /// Represents the exception that is thrown by the SQL service in case of an error.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public class HazelcastSqlException : HazelcastException
     {
         // NOTE: as per CA1032 we implement all constructors, but... keep them private/internal.
@@ -81,11 +83,13 @@ namespace Hazelcast.Sql
             Suggestion = error.Suggestion;
         }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         protected HazelcastSqlException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -95,6 +99,7 @@ namespace Hazelcast.Sql
         }
 
         /// <inheritdoc />
+        [Obsolete("This method is obsolete due to BinaryFormatter being obsolete.")]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null) throw new ArgumentNullException(nameof(info));
@@ -104,6 +109,7 @@ namespace Hazelcast.Sql
             info.AddValue(nameof(ErrorCode), ErrorCode);
             base.GetObjectData(info, context);
         }
+#endif
 
         /// <summary>
         /// Get the identifier of the <see cref="IHazelcastClient"/>.

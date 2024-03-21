@@ -19,7 +19,9 @@ namespace Hazelcast.Security
     /// <summary>
     /// Implements <see cref=" IPasswordCredentials"/>.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public class UsernamePasswordCredentials : IPasswordCredentials
     {
         /// <inheritdoc />

@@ -26,7 +26,9 @@ namespace Hazelcast.Serialization
     /// The exception that is thrown when a compact serialization schema could not be found
     /// for a specified schema identifier, even after trying to fetch it from the cluster.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class UnknownCompactSchemaException : SerializationException
     {
         /// <summary>
@@ -38,7 +40,7 @@ namespace Hazelcast.Serialization
         {
             SchemaId = schemaId;
         }
-        
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="UnknownCompactSchemaException"/> class with serialized data.
         /// </summary>
@@ -46,22 +48,26 @@ namespace Hazelcast.Serialization
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private UnknownCompactSchemaException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             SchemaId = info.GetInt64(nameof(SchemaId));
         }
+#endif
 
         /// <summary>
         /// Gets the identifier of the unknown schema.
         /// </summary>
         public long SchemaId { get; }
-
+#if !NET8_0_OR_GREATER
         /// <inheritdoc />
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
             info.AddValue(nameof(SchemaId), SchemaId);
         }
+#endif
     }
 }

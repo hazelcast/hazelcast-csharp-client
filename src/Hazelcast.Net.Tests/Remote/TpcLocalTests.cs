@@ -35,6 +35,7 @@ namespace Hazelcast.Tests.Remote;
 
 [TestFixture]
 [Category("beta")]
+[Explicit("TPC Requires to be promoted to prod.")]
 internal class TpcLocalTests
 {
     [Test]

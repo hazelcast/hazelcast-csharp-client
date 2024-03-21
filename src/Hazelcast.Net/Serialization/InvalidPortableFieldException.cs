@@ -21,7 +21,9 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Represents the exception that is thrown when the portable reader reads a field of an invalid type.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     internal class InvalidPortableFieldException : HazelcastException
     {
         /// <summary>
@@ -60,6 +62,7 @@ namespace Hazelcast.Serialization
             : base(message, innerException)
         { }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class with serialized data.
         /// </summary>
@@ -67,8 +70,10 @@ namespace Hazelcast.Serialization
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         public InvalidPortableFieldException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
     }
 }

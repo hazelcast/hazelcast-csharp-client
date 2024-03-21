@@ -126,6 +126,8 @@ namespace Hazelcast.Serialization
             RegisterConstantSerializer(_compactSerializerAdapter);
             RegisterConstantSerializer(_compactSerializerWithSchemasAdapter);
 
+            // BinaryFormatter serialization is not supported on .NET8+ anymore.
+#if !NET8_0_OR_GREATER
             // Registers the constant 'serializable serializer', which implements CLR BinaryFormatter
             // serialization of objects marked with the [Serializable] attributes.
             _serializableSerializerAdapter = CreateSerializerAdapter<object>(new SerializableSerializer());
@@ -140,7 +142,7 @@ namespace Hazelcast.Serialization
             // This also means that LookupConstantSerializer does not need to exclude the CsharpClrSerializationType
             // anymore as, again, it just is a constant serializer to begin with.
             RegisterConstantSerializer(_serializableSerializerAdapter);
-
+#endif 
             // Invoke ISerializerDefinitions, which are classes that can register more serializers.
             // Mostly, this is going to register all the primitive constant serializers.
             foreach (var definition in definitions) definition.AddSerializers(this);
@@ -239,7 +241,7 @@ namespace Hazelcast.Serialization
             }
 
             var createSerializerAdapter = _createSerializerAdapter.MakeGenericMethod(type);
-            return (ISerializerAdapter)createSerializerAdapter.Invoke(this, new object[] { serializer });
+            return (ISerializerAdapter) createSerializerAdapter.Invoke(this, new object[] {serializer});
         }
 
         /// <summary>

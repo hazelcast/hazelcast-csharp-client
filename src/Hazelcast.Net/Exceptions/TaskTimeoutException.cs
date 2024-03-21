@@ -21,7 +21,9 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Represents the exception that is throw when an async task times out.
     /// </summary>
-    [Serializable] // CA2237
+    #if !NET8_0_OR_GREATER
+    [Serializable]
+#endif // CA2237
     public sealed class TaskTimeoutException : HazelcastException
     {
         /// <summary>
@@ -77,7 +79,7 @@ namespace Hazelcast.Exceptions
         public TaskTimeoutException(string message, Exception innerException)
             : base(message, innerException)
         { }
-
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class with serialized data.
         /// </summary>
@@ -89,8 +91,11 @@ namespace Hazelcast.Exceptions
         /// <para>This constructor method is provided to comply with CA2229 and ensure that the
         /// exception class is a good .NET citizen. It is not meant to be used in code.</para>
         /// </remarks>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private TaskTimeoutException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
     }
 }
+

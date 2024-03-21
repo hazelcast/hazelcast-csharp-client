@@ -34,7 +34,9 @@ namespace Hazelcast.Tests.Core
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
 
+#if !NET8_0_OR_GREATER
             e = e.SerializeAndDeSerialize();
+#endif
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);

@@ -20,17 +20,17 @@ namespace Hazelcast.Testing
 {
     public static class ExceptionExtensions
     {
+#if !NET8_0_OR_GREATER
         public static TException SerializeAndDeSerialize<TException>(this TException e)
             where TException : Exception
         {
             // read https://stackoverflow.com/questions/94488
-
             var fmt = new BinaryFormatter();
             using var ms = new MemoryStream();
-
             fmt.Serialize(ms, e);
             ms.Seek(0, 0);
-            return (TException)fmt.Deserialize(ms);
+            return (TException) fmt.Deserialize(ms);
         }
+#endif
     }
 }

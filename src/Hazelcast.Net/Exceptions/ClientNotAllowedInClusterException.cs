@@ -24,7 +24,9 @@ namespace Hazelcast.Exceptions
     /// <item>Cluster blacklisted the client</item>
     /// </list>
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class ClientNotAllowedInClusterException : HazelcastException
     {
         /// <summary>
@@ -63,8 +65,8 @@ namespace Hazelcast.Exceptions
         public ClientNotAllowedInClusterException(string message, Exception innerException) : base(message, innerException)
         {
         }
-
-
+        
+#if !NET8_0_OR_GREATER        
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotAllowedInClusterException"/> class with serialized data.
         /// </summary>
@@ -72,8 +74,10 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private ClientNotAllowedInClusterException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
+#endif
     }
 }

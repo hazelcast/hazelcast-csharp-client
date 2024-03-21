@@ -23,6 +23,7 @@ namespace Hazelcast.Tests.Remote;
 [TestFixture]
 [Timeout(60_000)]
 [Category("beta")]
+[Explicit("TPC Requires to be promoted to prod.")]
 internal class TpcRemoteTests : SingleMemberRemoteTestBase
 {
     protected override string RcClusterConfiguration 

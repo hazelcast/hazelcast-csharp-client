@@ -23,7 +23,9 @@ namespace Hazelcast.Protocol
     /// <summary>
     /// Represents an exception that was thrown remotely on a server.
     /// </summary>
+#if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class RemoteException : HazelcastException
     {
         private const string InnerExceptionPrefix = " ---> ";
@@ -139,6 +141,7 @@ namespace Hazelcast.Protocol
             ServerStackTrace = serverStackTrace;
         }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class with serialized data.
         /// </summary>
@@ -146,6 +149,7 @@ namespace Hazelcast.Protocol
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private RemoteException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -154,7 +158,7 @@ namespace Hazelcast.Protocol
             Retryable = info.GetBoolean(nameof(Retryable));
             ServerStackTrace = info.GetString(nameof(ServerStackTrace));
         }
-
+#endif
         /// <summary>
         /// Gets the unique identifier of the member which threw the exception.
         /// </summary>
@@ -190,8 +194,9 @@ namespace Hazelcast.Protocol
             get => (string) Data[nameof(ServerStackTrace)];
             set => Data[nameof(ServerStackTrace)] = value;
         }
-
+#if !NET8_0_OR_GREATER
         /// <inheritdoc />
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null) throw new ArgumentNullException(nameof(info));
@@ -202,7 +207,7 @@ namespace Hazelcast.Protocol
             info.AddValue(nameof(ServerStackTrace), ServerStackTrace);
             base.GetObjectData(info, context);
         }
-
+#endif
         /// <inheritdoc />
         public override string ToString()
         {

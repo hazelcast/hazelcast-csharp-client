@@ -39,8 +39,8 @@ For backward-compatibility reasons, .NET `BinaryFormatter` serialization is enab
 > [!WARNING]
 > The `BinaryFormatter` type is dangerous and is *not* recommended for data processing. Applications should stop using `BinaryFormatter` as soon as possible, even if they believe the data they're processing to be trustworthy. `BinaryFormatter` is insecure and can't be made secure. ([source](https://docs.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide))
 
-We therefore recommend that `BinaryFormatter` serialization be entirely disabled. For that purpose, set `SerializationOptions.EnableClrSerialization` to `false`.
-
+> [!WARNING]
+> Starting from Hazelcast .Net Client 5.4.0 on .Net 8.0 build, `BinaryFormatter` serialization is removed. CLR serialization is not available anymore on the client.
 ## Default Types
 
 Hazelcast serializes all your objects before sending them to the server. The built-in primitive types are serialized natively and you cannot override this behavior. The following table is the conversion of types for Java server side.

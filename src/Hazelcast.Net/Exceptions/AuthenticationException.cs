@@ -20,7 +20,9 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Represents the exception that is thrown when authentication fails.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class AuthenticationException : HazelcastException
     {
         /// <summary>
@@ -55,10 +57,12 @@ namespace Hazelcast.Exceptions
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
+        
         public AuthenticationException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
+#if !NET8_0_OR_GREATER        
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationException"/> class with serialized data.
         /// </summary>
@@ -66,8 +70,10 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private AuthenticationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
     }
 }

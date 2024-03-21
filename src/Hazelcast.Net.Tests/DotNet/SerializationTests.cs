@@ -48,7 +48,7 @@ namespace Hazelcast.Tests.DotNet
             Assert.AreEqual(0x0e, a[14]);
             Assert.AreEqual(0x0f, a[15]);
         }
-
+#if !NET8_0_OR_GREATER
         [Test]
         public void SerializationInfoSupports()
         {
@@ -63,7 +63,7 @@ namespace Hazelcast.Tests.DotNet
             Assert.That(result, Is.Not.Null);
             Assert.That(result.GuidValue, Is.EqualTo(thing.GuidValue));
         }
-
+#endif
         [Test]
         public void TestSerializationInfoExtension()
         {
@@ -73,7 +73,7 @@ namespace Hazelcast.Tests.DotNet
         }
 
         // this is a test, it's OK to use BinaryFormatter here
-
+#if !NET8_0_OR_GREATER
         private static byte[] SerializeToBytes<T>(T e)
             where T : ISerializable
         {
@@ -92,7 +92,7 @@ namespace Hazelcast.Tests.DotNet
             return (T) new BinaryFormatter().Deserialize(stream);
 #pragma warning restore SYSLIB0011
         }
-
+#endif
         [Serializable]
         private class SerializableThing : ISerializable
         {

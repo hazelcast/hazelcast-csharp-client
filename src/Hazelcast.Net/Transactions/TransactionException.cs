@@ -21,7 +21,9 @@ namespace Hazelcast.Transactions
     /// <summary>
     /// Represents the exception that is thrown when something goes wrong with transactions.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     internal class TransactionException : HazelcastException
     {
         /// <summary>
@@ -60,6 +62,7 @@ namespace Hazelcast.Transactions
             : base(message, innerException)
         { }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         /// Initializes a new instance of the <see cref="TransactionException"/> class with serialized data.
         /// </summary>
@@ -67,8 +70,10 @@ namespace Hazelcast.Transactions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         public TransactionException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
     }
 }

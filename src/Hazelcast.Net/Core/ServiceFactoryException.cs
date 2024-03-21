@@ -18,7 +18,9 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
+#if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public sealed class ServiceFactoryException : HazelcastException
     {
 
@@ -57,7 +59,7 @@ namespace Hazelcast.Core
         public ServiceFactoryException(string message, Exception innerException)
             : base(message, innerException)
         { }
-
+#if !NET8_0_OR_GREATER    
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceFactoryException"/> class with serialized data.
         /// </summary>
@@ -65,8 +67,10 @@ namespace Hazelcast.Core
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        //[Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         private ServiceFactoryException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif
     }
 }

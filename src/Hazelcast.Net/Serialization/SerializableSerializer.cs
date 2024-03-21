@@ -17,6 +17,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Hazelcast.Serialization
 {
+#if !NET8_0_OR_GREATER
     // note
     //
     // "The BinaryFormatter type is dangerous and is not recommended for data processing. Applications
@@ -25,11 +26,12 @@ namespace Hazelcast.Serialization
     //
     // see: https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2300
     // see: https://docs.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide
-    //
-    // TODO: replace BinaryFormatter with something else (breaking?)
-
+    
+    
     /// <summary>
     /// Serialize using default .NET serialization
+    /// <remarks>Starting from Hazelcast .Net Client 5.4.0 for .Net8 build, SerializableSerializer support drops
+    /// due to due changes on .Net. See <a  href="https://docs.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide">Binary Formatter</a></remarks> 
     /// </summary>
     internal class SerializableSerializer : SingletonSerializerBase<object>
     {
@@ -58,4 +60,6 @@ namespace Hazelcast.Serialization
 #pragma warning restore SYSLIB0011
         }
     }
+    
+#endif
 }

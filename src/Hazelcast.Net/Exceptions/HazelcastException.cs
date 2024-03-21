@@ -20,7 +20,9 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Represents the generic exception that is throw when Hazelcast goes south.
     /// </summary>
+    #if !NET8_0_OR_GREATER
     [Serializable]
+#endif
     public class HazelcastException : Exception
     {
         // ReSharper disable once InconsistentNaming
@@ -61,7 +63,7 @@ namespace Hazelcast.Exceptions
         public HazelcastException(string message, Exception innerException)
             : base(message, innerException)
         { }
-
+#if !NET8_0_OR_GREATER        
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class with serialized data.
         /// </summary>
@@ -69,8 +71,10 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+        [Obsolete("This constructor is obsolete due to BinaryFormatter being obsolete. Use the constructor without this parameter.")]
         protected HazelcastException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+#endif        
     }
 }

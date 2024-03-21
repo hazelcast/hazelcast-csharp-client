@@ -81,8 +81,8 @@ internal partial class CPSessionManager : IAsyncDisposable
         // dictionary, *then* fall back to asynchronous code which locks
 
         var key = (groupId, localThreadId);
-        return _uniqueThreadIds.TryGetValue(key, out var id) 
-            ? new ValueTask<long>(id) 
+        return _uniqueThreadIds.TryGetValue(key, out var id)
+            ? new ValueTask<long>(id)
             : CreateUniqueThreadIdAsync(key);
 
         async ValueTask<long> CreateUniqueThreadIdAsync((CPGroupId GroupId, long LockId) k)
@@ -91,7 +91,6 @@ internal partial class CPSessionManager : IAsyncDisposable
             ThrowIfDisposed();
             return _uniqueThreadIds.GetOrAdd(k, await RequestGenerateThreadIdAsync(k.GroupId).CfAwait());
         }
-
     }
 
     #endregion
@@ -152,8 +151,8 @@ internal partial class CPSessionManager : IAsyncDisposable
     public long GetSessionId(CPGroupId groupId)
     {
         ThrowIfDisposed();
-        return _groupSessions.TryGetValue(groupId, out var sessionState) 
-            ? sessionState.Id 
+        return _groupSessions.TryGetValue(groupId, out var sessionState)
+            ? sessionState.Id
             : NoSessionId;
     }
 
@@ -188,7 +187,7 @@ internal partial class CPSessionManager : IAsyncDisposable
             var (groupId, sessionId) = entry;
             return CloseSessionAsync(groupId, sessionId.Id);
         });
-        
+
         _groupSessions.Clear();
     }
 
@@ -212,12 +211,12 @@ internal partial class CPSessionManager : IAsyncDisposable
         var groupSemaphore = GetGroupSemaphore(groupId);
         await groupSemaphore.WaitAsync().CfAwait();
 
-        // triple-check
-        if (_groupSessions.TryGetValue(groupId, out sessionState) && sessionState.IsValid)
-            return sessionState;
-
         try
         {
+            // triple-check
+            if (_groupSessions.TryGetValue(groupId, out sessionState) && sessionState.IsValid)
+                return sessionState;
+
             // actually create/start a new session
             var (session, heartbeatMillis) = await RequestNewSessionAsync(groupId).CfAwait();
             _groupSessions[groupId] = session;
@@ -274,6 +273,7 @@ internal partial class CPSessionManager : IAsyncDisposable
         {
             _logger.LogWarning(e, "Caught an exception while disposing a CP Session Heartbeat.");
         }
+
         _heartbeatCancel.Dispose();
 
         // dispose what needs to be disposed
