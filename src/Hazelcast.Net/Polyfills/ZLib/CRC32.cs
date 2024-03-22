@@ -1,30 +1,16 @@
-// CRC32.cs
-// ------------------------------------------------------------------
-//
-// Copyright (c) 2011 Dino Chiesa.
-// All rights reserved.
-//
-// This code module is part of DotNetZip, a zipfile class library.
-//
-// ------------------------------------------------------------------
-//
-// This code is licensed under the Microsoft Public License.
-// See the file License.txt for the license details.
-// More info on: http://dotnetzip.codeplex.com
-//
-// ------------------------------------------------------------------
-//
-// Last Saved: <2011-August-02 18:25:54>
-//
-// ------------------------------------------------------------------
-//
-// This module defines the CRC32 class, which can do the CRC32 algorithm, using
-// arbitrary starting polynomials, and bit reversal. The bit reversal is what
-// distinguishes this CRC-32 used in BZip2 from the CRC-32 that is used in PKZIP
-// files, or GZIP files. This class does both.
-//
-// ------------------------------------------------------------------
-
+// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using Interop = System.Runtime.InteropServices;

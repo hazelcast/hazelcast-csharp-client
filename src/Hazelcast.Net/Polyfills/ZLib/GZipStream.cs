@@ -1,31 +1,16 @@
-// GZipStream.cs
-// ------------------------------------------------------------------
-//
-// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
-// All rights reserved.
-//
-// This code module is part of DotNetZip, a zipfile class library.
-//
-// ------------------------------------------------------------------
-//
-// This code is licensed under the Microsoft Public License.
-// See the file License.txt for the license details.
-// More info on: http://dotnetzip.codeplex.com
-//
-// ------------------------------------------------------------------
-//
-// last saved (in emacs):
-// Time-stamp: <2011-August-08 18:14:39>
-//
-// ------------------------------------------------------------------
-//
-// This module defines the GZipStream class, which can be used as a replacement for
-// the System.IO.Compression.GZipStream class in the .NET BCL.  NB: The design is not
-// completely OO clean: there is some intelligence in the ZlibBaseStream that reads the
-// GZip header.
-//
-// ------------------------------------------------------------------
-
+// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.IO;
