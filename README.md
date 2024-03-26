@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./doc/images/hazelcast-black-240.png" />
+    <img src="https://hazelcast.com/files/brand-images/logo/hazelcast-logo.png" />
     <h2 align="center">.NET Client</h2>
 </p>
 
