@@ -1,5 +1,5 @@
 {{!Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE file in the project root for full license information.}}
 
 <a class="navbar-brand" href="{{_rel}}index.html">
-  <img id="logo" src="https://hazelcast.com/files/brand-images/logo/hazelcast-logo.png" alt="{{_appName}}" />
+  <img id="logo" src="{{_rel}}images/hazelcast-white.png" alt="{{_appName}}" />
 </a>
