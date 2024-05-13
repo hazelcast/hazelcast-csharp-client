@@ -16,6 +16,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
@@ -207,10 +208,7 @@ internal class FailoverTests : RemoteTestBase
 
         var failover = new Failover(clusterState, options);
 
-        failover.ClusterChanged += _ =>
-        {
-            clusterChangedCount++;
-        };
+        failover.ClusterChanged += _ => { clusterChangedCount++; };
 
         void AssertCluster1(Failover fo)
         {
@@ -318,12 +316,22 @@ internal class FailoverTests : RemoteTestBase
             .WithHConsoleLogger()
             .Build();
 
+        var latch = new ManualResetEvent(false);
+        
         HConsole.WriteLine(this, "Start members of clusters 0 and 1");
         var members0 = await StartMembersAsync(_cluster0, memberCount);
         var members1 = await StartMembersAsync(_cluster1, memberCount);
 
         HConsole.WriteLine(this, "Start failover client");
         await using var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
+        
+        var clientImp = (HazelcastClient) client;
+        clientImp.Cluster.State.Failover.ClusterChanged += _ =>
+        {
+            // During cluster changed event, members are cleared
+            if (!clientImp.Cluster.Members.GetMembers().Any()) latch.Set();
+        };
+        
         var mapName = CreateUniqueName();
         var map = await client.GetMapAsync<string, string>(mapName);
         Assert.IsNotNull(map);
@@ -361,6 +369,7 @@ internal class FailoverTests : RemoteTestBase
         await AssertStateEventually(states, ClientState.ClusterChanged);
         await AssertStateEventually(states, ClientState.Connected);
         await AssertCluster(client, _cluster0.Id, map);
+        Assert.True(latch.WaitOne(1_000));
     }
 
     [TestCase(true, 1)]
@@ -459,7 +468,6 @@ internal class FailoverTests : RemoteTestBase
     }
 
     [Test]
-
     public async Task TestClientThrowExceptionOnFailover()
     {
         HConsole.Configure(options => options
@@ -615,7 +623,7 @@ internal class FailoverTests : RemoteTestBase
         // and are not simply still trying to reconnect to the original cluster 0 before
         // failover - we test this because the ClusterChanged event *must* trigger here
         HConsole.WriteLine(this, "Wait...");
-        await Task.Delay((int)(failoverOptions.Clients[0].Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds + 2_000));
+        await Task.Delay((int) (failoverOptions.Clients[0].Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds + 2_000));
 
         // start cluster 0 members again
         HConsole.WriteLine(this, "Start members of Cluster 0");
@@ -706,9 +714,9 @@ internal class FailoverTests : RemoteTestBase
         // cluster 1 is live - but we should first try to connect again to cluster 0
         // within o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         Assert.AreEqual(_cluster0.Id, client.ClusterName);
-        Assert.True(client.Members.Any(x=>
-            x.Member.Address.Host==members0[0].Host &&
-            x.Member.Address.Port==members0[0].Port)
+        Assert.True(client.Members.Any(x =>
+            x.Member.Address.Host == members0[0].Host &&
+            x.Member.Address.Port == members0[0].Port)
         );
 
         // start cluster 0 members again
@@ -736,9 +744,9 @@ internal class FailoverTests : RemoteTestBase
     public static async Task AssertStateEventually(ConcurrentQueue<ClientState> states, ClientState expectedState, int timeoutMillis = 120_000)
     {
         var state = (ClientState) (-1);
-        
+
         await AssertEx.SucceedsEventually(
-            () => { Assert.That(states.TryDequeue(out state)); }, 
+            () => { Assert.That(states.TryDequeue(out state)); },
             timeoutMillis, 1000,
             $"Failed to get state {expectedState}, state did not change");
 

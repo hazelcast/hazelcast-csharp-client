@@ -80,6 +80,12 @@ namespace Hazelcast.Clustering
                     lock (_mutex) return _members.ContainsMember(x);
                 }, _clusterState.LoggerFactory);
             }
+
+            _clusterState.Failover.ClusterChanged += cluster =>
+            {
+                // Clear old member table since failover happened.
+                _members = new MemberTable();
+            };
         }
 
         // NOTES
@@ -370,6 +376,7 @@ namespace Hazelcast.Clustering
                 msg.Append(status);
                 msg.AppendLine();
             }
+
             msg.Append('}');
 
             //Print only if there is a change
@@ -793,10 +800,11 @@ namespace Hazelcast.Clustering
         /// <returns>The oldest active connection, or <c>null</c> if no connection is active.</returns>
         public MemberConnection GetOldestConnection()
         {
-            lock (_mutex) return _connections.Values
-                .Where(x => x.Active)
-                .OrderBy(x => x.ConnectTime)
-                .FirstOrDefault();
+            lock (_mutex)
+                return _connections.Values
+                    .Where(x => x.Active)
+                    .OrderBy(x => x.ConnectTime)
+                    .FirstOrDefault();
         }
 
         /// <summary>
