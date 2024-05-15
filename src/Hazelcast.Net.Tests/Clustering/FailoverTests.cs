@@ -316,22 +316,41 @@ internal class FailoverTests : RemoteTestBase
             .WithHConsoleLogger()
             .Build();
 
-        var latch = new ManualResetEvent(false);
-        
+        var latchExistMembers = new ManualResetEvent(false);
+        var latchConnectMembers = new ManualResetEvent(false);
+        var latchMembersUpdated = new ManualResetEvent(false);
+
         HConsole.WriteLine(this, "Start members of clusters 0 and 1");
         var members0 = await StartMembersAsync(_cluster0, memberCount);
         var members1 = await StartMembersAsync(_cluster1, memberCount);
 
         HConsole.WriteLine(this, "Start failover client");
         await using var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
-        
+
         var clientImp = (HazelcastClient) client;
         clientImp.Cluster.State.Failover.ClusterChanged += _ =>
         {
             // During cluster changed event, members are cleared
-            if (!clientImp.Cluster.Members.GetMembers().Any()) latch.Set();
+            if (clientImp.Cluster.Members.GetMembers().Any()) latchExistMembers.Set();
+
+            // Member table should be filled but we cant use them to connect due to the failover. 
+            if (!clientImp.Cluster.Members.GetMembersForConnection().Any()) latchConnectMembers.Set();
         };
-        
+
+        await client.SubscribeAsync(events =>
+            events.MembersUpdated((sender, args) =>
+            {
+                // After cluster changed, member events should be triggered properly.
+                if (latchConnectMembers.WaitOne(0)
+                    && latchExistMembers.WaitOne(0)
+                    && args.RemovedMembers.Count > 0
+                    && args.AddedMembers.Count > 0)
+                {
+                    latchMembersUpdated.Set();
+                }
+
+            }));
+
         var mapName = CreateUniqueName();
         var map = await client.GetMapAsync<string, string>(mapName);
         Assert.IsNotNull(map);
@@ -369,7 +388,9 @@ internal class FailoverTests : RemoteTestBase
         await AssertStateEventually(states, ClientState.ClusterChanged);
         await AssertStateEventually(states, ClientState.Connected);
         await AssertCluster(client, _cluster0.Id, map);
-        Assert.True(latch.WaitOne(1_000));
+        Assert.True(latchExistMembers.WaitOne(1_000));
+        Assert.True(latchConnectMembers.WaitOne(1_000));
+        Assert.True(latchMembersUpdated.WaitOne(1_000));
     }
 
     [TestCase(true, 1)]

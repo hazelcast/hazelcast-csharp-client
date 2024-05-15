@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
     internal class ClusterMembers : IAsyncDisposable
     {
         private const int SqlConnectionRandomAttempts = 10;
-
+        private const int InvalidMemberTableVersion = -1;
         private readonly object _mutex = new();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
@@ -83,8 +83,10 @@ namespace Hazelcast.Clustering
 
             _clusterState.Failover.ClusterChanged += cluster =>
             {
-                // Clear old member table since failover happened.
-                _members = new MemberTable();
+                // Invalidate current member table. Cannot remove the tables due to the
+                // members updated event. It should be occur on AddConnection method.
+                lock (_mutex)
+                    _members = new MemberTable(InvalidMemberTableVersion, _members.Members);
             };
         }
 
@@ -203,15 +205,6 @@ namespace Hazelcast.Clustering
 
                 // add the connection
                 _connections[connection.MemberId] = connection;
-
-                if (isNewCluster)
-                {
-                    // reset members
-                    // this is safe because... isNewCluster means that this is the very first connection and there are
-                    // no other connections yet and therefore we should not receive events and therefore no one
-                    // should invoke SetMembers.
-                    _members = new MemberTable();
-                }
 
                 // if this is a true member connection
                 if (_members.TryGetMember(connection.MemberId, out var member) && IsMemberAddress(member, connection.Address))
@@ -841,6 +834,11 @@ namespace Hazelcast.Clustering
         {
             IEnumerable<MemberInfo> members = _members.Members;
             return liteOnly ? members.Where(x => x.IsLiteMember).ToList() : members;
+        }
+
+        public IEnumerable<MemberInfo> GetMembersForConnection()
+        {
+            return _members.Version == InvalidMemberTableVersion ? Enumerable.Empty<MemberInfo>() : GetMembers();
         }
 
         /// <summary>
