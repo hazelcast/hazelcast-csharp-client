@@ -8,3 +8,5 @@ static Hazelcast.Models.HLocalDate.explicit operator Hazelcast.Models.HLocalDate
 static Hazelcast.Models.HLocalDate.explicit operator System.DateOnly(Hazelcast.Models.HLocalDate localDate) -> System.DateOnly
 static Hazelcast.Models.HLocalTime.explicit operator Hazelcast.Models.HLocalTime(System.TimeOnly timeOnly) -> Hazelcast.Models.HLocalTime
 static Hazelcast.Models.HLocalTime.explicit operator System.TimeOnly(Hazelcast.Models.HLocalTime localTime) -> System.TimeOnly
+static Hazelcast.Models.HLocalTime.explicit operator System.TimeOnly(Hazelcast.Models.HLocalTime localTime) -> System.TimeOnly
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
