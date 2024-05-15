@@ -526,7 +526,6 @@ Hazelcast.Exceptions.HazelcastException.HazelcastException() -> void
 ~Hazelcast.Exceptions.HazelcastException.HazelcastException(string message) -> void
 ~Hazelcast.Exceptions.HazelcastException.HazelcastException(string message, System.Exception innerException) -> void
 ~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Exception innerException) -> void
-~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 Hazelcast.Exceptions.TargetDisconnectedException
 Hazelcast.Exceptions.TargetDisconnectedException.TargetDisconnectedException() -> void
 ~Hazelcast.Exceptions.TargetDisconnectedException.TargetDisconnectedException(string message) -> void
@@ -537,7 +536,6 @@ Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException() -> 
 ~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(string message) -> void
 ~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(string message, System.Exception innerException) -> void
 ~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(System.Exception innerException) -> void
-~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 Hazelcast.Exceptions.TaskTimeoutException
 ~Hazelcast.Exceptions.TaskTimeoutException.Task.get -> System.Threading.Tasks.Task
 Hazelcast.Exceptions.TaskTimeoutException.TaskTimeoutException() -> void
@@ -597,7 +595,6 @@ Hazelcast.HazelcastOptions.HazelcastOptions() -> void
 ~Hazelcast.HazelcastOptions.Networking.get -> Hazelcast.Networking.NetworkingOptions
 ~Hazelcast.HazelcastOptions.PatternMatcher.get -> Hazelcast.Core.IPatternMatcher
 ~Hazelcast.HazelcastOptions.PatternMatcher.set -> void
-~Hazelcast.HazelcastOptions.Preview.get -> Hazelcast.PreviewOptions
 ~Hazelcast.HazelcastOptions.Serialization.get -> Hazelcast.Serialization.SerializationOptions
 ~Hazelcast.HazelcastOptions.Subscribers.get -> System.Collections.Generic.IList<Hazelcast.IHazelcastClientEventSubscriber>
 Hazelcast.HazelcastOptionsBase
@@ -651,7 +648,6 @@ Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider) -> void
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(string categoryName) -> Microsoft.Extensions.Logging.ILogger
 Hazelcast.Messaging.MessagingOptions
-~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.get -> int
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.set -> void
 Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.get -> bool
@@ -854,7 +850,6 @@ Hazelcast.Networking.NetworkingOptions
 ~Hazelcast.Networking.NetworkingOptions.ConnectionRetry.get -> Hazelcast.Core.ConnectionRetryOptions
 Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.get -> int
 Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.set -> void
-~Hazelcast.Networking.NetworkingOptions.NetworkingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Networking.NetworkingOptions.Reconnect.get -> bool
 Hazelcast.Networking.NetworkingOptions.Reconnect.set -> void
 Hazelcast.Networking.NetworkingOptions.ReconnectMode.get -> Hazelcast.Networking.ReconnectMode
@@ -905,13 +900,6 @@ Hazelcast.Partitioning.Strategies.IPartitionAware
 ~Hazelcast.Partitioning.Strategies.IPartitionAware.GetPartitionKey() -> object
 Hazelcast.Partitioning.Strategies.IPartitioningStrategy
 ~Hazelcast.Partitioning.Strategies.IPartitioningStrategy.GetPartitionKey(object o) -> object
-Hazelcast.PreviewOptions
-~Hazelcast.PreviewOptions.Clone() -> Hazelcast.PreviewOptions
-Hazelcast.PreviewOptions.EnableNewReconnectOptions.get -> bool
-Hazelcast.PreviewOptions.EnableNewReconnectOptions.set -> void
-Hazelcast.PreviewOptions.EnableNewRetryOptions.get -> bool
-Hazelcast.PreviewOptions.EnableNewRetryOptions.set -> void
-Hazelcast.PreviewOptions.PreviewOptions() -> void
 Hazelcast.Projection.IProjection
 Hazelcast.Projection.Projections
 Hazelcast.Protocol.Models.RemoteError
@@ -1320,7 +1308,6 @@ Hazelcast.Serialization.SerializerOptions.SerializerOptions() -> void
 ~Hazelcast.Serialization.SerializerOptions.SerializerOptions(Hazelcast.Serialization.SerializerOptions other, bool shallow) -> void
 Hazelcast.Sql.HazelcastSqlException
 Hazelcast.Sql.HazelcastSqlException.ClientId.get -> System.Guid
-~Hazelcast.Sql.HazelcastSqlException.HazelcastSqlException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 Hazelcast.Sql.HazelcastSqlException.MemberId.get -> System.Guid
 ~Hazelcast.Sql.HazelcastSqlException.Suggestion.get -> string
 Hazelcast.Sql.ISqlQueryResult
@@ -1401,7 +1388,6 @@ override Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.GetMember() -> Sy
 ~override Hazelcast.Core.HazelcastJsonValue.Equals(object obj) -> bool
 override Hazelcast.Core.HazelcastJsonValue.GetHashCode() -> int
 ~override Hazelcast.Core.HazelcastJsonValue.ToString() -> string
-~override Hazelcast.Exceptions.ClientOfflineException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 override Hazelcast.Models.HBigDecimal.Equals(object? obj) -> bool
 override Hazelcast.Models.HBigDecimal.GetHashCode() -> int
 override Hazelcast.Models.HBigDecimal.ToString() -> string!
@@ -1431,7 +1417,6 @@ override Hazelcast.Models.MemberVersion.GetHashCode() -> int
 override Hazelcast.Networking.NetworkAddress.GetHashCode() -> int
 ~override Hazelcast.Networking.NetworkAddress.ToString() -> string
 ~override Hazelcast.Networking.SslOptions.ToString() -> string
-~override Hazelcast.Protocol.RemoteException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 ~override Hazelcast.Protocol.RemoteException.ToString() -> string
 ~override Hazelcast.Security.KerberosCredentials.ToString() -> string
 ~override Hazelcast.Security.TokenCredentials.ToString() -> string
@@ -1439,7 +1424,7 @@ override Hazelcast.Networking.NetworkAddress.GetHashCode() -> int
 ~override Hazelcast.Serialization.JavaClass.Equals(object obj) -> bool
 override Hazelcast.Serialization.JavaClass.GetHashCode() -> int
 ~override Hazelcast.Serialization.JavaClass.ToString() -> string
-~override Hazelcast.Sql.HazelcastSqlException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+
 ~override Hazelcast.Sql.SqlColumnMetadata.ToString() -> string
 ~static Hazelcast.Aggregation.Aggregators.BigIntegerSum() -> Hazelcast.Aggregation.IAggregator<System.Numerics.BigInteger>
 ~static Hazelcast.Aggregation.Aggregators.BigIntegerSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<System.Numerics.BigInteger>
@@ -1479,7 +1464,6 @@ static Hazelcast.Core.ClientStateExtensions.IsActiveState(this Hazelcast.ClientS
 static Hazelcast.Core.EndiannessExtensions.IsBigEndian(this Hazelcast.Core.Endianness endianness) -> bool
 static Hazelcast.Core.EndiannessExtensions.IsLittleEndian(this Hazelcast.Core.Endianness endianness) -> bool
 static Hazelcast.Core.EndiannessExtensions.NativeEndianness.get -> Hazelcast.Core.Endianness
-~static Hazelcast.Core.SerializationInfoExtensions.GetGuid(this System.Runtime.Serialization.SerializationInfo info, string name) -> System.Guid
 ~static Hazelcast.Core.ServiceFactory.CreateInstance(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> object
 ~static Hazelcast.Core.ServiceFactory.CreateInstance(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> object
 ~static Hazelcast.HazelcastClientFactory.GetNewStartingClient(Hazelcast.HazelcastOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
@@ -1849,13 +1833,11 @@ Hazelcast.Serialization.IGenericRecordBuilder.SetString(string! fieldname, strin
 Hazelcast.Serialization.IGenericRecordBuilder.SetTime(string! fieldname, Hazelcast.Models.HLocalTime? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
 Hazelcast.Serialization.IGenericRecordBuilder.SetTimeStamp(string! fieldname, Hazelcast.Models.HLocalDateTime? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
 Hazelcast.Serialization.IGenericRecordBuilder.SetTimeStampWithTimeZone(string! fieldname, Hazelcast.Models.HOffsetDateTime? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
-Hazelcast.Serialization.SerializationException.SerializationException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.get -> bool
 Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.set -> void
 Hazelcast.Serialization.UnknownCompactSchemaException
 Hazelcast.Serialization.UnknownCompactSchemaException.SchemaId.get -> long
 Hazelcast.Serialization.UnknownCompactSchemaException.UnknownCompactSchemaException(long schemaId) -> void
-override Hazelcast.Serialization.UnknownCompactSchemaException.GetObjectData(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 static Hazelcast.Models.HOffsetDateTime.explicit operator Hazelcast.Models.HOffsetDateTime(System.DateTimeOffset value) -> Hazelcast.Models.HOffsetDateTime
 static Hazelcast.Models.HOffsetDateTime.explicit operator System.DateTimeOffset(Hazelcast.Models.HOffsetDateTime value) -> System.DateTimeOffset
 static Hazelcast.Serialization.GenericRecordBuilder.Compact(string! typename) -> Hazelcast.Serialization.IGenericRecordBuilder!
@@ -1938,14 +1920,6 @@ Hazelcast.Models.CacheDeserializedValues
 Hazelcast.Models.CacheDeserializedValues.Always = 2 -> Hazelcast.Models.CacheDeserializedValues
 Hazelcast.Models.CacheDeserializedValues.IndexOnly = 1 -> Hazelcast.Models.CacheDeserializedValues
 Hazelcast.Models.CacheDeserializedValues.Never = 0 -> Hazelcast.Models.CacheDeserializedValues
-Hazelcast.Models.CacheSimpleEntryListenerOptions
-Hazelcast.Models.CacheSimpleEntryListenerOptions.CacheSimpleEntryListenerOptions() -> void
-Hazelcast.Models.CacheSimpleEntryListenerOptions.ClassId.get -> int
-Hazelcast.Models.CacheSimpleEntryListenerOptions.FactoryId.get -> int
-Hazelcast.Models.CacheSimpleEntryListenerOptions.OldValueRequired.get -> bool
-Hazelcast.Models.CacheSimpleEntryListenerOptions.OldValueRequired.set -> void
-Hazelcast.Models.CacheSimpleEntryListenerOptions.Synchronous.get -> bool
-Hazelcast.Models.CacheSimpleEntryListenerOptions.Synchronous.set -> void
 Hazelcast.Models.Capacity
 Hazelcast.Models.Capacity.Bytes.get -> long
 Hazelcast.Models.Capacity.Capacity(long value) -> void
@@ -2346,7 +2320,7 @@ virtual Hazelcast.Models.ListenerOptions.Local.set -> void
 ~Hazelcast.DistributedObjects.ReliableTopicMessageEventArgs<T>.ReliableTopicMessageEventArgs(Hazelcast.Models.MemberInfo member, long publishTime, T payload, long sequence, object state) -> void
 ~Hazelcast.DistributedObjects.ReliableTopicTerminatedEventArgs.ReliableTopicTerminatedEventArgs(long sequence, object state) -> void
 ~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(System.Exception innerException) -> void
-~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~static Hazelcast.Core.SerializationInfoExtensions.GetGuid(this System.Runtime.Serialization.SerializationInfo info, string name) -> System.Guid
 ~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(string message) -> void
 ~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(string message, System.Exception innerException) -> void
 ~Hazelcast.HazelcastOptions.ReliableTopics.get -> System.Collections.Generic.IDictionary<string, Hazelcast.Models.ReliableTopicOptions>
