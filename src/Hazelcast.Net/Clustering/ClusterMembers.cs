@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
     internal class ClusterMembers : IAsyncDisposable
     {
         private const int SqlConnectionRandomAttempts = 10;
-
+        private const int InvalidMemberTableVersion = -1;
         private readonly object _mutex = new();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
@@ -80,6 +80,14 @@ namespace Hazelcast.Clustering
                     lock (_mutex) return _members.ContainsMember(x);
                 }, _clusterState.LoggerFactory);
             }
+
+            _clusterState.Failover.ClusterChanged += cluster =>
+            {
+                // Invalidate current member table. Cannot remove the tables due to the
+                // members updated event. It should be occur on AddConnection method.
+                lock (_mutex)
+                    _members = new MemberTable(InvalidMemberTableVersion, _members.Members);
+            };
         }
 
         // NOTES
@@ -197,15 +205,6 @@ namespace Hazelcast.Clustering
 
                 // add the connection
                 _connections[connection.MemberId] = connection;
-
-                if (isNewCluster)
-                {
-                    // reset members
-                    // this is safe because... isNewCluster means that this is the very first connection and there are
-                    // no other connections yet and therefore we should not receive events and therefore no one
-                    // should invoke SetMembers.
-                    _members = new MemberTable();
-                }
 
                 // if this is a true member connection
                 if (_members.TryGetMember(connection.MemberId, out var member) && IsMemberAddress(member, connection.Address))
@@ -370,6 +369,7 @@ namespace Hazelcast.Clustering
                 msg.Append(status);
                 msg.AppendLine();
             }
+
             msg.Append('}');
 
             //Print only if there is a change
@@ -793,10 +793,11 @@ namespace Hazelcast.Clustering
         /// <returns>The oldest active connection, or <c>null</c> if no connection is active.</returns>
         public MemberConnection GetOldestConnection()
         {
-            lock (_mutex) return _connections.Values
-                .Where(x => x.Active)
-                .OrderBy(x => x.ConnectTime)
-                .FirstOrDefault();
+            lock (_mutex)
+                return _connections.Values
+                    .Where(x => x.Active)
+                    .OrderBy(x => x.ConnectTime)
+                    .FirstOrDefault();
         }
 
         /// <summary>
@@ -833,6 +834,11 @@ namespace Hazelcast.Clustering
         {
             IEnumerable<MemberInfo> members = _members.Members;
             return liteOnly ? members.Where(x => x.IsLiteMember).ToList() : members;
+        }
+
+        public IEnumerable<MemberInfo> GetMembersForConnection()
+        {
+            return _members.Version == InvalidMemberTableVersion ? Enumerable.Empty<MemberInfo>() : GetMembers();
         }
 
         /// <summary>
