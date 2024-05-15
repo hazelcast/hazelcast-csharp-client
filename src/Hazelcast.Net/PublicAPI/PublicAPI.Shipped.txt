@@ -1884,16 +1884,6 @@ override Hazelcast.Models.DistributedObjectInfo.GetHashCode() -> int
 ~static Hazelcast.Models.DistributedObjectInfo.operator !=(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
 ~static Hazelcast.Models.DistributedObjectInfo.operator ==(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
 ~override Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.get -> Microsoft.Extensions.Logging.ILoggerFactory
-*REMOVED*Hazelcast.PreviewOptions
-*REMOVED*Hazelcast.PreviewOptions.EnableNewReconnectOptions.get -> bool
-*REMOVED*Hazelcast.PreviewOptions.EnableNewReconnectOptions.set -> void
-*REMOVED*Hazelcast.PreviewOptions.EnableNewRetryOptions.get -> bool
-*REMOVED*Hazelcast.PreviewOptions.EnableNewRetryOptions.set -> void
-*REMOVED*Hazelcast.PreviewOptions.PreviewOptions() -> void
-*REMOVED*~Hazelcast.HazelcastOptions.Preview.get -> Hazelcast.PreviewOptions
-*REMOVED*~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
-*REMOVED*~Hazelcast.Networking.NetworkingOptions.NetworkingOptions(Hazelcast.PreviewOptions preview = null) -> void
-*REMOVED*~Hazelcast.PreviewOptions.Clone() -> Hazelcast.PreviewOptions
 const Hazelcast.Models.QueryCacheOptions.Defaults.DelaySeconds = 0 -> int
 const Hazelcast.Models.QueryCacheOptions.Defaults.InMemoryFormat = Hazelcast.Core.InMemoryFormat.Binary -> Hazelcast.Core.InMemoryFormat
 const Hazelcast.Models.RingbufferOptions.Defaults.InMemoryFormat = Hazelcast.Core.InMemoryFormat.Binary -> Hazelcast.Core.InMemoryFormat
@@ -2375,13 +2365,6 @@ virtual Hazelcast.Models.ListenerOptions.Local.set -> void
 ~Hazelcast.Models.BitmapIndexOptions.ReadData(Hazelcast.Serialization.IObjectDataInput input) -> void
 ~Hazelcast.Models.BitmapIndexOptions.SetUniqueKey(string uniqueKey) -> Hazelcast.Models.BitmapIndexOptions
 ~Hazelcast.Models.BitmapIndexOptions.WriteData(Hazelcast.Serialization.IObjectDataOutput output) -> void
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.CacheEntryEventFilterFactory.get -> string
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.CacheEntryEventFilterFactory.set -> void
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.CacheEntryListenerFactory.get -> string
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.CacheEntryListenerFactory.set -> void
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.CacheSimpleEntryListenerOptions(Hazelcast.Models.CacheSimpleEntryListenerOptions listenerConfig) -> void
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.ReadData(Hazelcast.Serialization.IObjectDataInput input) -> void
-~Hazelcast.Models.CacheSimpleEntryListenerOptions.WriteData(Hazelcast.Serialization.IObjectDataOutput output) -> void
 ~Hazelcast.Models.Capacity.ToPrettyString() -> string
 ~Hazelcast.Models.DataPersistenceOptions.DataPersistenceOptions(Hazelcast.Models.DataPersistenceOptions dataPersistenceConfig) -> void
 ~Hazelcast.Models.DataPersistenceOptions.ReadData(Hazelcast.Serialization.IObjectDataInput input) -> void
@@ -2606,7 +2589,6 @@ virtual Hazelcast.Models.ListenerOptions.Local.set -> void
 ~const Hazelcast.Models.MergePolicyOptions.Defaults.MergePolicy = "com.hazelcast.spi.merge.PutIfAbsentMergePolicy" -> string
 ~const Hazelcast.NearCaching.NearCacheOptions.Defaults.Name = "default" -> string
 ~override Hazelcast.Models.AttributeOptions.ToString() -> string
-~override Hazelcast.Models.CacheSimpleEntryListenerOptions.ToString() -> string
 ~override Hazelcast.Models.Capacity.ToString() -> string
 ~override Hazelcast.Models.DataPersistenceOptions.ToString() -> string
 ~override Hazelcast.Models.DiskTierOptions.ToString() -> string
@@ -2642,3 +2624,27 @@ virtual Hazelcast.Models.ListenerOptions.Local.set -> void
 ~static readonly Hazelcast.Models.MemoryTierOptions.Defaults.Capacity -> Hazelcast.Models.Capacity
 ~virtual Hazelcast.Models.ListenerOptions.ReadData(Hazelcast.Serialization.IObjectDataInput input) -> void
 ~virtual Hazelcast.Models.ListenerOptions.WriteData(Hazelcast.Serialization.IObjectDataOutput output) -> void
+Hazelcast.CP.ICountDownLatch
+Hazelcast.CP.ICPMap<TKey, TValue>
+Hazelcast.CP.ISemaphore
+~Hazelcast.CP.ICountDownLatch.AwaitAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.ICountDownLatch.CountDownAsync() -> System.Threading.Tasks.Task
+~Hazelcast.CP.ICountDownLatch.GetCountAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.CP.ICountDownLatch.TrySetCountAsync(int count) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.ICPMap<TKey, TValue>.CompareAndSetAsync(TKey key, TValue expectedValue, TValue newValue) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.ICPMap<TKey, TValue>.DeleteAsync(TKey key) -> System.Threading.Tasks.Task
+~Hazelcast.CP.ICPMap<TKey, TValue>.GetAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.CP.ICPMap<TKey, TValue>.PutAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.CP.ICPMap<TKey, TValue>.RemoveAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.CP.ICPMap<TKey, TValue>.SetAsync(TKey key, TValue value) -> System.Threading.Tasks.Task
+~Hazelcast.CP.ICPSubsystem.GetCountDownLatchAsync(string name) -> System.Threading.Tasks.Task<Hazelcast.CP.ICountDownLatch>
+~Hazelcast.CP.ICPSubsystem.GetMapAsync<TKey, TValue>(string name) -> System.Threading.Tasks.Task<Hazelcast.CP.ICPMap<TKey, TValue>>
+~Hazelcast.CP.ICPSubsystem.GetSemaphore(string name) -> System.Threading.Tasks.Task<Hazelcast.CP.ISemaphore>
+~Hazelcast.CP.ISemaphore.AcquireAsync(int permits = 1) -> System.Threading.Tasks.Task
+~Hazelcast.CP.ISemaphore.DrainPermitsAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.CP.ISemaphore.GetAvailablePermitsAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.CP.ISemaphore.IncreasePermitsAsync(int delta) -> System.Threading.Tasks.Task
+~Hazelcast.CP.ISemaphore.InitializeAsync(int permits = 1) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.ISemaphore.ReducePermitsAsync(int delta) -> System.Threading.Tasks.Task
+~Hazelcast.CP.ISemaphore.ReleaseAsync(int permits = 1) -> System.Threading.Tasks.Task
+~Hazelcast.CP.ISemaphore.TryAcquireAsync(int permits = 1, long timeoutMs = 0) -> System.Threading.Tasks.Task<bool>
