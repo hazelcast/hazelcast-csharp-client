@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Failover (Blue/Green) | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Failover (Blue/Green) | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.4.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="failover-bluegreen">Failover (Blue/Green)</h1>
+
+<p>Failover is a cluster backup feature. In case of connected cluster is not reachable anymore, client will use the reconnection strategy and try to reconnect to current one. If connection still cannot be established, client will try to connect next configured cluster. After failover is occurred successfully, client state will be changed from <code>Disconnected</code> to <code>ClusterChanged</code> then <code>Connected</code>. Also, client can be black listed from cluster, that will force client to failover to next configured cluster.</p>
+<hr>
+<p>Initialization of a failover client.</p>
+<pre><code class="lang-csharp">var options = new HazelcastFailoverOptionsBuilder()
+                .With(fo =&gt;
+                {
+                    fo.TryCount = 2;//&lt;1&gt;
+                    
+                    fo.Clients.Add(new HazelcastOptionsBuilder().With(opt =&gt; {//&lt;2&gt;
+                        opt.ClusterName = &quot;blue&quot;;
+                        opt.Networking.Addresses.Add(&quot;CLUSTER_ADDRESS&quot;);
+                        opt.Networking.SmartRouting = true;
+                    }).Build());
+                    
+                    fo.Clients.Add(new HazelcastOptionsBuilder().With(opt =&gt; {//&lt;3&gt;
+                        opt.ClusterName = &quot;green&quot;;
+                        opt.Networking.Addresses.Add(&quot;CLUSTER_ADDRESS&quot;);
+                    }).Build());
+
+                })
+                .With(args)
+                .Build();
+
+await using var client = await HazelcastClientFactory.StartNewFailoverClientAsync(options); //&lt;4&gt;
+
+</code></pre>
+<p><strong>(1)</strong> Sets max try count. Try count is maximum number of going over clusters.</p>
+<p>Let's assume both clusters are down, and we just initialize the client. Client will do;</p>
+<ul>
+<li>First try to <code>blue</code>, than it will fail.</li>
+<li>Try <code>green</code>, than it will fail.</li>
+<li>Try <code>blue</code>, than it will fail.</li>
+<li>Try <code>green</code>, than it will shutdown since try count is exhausted.</li>
+</ul>
+<blockquote>
+<p>Note: At each step, reconnection strategy will be used. Client won't change the cluster without retry the current one. Failover will be occurred as a last option.</p>
+</blockquote>
+<p><strong>(2)</strong> Client configuration for the first cluster to be connected. Note that first <code>HazelcastOptionsBuilder</code> is able to configure to everything on the client, such as <code>HeartBeat</code>, <code>LoadBalancer</code> etc. This part is still <code>HazelcastOptions</code>. See details for client options <a href="configuration/options.html">Options</a>.</p>
+<p><strong>(3)</strong> Alternative cluster options. Alternative options are only for connection and authentication. Alternative client options cannot override other fields. General configuration should be done in first client options which is step <strong>1</strong>. For example, here <strong>3</strong>, we cannot change the <code>SmartRouting</code> for each cluster. Also, for server side, provided cluster must have <strong>same partition count</strong>. Client cannot failover to a cluster with different partition count.</p>
+<p><strong>(4)</strong> Initialize the client with failover feature. <strong>Failover client uses different options builder and different factory method.</strong></p>
+<hr>
+<p>Alternatively, options can be also done in <code>appsettings.json</code>.</p>
+<pre><code class="lang-json">{      
+  &quot;hazelcast-failover&quot;: { // &quot;hazelcast-failover&quot; is a different section. Please don't confuse with &quot;hazelcast&quot; section. You should either use &quot;hazelcast-failover&quot; or &quot;hazelcast&quot;.
+      &quot;tryCount&quot;: 2,
+      &quot;clients&quot;:[
+          {
+            // name of the cluster
+            &quot;clusterName&quot;: &quot;blue&quot;,
+            // networking options
+            &quot;networking&quot;: {
+                // cluster addresses
+                &quot;addresses&quot;: [
+                    &quot;CLUSTER_ADDRESS&quot;
+                ]
+            }
+          },
+
+          ///Alternative cluster options, only for connection and authentication options.
+          {
+            // name of the cluster
+            &quot;clusterName&quot;: &quot;green&quot;,
+            // networking options
+            &quot;networking&quot;: {
+                // alternative cluster, in this case it's cloud with ssl.
+                &quot;cloud&quot;: {
+                    &quot;enabled&quot;: true,
+                    &quot;discoveryToken&quot;: &quot;token&quot;                    
+                }, 
+                &quot;ssl&quot;: {
+                    &quot;enabled&quot;: true,
+                    &quot;validateCertificateChain&quot;: false,
+                    &quot;validateCertificateName&quot;: true,
+                    &quot;checkCertificateRevocation&quot;: true,
+                    &quot;certificateName&quot;: &quot;cert&quot;,
+                    &quot;certificatePath&quot;: &quot;path&quot;,
+                    &quot;certificatePassword&quot;: &quot;password&quot;,
+                    &quot;protocol&quot;: &quot;tls11&quot;
+                },
+            }
+        }
+      ]  
+  }
+}
+</code></pre>
+<p>For details reading from alternative resources <a href="configuration/sources.html">see details</a></p>
+<p>As it is seen, <code>HazelcastFailoverOptions</code> is a list of <code>HazelcastOptions</code> basically. You can find more details about <code>HazelcastOptions</code> <a href="configuration/options.html">here</a>.</p>
+<p>More about Blue/Green feature <a href="https://docs.hazelcast.com/hazelcast/latest/getting-started/blue-green">see details</a>.</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

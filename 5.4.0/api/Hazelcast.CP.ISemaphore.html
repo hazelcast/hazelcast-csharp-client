@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>ISemaphore Interface
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="ISemaphore Interface
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.4.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.CP.ISemaphore">
+
+
+
+  <h1 id="Hazelcast_CP_ISemaphore" data-uid="Hazelcast.CP.ISemaphore" class="text-break">ISemaphore Interface
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.CP.html">CP</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Defines a CP distributed semaphore.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public interface ISemaphore : ICPDistributedObject, IDistributedObject, IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.CP.ICPDistributedObject.GroupId.html#Hazelcast_CP_ICPDistributedObject_GroupId">ICPDistributedObject.GroupId</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_CP_ISemaphore_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>ISemaphore is a fault-tolerant distributed semaphore. Semaphores are often used
+ to restrict the number of threads than can access some physical or logical resource.</p>
+<p>ISemaphore is a cluster-wide counting semaphore. Conceptually, it maintains a set
+ of permits. Permits are acquired with the <a class="xref" href="Hazelcast.CP.ISemaphore.AcquireAsync.html#Hazelcast_CP_ISemaphore_AcquireAsync_System_Int32_">AcquireAsync(int)</a> and <a class="xref" href="Hazelcast.CP.ISemaphore.TryAcquireAsync.html#Hazelcast_CP_ISemaphore_TryAcquireAsync_System_Int32_System_Int64_">TryAcquireAsync(int, long)</a>
+ functions, and released with the <a class="xref" href="Hazelcast.CP.ISemaphore.ReleaseAsync.html#Hazelcast_CP_ISemaphore_ReleaseAsync_System_Int32_">ReleaseAsync(int)</a> function. No actual permit objects
+ are used: the semaphore just keeps a count of the number available and acts accordingly.</p>
+<p>Correct usage of a semaphore is established by programming convention in the
+ application. A semaphore is obtained via <pre><code class="lang-csharp">client.CPSubsystem.GetSemaphoreAsync(name)</code></pre>
+ and works on top of the Raft consensus algorithm. It offers linearizability during crash
+ failures and network partitions. It is CP with respect to the CAP principle. If a network
+ partition occurs, it remains available on at most one side of the partition.
+<p>There are two variations of the <a class="xref" href="Hazelcast.CP.ISemaphore.html">ISemaphore</a> interface.</p>
+<p>The default implementation is session-aware. When a caller interacts with the semaphore
+ for the first time, it starts a new CP session within the underlying CP group. Liveliness of
+ the session is then tracked via this CP session. Should the caller fails, permits acquired by
+ this client are automatically and safely released.</p>
+<p>Note however that a session-aware semaphore cannot release permits that have not been
+ acquired beforehand; in other words it can only release previously acquired permits. It is
+ possible to acquire a permit on one lock context, and release it on another lock context
+ from the same client, but not from different clients.</p>
+<p>The second impl offered by { @link CPSubsystem} is session-less. This implementation
+ does not perform auto-cleanup of acquired permits on failures. Acquired permits are not bound to
+ a client and permits can be released without being acquired first. This would be more
+ compatible with Java's semaphore release mode. It can be enabled by enabling JDK compatibility
+ when configuring the semaphore.</p>
+<p>Note however that the user needs to handle failed permit owners on their own. If a server
+ or a client fails while holding some permits, they will not be automatically released.</p>
+<p>There is a subtle difference between the lock and semaphore abstractions.</p>
+<p>A lock can be assigned to at most one endpoint at a time, so we have a total order among
+ its holders. On the other hand, permits of a semaphore can be assigned to multiple endpoints
+ at a time, which implies that we may not have a total order among permit holders. In fact,
+ permit holders are partially ordered.</p>
+</div>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_AcquireAsync_System_Int32_" data-uid="Hazelcast.CP.ISemaphore.AcquireAsync(System.Int32)">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.AcquireAsync.html#Hazelcast_CP_ISemaphore_AcquireAsync_System_Int32_">AcquireAsync(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Acquires permits immediately, if enough are available, and returns immediately.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_DrainPermitsAsync" data-uid="Hazelcast.CP.ISemaphore.DrainPermitsAsync">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.DrainPermitsAsync.html#Hazelcast_CP_ISemaphore_DrainPermitsAsync">DrainPermitsAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Acquires and returns all permits that are available.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_GetAvailablePermitsAsync" data-uid="Hazelcast.CP.ISemaphore.GetAvailablePermitsAsync">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.GetAvailablePermitsAsync.html#Hazelcast_CP_ISemaphore_GetAvailablePermitsAsync">GetAvailablePermitsAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the number of available permits.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_IncreasePermitsAsync_System_Int32_" data-uid="Hazelcast.CP.ISemaphore.IncreasePermitsAsync(System.Int32)">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.IncreasePermitsAsync.html#Hazelcast_CP_ISemaphore_IncreasePermitsAsync_System_Int32_">IncreasePermitsAsync(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Increases the number of available permits.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_InitializeAsync_System_Int32_" data-uid="Hazelcast.CP.ISemaphore.InitializeAsync(System.Int32)">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.InitializeAsync.html#Hazelcast_CP_ISemaphore_InitializeAsync_System_Int32_">InitializeAsync(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Tries to initialize this semaphore instance with the specified number of permits.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_ReducePermitsAsync_System_Int32_" data-uid="Hazelcast.CP.ISemaphore.ReducePermitsAsync(System.Int32)">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.ReducePermitsAsync.html#Hazelcast_CP_ISemaphore_ReducePermitsAsync_System_Int32_">ReducePermitsAsync(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reduces the number of available permits.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_ReleaseAsync_System_Int32_" data-uid="Hazelcast.CP.ISemaphore.ReleaseAsync(System.Int32)">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.ReleaseAsync.html#Hazelcast_CP_ISemaphore_ReleaseAsync_System_Int32_">ReleaseAsync(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Releases previously acquired permits.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ISemaphore_TryAcquireAsync_System_Int32_System_Int64_" data-uid="Hazelcast.CP.ISemaphore.TryAcquireAsync(System.Int32,System.Int64)">
+          <a class="xref" href="Hazelcast.CP.ISemaphore.TryAcquireAsync.html#Hazelcast_CP_ISemaphore_TryAcquireAsync_System_Int32_System_Int64_">TryAcquireAsync(int, long)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Tries to acquire permits, if enough are available, within the specified timeout duration.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

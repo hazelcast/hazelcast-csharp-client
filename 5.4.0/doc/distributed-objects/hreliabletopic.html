@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>HReliableTopic | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="HReliableTopic | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../../styles/docfx.css">
+      <link rel="stylesheet" href="../../../styles/main.css">
+      <link rel="stylesheet" href="../../../styles/hz.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.4.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="hreliabletopic">HReliableTopic</h1>
+
+<p>A <code>HReliableTopic</code> topic is the durable version of <a href="/htopic.md">HTopic</a> backed with a <a href="/hringbuffer.md">HRingBuffer</a>.</p>
+<p>The reliable topic behavior can be configured on the server: see the general <a href="https://docs.hazelcast.com/imdg/latest/data-structures/reliable-topic">Documentation</a> for complete details about reliable topics.</p>
+<h2 id="defining-topics">Defining Topics</h2>
+<p>Topics are fully identified by their type and unique name, regardless of the types specified for topic messages. In other words, an <code>HReliableTopic&lt;string&gt;</code> and an <code>HReliableTopic&lt;int&gt;</code> named with the same name are backed by the <em>same</em> cluster structure which is a <a href="/hringbuffer.md">RingBuffer</a>. Obviously, refering to a topic with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.</p>
+<p>The messages type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the <a href="../serialization.html">Serialization</a> documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.</p>
+<h2 id="creating--destroying-topics">Creating &amp; Destroying Topics</h2>
+<p>A reliable topic is obtained from the Hazelcast .NET Client, and is created on-demand: if a reliable topic with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:</p>
+<pre><code class="lang-csharp">var rTopic = await client.GetReliableTopicAsync&lt;string&gt;(&quot;my-reliableTopic&quot;);
+</code></pre>
+<h2 id="configuring-the-hreliabletopic">Configuring the HReliableTopic</h2>
+<p>There are three different parts can be configured. One is server side configuration, size of the backed ring buffer, TTL, overflow policy etc. Second is the reliable topic behavior on the client side, such as <code>ReliableTopicOptions.BatchSize</code> and <code>ReliableTopicOptions.Policy</code>. The batch size sets the number of messages read by the listener at once. And, overflow policy defines the behavior during publishing a message over <code>HReliableTopic</code>. Third one is for listener. The subscription is made to a <code>HReliableTopic</code> results in a listener. Some of the behaviors of the listener can be configured. For example, Los tolerancy, initial sequnce to start from, storing the sequence of the last read message and whether terminate the listener in case of an exception.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>To have a durable listener, set <code>IsLossTolerant</code> to <code>false</code> and <code>StoreSequence</code> to <code>true</code>.</p>
+</div>
+<p>Topics should be disposed after usage, in order to release their resources. Note that this only releases <em>client-side</em> resources, but the actual data remain available on the cluster for further usage. In order to wipe the topic and its data entirely from the cluster, it needs to be destroyed:</p>
+<pre><code class="lang-csharp">await rTopic.DestroyAsync();
+</code></pre>
+<h2 id="using-reliable-topics">Using Reliable Topics</h2>
+<p>The <code>HReliableTopic</code> structure is completely documented in the associated @Hazelcast.DistributedObjects.ReliableTopic`1 reference documentation. It provides a method to publish messages:</p>
+<ul>
+<li><code>PublishAsync(message)</code> publishes a message</li>
+</ul>
+<p>The <code>HReliableTopic</code> structure exposes events in a way similar to <code>HTopic</code>, but with some additions. When a subscription is made to a <code>HReliableTopic</code>, a background task is spawned. It listens to messages from the backing <code>HRingBuffer</code>, and triggers the corresponding <code>Message</code> topic events.</p>
+<p>In addition,</p>
+<ul>
+<li><p>The <code>Exception</code> event is raised when a message can not be processed, either because it can not be deserialized, or because an exception is thrown by one of the <code>Message</code> event handlers and interrupts the handling of the message. In this situation, by default, the subscription terminates, because it is not supposed to &quot;skip&quot; messages. It is however possible to cancel that termination by setting the <code>Cancel</code> event arguments property to <code>true</code>, in which case the subscription will move on to the next messages.</p>
+</li>
+<li><p>The <code>Terminated</code> event is raised when the subscription terminates, either because of a non-canceled exception (see above), or when anything goes wrong with the underlying buffer (overload, loss...), or when it is actively terminated by e.g. disposing the reliable topic instance. Finally, the behavior of the subscription can be configured via the <code>ReliableTopicEventHandlerOptions</code>.</p>
+</li>
+</ul>
+<blockquote>
+<p>[!NOTE] The similar event exist in other Hazelcast clients as the <code>onCancel</code> function callback at the listener interface.</p>
+</blockquote>
+<pre><code class="lang-csharp">var id = await topic.SubscribeAsync(events =&gt; events
+    .Message((sender, args) =&gt; {
+        logger.LogInformation($&quot;Got message {args.Payload} at {args.PublishTime}.&quot;);
+    })
+    .Terminated((sender, args) =&gt;{
+        logger.LogInformation($&quot;Listener disposed at sequence {args.Sequence}.&quot;);
+     }),
+     .Exception((sender, args) =&gt;
+    {
+        // Terminate the subscription if client goes offline.
+        if (args.Exception is ClientOfflineException)
+            args.Cancel = true;
+    }),
+    // Setting StoreSequence=true and IsLossTolerant=false means listener is durable.
+    new ReliableTopicEventHandlerOptions() {InitialSequence = -1, StoreSequence = true, IsLossTolerant = false});
+
+// ...
+
+await rTopic.UnsubscribeAsync(id);
+</code></pre>
+<p>Note that, as with all events in the .NET client, the handler methods passed when subscribing can be asynchronous.</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

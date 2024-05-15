@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>HOffsetDateTime Struct
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="HOffsetDateTime Struct
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.4.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Models.HOffsetDateTime">
+
+
+
+  <h1 id="Hazelcast_Models_HOffsetDateTime" data-uid="Hazelcast.Models.HOffsetDateTime" class="text-break">HOffsetDateTime Struct
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Models.html">Models</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents an Hazelcast <code>TIMESTAMP_WITH_TIME_ZONE</code> primitive type value.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public readonly struct HOffsetDateTime : IEquatable&lt;HOffsetDateTime&gt;</code></pre>
+  </div>
+  <div class="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a>&gt;</div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_Models_HOffsetDateTime_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>The <code>TIMESTAMP_WITH_TIME_ZONE</code> primitive type consists of a <code>TIMESTAMP</code><a class="xref" href="Hazelcast.Models.HOffsetDateTime.LocalDateTime.html#Hazelcast_Models_HOffsetDateTime_LocalDateTime">LocalDateTime</a> and a timezone <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Offset.html#Hazelcast_Models_HOffsetDateTime_Offset">Offset</a>.</p>
+<p>The offset ranges between <a class="xref" href="Hazelcast.Models.HOffsetDateTime.MinOffset.html">MinOffset</a> and <a class="xref" href="Hazelcast.Models.HOffsetDateTime.MaxOffset.html">MaxOffset</a> inclusive.
+with a 1 second precision, smaller values being rounded and lost during serialization.</p>
+</div>
+  <h3 id="constructors">Constructors
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime__ctor_Hazelcast_Models_HLocalDateTime_System_Int32_" data-uid="Hazelcast.Models.HOffsetDateTime.#ctor(Hazelcast.Models.HLocalDateTime,System.Int32)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.-ctor.html#Hazelcast_Models_HOffsetDateTime__ctor_Hazelcast_Models_HLocalDateTime_System_Int32_">HOffsetDateTime(HLocalDateTime, int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> struct.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime__ctor_Hazelcast_Models_HLocalDateTime_System_TimeSpan_" data-uid="Hazelcast.Models.HOffsetDateTime.#ctor(Hazelcast.Models.HLocalDateTime,System.TimeSpan)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.-ctor.html#Hazelcast_Models_HOffsetDateTime__ctor_Hazelcast_Models_HLocalDateTime_System_TimeSpan_">HOffsetDateTime(HLocalDateTime, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> struct.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime__ctor_System_DateTime_System_TimeSpan_" data-uid="Hazelcast.Models.HOffsetDateTime.#ctor(System.DateTime,System.TimeSpan)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.-ctor.html#Hazelcast_Models_HOffsetDateTime__ctor_System_DateTime_System_TimeSpan_">HOffsetDateTime(DateTime, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> struct.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime__ctor_System_DateTimeOffset_" data-uid="Hazelcast.Models.HOffsetDateTime.#ctor(System.DateTimeOffset)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.-ctor.html#Hazelcast_Models_HOffsetDateTime__ctor_System_DateTimeOffset_">HOffsetDateTime(DateTimeOffset)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> struct.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_Max" data-uid="Hazelcast.Models.HOffsetDateTime.Max">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Max.html">Max</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the largest possible value of a <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_MaxOffset" data-uid="Hazelcast.Models.HOffsetDateTime.MaxOffset">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.MaxOffset.html">MaxOffset</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the largest possible value of the offset part.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_Min" data-uid="Hazelcast.Models.HOffsetDateTime.Min">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Min.html">Min</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the smallest possible value of a <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_MinOffset" data-uid="Hazelcast.Models.HOffsetDateTime.MinOffset">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.MinOffset.html">MinOffset</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the smallest possible value of the offset part.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_LocalDateTime" data-uid="Hazelcast.Models.HOffsetDateTime.LocalDateTime">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.LocalDateTime.html#Hazelcast_Models_HOffsetDateTime_LocalDateTime">LocalDateTime</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the local date and time part.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_Offset" data-uid="Hazelcast.Models.HOffsetDateTime.Offset">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Offset.html#Hazelcast_Models_HOffsetDateTime_Offset">Offset</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the offset part.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_Equals_Hazelcast_Models_HOffsetDateTime_" data-uid="Hazelcast.Models.HOffsetDateTime.Equals(Hazelcast.Models.HOffsetDateTime)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Equals.html#Hazelcast_Models_HOffsetDateTime_Equals_Hazelcast_Models_HOffsetDateTime_">Equals(HOffsetDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Indicates whether the current object is equal to another object of the same type.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_Equals_System_Object_" data-uid="Hazelcast.Models.HOffsetDateTime.Equals(System.Object)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Equals.html#Hazelcast_Models_HOffsetDateTime_Equals_System_Object_">Equals(object?)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Indicates whether this instance and a specified object are equal.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_GetHashCode" data-uid="Hazelcast.Models.HOffsetDateTime.GetHashCode">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.GetHashCode.html#Hazelcast_Models_HOffsetDateTime_GetHashCode">GetHashCode()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the hash code for this instance.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_Parse_System_String_" data-uid="Hazelcast.Models.HOffsetDateTime.Parse(System.String)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.Parse.html#Hazelcast_Models_HOffsetDateTime_Parse_System_String_">Parse(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the string representation of a date and time with timezone to its <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> equivalent.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_ToDateTimeOffset" data-uid="Hazelcast.Models.HOffsetDateTime.ToDateTimeOffset">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.ToDateTimeOffset.html#Hazelcast_Models_HOffsetDateTime_ToDateTimeOffset">ToDateTimeOffset()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the value of this instance to its <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetimeoffset">DateTimeOffset</a> equivalent.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_ToString" data-uid="Hazelcast.Models.HOffsetDateTime.ToString">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.ToString.html#Hazelcast_Models_HOffsetDateTime_ToString">ToString()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the fully qualified type name of this instance.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_TryParse_System_String_Hazelcast_Models_HOffsetDateTime__" data-uid="Hazelcast.Models.HOffsetDateTime.TryParse(System.String,Hazelcast.Models.HOffsetDateTime@)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.TryParse.html#Hazelcast_Models_HOffsetDateTime_TryParse_System_String_Hazelcast_Models_HOffsetDateTime__">TryParse(string, out HOffsetDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the string representation of a date and time with timezone to its <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> equivalent.
+A return value indicates whether the operation succeeded.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_TryToDateTimeOffset_System_DateTimeOffset__" data-uid="Hazelcast.Models.HOffsetDateTime.TryToDateTimeOffset(System.DateTimeOffset@)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.TryToDateTimeOffset.html#Hazelcast_Models_HOffsetDateTime_TryToDateTimeOffset_System_DateTimeOffset__">TryToDateTimeOffset(out DateTimeOffset)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Converts the value of this instance to its <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetimeoffset">DateTimeOffset</a> equivalent.
+A return value indicates whether the operation succeeded.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_op_Equality_Hazelcast_Models_HOffsetDateTime_Hazelcast_Models_HOffsetDateTime_" data-uid="Hazelcast.Models.HOffsetDateTime.op_Equality(Hazelcast.Models.HOffsetDateTime,Hazelcast.Models.HOffsetDateTime)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.op_Equality.html#Hazelcast_Models_HOffsetDateTime_op_Equality_Hazelcast_Models_HOffsetDateTime_Hazelcast_Models_HOffsetDateTime_">operator ==(HOffsetDateTime, HOffsetDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the == operator.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_op_Explicit_Hazelcast_Models_HOffsetDateTime__System_DateTimeOffset" data-uid="Hazelcast.Models.HOffsetDateTime.op_Explicit(Hazelcast.Models.HOffsetDateTime)~System.DateTimeOffset">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.op_Explicit.html#Hazelcast_Models_HOffsetDateTime_op_Explicit_Hazelcast_Models_HOffsetDateTime__System_DateTimeOffset">explicit operator DateTimeOffset(HOffsetDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> to <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetimeoffset">DateTimeOffset</a> conversion.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_op_Explicit_System_DateTimeOffset__Hazelcast_Models_HOffsetDateTime" data-uid="Hazelcast.Models.HOffsetDateTime.op_Explicit(System.DateTimeOffset)~Hazelcast.Models.HOffsetDateTime">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.op_Explicit.html#Hazelcast_Models_HOffsetDateTime_op_Explicit_System_DateTimeOffset__Hazelcast_Models_HOffsetDateTime">explicit operator HOffsetDateTime(DateTimeOffset)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetimeoffset">DateTimeOffset</a> to <a class="xref" href="Hazelcast.Models.HOffsetDateTime.html">HOffsetDateTime</a> conversion.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_HOffsetDateTime_op_Inequality_Hazelcast_Models_HOffsetDateTime_Hazelcast_Models_HOffsetDateTime_" data-uid="Hazelcast.Models.HOffsetDateTime.op_Inequality(Hazelcast.Models.HOffsetDateTime,Hazelcast.Models.HOffsetDateTime)">
+          <a class="xref" href="Hazelcast.Models.HOffsetDateTime.op_Inequality.html#Hazelcast_Models_HOffsetDateTime_op_Inequality_Hazelcast_Models_HOffsetDateTime_Hazelcast_Models_HOffsetDateTime_">operator !=(HOffsetDateTime, HOffsetDateTime)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Implements the != operator.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
