@@ -525,7 +525,7 @@ namespace Hazelcast.Clustering
             }
 
             // get known members' addresses
-            var addresses = _clusterMembers.GetMembers().Select(x => x.ConnectAddress);
+            var addresses = _clusterMembers.GetMembersForConnection().Select(x => x.ConnectAddress);
             foreach (var address in Distinct(addresses, distinct, shuffle))
                 yield return address;
 
