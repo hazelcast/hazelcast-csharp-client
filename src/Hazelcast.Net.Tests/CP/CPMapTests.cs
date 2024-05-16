@@ -28,7 +28,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.CP;
 
 [Category("enterprise")]
-[ServerCondition("[5.4)")]
+[ServerCondition("5.4")]
 public class CPMapTests : MultiMembersRemoteTestBase
 {
     private string _defaultMapName = "myMap";
