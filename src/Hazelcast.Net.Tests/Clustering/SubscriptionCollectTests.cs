@@ -85,11 +85,11 @@ namespace Hazelcast.Tests.Clustering
             var options = new HazelcastOptionsBuilder()
                 .WithHConsoleLogger()
                 .With(options =>
-            {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
-                options.Networking.Addresses.Add("127.0.0.1:11002");
-                options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
-            }).Build();
+                {
+                    options.Networking.Addresses.Add("127.0.0.1:11001");
+                    options.Networking.Addresses.Add("127.0.0.1:11002");
+                    options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
+                }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Get map");
@@ -187,120 +187,120 @@ namespace Hazelcast.Tests.Clustering
             {
                 // must handle auth
                 case ClientAuthenticationServerCodec.RequestMessageType:
-                    {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
-                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
-                        var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
-                            0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
-                            "4.0", partitionsCount, request.Server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>());
-                        await request.RespondAsync(authResponse).CfAwait();
-                        break;
-                    }
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
+                    var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
+                    var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
+                        0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
+                        "4.0", partitionsCount, request.Server.ClusterId, false,
+                        Array.Empty<int>(), Array.Empty<byte>(), 0, Array.Empty<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(0));
+                    await request.RespondAsync(authResponse).CfAwait();
+                    break;
+                }
 
                 // must handle events
                 case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
+                    var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
+                    var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                    await request.RespondAsync(addResponse).CfAwait();
+
+                    _ = Task.Run(async () =>
                     {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
-                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
-                        var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await request.RespondAsync(addResponse).CfAwait();
+                        await Task.Delay(500).CfAwait();
 
-                        _ = Task.Run(async () =>
+                        const int membersVersion = 1;
+                        var memberVersion = new MemberVersion(4, 0, 0);
+                        var memberAttributes = new Dictionary<string, string>();
+                        var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
                         {
-                            await Task.Delay(500).CfAwait();
-
-                            const int membersVersion = 1;
-                            var memberVersion = new MemberVersion(4, 0, 0);
-                            var memberAttributes = new Dictionary<string, string>();
-                            var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
-                            {
-                                new MemberInfo(request.State.MemberIds[0], request.State.Addresses[0], memberVersion, false, memberAttributes),
-                                new MemberInfo(request.State.MemberIds[1], request.State.Addresses[1], memberVersion, false, memberAttributes),
-                            });
-                            await request.RaiseAsync(membersEventMessage).CfAwait();
-
-                            await Task.Delay(500).CfAwait();
-
-                            const int partitionsVersion = 1;
-                            var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
-                            {
-                                new KeyValuePair<Guid, IList<int>>(request.State.MemberIds[0], new List<int> { 0 }),
-                                new KeyValuePair<Guid, IList<int>>(request.State.MemberIds[1], new List<int> { 1 }),
-                            });
-                            await request.RaiseAsync(partitionsEventMessage).CfAwait();
+                            new MemberInfo(request.State.MemberIds[0], request.State.Addresses[0], memberVersion, false, memberAttributes),
+                            new MemberInfo(request.State.MemberIds[1], request.State.Addresses[1], memberVersion, false, memberAttributes),
                         });
+                        await request.RaiseAsync(membersEventMessage).CfAwait();
 
-                        break;
-                    }
+                        await Task.Delay(500).CfAwait();
+
+                        const int partitionsVersion = 1;
+                        var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
+                        {
+                            new KeyValuePair<Guid, IList<int>>(request.State.MemberIds[0], new List<int> { 0 }),
+                            new KeyValuePair<Guid, IList<int>>(request.State.MemberIds[1], new List<int> { 1 }),
+                        });
+                        await request.RaiseAsync(partitionsEventMessage).CfAwait();
+                    });
+
+                    break;
+                }
 
                 // create object
                 case ClientCreateProxyServerCodec.RequestMessageType:
-                    {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) CreateProxy");
-                        var createRequest = ClientCreateProxyServerCodec.DecodeRequest(request.Message);
-                        var createResponse = ClientCreateProxiesServerCodec.EncodeResponse();
-                        await request.RespondAsync(createResponse).CfAwait();
-                        break;
-                    }
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) CreateProxy");
+                    var createRequest = ClientCreateProxyServerCodec.DecodeRequest(request.Message);
+                    var createResponse = ClientCreateProxiesServerCodec.EncodeResponse();
+                    await request.RespondAsync(createResponse).CfAwait();
+                    break;
+                }
 
                 // subscribe
                 case MapAddEntryListenerServerCodec.RequestMessageType:
-                    {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) AddEntryListener");
-                        var addRequest = MapAddEntryListenerServerCodec.DecodeRequest(request.Message);
-                        request.State.Subscribed = true;
-                        request.State.SubscriptionCorrelationId = request.Message.CorrelationId;
-                        var addResponse = MapAddEntryListenerServerCodec.EncodeResponse(request.State.SubscriptionId);
-                        await request.RespondAsync(addResponse).CfAwait();
-                        break;
-                    }
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) AddEntryListener");
+                    var addRequest = MapAddEntryListenerServerCodec.DecodeRequest(request.Message);
+                    request.State.Subscribed = true;
+                    request.State.SubscriptionCorrelationId = request.Message.CorrelationId;
+                    var addResponse = MapAddEntryListenerServerCodec.EncodeResponse(request.State.SubscriptionId);
+                    await request.RespondAsync(addResponse).CfAwait();
+                    break;
+                }
 
                 // unsubscribe
                 // server 1 removes on first try, server 2 removes on later tries
                 case MapRemoveEntryListenerServerCodec.RequestMessageType:
-                    {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) RemoveEntryListener");
-                        var removeRequest = MapRemoveEntryListenerServerCodec.DecodeRequest(request.Message);
-                        var removed = request.State.Subscribed && removeRequest.RegistrationId == request.State.SubscriptionId;
-                        removed &= request.State.Id == 0 || request.State.UnsubscribeCount++ > 0;
-                        if (removed) request.State.Subscribed = false;
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) Subscribed={request.State.Subscribed}");
-                        var removeResponse = MapRemoveEntryListenerServerCodec.EncodeResponse(removed);
-                        await request.RespondAsync(removeResponse).CfAwait();
-                        break;
-                    }
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) RemoveEntryListener");
+                    var removeRequest = MapRemoveEntryListenerServerCodec.DecodeRequest(request.Message);
+                    var removed = request.State.Subscribed && removeRequest.RegistrationId == request.State.SubscriptionId;
+                    removed &= request.State.Id == 0 || request.State.UnsubscribeCount++ > 0;
+                    if (removed) request.State.Subscribed = false;
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Subscribed={request.State.Subscribed}");
+                    var removeResponse = MapRemoveEntryListenerServerCodec.EncodeResponse(removed);
+                    await request.RespondAsync(removeResponse).CfAwait();
+                    break;
+                }
 
                 // add to map & trigger event
                 case MapSetServerCodec.RequestMessageType:
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Set");
+                    var setRequest = MapSetServerCodec.DecodeRequest(request.Message);
+                    var setResponse = MapSetServerCodec.EncodeResponse();
+                    await request.RespondAsync(setResponse).CfAwait();
+
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Subscribed={request.State.Subscribed}");
+
+                    if (request.State.Subscribed)
                     {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) Set");
-                        var setRequest = MapSetServerCodec.DecodeRequest(request.Message);
-                        var setResponse = MapSetServerCodec.EncodeResponse();
-                        await request.RespondAsync(setResponse).CfAwait();
-
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) Subscribed={request.State.Subscribed}");
-
-                        if (request.State.Subscribed)
-                        {
-                            HConsole.WriteLine(this, $"(server{request.State.Id}) Trigger event");
-                            var key = setRequest.Key;
-                            var value = setRequest.Value;
-                            var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int)MapEventTypes.Added, request.State.SubscriptionId, 1);
-                            // note: raising on *this* connection with the request's correlation id
-                            await request.RaiseAsync(addedEvent, request.State.SubscriptionCorrelationId).CfAwait();
-                        }
-                        break;
+                        HConsole.WriteLine(this, $"(server{request.State.Id}) Trigger event");
+                        var key = setRequest.Key;
+                        var value = setRequest.Value;
+                        var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int) MapEventTypes.Added, request.State.SubscriptionId, 1);
+                        // note: raising on *this* connection with the request's correlation id
+                        await request.RaiseAsync(addedEvent, request.State.SubscriptionCorrelationId).CfAwait();
                     }
+                    break;
+                }
 
                 // unexpected message = error
                 default:
-                    {
-                        // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
-                        var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
-                        await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
-                        break;
-                    }
+                {
+                    // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
+                    var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
+                    await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
+                    break;
+                }
             }
         }
     }
