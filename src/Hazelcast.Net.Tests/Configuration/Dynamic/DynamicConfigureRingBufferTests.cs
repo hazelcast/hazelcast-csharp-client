@@ -17,6 +17,7 @@ using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Configuration.Dynamic;
@@ -49,6 +50,7 @@ public class DynamicConfigureRingBufferTests : DynamicConfigureTestBase
     }
 
     [Test]
+    [ServerCondition("5.4")]
     public async Task DefaultOptionsEncodeToSameMessageAsJava()
     {
         // CI error: trying to invoke this:

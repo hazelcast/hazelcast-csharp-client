@@ -12,23 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
-using Hazelcast.Messaging.FrameFields;
 using Hazelcast.Models;
 using Hazelcast.NearCaching;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
-using Hazelcast.Testing;
-using Hazelcast.Testing.Remote;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
-
 namespace Hazelcast.Tests.Configuration.Dynamic;
 
 [TestFixture]
@@ -226,6 +218,7 @@ public class DynamicConfigureMapTests : DynamicConfigureTestBase
     }
 
     [Test]
+    [ServerCondition("5.4")]
     public async Task DefaultOptionsEncodeToSameMessageAsJava()
     {
         const string script = @"

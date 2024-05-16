@@ -201,12 +201,9 @@ namespace Hazelcast.Tests.DotNet
 
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
-#if NET8_0_OR_GREATER
-            // see https://github.com/dotnet/runtime/issues/83382 the exception type changed in .NET 8.0
-            Assert.ThrowsAsync<OperationCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
-#else
+            
             Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
-#endif
+
 
             await Task.Delay(100, CancellationToken.None).CfAwait();
 
