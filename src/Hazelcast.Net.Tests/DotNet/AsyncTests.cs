@@ -145,7 +145,7 @@ namespace Hazelcast.Tests.DotNet
         public async Task DelayCancel()
         {
             var cancellation = new CancellationTokenSource(100);
-          
+
             Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token).CfAwait());
             await Task.Delay(100, CancellationToken.None).CfAwait();
 
@@ -201,12 +201,13 @@ namespace Hazelcast.Tests.DotNet
 
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
-#if NET8_0_OR_GREATER
+
             // see https://github.com/dotnet/runtime/issues/83382 the exception type changed in .NET 8.0
-            Assert.ThrowsAsync<OperationCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait()); 
-#else
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2).CfAwait());
-#endif
+            // Each API throws a different exception type. It's a mess.
+            Assert.ThrowsAsync(Is.InstanceOf<OperationCanceledException>().Or.InstanceOf<TaskCanceledException>(), async () =>
+            {
+                await Task.WhenAll(task1, task2).CfAwait();
+            });
 
             await Task.Delay(100, CancellationToken.None).CfAwait();
 
@@ -666,7 +667,7 @@ namespace Hazelcast.Tests.DotNet
             var v = 0;
 
             // get an IAsyncEnumerable<> that does not throw when the enumeration is canceled
-            var asyncEnumerable = new AsyncEnumerable<int>(new[] {1, 2, 3, 4}, throwOnCancel: false);
+            var asyncEnumerable = new AsyncEnumerable<int>(new[] { 1, 2, 3, 4 }, throwOnCancel: false);
 
             // can enumerate
             await foreach (var i in asyncEnumerable)
@@ -689,7 +690,7 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine("/");
 
             // get an IAsyncEnumerable<> that throws when the enumeration is canceled
-            asyncEnumerable = new AsyncEnumerable<int>(new[] {1, 2, 3, 4});
+            asyncEnumerable = new AsyncEnumerable<int>(new[] { 1, 2, 3, 4 });
 
             // can enumerate
             await foreach (var i in asyncEnumerable)
@@ -725,7 +726,7 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine("/");
 
             // repeat with bare enumerable
-            var bareEnumerable = new BareAsyncEnumerable<int>(new[] {1, 2, 3, 4});
+            var bareEnumerable = new BareAsyncEnumerable<int>(new[] { 1, 2, 3, 4 });
 
             // can enumerate
             await foreach (var i in bareEnumerable)
