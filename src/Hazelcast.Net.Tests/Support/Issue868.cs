@@ -21,11 +21,13 @@ using Hazelcast.Core;
 using Hazelcast.Query;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Support;
 
 [TestFixture]
+[ServerCondition("[5.2,)")]
 public class Issue868 : SingleMemberClientRemoteTestBase
 {
     internal class Thing
