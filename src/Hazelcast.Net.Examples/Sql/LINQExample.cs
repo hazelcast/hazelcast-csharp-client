@@ -38,7 +38,7 @@ namespace Hazelcast.Examples.Sql
             // In this example, we will create a map City to its Mayor.
             // We will de/serialize the object by Compact with zero config approach.
             // Please, visit Compact Serialization for more details.
-            // https://docs.hazelcast.com/hazelcast/5.2/serialization/compact-serialization
+            // https://docs.hazelcast.com/hazelcast/latest/serialization/compact-serialization
             // http://hazelcast.github.io/hazelcast-csharp-client/latest/doc/serialization.html#compact-serialization
 
             // Get a map with City to Mayor type.

@@ -94,7 +94,7 @@ SELECT __key, this FROM employee
 You may also access the nested fields of a key or value. The list of exposed fields depends on the serialization format, as described below:
 
 * For [IdentifiedDataSerializable](serialization.md#identifieddataserializable-serialization) objects, you can use public field name or getter names.
-  See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/5.0/sql/querying-maps-sql) for more information.
+  See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/latest/sql/querying-maps-sql) for more information.
 * For [Portable](serialization.md#portable-serialization) objects, the fields written with `IPortableWriter` methods are exposed using their exact names.
 * For `Json` objects, the fields can be accessed with `JSON_QUERY(..)` or `JSON_VALUE(..)`.
 
@@ -340,7 +340,7 @@ An optional `WHERE` clause defines a condition, that is any expression that eval
 
 ### Sorting
 
-You can use the standard SQL clauses ORDER BY, LIMIT, and OFFSET to sort and limit the result set. In order to do so, you need server configuration. See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/5.0/query/indexing-maps) for more.
+You can use the standard SQL clauses ORDER BY, LIMIT, and OFFSET to sort and limit the result set. In order to do so, you need server configuration. See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/latest/query/indexing-maps) for more.
 
 ### Unsupported Features
 
@@ -352,7 +352,7 @@ The following features are **not supported** and are planned for future releases
 ## Expressions
 
 Hazelcast SQL supports logical predicates, `IS` predicates, comparison operators, mathematical functions and operators, string functions, and special functions.
-Refer to [Hazelcast docs](https://docs.hazelcast.com/hazelcast/5.0/sql/expressions) for all possible operations.
+Refer to [Hazelcast docs](https://docs.hazelcast.com/hazelcast/latest/sql/expressions) for all possible operations.
 
 ## Lite Members
 
@@ -360,6 +360,6 @@ You cannot start SQL queries on lite members. This limitation will be removed in
 
 ## More Information
 
-Please refer to [Hazelcast SQL docs](https://docs.hazelcast.com/imdg/4.2/sql/distributed-sql.html) for more information.
+Please refer to [Hazelcast SQL docs](https://docs.hazelcast.com/hazelcast/latest/sql/querying-maps-sql) for more information.
 
 For basic usage of SQL, see `SqlBasicQueryExample` and `SqlJsonExample` in *Hazelcast.Net.Examples* project.

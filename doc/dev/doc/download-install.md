@@ -66,7 +66,7 @@ There are many different ways to run a Hazelcast cluster or member. The [Install
 If you want to start one member to experiment with the Hazelcast .NET client, two simple ways are possible.
 
 > [!NOTE]
-> Running the Hazelcast server requires a Java Runtime Environment. The [Supported JVMs](https://docs.hazelcast.com/imdg/latest/installation/supported-jvms.html) page of the reference details which JVMs are supported. For a quick start, OpenJDK provided by [Adoptium](https://adoptopenjdk.net/) (either version 8, 11 or 16) are OK.
+> Running the Hazelcast server requires a Java Runtime Environment. The [Supported JVMs](https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines) page of the reference details which JVMs are supported. For a quick start, OpenJDK provided by [Adoptium](https://adoptopenjdk.net/) (either version 8, 11 or 16) are OK.
 
 ### Standalone JARs
 

@@ -2,7 +2,7 @@
 
 A `HReliableTopic` topic is the durable version of [HTopic](/htopic.md) backed with a [HRingBuffer](/hringbuffer.md).
 
-The reliable topic behavior can be configured on the server: see the general [Documentation](https://docs.hazelcast.com/imdg/latest/data-structures/reliable-topic) for complete details about reliable topics.
+The reliable topic behavior can be configured on the server: see the general [Documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/reliable-topic) for complete details about reliable topics.
 
 ## Defining Topics
 

@@ -3,7 +3,7 @@
 > [!NOTE]
 > ISemaphore is a member of CP Subsystem API. For detailed information, see the [CP SubSystem documentation](../cpsubsystem.md).
 >
-> The original Java [Semaphore documentation](https://docs.hazelcast.com/imdg/latest/data-structures/isemaphore) may help get a
+> The original Java [Semaphore documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/isemaphore) may help get a
 > better understanding of the .NET ISemaphore implementation.
 
 Hazelcast @Hazelcast.CP.ISemaphore is a distributed implementation of `java.util.concurrent.Semaphore`.
@@ -14,7 +14,7 @@ released.
 
 When a permit is acquired, the number of available permits is decreased. When the permit is released, the count is increased.
 
-See also the [Semaphore Configuration Section](https://docs.hazelcast.com/imdg/latest/cp-subsystem/configuration#semaphore-configuration)
+See also the [Semaphore Configuration Section](https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/configuration#semaphore-config)
 for details.
 
 ## Async Context
