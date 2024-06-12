@@ -22,7 +22,7 @@ Instead, it fails with an exception or a specified return value.
 Distributed locks are unfortunately not equivalent to single-node mutexes because of the complexities in distributed 
 systems, such as uncertain communication patterns, and independent and partial failures. In an asynchronous network, 
 no lock service can guarantee mutual exclusion, because there is no way to distinguish between a slow and a crashed 
-process. This can be mitigated with *fences* (see [CP SubSystem FencedLock documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/fencedlock)
+process. This can be mitigated with *fences* (see [FencedLock documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/fencedlock)
 for details): lock holders are ordered by a monotonic fencing token, which increments each time the lock is assigned 
 to a new owner. This fencing token can be passed to external services or resources to ensure sequential execution of 
 the side effects performed by lock holders.
