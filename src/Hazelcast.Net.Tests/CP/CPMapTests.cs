@@ -21,12 +21,14 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.CP;
 
 [Category("enterprise")]
+[ServerCondition("5.4")]
 public class CPMapTests : MultiMembersRemoteTestBase
 {
     private string _defaultMapName = "myMap";

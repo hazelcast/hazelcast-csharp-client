@@ -1656,7 +1656,7 @@ function hz-build-docs {
 
     # clear plugins then copy our dll
     # NOTE: as of docfx 2.64 the plugin system is broken
-    $target = "net7.0" # must match DocAsCode project framework AND latest stable .NET
+    $target = "net8.0" # must match DocAsCode project framework AND latest stable .NET
     $pluginDll = "$srcDir/Hazelcast.DocAsCode.Build/bin/$($options.configuration)/$target/Hazelcast.DocAsCode.Build.dll"
     #if (test-path "$docDir/templates/hz/Plugins") {
     #    remove-item -recurse -force "$docDir/templates/hz/Plugins"
