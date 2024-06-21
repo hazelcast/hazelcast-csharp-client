@@ -8,3 +8,12 @@ static Hazelcast.Models.HLocalDate.explicit operator Hazelcast.Models.HLocalDate
 static Hazelcast.Models.HLocalDate.explicit operator System.DateOnly(Hazelcast.Models.HLocalDate localDate) -> System.DateOnly
 static Hazelcast.Models.HLocalTime.explicit operator Hazelcast.Models.HLocalTime(System.TimeOnly timeOnly) -> Hazelcast.Models.HLocalTime
 static Hazelcast.Models.HLocalTime.explicit operator System.TimeOnly(Hazelcast.Models.HLocalTime localTime) -> System.TimeOnly
+Hazelcast.Serialization.SerializationException.SerializationException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Sql.HazelcastSqlException.HazelcastSqlException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Exceptions.ClientOfflineException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Protocol.RemoteException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Sql.HazelcastSqlException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+override Hazelcast.Serialization.UnknownCompactSchemaException.GetObjectData(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
