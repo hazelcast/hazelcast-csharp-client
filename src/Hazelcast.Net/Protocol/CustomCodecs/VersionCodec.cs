@@ -36,42 +36,35 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class EvictionConfigHolderCodec
+    internal static class VersionCodec
     {
-        private const int SizeFieldOffset = 0;
-        private const int InitialFrameSize = SizeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int MajorFieldOffset = 0;
+        private const int MinorFieldOffset = MajorFieldOffset + BytesExtensions.SizeOfByte;
+        private const int InitialFrameSize = MinorFieldOffset + BytesExtensions.SizeOfByte;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Models.EvictionConfigHolder evictionConfigHolder)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.ClusterVersion version)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(SizeFieldOffset, evictionConfigHolder.Size);
+            initialFrame.Bytes.WriteByteL(MajorFieldOffset, version.Major);
+            initialFrame.Bytes.WriteByteL(MinorFieldOffset, version.Minor);
             clientMessage.Append(initialFrame);
-
-            StringCodec.Encode(clientMessage, evictionConfigHolder.MaxSizePolicy);
-            StringCodec.Encode(clientMessage, evictionConfigHolder.EvictionPolicy);
-            CodecUtil.EncodeNullable(clientMessage, evictionConfigHolder.ComparatorClassName, StringCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, evictionConfigHolder.Comparator, DataCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Protocol.Models.EvictionConfigHolder Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.ClusterVersion Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var size = initialFrame.Bytes.ReadIntL(SizeFieldOffset);
+            var major = initialFrame.Bytes.ReadByteL(MajorFieldOffset);
 
-            var maxSizePolicy = StringCodec.Decode(iterator);
-            var evictionPolicy = StringCodec.Decode(iterator);
-            var comparatorClassName = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            var comparator = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-
+            var minor = initialFrame.Bytes.ReadByteL(MinorFieldOffset);
             iterator.SkipToStructEnd();
-            return new Hazelcast.Protocol.Models.EvictionConfigHolder(size, maxSizePolicy, evictionPolicy, comparatorClassName, comparator);
+            return CustomTypeFactory.CreateVersion(major, minor);
         }
     }
 }
