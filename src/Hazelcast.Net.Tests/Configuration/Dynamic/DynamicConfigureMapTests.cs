@@ -218,7 +218,7 @@ public class DynamicConfigureMapTests : DynamicConfigureTestBase
     }
 
     [Test]
-    [ServerCondition("5.4")]
+    [ServerCondition("[5.4]")]
     public async Task DefaultOptionsEncodeToSameMessageAsJava()
     {
         const string script = @"
