@@ -6,7 +6,7 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 
 ### Current Version
 
-* <curdoc>5.3.1 [general documentation](xref:doc-index-5-3-1) and [API reference](xref:api-index-5-3-1)</curdoc>
+* <curdoc>5.4.0 [general documentation](xref:doc-index-5-4-0) and [API reference](xref:api-index-5-4-0)</curdoc>
 
 ### Preview
 

@@ -1,0 +1,11 @@
+#nullable enable
+override Hazelcast.Serialization.UnknownCompactSchemaException.GetObjectData(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Hazelcast.Serialization.SerializationException.SerializationException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Exceptions.TopicOverloadException.TopicOverloadException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~Hazelcast.Sql.HazelcastSqlException.HazelcastSqlException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Exceptions.ClientOfflineException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Protocol.RemoteException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Sql.HazelcastSqlException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+
