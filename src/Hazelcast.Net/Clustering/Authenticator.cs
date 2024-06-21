@@ -14,6 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -33,6 +37,7 @@ namespace Hazelcast.Clustering;
 /// </summary>
 internal class Authenticator
 {
+    public static string ClusterVersionKey = "cluster.version";
     private static string _clientVersion; // static cache (immutable value)
     private readonly AuthenticationOptions _options;
     private readonly SerializationService _serializationService;
@@ -60,7 +65,7 @@ internal class Authenticator
     /// <param name="labels">The client labels.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task that will complete when the client is authenticated.</returns>
-    public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, CancellationToken cancellationToken)
+    public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, byte routingMode, CancellationToken cancellationToken)
     {
         if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -72,7 +77,7 @@ internal class Authenticator
 
         _logger.IfDebug()?.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
 
-        var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
+        var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, routingMode, cancellationToken).CfAwait();
         if (result != null) return result;
 
         // result is null, credentials failed but we may want to retry
@@ -81,7 +86,7 @@ internal class Authenticator
             resettableCredentialsFactory.Reset();
 
             // try again
-            result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
+            result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, routingMode, cancellationToken).CfAwait();
             if (result != null) return result;
         }
 
@@ -116,7 +121,7 @@ internal class Authenticator
     // returns a result if successful
     // returns null if failed due to credentials (may want to retry)
     // throws if anything else went wrong
-    private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, CancellationToken cancellationToken)
+    private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, byte routingMode, CancellationToken cancellationToken)
     {
         const string clientType = "CSP"; // CSharp
 
@@ -128,22 +133,28 @@ internal class Authenticator
         switch (credentials)
         {
             case IPasswordCredentials passwordCredentials:
-                requestMessage = _options.TpcEnabled 
-                    ? TpcClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
-                    : ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                requestMessage = _options.TpcEnabled
+                    ? TpcClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password,
+                        clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
+                    : ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password,
+                        clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels, routingMode);
                 break;
 
             case ITokenCredentials tokenCredentials:
                 requestMessage = _options.TpcEnabled
-                    ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
-                    : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                    ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType,
+                        serializationVersion, clientVersion, clusterClientName, labels)
+                    : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType,
+                        serializationVersion, clientVersion, clusterClientName, labels, routingMode);
                 break;
 
             default:
                 var bytes = _serializationService.ToData(credentials, withSchemas: true).ToByteArray();
                 requestMessage = _options.TpcEnabled
-                    ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
-                    : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                    ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
+                        clientVersion, clusterClientName, labels)
+                    : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
+                        clientVersion, clusterClientName, labels, routingMode);
                 break;
         }
 
@@ -153,13 +164,25 @@ internal class Authenticator
         HConsole.WriteLine(this, "Send auth request");
         var responseMessage = await client.SendAsync(requestMessage).CfAwait();
         HConsole.WriteLine(this, "Rcvd auth response");
-        var response = TpcClientAuthenticationCodec.DecodeResponse(responseMessage);
+        var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
         HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);
 
         return (AuthenticationStatus) response.Status switch
         {
             AuthenticationStatus.Authenticated
-                => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion, credentials.Name, response.TpcPorts, response.TpcToken),
+                => new AuthenticationResult(response.ClusterId,
+                    response.MemberUuid,
+                    response.Address,
+                    response.ServerHazelcastVersion,
+                    response.FailoverSupported,
+                    response.PartitionCount,
+                    response.SerializationVersion,
+                    credentials.Name,
+                    response.TpcPorts,
+                    response.TpcToken,
+                    ParsePartitionMemberGroups(response), // Doesn't throw
+                    ParseClusterVersion(response) // Doesn't throw
+                ),
 
             AuthenticationStatus.CredentialsFailed
                 => null, // could want to retry
@@ -172,5 +195,70 @@ internal class Authenticator
 
             _ => throw new AuthenticationException($"Received unsupported status code {response.Status}.")
         };
+    }
+
+    /// <summary>
+    /// Parse the cluster version. Returns null if the version is invalid. Doesn't throw.
+    /// </summary>
+    /// <param name="version">string cluster version</param>
+    /// <returns>ClusterVersion</returns>
+    private ClusterVersion ParseClusterVersion(ClientAuthenticationCodec.ResponseParameters response)
+    {
+        var clusterVersion = "";
+        try
+        {
+            var isClusterVersionExists = response.KeyValuePairs.TryGetValue(ClusterVersionKey, out clusterVersion);
+            if (response.IsKeyValuePairsExists && isClusterVersionExists)
+            {
+                return ClusterVersion.Parse(clusterVersion);
+            }
+        }
+        catch (FormatException e)
+        {
+            _logger.IfDebug()?.LogDebug("Failed to parse cluster version [{Version}]: {Exception}", clusterVersion, e.Message);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Parse members group. (internal for testing purposes. Doesn't throw.
+    /// </summary>
+    internal MemberGroups ParsePartitionMemberGroups(ClientAuthenticationCodec.ResponseParameters response)
+    {
+        var isContainsPartitionGroups = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.PartitionGroupJsonField, out var jsonMessage);
+
+        if (response.IsKeyValuePairsExists && isContainsPartitionGroups && string.IsNullOrEmpty(jsonMessage))
+        {
+            return new MemberGroups(new List<IList<Guid>>(0), 0, response.ClusterId, response.MemberUuid);
+        }
+
+        var partitionGroups = new List<IList<Guid>>();
+        var version = MemberPartitionGroup.InvalidVersion;
+        try
+        {
+            // Why is data json string?
+            var jsonObject = JsonNode.Parse(response.KeyValuePairs[MemberPartitionGroup.PartitionGroupJsonField]);
+
+            version = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.VersionJsonField, out var versionString)
+                ? int.Parse(versionString, NumberStyles.Integer)
+                : 0;
+
+            foreach (var memberIds in jsonObject.AsArray())
+            {
+                var group = new HashSet<Guid>();
+                foreach (var member in memberIds.AsArray())
+                {
+                    group.Add(Guid.Parse(member.ToString()));
+                }
+                partitionGroups.Add(group.ToList());
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.IfDebug()?.LogDebug("Failed to parse partition groups [{JsonMessage}]: {Message}. ", jsonMessage, e.Message);
+        }
+
+        return new MemberGroups(partitionGroups, version, response.ClusterId, response.MemberUuid);
     }
 }

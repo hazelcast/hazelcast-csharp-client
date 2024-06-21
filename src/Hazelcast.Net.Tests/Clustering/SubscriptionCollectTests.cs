@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
@@ -40,10 +42,22 @@ namespace Hazelcast.Tests.Clustering
         {
             var address0 = NetworkAddress.Parse("127.0.0.1:11001");
             var address1 = NetworkAddress.Parse("127.0.0.1:11002");
-
+            
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
 
+            var memberCollectionJson0 = "[[" +
+                                            $"\"{memberId0}\"," +
+                                            $"\"{memberId1}\"" +
+                                            "]]";
+            
+            var memberCollectionJson1 = "[[" +
+                                        $"\"{memberId0}\""+
+                                        "]]";
+
+            var clusterVersion = new ClusterVersion(5, 4);
+            
+            
             HConsole.WriteLine(this, "Begin");
             HConsole.WriteLine(this, "Start servers");
 
@@ -55,7 +69,14 @@ namespace Hazelcast.Tests.Clustering
                 MemberIds = new[] { memberId0, memberId1 },
                 Addresses = new[] { address0, address1 },
                 MemberId = memberId0,
-                Address = address0
+                Address = address0,
+                ClusterVersion = clusterVersion,
+                KeyValuePairs = new Dictionary<string, string>
+                {
+                    {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson0},
+                    {MemberPartitionGroup.VersionJsonField, "1"},
+                    {"cluster.version", "5.4"}
+                },
             };
 
             await using var server0 = new Server(address0, loggerFactory, "0")
@@ -70,7 +91,13 @@ namespace Hazelcast.Tests.Clustering
                 MemberIds = new[] { memberId0, memberId1 },
                 Addresses = new[] { address0, address1 },
                 MemberId = memberId1,
-                Address = address1
+                Address = address1,
+                ClusterVersion = clusterVersion,
+                KeyValuePairs = new Dictionary<string, string>
+                {
+                    {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson1},
+                    {MemberPartitionGroup.VersionJsonField, "2"}
+                },
             };
 
             await using var server1 = new Server(address1, loggerFactory, "1")
@@ -115,6 +142,9 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(3)); // 2 more correlated
                 Assert.That(subscription.Count, Is.EqualTo(2)); // 2 members
                 Assert.That(subscription.Active);
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count,Is.EqualTo(1)); // 1 members on v2
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers(), Contains.Item(memberId0));
+                Assert.That(client.ClusterVersion, Is.EqualTo(clusterVersion));
             }, 4000, 200);
 
             HConsole.WriteLine(this, "Set");
@@ -177,6 +207,8 @@ namespace Hazelcast.Tests.Clustering
             public Guid SubscriptionId { get; set; }
             public int UnsubscribeCount { get; set; }
             public long SubscriptionCorrelationId { get; set; }
+            public IDictionary<string, string> KeyValuePairs { get; set; }
+            public ClusterVersion ClusterVersion { get; set; }
         }
 
         private async ValueTask ServerHandler(ClientRequest<ServerState> request)
@@ -193,7 +225,8 @@ namespace Hazelcast.Tests.Clustering
                         var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                             0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
                             "4.0", partitionsCount, request.Server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>());
+                            Array.Empty<int>(), Array.Empty<byte>(),0,Enumerable.Empty<MemberInfo>().ToList(),
+                            0, new List<KeyValuePair<Guid, IList<int>>>(), request.State.KeyValuePairs);
                         await request.RespondAsync(authResponse).CfAwait();
                         break;
                     }
@@ -204,6 +237,7 @@ namespace Hazelcast.Tests.Clustering
                         HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
                         var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
                         var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                        
                         await request.RespondAsync(addResponse).CfAwait();
 
                         _ = Task.Run(async () =>
@@ -229,6 +263,21 @@ namespace Hazelcast.Tests.Clustering
                                 new KeyValuePair<Guid, IList<int>>(request.State.MemberIds[1], new List<int> { 1 }),
                             });
                             await request.RaiseAsync(partitionsEventMessage).CfAwait();
+
+                            await Task.Delay(500).CfAwait();
+
+                            var clusterVersionMessage = ClientAddClusterViewListenerServerCodec.EncodeClusterVersionEvent(request.State.ClusterVersion);
+                            await request.RaiseAsync(clusterVersionMessage).CfAwait();
+
+                            await Task.Delay(500).CfAwait();
+                            
+                            var memberGroupList = new List<ICollection<Guid>>
+                            {
+                                request.State.MemberIds.Select(id=> id).ToList()
+                            };
+                            var memberGroupListMessage = ClientAddClusterViewListenerServerCodec.EncodeMemberGroupsViewEvent(membersVersion, memberGroupList);
+
+                            await request.RaiseAsync(memberGroupListMessage).CfAwait();
                         });
 
                         break;

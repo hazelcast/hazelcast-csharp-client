@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Partitioning;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,7 @@ namespace Hazelcast.Clustering
         private readonly Failover _failover;
         private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
+        private ClusterVersion _clusterVersion = new ClusterVersion(0, 0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterState"/> class.
@@ -135,6 +137,11 @@ namespace Hazelcast.Clustering
         /// </summary>
         public string ClusterName { get; private set; }
 
+        /// <summary>
+        /// Cluster version.
+        /// </summary>
+        public ClusterVersion ClusterVersion => _clusterVersion;
+
         #endregion
 
         #region ClientState
@@ -148,6 +155,18 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ClientState ClientState { get; private set; }
 
+        /// <summary>
+        /// Sets the cluster version.
+        /// </summary>
+        /// <param name="clusterVersion">The new cluster version.</param>
+        public void ChangeClusterVersion(ClusterVersion clusterVersion)
+        {
+            lock (_mutex)
+            {
+                _clusterVersion = clusterVersion;    
+            }
+        }
+        
         /// <summary>
         /// Changes the state, and pushes the change to the events queue.
         /// </summary>

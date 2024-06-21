@@ -36,7 +36,20 @@ namespace Hazelcast.Models
         /// <param name="principal">The principal that was used to authenticate.</param>
         /// <param name="tpcPorts">The list of TPC ports, or <c>null</c> if the server does not support TPC.</param>
         /// <param name="tpcToken">The TPC token, or <c>null</c> if the server does not support TPC.</param>
-        public AuthenticationResult(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion, string principal, IList<int> tpcPorts, byte[] tpcToken)
+        /// <param name="memberGroups">The members grouped by partitions.</param>
+        /// <param name="clusterVersion"></param>
+        public AuthenticationResult(Guid clusterId,
+            Guid memberId,
+            NetworkAddress memberAddress,
+            string serverVersion,
+            bool failoverSupported,
+            int partitionCount,
+            byte serializationVersion,
+            string principal,
+            IList<int> tpcPorts,
+            byte[] tpcToken,
+            MemberGroups memberGroups = null,
+            ClusterVersion clusterVersion = null)
         {
             ClusterId = clusterId;
             MemberId = memberId;
@@ -48,6 +61,8 @@ namespace Hazelcast.Models
             Principal = principal;
             TpcPorts = tpcPorts;
             TpcToken = tpcToken;
+            MemberGroups = memberGroups;
+            ClusterVersion = clusterVersion;
         }
 
         /// <summary>
@@ -104,5 +119,15 @@ namespace Hazelcast.Models
         /// Whether the member supports TPC and provided TPC infos.
         /// </summary>
         public bool SupportsTpc => TpcPorts != null;
+
+        /// <summary>
+        /// Member groups by partitions. Read from KeyValuePairs["partition.groups"].
+        /// </summary>
+        public MemberGroups MemberGroups { get;  }
+
+        /// <summary>
+        /// Cluster version. Read from KeyValuePairs["cluster.version"].
+        /// </summary>
+        public ClusterVersion ClusterVersion { get; }
     }
 }

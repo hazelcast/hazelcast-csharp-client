@@ -552,6 +552,8 @@ namespace Hazelcast.Clustering
                 => ClientAddClusterViewListenerCodec.HandleEventAsync(message,
                     HandleCodecMemberViewEvent,
                     HandleCodecPartitionViewEvent,
+                    (version,  memberGroups,  state) => HandleCodecMemberGroupsViewEvent(version, memberGroups, state, connection.ClusterId, connection.MemberId),
+                    HandleCodecClusterVersionEvent,
                     connection.Id,
                     _clusterState.LoggerFactory);
 
@@ -619,6 +621,19 @@ namespace Hazelcast.Clustering
             // raise event
             // On... does not throw
             await _partitionsUpdated.AwaitEach().CfAwait();
+        }
+        
+        private  ValueTask HandleCodecClusterVersionEvent(ClusterVersion version, object state)
+        {
+            _logger.LogDebug("Handle ClusterVersion event.");
+            _clusterState.ChangeClusterVersion(version);
+            return default;
+        }
+        
+        private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
+        {
+            _logger.LogDebug("Handle MemberGroups event.");
+         _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
         }
 
         /// <summary>
@@ -786,7 +801,7 @@ namespace Hazelcast.Clustering
 #pragma warning disable IDE0060 // Remove unused parameters
 #pragma warning disable CA1801 // Review unused parameters
         // unused parameters are required, this is an event handler
-        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster, ClusterVersion clusterVersion)
 #pragma warning restore CA1801
 #pragma warning restore IDE0060
         {
