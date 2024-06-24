@@ -83,10 +83,10 @@
     <Version>4.0.0-alpha.2</Version>
     -->
 
-    <AssemblyVersion>5.4.0</AssemblyVersion>
-    <FileVersion>5.4.0</FileVersion>
-    <VersionPrefix>5.4.0</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
+    <AssemblyVersion>5.5.0</AssemblyVersion>
+    <FileVersion>5.5.0</FileVersion>
+    <VersionPrefix>5.5.0</VersionPrefix>
+    <VersionSuffix>preview.0</VersionSuffix>
 
     <!-- bundle XML doc in NuGet package-->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
