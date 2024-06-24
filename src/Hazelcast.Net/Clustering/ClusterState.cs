@@ -36,7 +36,7 @@ namespace Hazelcast.Clustering
         private readonly Failover _failover;
         private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
-        private ClusterVersion _clusterVersion = new ClusterVersion(0, 0);
+        private ClusterVersion _clusterVersion = new ClusterVersion(Models.ClusterVersion.Unknown, ClusterVersion.Unknown);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterState"/> class.
@@ -161,6 +161,8 @@ namespace Hazelcast.Clustering
         /// <param name="clusterVersion">The new cluster version.</param>
         public void ChangeClusterVersion(ClusterVersion clusterVersion)
         {
+            if(clusterVersion == null) return;
+            
             lock (_mutex)
             {
                 _clusterVersion = clusterVersion;    

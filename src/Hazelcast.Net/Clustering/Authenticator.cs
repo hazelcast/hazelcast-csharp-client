@@ -218,7 +218,7 @@ internal class Authenticator
             _logger.IfDebug()?.LogDebug("Failed to parse cluster version [{Version}]: {Exception}", clusterVersion, e.Message);
         }
 
-        return null;
+        return new ClusterVersion(ClusterVersion.Unknown, ClusterVersion.Unknown);
     }
 
     /// <summary>

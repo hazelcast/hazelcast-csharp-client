@@ -17,6 +17,8 @@ namespace Hazelcast.Models
     /// <summary> Represents the version of the cluster. </summary> 
     public sealed class ClusterVersion
     {
+        public const byte Unknown = 0;
+        
         /// <summary> Initializes a new instance of the <see cref="ClusterVersion"/> class. </summary>
         /// <param name="major">The major version number.</param>
         /// <param name="minor">The minor version number.</param>
@@ -34,6 +36,8 @@ namespace Hazelcast.Models
 
         /// <summary> Returns a string representation of the cluster version. </summary>
         public override string ToString() => $"{Major}.{Minor}";
+        
+        public bool IsUnknown => Major == Unknown && Minor == Unknown;
 
         /// <summary> Parses a string representation of the cluster version. </summary>
         /// <param name="value">The string representation of the cluster version.</param>
@@ -41,7 +45,7 @@ namespace Hazelcast.Models
         public static ClusterVersion Parse(string value)
         {
             var parts = value.Split('.');
-            if (parts.Length >= 2)
+            if (parts.Length > 2)
                 throw new FormatException("Invalid cluster version format.");
 
             if (!byte.TryParse(parts[0], out var major))
@@ -68,6 +72,8 @@ namespace Hazelcast.Models
 
             return false;
         }
+        
+        
 
     }
 }

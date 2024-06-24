@@ -630,10 +630,11 @@ namespace Hazelcast.Clustering
             return default;
         }
         
-        private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
+        private ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
         {
             _logger.LogDebug("Handle MemberGroups event.");
-         _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
+            _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
+            return default;
         }
 
         /// <summary>

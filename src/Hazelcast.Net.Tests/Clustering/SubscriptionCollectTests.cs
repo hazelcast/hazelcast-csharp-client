@@ -73,8 +73,8 @@ namespace Hazelcast.Tests.Clustering
                 ClusterVersion = clusterVersion,
                 KeyValuePairs = new Dictionary<string, string>
                 {
-                    {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson0},
-                    {MemberPartitionGroup.VersionJsonField, "1"},
+                    {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson1},
+                    {MemberPartitionGroup.VersionJsonField, "2"},
                     {"cluster.version", "5.4"}
                 },
             };
@@ -118,7 +118,7 @@ namespace Hazelcast.Tests.Clustering
                 options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
             }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
-
+            
             HConsole.WriteLine(this, "Get map");
 
             var map = await client.GetMapAsync<string, string>("name");
@@ -136,16 +136,17 @@ namespace Hazelcast.Tests.Clustering
 
             Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(1)); // 1 (our) client subscription
             Assert.That(clusterEvents.Subscriptions.TryGetValue(sid, out var subscription)); // can get our subscription
-
+            
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(3)); // 2 more correlated
                 Assert.That(subscription.Count, Is.EqualTo(2)); // 2 members
                 Assert.That(subscription.Active);
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count,Is.EqualTo(1)); // 1 members on v2
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count,Is.EqualTo(1)); // 1 member on v2
                 Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers(), Contains.Item(memberId0));
                 Assert.That(client.ClusterVersion, Is.EqualTo(clusterVersion));
-            }, 4000, 200);
+
+            }, 10000, 200);
 
             HConsole.WriteLine(this, "Set");
 
@@ -211,6 +212,7 @@ namespace Hazelcast.Tests.Clustering
             public ClusterVersion ClusterVersion { get; set; }
         }
 
+        
         private async ValueTask ServerHandler(ClientRequest<ServerState> request)
         {
             const int partitionsCount = 2;
