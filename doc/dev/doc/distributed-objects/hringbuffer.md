@@ -1,8 +1,8 @@
 # HRingBuffer
 
-A `HRingBuffer` list is a distributed ring-buffer corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/ringbuffer.html). Content in a ring-buffer is stored in a ring-like structure. A ringbuffer has a capacity so it won't grow beyond that capacity and endanger the stability of the system. If that capacity is exceeded, than the oldest item in the ringbuffer is overwritten.
+A `HRingBuffer` list is a distributed ring-buffer corresponding to a cluster-side [List](https://docs.hazelcast.com/hazelcast/latest/data-structures/ringbuffer). Content in a ring-buffer is stored in a ring-like structure. A ringbuffer has a capacity so it won't grow beyond that capacity and endanger the stability of the system. If that capacity is exceeded, than the oldest item in the ringbuffer is overwritten.
 
-The ring-buffer behavior can be configured on the server: see the general [Queue documentation](https://docs.hazelcast.com/imdg/latest/data-structures/ringbuffer.html) for complete details about ring-buffers.
+The ring-buffer behavior can be configured on the server: see the general [Queue documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/ringbuffer) for complete details about ring-buffers.
 
 ## Defining Ring-Buffers
 

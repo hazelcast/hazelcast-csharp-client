@@ -1,11 +1,11 @@
 # HMap, HMultiMap, HReplicatedMap
 
-A `HMap` map is a distributed key/value store corresponding to a cluster-side [Map](https://docs.hazelcast.com/imdg/latest/data-structures/map.html) which can be considered as a distributed implementation of the well-known C# `IDictionary<K,V>`, with data being partitioned over members of the cluster, thus providing horizontal scalability. It is one of the most important Hazelcast data structures. Additionally, Hazelcast provides the following map-related data structures:
+A `HMap` map is a distributed key/value store corresponding to a cluster-side [Map](https://docs.hazelcast.com/hazelcast/latest/data-structures/map) which can be considered as a distributed implementation of the well-known C# `IDictionary<K,V>`, with data being partitioned over members of the cluster, thus providing horizontal scalability. It is one of the most important Hazelcast data structures. Additionally, Hazelcast provides the following map-related data structures:
 
-* A `HMultiMap` map is a distributed key/value store corresponding to a cluster-side [MultiMap](https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html): a specialized map that supports storing multiple values under a single key. 
-* A `HReplicatedMap` map is a distributed key/value store corresponding to a cluster-side [ReplicatedMap](https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html): a specialized map where data is replicated to all members of the cluster, instead of being partitioned, thus providing faster read/write accesses at the cost of higher server memory consumption.
+* A `HMultiMap` map is a distributed key/value store corresponding to a cluster-side [MultiMap](https://docs.hazelcast.com/hazelcast/latest/data-structures/multimap): a specialized map that supports storing multiple values under a single key. 
+* A `HReplicatedMap` map is a distributed key/value store corresponding to a cluster-side [ReplicatedMap](https://docs.hazelcast.com/hazelcast/latest/data-structures/replicated-map): a specialized map where data is replicated to all members of the cluster, instead of being partitioned, thus providing faster read/write accesses at the cost of higher server memory consumption.
 
-The maps behavior can be configured on the server: see the general [Map documentation](https://docs.hazelcast.com/imdg/latest/data-structures/map.html) for complete details about maps.
+The maps behavior can be configured on the server: see the general [Map documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/map) for complete details about maps.
 
 ## Defining Maps
 

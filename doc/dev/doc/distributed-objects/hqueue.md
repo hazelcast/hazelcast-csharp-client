@@ -1,8 +1,8 @@
 # HQueue
 
-A `HQueue` list is a distributed queue corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/queue.html) which can be considered as a distributed implementation of the well-known C# `Queue<T>`. A `HQueue` is a specialized `IHCollection`.
+A `HQueue` list is a distributed queue corresponding to a cluster-side [List](https://docs.hazelcast.com/hazelcast/latest/data-structures/queue) which can be considered as a distributed implementation of the well-known C# `Queue<T>`. A `HQueue` is a specialized `IHCollection`.
 
-The queue behavior can be configured on the server: see the general [Queue documentation](https://docs.hazelcast.com/imdg/latest/data-structures/queue.html) for complete details about queues.
+The queue behavior can be configured on the server: see the general [Queue documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/queue) for complete details about queues.
 
 ## Defining Queues
 

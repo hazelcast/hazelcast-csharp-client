@@ -23,4 +23,4 @@ Console.WriteLine($"Count is {await counter.GetAsync()}");
 
 When you start other instances with the code above, you will see the count as member count times a million.
 
-Note that sending functions to, and executing functions on, AtomicLong as documented for the Java client (see [this page](https://docs.hazelcast.com/imdg/latest/data-structures/iatomiclong.html)) are not supported by the C# client.
+Note that sending functions to, and executing functions on, AtomicLong as documented for the Java client (see [this page](https://docs.hazelcast.com/hazelcast/latest/data-structures/iatomiclong)) are not supported by the C# client.

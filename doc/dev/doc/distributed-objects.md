@@ -2,14 +2,14 @@
 
 Distributed objects are managed by an Hazelcast cluster, and accessed via the Hazelcast .NET client. Currently, the client supports the following distributed objects:
 
-* [HMap](distributed-objects/hmap.md) - a distributed key/value store corresponding to a cluster-side [Map](https://docs.hazelcast.com/imdg/latest/data-structures/map.html)
-* [HMultiMap](distributed-objects/hmap.md) - a distributed key/value store corresponding to a cluster-side [MultiMap](https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html)
-* [HReplicatedMap](distributed-objects/hmap.md) - a distributed key/value store corresponding to a cluster-side [ReplicatedMap](https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html)
-* [HList](distributed-objects/hlist.md) - a distributed list store corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/list.html)
-* [HQueue](distributed-objects/hqueue.md) - a distributed queue store corresponding to a cluster-side [Queue](https://docs.hazelcast.com/imdg/latest/data-structures/queue.html)
-* [HRingBuffer](distributed-objects/hringbuffer.md) - a distributed ring-buffer corresponding to a cluster-side [Map](https://docs.hazelcast.com/imdg/latest/data-structures/ringbuffer.html)
-* [HSet](distributed-objects/hset.md) - a distributed set store corresponding to a cluster-side [Set](https://docs.hazelcast.com/imdg/latest/data-structures/set.html)
-* [HTopic](distributed-objects/htopic.md) - a distributed message-publishing store corresponding to a cluster-side [Topic](https://docs.hazelcast.com/imdg/latest/data-structures/topic.html)
+* [HMap](distributed-objects/hmap.md) - a distributed key/value store corresponding to a cluster-side [Map](https://docs.hazelcast.com/hazelcast/latest/data-structures/map)
+* [HMultiMap](distributed-objects/hmap.md) - a distributed key/value store corresponding to a cluster-side [MultiMap](https://docs.hazelcast.com/hazelcast/latest/data-structures/multimap)
+* [HReplicatedMap](distributed-objects/hmap.md) - a distributed key/value store corresponding to a cluster-side [ReplicatedMap](https://docs.hazelcast.com/hazelcast/latest/data-structures/replicated-map)
+* [HList](distributed-objects/hlist.md) - a distributed list store corresponding to a cluster-side [List](https://docs.hazelcast.com/hazelcast/latest/data-structures/list)
+* [HQueue](distributed-objects/hqueue.md) - a distributed queue store corresponding to a cluster-side [Queue](https://docs.hazelcast.com/hazelcast/latest/data-structures/queue)
+* [HRingBuffer](distributed-objects/hringbuffer.md) - a distributed ring-buffer corresponding to a cluster-side [Map](https://docs.hazelcast.com/hazelcast/latest/data-structures/ringbuffer)
+* [HSet](distributed-objects/hset.md) - a distributed set store corresponding to a cluster-side [Set](https://docs.hazelcast.com/hazelcast/latest/data-structures/set)
+* [HTopic](distributed-objects/htopic.md) - a distributed message-publishing store corresponding to a cluster-side [Topic](https://docs.hazelcast.com/hazelcast/latest/data-structures/topic)
 
 Distributed objects are obtained from the Hazelcast .NET Client and are fully identified by their unique name. If an object of the specified type and with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:
 

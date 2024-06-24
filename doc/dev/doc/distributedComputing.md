@@ -55,7 +55,7 @@ public class IdentifiedEntryProcessor : IEntryProcessor<string>, IIdentifiedData
 }
 ```
 
-Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's `CLASSPATH`, see [Adding User Library to CLASSPATH](https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath).
+Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's `CLASSPATH`, see [Adding User Library to CLASSPATH](https://docs.hazelcast.com/hazelcast/latest/clusters/deploying-code-from-clients#adding-user-library-to-classpath).
 
 The following is the Java equivalent of the entry processor in .NET client given above:
 
