@@ -1,8 +1,8 @@
 # HList
 
-A `HList` list is a distributed list corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/list.html) which can be considered as a distributed implementation of the well-known C# `IList<T>`. A `HList` is a specialized `IHCollection`.
+A `HList` list is a distributed list corresponding to a cluster-side [List](https://docs.hazelcast.com/hazelcast/latest/data-structures/list) which can be considered as a distributed implementation of the well-known C# `IList<T>`. A `HList` is a specialized `IHCollection`.
 
-The list behavior can be configured on the server: see the general [List documentation](https://docs.hazelcast.com/imdg/latest/data-structures/list.html) for complete details about lists.
+The list behavior can be configured on the server: see the general [List documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/list) for complete details about lists.
 
 ## Defining Lists
 

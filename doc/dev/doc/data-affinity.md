@@ -2,7 +2,7 @@
 
 *Data affinity* ensures that related map entries exist on the same cluster member. If related data is on the same member, operations can be executed without the cost of extra network calls and extra wire data. Hazelcast has a standard way of routing all operations on an entry to the member which owns and manages the entry, based upon the key of the entry. For instance, getting the value of the entry, setting this value, locking the entry, etc. are operations that are all performed by the same member.
 
-This is achieved through *partitioning*, which consists in assigning a *partition identifier* to each map entry. The cluster is configured to support a configurable number of partitions (see [Partition Group Configuration](https://docs.hazelcast.com/imdg/latest/clusters/partition-group-configuration.html) in the Reference Manual for details), which are distributed randomly and equally among members.
+This is achieved through *partitioning*, which consists in assigning a *partition identifier* to each map entry. The cluster is configured to support a configurable number of partitions (see [Partition Group Configuration](https://docs.hazelcast.com/hazelcast/latest/clusters/partition-group-configuration) in the Reference Manual for details), which are distributed randomly and equally among members.
 
 When the client establishes its first connection to the cluster, it receives data from the server, including:
 

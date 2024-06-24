@@ -1,8 +1,8 @@
 # HSet
 
-A `HSet` list is a distributed list corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/set.html) which can be considered as a distributed implementation of the well-known C# `IHashSet<T>`. A `HSet` is a specialized `IHCollection`.
+A `HSet` list is a distributed list corresponding to a cluster-side [List](https://docs.hazelcast.com/hazelcast/latest/data-structures/set) which can be considered as a distributed implementation of the well-known C# `IHashSet<T>`. A `HSet` is a specialized `IHCollection`.
 
-The set behavior can be configured on the server: see the general [List documentation](https://docs.hazelcast.com/imdg/latest/data-structures/set.html) for complete details about sets.
+The set behavior can be configured on the server: see the general [List documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/set) for complete details about sets.
 
 ## Defining Sets
 

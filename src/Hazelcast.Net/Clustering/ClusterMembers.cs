@@ -723,7 +723,7 @@ namespace Hazelcast.Clustering
 
             // Failed to get a connection to a data member, return first lite member instead
             // Lite members support DDL but note DML statements
-            // https://docs.hazelcast.com/hazelcast/5.0-SNAPSHOT/sql/sql-statements.html
+            // https://docs.hazelcast.com/hazelcast/latest/sql/sql-statements
             return firstConnection;
         }
 

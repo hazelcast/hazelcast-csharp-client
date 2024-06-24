@@ -3,8 +3,7 @@
 > [!NOTE]
 > IFencedLock is a member of CP Subsystem API. For detailed information, see the [CP SubSystem documentation](../cpsubsystem.md).
 >
-> The original Java [FencedLock documentation](https://docs.hazelcast.com/imdg/latest/data-structures/fencedlock) and 
-> [CP SubSystem FencedLock documentation](https://docs.hazelcast.com/imdg/latest/cp-subsystem/fencedlock) may help get a
+> The original [FencedLock documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/fencedlock) may help get a
 > better understanding of the .NET IFencedLock implementation.
 
 Hazelcast @Hazelcast.CP.IFencedLock is a linearizable and distributed implementation of `java.util.concurrent.locks.Lock`, meaning that if you lock using a FencedLock, the critical section that it guards is guaranteed to be executed by only one thread in the entire cluster. Even though locks are great for synchronization, they can lead to problems if not used properly. Also note that Hazelcast Lock does not support fairness.
@@ -23,7 +22,7 @@ Instead, it fails with an exception or a specified return value.
 Distributed locks are unfortunately not equivalent to single-node mutexes because of the complexities in distributed 
 systems, such as uncertain communication patterns, and independent and partial failures. In an asynchronous network, 
 no lock service can guarantee mutual exclusion, because there is no way to distinguish between a slow and a crashed 
-process. This can be mitigated with *fences* (see [CP SubSystem FencedLock documentation](https://docs.hazelcast.com/imdg/latest/cp-subsystem/fencedlock)
+process. This can be mitigated with *fences* (see [FencedLock documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/fencedlock)
 for details): lock holders are ordered by a monotonic fencing token, which increments each time the lock is assigned 
 to a new owner. This fencing token can be passed to external services or resources to ensure sequential execution of 
 the side effects performed by lock holders.
@@ -124,6 +123,5 @@ Locks are re-entrant. The same context can lock multiple times on the same lock.
 contexts to be able to require this lock, the owner of the lock must call unlock as many times as the 
 owner called lock.
 
-Refer to the original Java [FencedLock documentation](https://docs.hazelcast.com/imdg/latest/data-structures/fencedlock) and 
-> [CP SubSystem FencedLock documentation](https://docs.hazelcast.com/imdg/latest/cp-subsystem/fencedlock) for a
+Refer to the [FencedLock documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/fencedlock) for a
 > better understanding of FencedLock, fencing, etc.

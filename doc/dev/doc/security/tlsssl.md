@@ -11,7 +11,7 @@ You should set `keyStore` and `trustStore` before starting the members. See the 
 
 ## TLS/SSL for Hazelcast Members
 
-Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members, for end to end encryption. To use it, see the [TLS/SSL for Hazelcast Members section](https://docs.hazelcast.com/imdg/latest/security/tls-ssl.html#tlsssl-for-hazelcast-members).
+Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members, for end to end encryption. To use it, see the [TLS/SSL for Hazelcast Members section](https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl#tlsssl-for-hazelcast-members).
 
 ## TLS/SSL for Hazelcast .NET Clients
 
@@ -79,7 +79,7 @@ To enable mutual authentication, firstly, you need to set the following property
 </network>
 ```
 
-You can see the details of setting mutual authentication on the server side in the [Mutual Authentication section](https://docs.hazelcast.com/imdg/latest/security/tls-ssl.html#mutual-authentication) of the Hazelcast IMDG Reference Manual.
+You can see the details of setting mutual authentication on the server side in the [Mutual Authentication section](https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl#mutual-authentication) of the Hazelcast IMDG Reference Manual.
 
 On the client side, you have to provide the client certificate and its password if there is one. Here is how you do it:
 

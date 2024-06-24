@@ -1,8 +1,8 @@
 # HTopic
 
-A `HTopic` topic is a distributed topic corresponding to a cluster-side [List](https://docs.hazelcast.com/imdg/latest/data-structures/topic.html).
+A `HTopic` topic is a distributed topic corresponding to a cluster-side [List](https://docs.hazelcast.com/hazelcast/latest/data-structures/topic).
 
-The topic behavior can be configured on the server: see the general [Documentation](https://docs.hazelcast.com/imdg/latest/data-structures/topic.html) for complete details about topics.
+The topic behavior can be configured on the server: see the general [Documentation](https://docs.hazelcast.com/hazelcast/latest/data-structures/topic) for complete details about topics.
 
 ## Defining Topics
 

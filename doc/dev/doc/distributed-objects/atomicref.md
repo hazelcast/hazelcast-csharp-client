@@ -32,4 +32,4 @@ while (!cancellationToken.IsCancellationRequested)
 await sentence.DestroyAsync();
 ```
 
-Note that sending functions to, and executing functions on, `AtomicReference` as documented for the Java client (see [this page](https://docs.hazelcast.com/imdg/latest/data-structures/iatomicreference.html)) are not supported by the C# client.
+Note that sending functions to, and executing functions on, `AtomicReference` as documented for the Java client (see [this page](https://docs.hazelcast.com/hazelcast/latest/data-structures/iatomicreference)) are not supported by the C# client.

@@ -34,7 +34,7 @@ In both cases, the Hazelcast .NET Client transparently negociates authentication
 
 ## Server Configuration
 
-Server security configuration (starting with 4.1) is documented in the [Security](https://docs.hazelcast.com/imdg/latest/security/security.html) section of the main Hazelcast documentation, and Kerberos authentication is documented in the [Security Reams](https://docs.hazelcast.com/imdg/latest/security/security-realms.html#kerberos-authentication) sub-section.
+Server security configuration (starting with 4.1) is documented in the [Security](https://docs.hazelcast.com/hazelcast/latest/security/overview) section of the main Hazelcast documentation, and Kerberos authentication is documented in the [Security Reams](https://docs.hazelcast.com/hazelcast/latest/security/security-realms#kerberos-authentication) sub-section.
 
 The Kerberos support in Hazelcast has 2 configuration parts: identity and authentication. The identity part is responsible for retrieving the service ticket from Kerberos KDC (Key Distribution Center). The authentication part verifies the service tickets.
 
