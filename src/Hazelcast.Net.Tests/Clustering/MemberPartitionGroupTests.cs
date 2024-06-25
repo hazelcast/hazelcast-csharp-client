@@ -92,8 +92,8 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task TestServerNotSupportMultiMemberRoutingAndClusterVersion()
         {
-            var address0 = NetworkAddress.Parse("127.0.0.1:11001");
-            var address1 = NetworkAddress.Parse("127.0.0.1:11002");
+            var address0 = NetworkAddress.Parse("127.0.0.1:11003");
+            var address1 = NetworkAddress.Parse("127.0.0.1:11004");
 
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
@@ -144,8 +144,8 @@ namespace Hazelcast.Tests.Clustering
         {
             HConsole.Configure(x => x.Configure<MemberPartitionGroupTests>().SetIndent(4).SetPrefix("MP_GRP"));
 
-            var address0 = NetworkAddress.Parse("127.0.0.1:11001");
-            var address1 = NetworkAddress.Parse("127.0.0.1:11002");
+            var address0 = NetworkAddress.Parse("127.0.0.1:11005");
+            var address1 = NetworkAddress.Parse("127.0.0.1:11006");
 
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
