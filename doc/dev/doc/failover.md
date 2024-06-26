@@ -14,7 +14,7 @@ var options = new HazelcastFailoverOptionsBuilder()
                     fo.Clients.Add(new HazelcastOptionsBuilder().With(opt => {//<2>
                         opt.ClusterName = "blue";
                         opt.Networking.Addresses.Add("CLUSTER_ADDRESS");
-                        opt.Networking.SmartRouting = true;
+                        opt.Networking.RoutingMode = RoutingModes.AllMembers;
                     }).Build());
                     
                     fo.Clients.Add(new HazelcastOptionsBuilder().With(opt => {//<3>
@@ -42,7 +42,7 @@ Let's assume both clusters are down, and we just initialize the client. Client w
 
 **(2)** Client configuration for the first cluster to be connected. Note that first `HazelcastOptionsBuilder` is able to configure to everything on the client, such as `HeartBeat`, `LoadBalancer` etc. This part is still `HazelcastOptions`. See details for client options [Options](configuration/options.md).
 
-**(3)** Alternative cluster options. Alternative options are only for connection and authentication. Alternative client options cannot override other fields. General configuration should be done in first client options which is step **1**. For example, here **3**, we cannot change the `SmartRouting` for each cluster. Also, for server side, provided cluster must have **same partition count**. Client cannot failover to a cluster with different partition count.
+**(3)** Alternative cluster options. Alternative options are only for connection and authentication. Alternative client options cannot override other fields. General configuration should be done in first client options which is step **1**. For example, here **3**, we cannot change the `~~~~RoutingMode` for each cluster. Also, for server side, provided cluster must have **same partition count**. Client cannot failover to a cluster with different partition count.
 
 **(4)** Initialize the client with failover feature. **Failover client uses different options builder and different factory method.**
 
