@@ -102,7 +102,7 @@ public class FailoverTests2 : HazelcastTestBase
                          o.Networking.Addresses.Clear();
                          o.Networking.Addresses.Add(member0Address.ToString());
                          o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-                         o.Networking.SmartRouting = true;
+                         o.Networking.RoutingMode.Mode = RoutingModes.AllMembers;
 
                          // each single socket connection attempt has a timeout
                          // connection to a cluster has a total timeout
@@ -234,7 +234,7 @@ public class FailoverTests2 : HazelcastTestBase
                          o.Networking.Addresses.Clear();
                          o.Networking.Addresses.Add(member0Address.ToString());
                          o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-                         o.Networking.SmartRouting = true;
+                         o.Networking.RoutingMode.Mode = RoutingModes.AllMembers;
 
                          // each single socket connection attempt has a timeout
                          // connection to a cluster has a total timeout

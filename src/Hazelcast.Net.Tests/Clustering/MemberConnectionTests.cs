@@ -135,7 +135,7 @@ namespace Hazelcast.Tests.Clustering
         public async Task TestUnchangedMembersListDoesNotLog()
         {
             var options = new HazelcastOptionsBuilder()
-                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.RoutingMode.Mode = RoutingModes.SingleMember)
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
@@ -172,7 +172,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder()
-                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.RoutingMode.Mode = RoutingModes.SingleMember)
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
@@ -212,7 +212,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder()
-                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.RoutingMode.Mode = RoutingModes.SingleMember)
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 

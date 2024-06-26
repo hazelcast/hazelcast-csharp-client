@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Transactions;
 using NUnit.Framework;
@@ -31,7 +32,7 @@ namespace Hazelcast.Tests.Remote
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            options.Networking.SmartRouting = false;
+            options.Networking.RoutingMode.Mode = RoutingModes.SingleMember;
             return options;
         }
 

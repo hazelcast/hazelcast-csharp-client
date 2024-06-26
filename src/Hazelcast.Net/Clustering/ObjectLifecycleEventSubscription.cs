@@ -27,7 +27,7 @@ namespace Hazelcast.Clustering
         public ObjectLifecycleEventSubscription(ClusterState clusterState, ClusterEvents clusterEvents)
             : base(clusterState, clusterEvents)
         {
-            _isSmart = clusterState.Options.Networking.SmartRouting;
+            _isSmart = clusterState.IsSmartRouting;
         }
 
         protected override ClusterSubscription CreateSubscription()

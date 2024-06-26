@@ -16,6 +16,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Networking;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -43,7 +44,7 @@ namespace Hazelcast.Tests.Remote
 
             var client = await CreateAndStartClientAsync(opt =>
              {
-                 opt.Networking.SmartRouting = false;
+                 opt.Networking.RoutingMode.Mode = RoutingModes.SingleMember;
                  opt.AddSubscriber(events => events.StateChanged((sender, args) =>
                  {
                      HConsole.WriteLine(this, args.State);
@@ -67,7 +68,7 @@ namespace Hazelcast.Tests.Remote
 
             var client = await CreateAndStartClientAsync(opt =>
             {
-                opt.Networking.SmartRouting = false;
+                opt.Networking.RoutingMode.Mode = RoutingModes.SingleMember;
             });
 
             var map = await client.GetMapAsync<int, int>("myMap");
@@ -96,7 +97,7 @@ namespace Hazelcast.Tests.Remote
 
             var client = await CreateAndStartClientAsync(opt =>
             {
-                opt.Networking.SmartRouting = false;
+                opt.Networking.RoutingMode.Mode = RoutingModes.SingleMember;
                 opt.Networking.ShuffleAddresses = false;
                 opt.Networking.Addresses.Clear();
                 opt.Networking.Addresses.Add(memberA.Host + ":" + memberA.Port);

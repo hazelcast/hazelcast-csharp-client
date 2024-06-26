@@ -67,7 +67,7 @@ namespace Hazelcast
             CPSubsystem = new CPSubsystem(cluster, SerializationService, loggerFactory);
 
             // This option is internal and bound to SmartRouting for now.
-            options.Sql.ArgumentIndexCachingEnabled = options.Networking.SmartRouting;
+            options.Sql.ArgumentIndexCachingEnabled = Cluster.IsSmartRouting;
             Sql = new SqlService(options.Sql, cluster, SerializationService, loggerFactory);
 
             if (options.Metrics.Enabled)
