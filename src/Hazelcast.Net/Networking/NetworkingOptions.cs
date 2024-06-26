@@ -43,6 +43,7 @@ public class NetworkingOptions
         ReconnectMode = other.ReconnectMode;
         ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         UsePublicAddresses = other.UsePublicAddresses;
+        RoutingMode = other.RoutingMode.Clone();
 
         Tpc = other.Tpc.Clone();
         Ssl = other.Ssl.Clone();
@@ -91,6 +92,9 @@ public class NetworkingOptions
     /// <para>Note that it however does not guarantee that the operation will always be
     /// executed on the owner, as the member table is only updated every 10 seconds.</para>
     /// </remarks>
+    [Obsolete("This option has no effect, use RoutingMode instead.", false)]
+    [ExcludeFromCodeCoverage]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public bool SmartRouting { get; set; } = true;
 
     /// <summary>
@@ -180,9 +184,12 @@ public class NetworkingOptions
     /// socket. It is also the timeout for cloud discovery.</para>
     /// </remarks>
     public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
-    
-    // TODO: Refactor when new networking options are added.
-    internal byte RoutingMode { get; set; } 
+
+    /// <summary>
+    /// Sets or gets the <see cref="RoutingMode"/> for the client. The client connects to the cluster
+    /// based on the selected routing mode.
+    /// </summary>
+    public RoutingMode RoutingMode { get; } = new();
 
     /// <summary>
     /// Clones the options.

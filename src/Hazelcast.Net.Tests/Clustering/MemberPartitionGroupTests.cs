@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Aggregation;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Networking;
@@ -76,7 +77,7 @@ namespace Hazelcast.Tests.Clustering
             int expectedGroupSize)
         {
 
-            ISubsetClusterMembers memberPartitionGroup = new MemberPartitionGroup();
+            ISubsetClusterMembers memberPartitionGroup = new MemberPartitionGroup(new NetworkingOptions(), NullLogger.Instance);
 
             memberPartitionGroup.SetSubsetMembers(group1);
             if (group2.Version != MemberPartitionGroup.InvalidVersion)
@@ -130,14 +131,61 @@ namespace Hazelcast.Tests.Clustering
             var server1 = CreateServer(state1, address1, "1", clusterId);
             await server1.StartAsync().CfAwait();
 
-            var client = await CreateClient(address0, address1);
+            var client = await CreateClient(address0, address1, RoutingModes.SingleMember);
 
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(2));
             Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(0));
             Assert.That(client.ClusterVersion.IsUnknown, Is.True);
-            // TODO: [SUBSET_ROUTING] throw if config enable after adding config.
+            
         }
 
+        [Test]
+        public async Task TestClientThrowsWhenMultiMemberNotSupported()
+        {
+            var address0 = NetworkAddress.Parse("127.0.0.1:11005");
+            var address1 = NetworkAddress.Parse("127.0.0.1:11006");
+
+            var memberId0 = Guid.NewGuid();
+            var memberId1 = Guid.NewGuid();
+            var clusterId = Guid.NewGuid();
+            var clusterVersion = new ClusterVersion(5, 3);
+
+            var keyValues = new Dictionary<string, string>();
+
+            var state0 = new ServerState()
+            {
+                MemberIds = new[] { memberId0, memberId1 },
+                Addresses = new[] { address0, address1 },
+                Id = 0,
+                MemberId = memberId0,
+                Address = address0,
+                KeyValuePairs = keyValues,
+                ClusterVersion = clusterVersion
+            };
+
+            var server0 = CreateServer(state0, address0, "0", clusterId);
+            await server0.StartAsync().CfAwait();
+
+            var state1 = new ServerState()
+            {
+                MemberIds = new[] { memberId0, memberId1 },
+                Addresses = new[] { address0, address1 },
+                Id = 0,
+                MemberId = memberId1,
+                Address = address1,
+                KeyValuePairs = keyValues,
+                ClusterVersion = clusterVersion
+            };
+
+            var server1 = CreateServer(state1, address1, "1", clusterId);
+            await server1.StartAsync().CfAwait();
+
+            Assert.ThrowsAsync<ConnectionException>(async () =>
+            {
+                // It must throw if routing mode is multi member and server doesn't support it.
+                await CreateClient(address0, address1);
+            });
+        }
 
         [Test]
         public async Task TestClientHandlesClusterVersionAndMemberGroupViews()
@@ -201,9 +249,6 @@ namespace Hazelcast.Tests.Clustering
 
             var client = await CreateClient(address0, address1);
 
-            // Wait for views to be emitted
-            //await Task.Delay(1_000);
-
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(2));
             Assert.That(((MemberPartitionGroup) client.Cluster.Members.SubsetClusterMembers).CurrentGroups.Version, Is.EqualTo(1));
             Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(1));
@@ -234,7 +279,7 @@ namespace Hazelcast.Tests.Clustering
 
         // Mock server over real TPC connection
 
-        private static async Task<HazelcastClient> CreateClient(NetworkAddress address0, NetworkAddress address1)
+        private static async Task<HazelcastClient> CreateClient(NetworkAddress address0, NetworkAddress address1, RoutingModes routingMode = RoutingModes.MultiMember)
         {
             var options = new HazelcastOptionsBuilder()
                 .WithHConsoleLogger()
@@ -243,6 +288,7 @@ namespace Hazelcast.Tests.Clustering
                     options.Networking.Addresses.Add(address0.ToString());
                     options.Networking.Addresses.Add(address1.ToString());
                     options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
+                    options.Networking.RoutingMode.Mode = routingMode;
                 }).Build();
             var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
             return client;

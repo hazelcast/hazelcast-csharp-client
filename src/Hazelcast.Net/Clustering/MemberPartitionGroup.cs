@@ -15,7 +15,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Models;
+using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 namespace Hazelcast.Clustering
 {
     internal class MemberPartitionGroup : ISubsetClusterMembers
@@ -23,9 +26,17 @@ namespace Hazelcast.Clustering
         public const string VersionJsonField = "version";
         public const string PartitionGroupJsonField = "partition.groups";
         public const int InvalidVersion = -1;
+
+        private NetworkingOptions _networkingOptions;
         private object _mutex = new object();
+        private ILogger _logger;
         private MemberGroups _currentGroups
             = new MemberGroups(new List<IList<Guid>>(0), -1, Guid.Empty, Guid.Empty);
+        public MemberPartitionGroup(NetworkingOptions networkingOptions, ILogger logger)
+        {
+            _networkingOptions = networkingOptions;
+            _logger = logger;
+        }
 
 
 #region SubsetPicking
@@ -75,7 +86,7 @@ namespace Hazelcast.Clustering
                     mostOverlappedGroup = examinedGroup;
                 }
             }
-          
+
             return mostOverlappedGroup is { Count: > 0 } ? newGroups : _currentGroups;
         }
 
@@ -103,17 +114,21 @@ namespace Hazelcast.Clustering
 
         // internal for testing
         internal MemberGroups CurrentGroups => _currentGroups;
-        
+
         public IReadOnlyList<Guid> GetSubsetMembers() => _currentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
-            var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup :  PickBestGroup(newGroup);
+            var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup : PickBestGroup(newGroup);
+
+            var old = _currentGroups;
 
             lock (_mutex)
             {
                 _currentGroups = pickedGroup;
             }
+
+            _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} \n New group: {PickedGroup}", old, pickedGroup);
         }
     }
 }
