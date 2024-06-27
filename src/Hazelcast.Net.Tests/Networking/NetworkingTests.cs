@@ -88,8 +88,7 @@ namespace Hazelcast.Tests.Networking
                     var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
                         0, server.Address, server.MemberId, SerializationService.SerializerVersion,
                         "4.0", 1, server.ClusterId, false,
-                        Array.Empty<int>(), Array.Empty<byte>(), 
-                        0, Array.Empty<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(0));
+                        Array.Empty<int>(), Array.Empty<byte>(),0, new List<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(),new Dictionary<string, string>());
                     await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
                     break;
                 }
@@ -106,7 +105,7 @@ namespace Hazelcast.Tests.Networking
                         await Task.Delay(500).CfAwait();
                         var memberVersion = new MemberVersion(4, 0, 0);
                         var memberInfo = new MemberInfo(server.MemberId, server.Address, memberVersion, false, new Dictionary<string, string>());
-                        var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[] { memberInfo });
+                        var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[] {memberInfo});
                         await connection.SendEventAsync(requestMessage, eventMessage).CfAwait();
                     });
                     break;
@@ -276,7 +275,7 @@ namespace Hazelcast.Tests.Networking
                                 0, address, Guid.NewGuid(), SerializationService.SerializerVersion,
                                 "4.0", 1, Guid.NewGuid(), false,
                                 Array.Empty<int>(), Array.Empty<byte>(),
-                                0, Array.Empty<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(0));
+                                0, new List<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(),new Dictionary<string, string>());
                             await ResponseAsync(authResponse).CfAwait();
                             break;
 

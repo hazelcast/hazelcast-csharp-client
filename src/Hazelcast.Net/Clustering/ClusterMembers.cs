@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,9 +39,10 @@ namespace Hazelcast.Clustering
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
         private readonly ILoadBalancer _loadBalancer;
-
+        private readonly ISubsetClusterMembers _subsetClusterMembers;
         private readonly TerminateConnections _terminateConnections;
         private readonly MemberConnectionQueue _memberConnectionQueue;
+        // Used to connect subset of the cluster if routing is multi member.
 
         private MemberTable _members;
         private bool _connected;
@@ -59,12 +61,13 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="clusterState">The cluster state.</param>
         /// <param name="terminateConnections">The terminate connections task.</param>
-        public ClusterMembers(ClusterState clusterState, TerminateConnections terminateConnections)
+        public ClusterMembers(ClusterState clusterState, TerminateConnections terminateConnections, ISubsetClusterMembers subsetClusterMembers)
         {
             HConsole.Configure(x => x.Configure<ClusterMembers>().SetPrefix("CLUST.MBRS"));
 
             _clusterState = clusterState;
             _terminateConnections = terminateConnections;
+            _subsetClusterMembers = subsetClusterMembers;
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
@@ -77,9 +80,12 @@ namespace Hazelcast.Clustering
                 // initialize the queue of members to connect
                 _memberConnectionQueue = new MemberConnectionQueue(x =>
                 {
+                    // TODO: Handle member filtering here for multi member connections
                     lock (_mutex) return _members.ContainsMember(x);
                 }, _clusterState.LoggerFactory);
             }
+            
+            //* TODO: [SMART ROUTING OPTIONS] - Enable subset routing accordingly after adding config.
 
             _clusterState.Failover.ClusterChanged += cluster =>
             {
@@ -138,6 +144,9 @@ namespace Hazelcast.Clustering
         // see notes above, if matching then addresses must match, else anything matches
         public bool IsMemberAddress(MemberInfo member, NetworkAddress address)
             => !MatchMemberAddress || member.ConnectAddress == address;
+        
+        // Gets filtered members for multi member connections.
+        public ISubsetClusterMembers SubsetClusterMembers => _subsetClusterMembers;
 
         // determines whether a member is connected.
         private bool IsMemberConnected(MemberInfo member)
