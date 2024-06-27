@@ -33,9 +33,22 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 namespace Hazelcast.Tests.Clustering
 {
+
     // internal for class MemberPartitionGroup : ISubsetClusterMembers
     internal class MemberPartitionGroupTests
     {
+
+        private List<Server<ServerState>> _servers = new();
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            foreach (var server in _servers)
+            {
+                await server.StopAsync().CfAwait();
+            }
+        }
+
         [TestCase("[[ \"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
         [TestCase("[[\"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
         [TestCase("[[\"fa270257-5767-45bf-a3c6-bafe17bed525\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 1, 5)]
@@ -255,6 +268,7 @@ namespace Hazelcast.Tests.Clustering
                 .WithClusterId(clusterId)
                 .WithState(state)
                 .HandleFallback(ServerHandler);
+            _servers.Add(server0);
             return server0;
         }
 
@@ -476,7 +490,7 @@ namespace Hazelcast.Tests.Clustering
                 1, // Expected version
                 3 // Expected group size
             },
-            
+
             // Case 2: Biggest wins
             new object[]
             {
@@ -512,7 +526,7 @@ namespace Hazelcast.Tests.Clustering
                 1, // Expected version
                 3 // Expected group size
             },
-            
+
 
         };
     }
