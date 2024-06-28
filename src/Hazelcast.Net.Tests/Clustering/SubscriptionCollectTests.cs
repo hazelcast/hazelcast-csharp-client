@@ -142,8 +142,8 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(3)); // 2 more correlated
                 Assert.That(subscription.Count, Is.EqualTo(2)); // 2 members
                 Assert.That(subscription.Active);
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count,Is.EqualTo(1)); // 1 member on v2
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers(), Contains.Item(memberId0));
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count,Is.EqualTo(1)); // 1 member on v2
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId0));
                 Assert.That(client.ClusterVersion, Is.EqualTo(clusterVersion));
 
             }, 10000, 200);

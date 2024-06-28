@@ -20,7 +20,7 @@ namespace Hazelcast.Testing
     internal class NoOpSubsetMembers : ISubsetClusterMembers
     {
 
-        public IReadOnlyList<Guid> GetSubsetMembers()
+        public IReadOnlyList<Guid> GetSubsetMemberIds()
             => throw new NotImplementedException();
         public void SetSubsetMembers(MemberGroups newGroup)
         {

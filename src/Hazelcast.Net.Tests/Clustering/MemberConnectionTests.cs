@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Clustering
             var memberConnection = new MemberConnection(address, address, authenticator,
                 options.Messaging, options.Networking, options.Networking.Ssl,
                 correlationIdSequence,
-                loggerFactory, Guid.NewGuid(), 
+                loggerFactory, Guid.NewGuid(),
                 new AddressProvider(Substitute.For<IAddressProviderSource>(), Substitute.For<ILoggerFactory>()));
 
             var memberConnectionHasClosed = false;
@@ -149,21 +149,91 @@ namespace Hazelcast.Tests.Clustering
 
             var memberList = new List<MemberInfo> { NewMemberInfo(true), NewMemberInfo(true) };
 
-            await clusterMembers.SetMembersAsync(1, memberList);//will print since list new -> 1
-            await clusterMembers.SetMembersAsync(2, memberList);//won't print since list steady
+            await clusterMembers.SetMembersAsync(1, memberList); //will print since list new -> 1
+            await clusterMembers.SetMembersAsync(2, memberList); //won't print since list steady
 
             memberList.Add(NewMemberInfo(true));
-            await clusterMembers.SetMembersAsync(3, memberList);//will print since list new -> 2
-            await clusterMembers.SetMembersAsync(3, memberList);//won't print since list steady
-            
+            await clusterMembers.SetMembersAsync(3, memberList); //will print since list new -> 2
+            await clusterMembers.SetMembersAsync(3, memberList); //won't print since list steady
+
             // logged exactly twice - else member list prints is too verbose
             loggerMock
                 .Received(2)
                 .Log<Arg.AnyType>(LogLevel.Information,
-                0,
-                Arg.Any<Arg.AnyType>(),
-                null,
-                Arg.Any<Func<Arg.AnyType, Exception, string>>());
+                    0,
+                    Arg.Any<Arg.AnyType>(),
+                    null,
+                    Arg.Any<Func<Arg.AnyType, Exception, string>>());
+        }
+
+        [TestCase(RoutingModes.SingleMember)]
+        [TestCase(RoutingModes.MultiMember)]
+        [TestCase(RoutingModes.AllMembers)]
+        public async Task TestRoutingModesWorksWithsFilters(RoutingModes mode)
+        {
+            // Prepare
+            var options = new HazelcastOptionsBuilder()
+                .With(o => o.Networking.RoutingMode.Mode = mode)
+                .With(o => o.Networking.UsePublicAddresses = false)
+                .Build();
+
+            var loggerFactoryMock = Substitute.For<ILoggerFactory>();
+            var loggerMock = Substitute.For<ILogger>();
+            loggerMock.IsEnabled(Arg.Any<LogLevel>()).Returns(true);
+            loggerFactoryMock.CreateLogger(Arg.Any<string>()).Returns(loggerMock);
+
+            var subsetMembers = new MemberPartitionGroup(options.Networking, loggerFactoryMock.CreateLogger<MemberPartitionGroup>());
+
+            var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactoryMock);
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactoryMock), subsetMembers);
+
+            var refMemberList = new List<MemberInfo> { NewMemberInfo(true), NewMemberInfo(true), NewMemberInfo(true), NewMemberInfo(true) };
+            var partitionGroup = refMemberList.Take(2).Select(m => m.Id).ToList();
+            var pGroupVersion = 1;
+
+            void SetSubsetMembers(List<Guid> pGuids)
+            {
+                subsetMembers.SetSubsetMembers(new MemberGroups(new List<IList<Guid>>() { pGuids },
+                    pGroupVersion++,
+                    pGuids.First(),
+                    pGuids.First()));
+            }
+
+            void AssertMembers()
+            {
+                var activeMemberIds = clusterMembers.GetMembers().Select(m => m.Id).ToList();
+
+                // filtered and current members must match in multi member mode
+                if (mode is RoutingModes.MultiMember)
+                {
+                    Assert.That(subsetMembers.GetSubsetMemberIds(), Is.EquivalentTo(activeMemberIds));
+                }
+                else
+                {
+                    // In the test, partition group is always a subset of the member list
+                    // So, it should never be equivalent to the member list in non multi member mode.
+                    Assert.That(subsetMembers.GetSubsetMemberIds(), Is.Not.EquivalentTo(activeMemberIds));
+                    Assert.That(refMemberList, Is.EquivalentTo(clusterMembers.GetMembers()));
+                }
+            }
+
+            // Actual testing
+
+            // Set partition group
+            SetSubsetMembers(partitionGroup);
+
+            // First Member table
+            await clusterMembers.SetMembersAsync(1, refMemberList);
+            AssertMembers();
+
+            // Partition Group changed
+            partitionGroup = refMemberList.Skip(2).Select(m => m.Id).ToList();
+            SetSubsetMembers(partitionGroup);
+            
+            // This is event bound to Events.MemberPartitionGroupsUpdated on client level.
+            // we mimic this behavior here.
+            await clusterMembers.HandleMemberPartitionGroupsUpdated();
+            AssertMembers();
         }
 
         [Test]
@@ -245,7 +315,7 @@ namespace Hazelcast.Tests.Clustering
         }
 
         [Test]
-        public async Task FailCurentInvocationWhenDisposed()
+        public async Task FailCurrentInvocationWhenDisposed()
         {
             var loggerFactory = new NullLoggerFactory();
             var address = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}");
@@ -296,10 +366,10 @@ namespace Hazelcast.Tests.Clustering
             // bam
             await AssertEx.ThrowsAsync<TargetDisconnectedException>(async () => await invoking);
         }
-        
-        
-        
-        
+
+
+
+
 
         internal class ServerState
         {
@@ -316,71 +386,71 @@ namespace Hazelcast.Tests.Clustering
             {
                 // must handle auth
                 case ClientAuthenticationServerCodec.RequestMessageType:
-                    {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
-                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
-                        var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
-                            0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
-                            "4.0", partitionsCount, request.Server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>(),0, new List<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(),new Dictionary<string, string>());
-                        await request.RespondAsync(authResponse).CfAwait();
-                        break;
-                    }
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
+                    var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
+                    var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
+                        0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
+                        "4.0", partitionsCount, request.Server.ClusterId, false,
+                        Array.Empty<int>(), Array.Empty<byte>(), 0, new List<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(), new Dictionary<string, string>());
+                    await request.RespondAsync(authResponse).CfAwait();
+                    break;
+                }
 
                 // must handle events
                 case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
+                    var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
+                    var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                    await request.RespondAsync(addResponse).CfAwait();
+
+                    _ = Task.Run(async () =>
                     {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
-                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
-                        var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await request.RespondAsync(addResponse).CfAwait();
+                        await Task.Delay(500).CfAwait();
 
-                        _ = Task.Run(async () =>
+                        const int membersVersion = 1;
+                        var memberVersion = new MemberVersion(4, 0, 0);
+                        var memberAttributes = new Dictionary<string, string>();
+                        var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
                         {
-                            await Task.Delay(500).CfAwait();
-
-                            const int membersVersion = 1;
-                            var memberVersion = new MemberVersion(4, 0, 0);
-                            var memberAttributes = new Dictionary<string, string>();
-                            var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
-                            {
-                                new MemberInfo(request.State.MemberId, request.State.Address, memberVersion, false, memberAttributes)
-                            });
-                            await request.RaiseAsync(membersEventMessage).CfAwait();
-
-                            await Task.Delay(500).CfAwait();
-
-                            const int partitionsVersion = 1;
-                            var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
-                            {
-                                new KeyValuePair<Guid, IList<int>>(request.State.MemberId, new List<int> { 0 }),
-                                new KeyValuePair<Guid, IList<int>>(request.State.MemberId, new List<int> { 1 }),
-                            });
-                            await request.RaiseAsync(partitionsEventMessage).CfAwait();
+                            new MemberInfo(request.State.MemberId, request.State.Address, memberVersion, false, memberAttributes)
                         });
+                        await request.RaiseAsync(membersEventMessage).CfAwait();
 
-                        break;
-                    }
+                        await Task.Delay(500).CfAwait();
+
+                        const int partitionsVersion = 1;
+                        var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
+                        {
+                            new KeyValuePair<Guid, IList<int>>(request.State.MemberId, new List<int> { 0 }),
+                            new KeyValuePair<Guid, IList<int>>(request.State.MemberId, new List<int> { 1 }),
+                        });
+                        await request.RaiseAsync(partitionsEventMessage).CfAwait();
+                    });
+
+                    break;
+                }
 
                 // create object
                 case ClientPingServerCodec.RequestMessageType:
-                    {
-                        HConsole.WriteLine(this, $"(server{request.State.Id}) Ping");
-                        var pingRequest = ClientPingServerCodec.DecodeRequest(request.Message);
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Ping");
+                    var pingRequest = ClientPingServerCodec.DecodeRequest(request.Message);
 
-                        // no response, will timeout
+                    // no response, will timeout
 
-                        break;
-                    }
+                    break;
+                }
 
                 // unexpected message = error
                 default:
-                    {
-                        // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
-                        var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
-                        await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
-                        break;
-                    }
+                {
+                    // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
+                    var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
+                    await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
+                    break;
+                }
             }
         }
 

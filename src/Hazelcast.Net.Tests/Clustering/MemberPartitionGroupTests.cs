@@ -99,7 +99,7 @@ namespace Hazelcast.Tests.Clustering
             }
 
             Assert.AreEqual(expectedVersion, ((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.Version);
-            Assert.That(memberPartitionGroup.GetSubsetMembers(), Contains.Item(expectedMemberId));
+            Assert.That(memberPartitionGroup.GetSubsetMemberIds(), Contains.Item(expectedMemberId));
             Assert.That(((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.SelectedGroup.Count, Is.EqualTo(expectedGroupSize));
         }
 
@@ -147,7 +147,7 @@ namespace Hazelcast.Tests.Clustering
             var client = await CreateClient(address0, address1, RoutingModes.SingleMember);
 
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(2));
-            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(0));
+            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(0));
             Assert.That(client.ClusterVersion.IsUnknown, Is.True);
             
         }
@@ -264,7 +264,7 @@ namespace Hazelcast.Tests.Clustering
 
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(2));
             Assert.That(((MemberPartitionGroup) client.Cluster.Members.SubsetClusterMembers).CurrentGroups.Version, Is.EqualTo(1));
-            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(1));
+            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(1));
             Assert.That(client.ClusterVersion, Is.EqualTo(clusterVersion));
 
 
@@ -282,8 +282,8 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(client.State == ClientState.Connected);
 
                 Assert.That(((MemberPartitionGroup) client.Cluster.Members.SubsetClusterMembers).CurrentGroups.Version, Is.EqualTo(2));
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(1));
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers(), Contains.Item(memberId0));
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(1));
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId0));
                 Assert.That(client.ClusterVersion, Is.EqualTo(newClusterVersions));
 
             }, 10_000, 200);
