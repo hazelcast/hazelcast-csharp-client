@@ -164,7 +164,9 @@ internal class Authenticator
         HConsole.WriteLine(this, "Send auth request");
         var responseMessage = await client.SendAsync(requestMessage).CfAwait();
         HConsole.WriteLine(this, "Rcvd auth response");
+        
         var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
+        
         HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);
 
         return (AuthenticationStatus) response.Status switch

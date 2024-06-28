@@ -18,7 +18,7 @@ namespace Hazelcast.Clustering
 {
     internal interface ISubsetClusterMembers
     {
-        IReadOnlyList<Guid> GetSubsetMembers();
+        IReadOnlyList<Guid> GetSubsetMemberIds();
 
         void SetSubsetMembers(MemberGroups newGroup);
     }

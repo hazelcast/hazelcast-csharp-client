@@ -115,7 +115,7 @@ namespace Hazelcast.Clustering
         // internal for testing
         internal MemberGroups CurrentGroups => _currentGroups;
 
-        public IReadOnlyList<Guid> GetSubsetMembers() => _currentGroups.SelectedGroup;
+        public IReadOnlyList<Guid> GetSubsetMemberIds() => _currentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {

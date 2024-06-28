@@ -439,6 +439,11 @@ namespace Hazelcast.Clustering
         public RoutingModes RoutingMode => Options.Networking.RoutingMode.Mode;
 
         /// <summary>
+        /// Gets whether current routing mode is MultiMember or not.
+        /// </summary>
+        public bool IsRoutingModeMultiMember => Options.Networking.RoutingMode.Mode is RoutingModes.MultiMember;
+
+        /// <summary>
         /// Gets Failover service.
         /// </summary>
         public Failover Failover => _failover;
