@@ -13,11 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Partitioning;
 using Microsoft.Extensions.Logging;
@@ -35,6 +38,7 @@ namespace Hazelcast.Clustering
         private readonly Failover _failover;
         private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
+        private ClusterVersion _clusterVersion = new ClusterVersion(Models.ClusterVersion.Unknown, ClusterVersion.Unknown);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterState"/> class.
@@ -135,6 +139,11 @@ namespace Hazelcast.Clustering
         /// </summary>
         public string ClusterName { get; private set; }
 
+        /// <summary>
+        /// Cluster version.
+        /// </summary>
+        public ClusterVersion ClusterVersion => _clusterVersion;
+
         #endregion
 
         #region ClientState
@@ -148,6 +157,20 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ClientState ClientState { get; private set; }
 
+        /// <summary>
+        /// Sets the cluster version.
+        /// </summary>
+        /// <param name="clusterVersion">The new cluster version.</param>
+        public void ChangeClusterVersion(ClusterVersion clusterVersion)
+        {
+            if(clusterVersion == null) return;
+            
+            lock (_mutex)
+            {
+                _clusterVersion = clusterVersion;    
+            }
+        }
+        
         /// <summary>
         /// Changes the state, and pushes the change to the events queue.
         /// </summary>
@@ -408,7 +431,17 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Whether smart routing is enabled.
         /// </summary>
-        public bool IsSmartRouting => Options.Networking.SmartRouting;
+        public bool IsSmartRouting => RoutingMode == RoutingModes.AllMembers;
+
+        /// <summary>
+        /// Current routing mode.
+        /// </summary>
+        public RoutingModes RoutingMode => Options.Networking.RoutingMode.Mode;
+
+        /// <summary>
+        /// Gets whether current routing mode is MultiMember or not.
+        /// </summary>
+        public bool IsRoutingModeMultiMember => Options.Networking.RoutingMode.Mode is RoutingModes.MultiMember;
 
         /// <summary>
         /// Gets Failover service.

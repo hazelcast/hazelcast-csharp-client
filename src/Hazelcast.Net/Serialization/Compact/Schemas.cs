@@ -190,7 +190,7 @@ internal class Schemas : ISchemas
     }
 
     /// <inheritdoc />
-    public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+    public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster, ClusterVersion clusterVersion)
     {
         // when the first connection to a cluster is opened, regardless of whether it's a "new"
         // cluster (first time the client connects, or cluster ID change) or not, make sure we

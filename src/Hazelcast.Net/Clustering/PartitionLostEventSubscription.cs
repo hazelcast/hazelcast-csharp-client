@@ -29,7 +29,7 @@ namespace Hazelcast.Clustering
             : base(clusterState, clusterEvents)
         {
             _clusterMembers = clusterMembers;
-            _isSmart = clusterState.Options.Networking.SmartRouting;
+            _isSmart = clusterState.IsSmartRouting;
         }
 
         protected override ClusterSubscription CreateSubscription()

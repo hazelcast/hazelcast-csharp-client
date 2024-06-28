@@ -269,10 +269,12 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsTrue(options.Addresses.Contains("localhost"));
             Assert.IsTrue(options.Addresses.Contains("otherhost"));
             Assert.IsFalse(options.ShuffleAddresses);
-            Assert.IsFalse(options.SmartRouting);
             Assert.IsFalse(options.RedoOperations);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
             Assert.IsFalse(options.ShuffleAddresses);
+            
+            Assert.AreEqual(RoutingModes.SingleMember, options.RoutingMode.Mode);
+            Assert.AreEqual(RoutingStrategy.PartitionGroups, options.RoutingMode.Strategy);
 
             var sslOptions = options.Ssl;
             Assert.IsTrue(sslOptions.Enabled);

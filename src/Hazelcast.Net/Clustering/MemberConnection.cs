@@ -253,7 +253,7 @@ namespace Hazelcast.Clustering
             { OnReceiveMessage = ReceiveMessage };
 
             HConsole.Configure(x => x.Configure(_messageConnection).SetIndent(8).SetPrefix($"CLT.MSG [{Id.ToShortString()}]"));
-
+           
             AuthenticationResult result;
             try
             {
@@ -265,9 +265,11 @@ namespace Hazelcast.Clustering
                 var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CfAwait();
                 if (!sent) throw new ConnectionException("Failed to send protocol bytes.");
 
+                var routingMode = (byte) _networkingOptions.RoutingMode.Mode;
+                
                 // authenticate (does not return null, throws if it fails to authenticate)
                 result = await _authenticator
-                    .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, cancellationToken)
+                    .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, routingMode, cancellationToken)
                     .CfAwait();
             }
             catch
