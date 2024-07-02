@@ -147,5 +147,6 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static DiskTierOptions CreateDiskTierConfig(bool enabled, string deviceName)
             => new() {Enabled = enabled, DeviceName = deviceName};
+        public static ClusterVersion CreateVersion(byte major, byte minor) => new ClusterVersion(major, minor);
     }
 }

@@ -84,7 +84,7 @@ public class CompactQaTests : ClusterRemoteTestBase
         options.Messaging.RetryTimeoutSeconds = 20;
         await using var client = HazelcastClientFactory.CreateClient(options);
         // use an internal-level handler, exceptions in user-level handlers are caught
-        client.Cluster.Connections.ConnectionOpened += (_, _, _, _) =>
+        client.Cluster.Connections.ConnectionOpened += (_, _, _, _, _) =>
         {
             if (throwException) throw new Exception("bang!");
             return default;

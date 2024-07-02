@@ -76,6 +76,12 @@
         "localhost",
         "otherhost"
       ],
+      
+      // routing mode
+      "routingMode": {
+        "mode": "singleMember",
+        "strategy": "partitionGroups"
+      },
 
       // whether to shuffle addresses when connecting to the cluster
       "shuffleAddresses": false,

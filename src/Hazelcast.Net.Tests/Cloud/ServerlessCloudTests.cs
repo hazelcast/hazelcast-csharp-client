@@ -61,7 +61,7 @@ public class ServerlessCloudTests : CloudTestBase
         var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
 
         HConsole.WriteLine(this, $"Create client (smart={(smartMode ? "true" : "false")})");
-        await using var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = smartMode; });
+        await using var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.RoutingMode.Mode = smartMode ? RoutingModes.AllMembers: RoutingModes.SingleMember; });
 
         if (smartMode)
         {
@@ -98,7 +98,7 @@ public class ServerlessCloudTests : CloudTestBase
         var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
 
         HConsole.WriteLine(this, $"Create client (smart={(smartMode ? "true" : "false")})");
-        await using var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = smartMode; });
+        await using var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.RoutingMode.Mode = smartMode ? RoutingModes.AllMembers: RoutingModes.SingleMember; });
         HConsole.WriteLine(this, "Client is connected");
 
         if (smartMode)

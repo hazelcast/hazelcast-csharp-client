@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Networking;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -63,7 +64,10 @@ namespace Hazelcast.Clustering
 
             // create components
             _terminateConnections = new TerminateConnections(loggerFactory);
-            Members = new ClusterMembers(State, _terminateConnections);
+            
+            var subsetMembers = new MemberPartitionGroup(options.Networking, loggerFactory.CreateLogger<MemberPartitionGroup>());
+            
+            Members = new ClusterMembers(State, _terminateConnections, subsetMembers);
             Messaging = new ClusterMessaging(State, Members);
             Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
             SerializationService = serializationServiceFactory(Messaging);

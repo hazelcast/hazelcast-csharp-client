@@ -178,7 +178,7 @@ namespace Hazelcast.Sql
         }
 
         /// <summary>
-        /// Tries to find partition Id for the key if argument index exists for the statement and <see cref="NetworkingOptions.SmartRouting"/> enabled.
+        /// Tries to find partition Id for the key if argument index exists for the statement and  if RoutingMode is <see cref="RoutingModes.AllMembers"/>.
         /// </summary>
         /// <param name="sql">Sql Statement.</param>
         /// <param name="serializedParameters">Serialized parameters of the statement.</param>

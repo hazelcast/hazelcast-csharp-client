@@ -135,7 +135,7 @@ namespace Hazelcast.Tests.Clustering
         public async Task TestUnchangedMembersListDoesNotLog()
         {
             var options = new HazelcastOptionsBuilder()
-                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.RoutingMode.Mode = RoutingModes.SingleMember)
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
@@ -145,7 +145,7 @@ namespace Hazelcast.Tests.Clustering
             loggerFactoryMock.CreateLogger(Arg.Any<string>()).Returns(loggerMock);
 
             var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactoryMock);
-            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactoryMock));
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactoryMock), new NoOpSubsetMembers());
 
             var memberList = new List<MemberInfo> { NewMemberInfo(true), NewMemberInfo(true) };
 
@@ -172,14 +172,14 @@ namespace Hazelcast.Tests.Clustering
             HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder()
-                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.RoutingMode.Mode = RoutingModes.SingleMember)
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
             var loggerFactory = NullLoggerFactory.Instance;
 
             var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactory);
-            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory));
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory), new NoOpSubsetMembers());
 
             foreach (var members in new[]
             {
@@ -212,7 +212,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder()
-                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.RoutingMode.Mode = RoutingModes.SingleMember)
                 .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
@@ -222,7 +222,7 @@ namespace Hazelcast.Tests.Clustering
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
             var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactory);
-            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory));
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory), new NoOpSubsetMembers());
 
             foreach (var members in new[]
             {
@@ -296,6 +296,10 @@ namespace Hazelcast.Tests.Clustering
             // bam
             await AssertEx.ThrowsAsync<TargetDisconnectedException>(async () => await invoking);
         }
+        
+        
+        
+        
 
         internal class ServerState
         {
@@ -318,7 +322,7 @@ namespace Hazelcast.Tests.Clustering
                         var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                             0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
                             "4.0", partitionsCount, request.Server.ClusterId, false,
-                            Array.Empty<int>(), Array.Empty<byte>(), 0, Array.Empty<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(0));
+                            Array.Empty<int>(), Array.Empty<byte>(),0, new List<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(),new Dictionary<string, string>());
                         await request.RespondAsync(authResponse).CfAwait();
                         break;
                     }

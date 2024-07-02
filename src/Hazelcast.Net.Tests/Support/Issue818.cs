@@ -46,7 +46,7 @@ public class Issue818 : SingleMemberClientRemoteTestBase
             {
                 o.Networking.Addresses.Add("127.0.0.1");
                 o.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
-                o.Networking.SmartRouting = true;
+                o.Networking.RoutingMode.Mode = RoutingModes.AllMembers;
                 o.Networking.ShuffleAddresses = true;
                 o.Networking.RedoOperations = true;
 
