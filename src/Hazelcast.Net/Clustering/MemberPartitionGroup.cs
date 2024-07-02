@@ -24,7 +24,8 @@ namespace Hazelcast.Clustering
     internal class MemberPartitionGroup : ISubsetClusterMembers
     {
         public const string VersionJsonField = "version";
-        public const string PartitionGroupJsonField = "partition.groups";
+        public const string PartitionGroupRootJsonField = "memberGroups";
+        public const string PartitionGroupJsonField = "groups";
         public const int InvalidVersion = -1;
 
         private NetworkingOptions _networkingOptions;
@@ -115,7 +116,7 @@ namespace Hazelcast.Clustering
         // internal for testing
         internal MemberGroups CurrentGroups => _currentGroups;
 
-        public IReadOnlyList<Guid> GetSubsetMembers() => _currentGroups.SelectedGroup;
+        public IReadOnlyList<Guid> GetSubsetMemberIds() => _currentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
@@ -129,6 +130,29 @@ namespace Hazelcast.Clustering
             }
 
             _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} \n New group: {PickedGroup}", old, pickedGroup);
+        }
+        public void RemoveSubsetMember(Guid memberId)
+        {
+            lock (_mutex)
+            {
+                if (_currentGroups.SelectedGroup.Contains(memberId))
+                {
+                    var clearedGroup =  new List<IList<Guid>>();
+
+                    foreach (var group in _currentGroups.Groups)
+                    {
+                        var cleared = group.Where(id => id != memberId).ToList();
+                        if (cleared.Count > 0)
+                        {
+                            clearedGroup.Add(cleared);
+                        }
+                    }
+                    
+                    var newGroup = new MemberGroups(clearedGroup, _currentGroups.Version, _currentGroups.ClusterId, _currentGroups.MemberReceivedFrom);
+                    
+                    SetSubsetMembers(newGroup);
+                }
+            }
         }
     }
 }

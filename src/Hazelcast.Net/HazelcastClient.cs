@@ -122,6 +122,9 @@ namespace Hazelcast
             // when members are updated, trigger the user-level event
             Cluster.Events.MembersUpdated += Trigger<MembersUpdatedEventHandler, MembersUpdatedEventArgs>;
 
+            // When member partition groups are updated, member table should be updated accordingly.
+            Cluster.Events.MemberPartitionGroupsUpdated += Cluster.Members.HandleMemberPartitionGroupsUpdated;
+
             // -- ConnectionClosed -- order is *important* --
 
             // when a connection is closed, notify the heartbeat service
