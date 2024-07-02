@@ -50,18 +50,17 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
-        [TestCase("[[ \"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
-        [TestCase("[[\"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
-        [TestCase("[[\"fa270257-5767-45bf-a3c6-bafe17bed525\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 1, 5)]
-        [TestCase("[['']]", "", 0, -1)]
+        [TestCase("{ \"version\":\"1\", \"groups\":[[ \"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
+        [TestCase("{\"version\":\"1\", \"groups\":[[\"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
+        [TestCase("{\"version\":\"5\", \"groups\":[[\"fa270257-5767-45bf-a3c6-bafe17bed525\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 1, 5)]
+        [TestCase("{\"version\":\"1\", \"groups\":[['']]]", "", 0, -1)]
         [TestCase("", "", 0, -1)]
-        [TestCase("[[\"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, -1)]
+        [TestCase("{\"version\":\"-1\", \"groups\":[[\"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, -1)]
         public void TestAuthenticatorCanParseMemberList(string memberList, string memberId, int count, int version)
         {
             ClientAuthenticationCodec.ResponseParameters response = new ClientAuthenticationCodec.ResponseParameters();
             response.KeyValuePairs = new Dictionary<string, string>();
-            response.KeyValuePairs[MemberPartitionGroup.PartitionGroupJsonField] = memberList;
-            response.KeyValuePairs[MemberPartitionGroup.VersionJsonField] = version.ToString();
+            response.KeyValuePairs[MemberPartitionGroup.PartitionGroupRootJsonField] = memberList;
             response.ClusterId = Guid.NewGuid();
             response.MemberUuid = string.IsNullOrEmpty(memberId) ? Guid.NewGuid() : Guid.Parse(memberId);
 
@@ -99,7 +98,7 @@ namespace Hazelcast.Tests.Clustering
             }
 
             Assert.AreEqual(expectedVersion, ((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.Version);
-            Assert.That(memberPartitionGroup.GetSubsetMembers(), Contains.Item(expectedMemberId));
+            Assert.That(memberPartitionGroup.GetSubsetMemberIds(), Contains.Item(expectedMemberId));
             Assert.That(((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.SelectedGroup.Count, Is.EqualTo(expectedGroupSize));
         }
 
@@ -144,12 +143,12 @@ namespace Hazelcast.Tests.Clustering
             var server1 = CreateServer(state1, address1, "1", clusterId);
             await server1.StartAsync().CfAwait();
 
-            var client = await CreateClient(address0, address1, RoutingModes.SingleMember);
+            var client = await CreateClient(RoutingModes.SingleMember, address0, address1);
 
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(2));
-            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(0));
+            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(0));
             Assert.That(client.ClusterVersion.IsUnknown, Is.True);
-            
+
         }
 
         [Test]
@@ -196,7 +195,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.ThrowsAsync<ConnectionException>(async () =>
             {
                 // It must throw if routing mode is multi member and server doesn't support it.
-                await CreateClient(address0, address1);
+                await CreateClient(RoutingModes.MultiMember, address0);
             });
         }
 
@@ -212,20 +211,19 @@ namespace Hazelcast.Tests.Clustering
             var memberId1 = Guid.NewGuid();
             var clusterId = Guid.NewGuid();
             var clusterVersion = new ClusterVersion(5, 5);
-            var memberCollectionJson = "[[" +
+            var memberCollectionJson = "{ \"version\":\"1\", \"groups\":[[" +
                                        $"\"{memberId0}\"" +
-                                       "]]";
+                                       "]]}";
 
-            var memberCollectionJson2 = "[[" +
+            var memberCollectionJson2 = "{ \"version\":\"1\", \"groups\":[[" +
                                         $"\"{memberId0}\"," +
                                         $"\"{memberId1}\"" +
-                                        "]]";
+                                        "]]}";
 
             var keyValues = new Dictionary<string, string>
             {
-                { MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson },
-                { MemberPartitionGroup.VersionJsonField, "1" },
-                { "cluster.version", "5.5" }
+                { MemberPartitionGroup.PartitionGroupRootJsonField, memberCollectionJson },
+                { Authenticator.ClusterVersionKey, clusterVersion.ToString() }
             };
 
             var latchViews = new SemaphoreSlim(0);
@@ -260,11 +258,11 @@ namespace Hazelcast.Tests.Clustering
             var server1 = CreateServer(state1, address1, "1", clusterId);
             await server1.StartAsync().CfAwait();
 
-            var client = await CreateClient(address0, address1);
+            var client = await CreateClient(RoutingModes.MultiMember, address0, address1);
 
-            Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(2));
+            Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(1));
             Assert.That(((MemberPartitionGroup) client.Cluster.Members.SubsetClusterMembers).CurrentGroups.Version, Is.EqualTo(1));
-            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(1));
+            Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(1));
             Assert.That(client.ClusterVersion, Is.EqualTo(clusterVersion));
 
 
@@ -282,9 +280,10 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(client.State == ClientState.Connected);
 
                 Assert.That(((MemberPartitionGroup) client.Cluster.Members.SubsetClusterMembers).CurrentGroups.Version, Is.EqualTo(2));
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers().Count, Is.EqualTo(1));
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMembers(), Contains.Item(memberId0));
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(1));
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId0));
                 Assert.That(client.ClusterVersion, Is.EqualTo(newClusterVersions));
+                Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(1));
 
             }, 10_000, 200);
         }
@@ -292,14 +291,17 @@ namespace Hazelcast.Tests.Clustering
 
         // Mock server over real TPC connection
 
-        private static async Task<HazelcastClient> CreateClient(NetworkAddress address0, NetworkAddress address1, RoutingModes routingMode = RoutingModes.MultiMember)
+        private static async Task<HazelcastClient> CreateClient(RoutingModes routingMode = RoutingModes.MultiMember, params NetworkAddress[] addresses)
         {
             var options = new HazelcastOptionsBuilder()
                 .WithHConsoleLogger()
                 .With(options =>
                 {
-                    options.Networking.Addresses.Add(address0.ToString());
-                    options.Networking.Addresses.Add(address1.ToString());
+                    foreach (var address in addresses)
+                    {
+                        options.Networking.Addresses.Add(address.ToString());
+                    }
+
                     options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
                     options.Networking.RoutingMode.Mode = routingMode;
                 }).Build();
