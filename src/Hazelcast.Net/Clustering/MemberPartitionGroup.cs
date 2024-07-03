@@ -150,7 +150,7 @@ namespace Hazelcast.Clustering
                     
                     var newGroup = new MemberGroups(clearedGroup, _currentGroups.Version, _currentGroups.ClusterId, _currentGroups.MemberReceivedFrom);
                     
-                    SetSubsetMembers(newGroup);
+                    _currentGroups = newGroup.SelectedGroup.Count > 0 ? newGroup : new MemberGroups(new List<IList<Guid>>(0), MemberPartitionGroup.InvalidVersion, Guid.Empty, Guid.Empty);
                 }
             }
         }

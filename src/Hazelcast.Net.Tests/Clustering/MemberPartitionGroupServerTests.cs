@@ -24,7 +24,8 @@ using Thrift.Protocol;
 namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise")]
-    //[ServerCondition("5.5")]
+    [ServerCondition("5.5")]
+    [Timeout(30_000)]
     public class MemberPartitionGroupServerTests : MultiMembersRemoteTestBase
     {
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
@@ -39,38 +40,34 @@ namespace Hazelcast.Tests.Clustering
             var address3 = "127.0.0.1:5703";
 
             // create a client with the given routing strategy
-          //  var client1 = await CreateClient(routingStrategy, address1);
-           // var client2 = await CreateClient(routingStrategy, address2);
-             var client3 = await CreateClient(routingStrategy, address3);
+            var client1 = await CreateClient(routingStrategy, address1);
+            var client2 = await CreateClient(routingStrategy, address2);
+            var client3 = await CreateClient(routingStrategy, address3);
 
-            // Assert.AreEqual(RcCluster.Id, client1.Cluster.Name);
-            // Assert.AreEqual(RcCluster.Id, client2.Cluster.Name);
-            Assert.AreEqual(RcCluster.Id, client3.Cluster.Name);
-
-            // AssertClientOnlySees(client1, address1);
-            // AssertClientOnlySees(client2, address2);
-            // AssertClientOnlySees(client3, address3);
+            AssertClientOnlySees(client1, address1);
+            AssertClientOnlySees(client2, address2);
+            AssertClientOnlySees(client3, address3);
 
             // Scale Up
             var member4 = await AddMember();
 
-            // AssertClientOnlySees(client1, address1);
-            // AssertClientOnlySees(client2, address2);
-            // AssertClientOnlySees(client3, address3);
+            AssertClientOnlySees(client1, address1);
+            AssertClientOnlySees(client2, address2);
+            AssertClientOnlySees(client3, address3);
 
             // Scale Down
             await RemoveMember(member4.Uuid);
 
-            // AssertClientOnlySees(client1, address1);
-            // AssertClientOnlySees(client2, address2);
-            // AssertClientOnlySees(client3, address3);
+            AssertClientOnlySees(client1, address1);
+            AssertClientOnlySees(client2, address2);
+            AssertClientOnlySees(client3, address3);
 
             // Kill a member and check if clients are still connected correct members
             var memberId3 = RcMembers.Values.Where(m => address3.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
             await RemoveMember(memberId3);
 
-           // AssertClientOnlySees(client1, address1);
-           // AssertClientOnlySees(client2, address2);
+            AssertClientOnlySees(client1, address1);
+            AssertClientOnlySees(client2, address2);
 
             await AssertEx.SucceedsEventually(()
                     => Assert.That(client3.State, Is.EqualTo(ClientState.Disconnected)),
@@ -92,12 +89,13 @@ namespace Hazelcast.Tests.Clustering
                 10_000, 500);
 
             // Check if client1 is connected to the new member
-            // cannot use the old member id since we can only either kill or create members
+            // cannot use the old member id since we can only either kill or create member
             Assert.That(client3.Members.Count(), Is.EqualTo(1));
             Assert.That(client3.Members.First().Member.ConnectAddress, Is.EqualTo(nAddress3));
 
-           // AssertClientOnlySees(client2, address2);
-            //AssertClientOnlySees(client3, address3);
+            AssertClientOnlySees(client1, address1);
+            AssertClientOnlySees(client2, address2);
+            AssertClientOnlySees(client3, address3);
         }
 
         private void AssertClientOnlySees(HazelcastClient client, string address)
@@ -130,10 +128,10 @@ namespace Hazelcast.Tests.Clustering
                     {
                         Console.WriteLine(eventArgs.State);
                     }));
-                    
+
                     args.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(
-                        conf=>conf.AddConsole().SetMinimumLevel(LogLevel.Debug));
-                    
+                        conf => conf.AddConsole().SetMinimumLevel(LogLevel.Debug));
+
                 })
                 .Build();
 
