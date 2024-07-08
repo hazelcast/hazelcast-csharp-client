@@ -133,7 +133,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        public IReadOnlyList<Guid> GetSubsetMembersIds() => CurrentGroups.SelectedGroup;
+        public IReadOnlyList<Guid> GetSubsetMemberIds() => CurrentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
