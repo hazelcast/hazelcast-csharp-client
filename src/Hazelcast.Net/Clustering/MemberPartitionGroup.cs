@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 namespace Hazelcast.Clustering
 {
     internal class MemberPartitionGroup : ISubsetClusterMembers
@@ -28,11 +29,11 @@ namespace Hazelcast.Clustering
         public const string PartitionGroupJsonField = "groups";
         public const int InvalidVersion = -1;
 
-        private NetworkingOptions _networkingOptions;
-        private object _mutex = new object();
+        private NetworkingOptions _networkingOptions;        
         private ILogger _logger;
+        private readonly ReaderWriterLockSlim _mutex = new ReaderWriterLockSlim();
         private MemberGroups _currentGroups
-            = new MemberGroups(new List<IList<Guid>>(0), -1, Guid.Empty, Guid.Empty);
+            = new MemberGroups(null, InvalidVersion, Guid.Empty, Guid.Empty);
         public MemberPartitionGroup(NetworkingOptions networkingOptions, ILogger logger)
         {
             _networkingOptions = networkingOptions;
@@ -50,12 +51,14 @@ namespace Hazelcast.Clustering
             if (newGroup is null)
                 return _currentGroups;
 
-            var shouldNeedNewGroup = _currentGroups.ClusterId != newGroup.ClusterId || _currentGroups.SelectedGroup.Count == 0;
-
-            if (shouldNeedNewGroup && newGroup.MemberReceivedFrom != Guid.Empty && newGroup.SelectedGroup.Count > 0)
+            if ((_currentGroups.ClusterId != newGroup.ClusterId || _currentGroups.SelectedGroup.Count == 0)
+                && newGroup.MemberReceivedFrom != Guid.Empty
+                && newGroup.SelectedGroup.Count > 0)
+            {
                 return newGroup;
+            }
 
-            if (!shouldNeedNewGroup)
+            if (_currentGroups.SelectedGroup.Count == 0)
             {
                 var pickedGroup = GetMostOverlappedGroup(newGroup.ClusterId, newGroup.MemberReceivedFrom, newGroup);
 
@@ -87,57 +90,78 @@ namespace Hazelcast.Clustering
                     mostOverlappedGroup = examinedGroup;
                 }
             }
-
+          
             return mostOverlappedGroup is { Count: > 0 } ? newGroups : _currentGroups;
         }
 
         // internal for testing
-        internal MemberGroups GetBiggestGroup(MemberGroups groupRight)
+        internal MemberGroups GetBiggestGroup(MemberGroups newGroup)
         {
             var maxCount = int.MinValue;
             IList<Guid> biggestGroup = null;
-
-            for (var i = 0; i < groupRight.Groups.Count; i++)
+            
+            for (var i = 0; i < newGroup.Groups.Count; i++)
             {
-                if (_currentGroups.Groups[i].Count > maxCount)
+                if (newGroup.Groups[i].Count > maxCount)
                 {
-                    maxCount = groupRight.Groups[i].Count;
-                    biggestGroup = groupRight.Groups[i];
+                    maxCount = newGroup.Groups[i].Count;
+                    biggestGroup = newGroup.Groups[i];
                 }
             }
 
             return biggestGroup == null
-                ? new MemberGroups(new List<IList<Guid>>(0), 0, Guid.Empty, Guid.Empty)
-                : new MemberGroups(groupRight.Groups, groupRight.Version, groupRight.ClusterId, biggestGroup.First());
+                ? new MemberGroups(null, 0, Guid.Empty, Guid.Empty)
+                : new MemberGroups(newGroup.Groups, newGroup.Version, newGroup.ClusterId, biggestGroup.First());
         }
 
 #endregion
 
         // internal for testing
-        internal MemberGroups CurrentGroups => _currentGroups;
+        internal MemberGroups CurrentGroups
+        {
+            get
+            {
+                try
+                {
+                    _mutex.EnterReadLock();
+                    return _currentGroups;
+                }
+                finally
+                {
+                    _mutex.ExitReadLock();
+                }
+            }
+        }
 
-        public IReadOnlyList<Guid> GetSubsetMemberIds() => _currentGroups.SelectedGroup;
+        public IReadOnlyList<Guid> GetSubsetMembersIds() => CurrentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
-            var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup : PickBestGroup(newGroup);
+            _mutex.EnterUpgradeableReadLock();
 
-            var old = _currentGroups;
-
-            lock (_mutex)
+            try
             {
+                var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup : PickBestGroup(newGroup);
+                _mutex.EnterWriteLock();
+                var old = _currentGroups;
                 _currentGroups = pickedGroup;
+                _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} \n New group: {PickedGroup}", old, pickedGroup);
             }
-
-            _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} \n New group: {PickedGroup}", old, pickedGroup);
+            finally
+            {
+                _mutex.ExitWriteLock();
+                _mutex.ExitUpgradeableReadLock();
+            }
         }
+        
         public void RemoveSubsetMember(Guid memberId)
         {
-            lock (_mutex)
+            try
             {
+                _mutex.EnterWriteLock();
                 if (_currentGroups.SelectedGroup.Contains(memberId))
                 {
-                    var clearedGroup =  new List<IList<Guid>>();
+                    var clearedGroup = new List<IList<Guid>>();
 
                     foreach (var group in _currentGroups.Groups)
                     {
@@ -147,11 +171,15 @@ namespace Hazelcast.Clustering
                             clearedGroup.Add(cleared);
                         }
                     }
-                    
+
                     var newGroup = new MemberGroups(clearedGroup, _currentGroups.Version, _currentGroups.ClusterId, _currentGroups.MemberReceivedFrom);
-                    
+
                     _currentGroups = newGroup.SelectedGroup.Count > 0 ? newGroup : new MemberGroups(new List<IList<Guid>>(0), MemberPartitionGroup.InvalidVersion, Guid.Empty, Guid.Empty);
                 }
+            }
+            finally
+            {
+                _mutex.ExitWriteLock();
             }
         }
     }

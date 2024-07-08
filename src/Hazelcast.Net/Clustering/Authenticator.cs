@@ -206,7 +206,7 @@ internal class Authenticator
     {
         if (!response.IsKeyValuePairsExists)
             return new ClusterVersion(ClusterVersion.Unknown, ClusterVersion.Unknown);
-        
+
         var clusterVersion = "";
         try
         {
@@ -233,10 +233,10 @@ internal class Authenticator
 
         if (!response.IsKeyValuePairsExists)
             return emptyMemberGroups;
-        
-        var isContainsPartitionGroups =  response.KeyValuePairs.TryGetValue(MemberPartitionGroup.PartitionGroupJsonField, out var jsonMessage);
 
-        if ( isContainsPartitionGroups && string.IsNullOrEmpty(jsonMessage))
+        var isContainsPartitionGroups = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.PartitionGroupJsonField, out var jsonMessage);
+
+        if (isContainsPartitionGroups && string.IsNullOrEmpty(jsonMessage))
         {
             return emptyMemberGroups;
         }
@@ -248,7 +248,7 @@ internal class Authenticator
             // Why is data json string?
             var jsonObject = JsonNode.Parse(response.KeyValuePairs[MemberPartitionGroup.PartitionGroupRootJsonField]);
 
-            var isVersionValid = int.TryParse(jsonObject.AsObject()[MemberPartitionGroup.VersionJsonField].ToString(), out var versionString);
+            var isVersionValid = int.TryParse(jsonObject.AsObject()[MemberPartitionGroup.VersionJsonField].ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var versionString);
             version = isVersionValid ? versionString : MemberPartitionGroup.InvalidVersion;
 
             foreach (var memberIds in jsonObject[MemberPartitionGroup.PartitionGroupJsonField].AsArray())
