@@ -86,10 +86,10 @@ namespace Hazelcast.Clustering
         {
             var maxCount = int.MinValue;
             IList<Guid> biggestGroup = null;
-
+            
             for (var i = 0; i < newGroup.Groups.Count; i++)
             {
-                if (_currentGroups.Groups[i].Count > maxCount)
+                if (newGroup.Groups[i].Count > maxCount)
                 {
                     maxCount = newGroup.Groups[i].Count;
                     biggestGroup = newGroup.Groups[i];
