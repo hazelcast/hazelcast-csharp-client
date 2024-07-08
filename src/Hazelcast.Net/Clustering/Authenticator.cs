@@ -37,7 +37,7 @@ namespace Hazelcast.Clustering;
 /// </summary>
 internal class Authenticator
 {
-    public static string ClusterVersionKey = "cluster.version";
+    public static string ClusterVersionKey = "clusterVersion";
     private static string _clientVersion; // static cache (immutable value)
     private readonly AuthenticationOptions _options;
     private readonly SerializationService _serializationService;
@@ -206,6 +206,9 @@ internal class Authenticator
     /// <returns>ClusterVersion</returns>
     private ClusterVersion ParseClusterVersion(ClientAuthenticationCodec.ResponseParameters response)
     {
+        if (!response.IsKeyValuePairsExists)
+            return new ClusterVersion(ClusterVersion.Unknown, ClusterVersion.Unknown);
+
         var clusterVersion = "";
         try
         {
@@ -228,11 +231,16 @@ internal class Authenticator
     /// </summary>
     internal MemberGroups ParsePartitionMemberGroups(ClientAuthenticationCodec.ResponseParameters response)
     {
+        var emptyMemberGroups = new MemberGroups(new List<IList<Guid>>(0), 0, response.ClusterId, response.MemberUuid);
+
+        if (!response.IsKeyValuePairsExists)
+            return emptyMemberGroups;
+
         var isContainsPartitionGroups = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.PartitionGroupJsonField, out var jsonMessage);
 
-        if (response.IsKeyValuePairsExists && isContainsPartitionGroups && string.IsNullOrEmpty(jsonMessage))
+        if (isContainsPartitionGroups && string.IsNullOrEmpty(jsonMessage))
         {
-            return new MemberGroups(new List<IList<Guid>>(0), 0, response.ClusterId, response.MemberUuid);
+            return emptyMemberGroups;
         }
 
         var partitionGroups = new List<IList<Guid>>();
@@ -240,13 +248,12 @@ internal class Authenticator
         try
         {
             // Why is data json string?
-            var jsonObject = JsonNode.Parse(response.KeyValuePairs[MemberPartitionGroup.PartitionGroupJsonField]);
+            var jsonObject = JsonNode.Parse(response.KeyValuePairs[MemberPartitionGroup.PartitionGroupRootJsonField]);
 
-            version = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.VersionJsonField, out var versionString)
-                ? int.Parse(versionString, NumberStyles.Integer)
-                : 0;
+            var isVersionValid = int.TryParse(jsonObject.AsObject()[MemberPartitionGroup.VersionJsonField].ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var versionString);
+            version = isVersionValid ? versionString : MemberPartitionGroup.InvalidVersion;
 
-            foreach (var memberIds in jsonObject.AsArray())
+            foreach (var memberIds in jsonObject[MemberPartitionGroup.PartitionGroupJsonField].AsArray())
             {
                 var group = new HashSet<Guid>();
                 foreach (var member in memberIds.AsArray())

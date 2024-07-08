@@ -26,5 +26,9 @@ namespace Hazelcast.Testing
         {
             throw new NotImplementedException();
         }
+        public void RemoveSubsetMember(Guid memberId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -39,7 +39,7 @@ namespace Hazelcast.Models
         public IReadOnlyList<Guid> GetGroupOf(Guid memberId)
         {
             // Find given member's group.
-            return ((Groups.FirstOrDefault(group => group.Contains(memberId))) ?? Enumerable.Empty<Guid>()).ToList();
+            return (Groups.FirstOrDefault(group => group.Contains(memberId)) ?? Enumerable.Empty<Guid>()).ToList();
         }
 
         public override string ToString()

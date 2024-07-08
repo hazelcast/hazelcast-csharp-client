@@ -21,5 +21,7 @@ namespace Hazelcast.Clustering
         IReadOnlyList<Guid> GetSubsetMemberIds();
 
         void SetSubsetMembers(MemberGroups newGroup);
+        
+        void RemoveSubsetMember(Guid memberId);
     }
 }

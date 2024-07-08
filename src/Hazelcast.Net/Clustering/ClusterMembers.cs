@@ -264,6 +264,8 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         public async Task RemoveConnectionAsync(MemberConnection connection)
         {
+            _subsetClusterMembers.RemoveSubsetMember(connection.MemberId);
+            
             lock (_mutex)
             {
                 // ignore unknown connections that were not added in the first place,

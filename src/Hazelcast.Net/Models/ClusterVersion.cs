@@ -73,6 +73,11 @@ namespace Hazelcast.Models
             return false;
         }
         
+        public override int GetHashCode()
+        {
+            return 31* Major + Minor;
+        }
+        
         
 
     }
