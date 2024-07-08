@@ -192,6 +192,11 @@ public class NetworkingOptions
     public RoutingMode RoutingMode { get; } = new();
 
     /// <summary>
+    /// Gets or sets whether client tries to redirect CP requests to CP group leaders.
+    /// </summary>
+    public bool CPDirectToLeaderEnabled { get; set; }
+
+    /// <summary>
     /// Clones the options.
     /// </summary>
     internal NetworkingOptions Clone() => new(this);

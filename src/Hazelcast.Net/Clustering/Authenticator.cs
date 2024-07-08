@@ -65,7 +65,7 @@ internal class Authenticator
     /// <param name="labels">The client labels.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task that will complete when the client is authenticated.</returns>
-    public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, byte routingMode, CancellationToken cancellationToken)
+    public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, byte routingMode, bool cpDirectEnabled, CancellationToken cancellationToken)
     {
         if (client == null) throw new ArgumentNullException(nameof(client));
 
@@ -77,7 +77,7 @@ internal class Authenticator
 
         _logger.IfDebug()?.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
 
-        var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, routingMode, cancellationToken).CfAwait();
+        var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, routingMode, cpDirectEnabled, cancellationToken).CfAwait();
         if (result != null) return result;
 
         // result is null, credentials failed but we may want to retry
@@ -86,7 +86,7 @@ internal class Authenticator
             resettableCredentialsFactory.Reset();
 
             // try again
-            result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, routingMode, cancellationToken).CfAwait();
+            result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, routingMode, cpDirectEnabled, cancellationToken).CfAwait();
             if (result != null) return result;
         }
 
@@ -121,7 +121,7 @@ internal class Authenticator
     // returns a result if successful
     // returns null if failed due to credentials (may want to retry)
     // throws if anything else went wrong
-    private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, byte routingMode, CancellationToken cancellationToken)
+    private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, byte routingMode, bool cpDirectEnabled, CancellationToken cancellationToken)
     {
         const string clientType = "CSP"; // CSharp
 
@@ -137,7 +137,7 @@ internal class Authenticator
                     ? TpcClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password,
                         clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
                     : ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password,
-                        clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels, routingMode);
+                        clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels, routingMode, cpDirectEnabled);
                 break;
 
             case ITokenCredentials tokenCredentials:
@@ -145,7 +145,7 @@ internal class Authenticator
                     ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType,
                         serializationVersion, clientVersion, clusterClientName, labels)
                     : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType,
-                        serializationVersion, clientVersion, clusterClientName, labels, routingMode);
+                        serializationVersion, clientVersion, clusterClientName, labels, routingMode, cpDirectEnabled);
                 break;
 
             default:
@@ -154,7 +154,7 @@ internal class Authenticator
                     ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
                         clientVersion, clusterClientName, labels)
                     : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
-                        clientVersion, clusterClientName, labels, routingMode);
+                        clientVersion, clusterClientName, labels, routingMode, cpDirectEnabled);
                 break;
         }
 
