@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Hazelcast.Models;
 namespace Hazelcast.Clustering
 {
@@ -23,9 +23,9 @@ namespace Hazelcast.Clustering
         public const string VersionJsonField = "version";
         public const string PartitionGroupJsonField = "partition.groups";
         public const int InvalidVersion = -1;
-        private object _mutex = new object();
+        private readonly ReaderWriterLockSlim _mutex = new ReaderWriterLockSlim();
         private MemberGroups _currentGroups
-            = new MemberGroups(new List<IList<Guid>>(0), -1, Guid.Empty, Guid.Empty);
+            = new MemberGroups(null, -1, Guid.Empty, Guid.Empty);
 
 
 #region SubsetPicking
@@ -38,12 +38,14 @@ namespace Hazelcast.Clustering
             if (newGroup is null)
                 return _currentGroups;
 
-            var shouldNeedNewGroup = _currentGroups.ClusterId != newGroup.ClusterId || _currentGroups.SelectedGroup.Count == 0;
-
-            if (shouldNeedNewGroup && newGroup.MemberReceivedFrom != Guid.Empty && newGroup.SelectedGroup.Count > 0)
+            if ((_currentGroups.ClusterId != newGroup.ClusterId || _currentGroups.SelectedGroup.Count == 0)
+                && newGroup.MemberReceivedFrom != Guid.Empty
+                && newGroup.SelectedGroup.Count > 0)
+            {
                 return newGroup;
+            }
 
-            if (!shouldNeedNewGroup)
+            if (_currentGroups.SelectedGroup.Count == 0)
             {
                 var pickedGroup = GetMostOverlappedGroup(newGroup.ClusterId, newGroup.MemberReceivedFrom, newGroup);
 
@@ -75,44 +77,65 @@ namespace Hazelcast.Clustering
                     mostOverlappedGroup = examinedGroup;
                 }
             }
-          
+
             return mostOverlappedGroup is { Count: > 0 } ? newGroups : _currentGroups;
         }
 
         // internal for testing
-        internal MemberGroups GetBiggestGroup(MemberGroups groupRight)
+        internal MemberGroups GetBiggestGroup(MemberGroups newGroup)
         {
             var maxCount = int.MinValue;
             IList<Guid> biggestGroup = null;
 
-            for (var i = 0; i < groupRight.Groups.Count; i++)
+            for (var i = 0; i < newGroup.Groups.Count; i++)
             {
                 if (_currentGroups.Groups[i].Count > maxCount)
                 {
-                    maxCount = groupRight.Groups[i].Count;
-                    biggestGroup = groupRight.Groups[i];
+                    maxCount = newGroup.Groups[i].Count;
+                    biggestGroup = newGroup.Groups[i];
                 }
             }
 
             return biggestGroup == null
-                ? new MemberGroups(new List<IList<Guid>>(0), 0, Guid.Empty, Guid.Empty)
-                : new MemberGroups(groupRight.Groups, groupRight.Version, groupRight.ClusterId, biggestGroup.First());
+                ? new MemberGroups(null, 0, Guid.Empty, Guid.Empty)
+                : new MemberGroups(newGroup.Groups, newGroup.Version, newGroup.ClusterId, biggestGroup.First());
         }
 
 #endregion
 
         // internal for testing
-        internal MemberGroups CurrentGroups => _currentGroups;
-        
-        public IReadOnlyList<Guid> GetSubsetMembers() => _currentGroups.SelectedGroup;
+        internal MemberGroups CurrentGroups
+        {
+            get
+            {
+                try
+                {
+                    _mutex.EnterReadLock();
+                    return _currentGroups;
+                }
+                finally
+                {
+                    _mutex.ExitReadLock();
+                }
+            }
+        }
+
+        public IReadOnlyList<Guid> GetSubsetMembers() => CurrentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
-            var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup :  PickBestGroup(newGroup);
+            _mutex.EnterUpgradeableReadLock();
 
-            lock (_mutex)
+            try
             {
+                var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup : PickBestGroup(newGroup);
+                _mutex.EnterWriteLock();
                 _currentGroups = pickedGroup;
+            }
+            finally
+            {
+                _mutex.ExitWriteLock();
+                _mutex.ExitUpgradeableReadLock();
             }
         }
     }

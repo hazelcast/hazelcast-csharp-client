@@ -241,7 +241,7 @@ internal class Authenticator
             var jsonObject = JsonNode.Parse(response.KeyValuePairs[MemberPartitionGroup.PartitionGroupJsonField]);
 
             version = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.VersionJsonField, out var versionString)
-                ? int.Parse(versionString, NumberStyles.Integer)
+                ? int.Parse(versionString, NumberStyles.Integer, CultureInfo.InvariantCulture)
                 : 0;
 
             foreach (var memberIds in jsonObject.AsArray())
