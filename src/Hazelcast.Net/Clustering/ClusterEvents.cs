@@ -564,7 +564,13 @@ namespace Hazelcast.Clustering
                 subscribeRequest.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
-                _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}.", connection.Id.ToShortString());
+                _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}", connection.Id.ToShortString());
+                
+                // Since ClientAddCPGroupViewListenerCodec is a cluster-wide listener over one connection, register with cluster view.
+                var cpGroupSubscribeRequest = ClientAddCPGroupViewListenerCodec.EncodeRequest();
+                _ = await _clusterMessaging.SendToMemberAsync(cpGroupSubscribeRequest, connection, correlationId, cancellationToken).CfAwait();
+                _logger.IfDebug()?.LogDebug("Subscribed to CP group view on connection {ConnectionId)}", connection.Id.ToShortString());
+                
                 return true;
             }
             catch (Exception e) when (e is TargetDisconnectedException or ClientOfflineException)
@@ -626,16 +632,23 @@ namespace Hazelcast.Clustering
         
         private  ValueTask HandleCodecClusterVersionEvent(ClusterVersion version, object state)
         {
-            _logger.LogDebug("Handle ClusterVersion event.");
+            _logger.IfDebug()?.LogDebug("Handle ClusterVersion event");
             _clusterState.ChangeClusterVersion(version);
             return default;
         }
         
         private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
         {
-            _logger.LogDebug("Handle MemberGroups event.");
+            _logger.IfDebug()?.LogDebug("Handle MemberGroups event");
             _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
             await _memberPartitionGroupsUpdated.AwaitEach().CfAwait();
+        }
+
+        private ValueTask HandleCodecCPGroupViewEvent(long version, ICollection<Hazelcast.CP.CPGroupInfo> groups, IList<KeyValuePair<Guid, Guid>> cpToApUuids, object state)
+        {
+            _logger.IfDebug()?.LogDebug("Handle CP Group event");
+            _clusterMembers.HandleCPGroupInfoUpdated(version,groups, cpToApUuids, state);
+            return default;
         }
 
         /// <summary>

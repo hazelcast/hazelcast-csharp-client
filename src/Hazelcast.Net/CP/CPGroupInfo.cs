@@ -30,5 +30,23 @@ namespace Hazelcast.CP
 
         public ICollection<CPMember> Followers { get; }
 
+        public override string ToString()
+        {
+            return $"CPGroupInfo{{groupId={GroupId}, leader={Leader}, followers={string.Join(", ", Followers)}}}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not CPGroupInfo other) return false;
+
+            return GroupId == other.GroupId && Leader.Equals(other.Leader) && Followers.Equals(other.Followers);
+        }
+
+        public override int GetHashCode()
+        {
+            var arrayOf = new object[] { GroupId, Leader, Followers };
+            return arrayOf.GetHashCode();
+        }
+
     }
 }

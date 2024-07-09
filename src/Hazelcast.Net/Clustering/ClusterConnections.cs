@@ -835,6 +835,9 @@ namespace Hazelcast.Clustering
             // connect to the server (may throw and that is ok here)
             var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
+            // we now that fail over is an ee feature.
+            _clusterState.IsEnterprise = result.FailoverSupported;
+            
             // if we are running a failover client but the cluster we just connected to does not support failover
             // then the client is not allowed in that cluster - in this case, terminate the connection and throw
             if (_clusterState.Options.FailoverOptions.Enabled && !result.FailoverSupported)

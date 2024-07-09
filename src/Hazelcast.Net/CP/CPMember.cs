@@ -25,5 +25,22 @@ namespace Hazelcast.CP
 
         public Guid Uuid { get; }
         public NetworkAddress Address { get; }
+
+        public override string ToString()
+        {
+            return $"CPMember: {{ UUID: {Uuid}, Address: {Address} }}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not CPMember other) return false;
+
+            return Uuid == other.Uuid || Address.Equals(other.Address);
+        }
+
+        public override int GetHashCode()
+        {
+            return 31 * Uuid.GetHashCode() + Address.GetHashCode();
+        }
     }
 }

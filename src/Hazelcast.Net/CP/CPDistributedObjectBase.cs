@@ -16,8 +16,11 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
+using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP
 {
@@ -39,10 +42,13 @@ namespace Hazelcast.CP
             Name = name;
             CPGroupId = groupId;
             Cluster = cluster;
+            Logger = cluster.State.LoggerFactory.CreateLogger(GetType());
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
         }
 
         protected SerializationService SerializationService { get; }
+
+        protected ILogger Logger { get; }
 
         /// <inheritdoc />
         public string ServiceName { get; }
@@ -66,7 +72,33 @@ namespace Hazelcast.CP
                 ? new ValueTask<TObject>(obj)
                 : SerializationService.ToObjectAsync<TObject>(valueData, state);
         }
-        
+
+        /// <summary>
+        /// Sends the invocation to the CP group leader if leader connection exists
+        /// and <see cref="NetworkingOptions.CPDirectToLeaderEnabled"/> enabled and the cluster is Enterprise;
+        /// otherwise sends to any member.
+        /// </summary>
+        /// <returns></returns>
+        protected Task<ClientMessage> SendAsync(ClientMessage request, CPGroupId cpGroupId)
+        {
+            if (Cluster.State.IsEnterprise && Cluster.State.Options.Networking.CPDirectToLeaderEnabled)
+            {
+                var leader = Cluster.Members.GetLeaderMemberOf(cpGroupId);
+
+                if (leader != null)
+                {
+                    return Cluster.Messaging.SendToMemberAsync(request, leader.Uuid);
+                }
+            }
+            else
+            {
+                if (Cluster.State.Options.Networking.CPDirectToLeaderEnabled)
+                    Logger.IfWarning()?.LogWarning("CP Direct To Leader is an Enterprise feature, the request will be sent to any member");
+            }
+
+            return Cluster.Messaging.SendAsync(request);
+        }
+
         protected IData ToSafeData(object o1)
         {
             if (o1 == null) throw new ArgumentNullException(nameof(o1));

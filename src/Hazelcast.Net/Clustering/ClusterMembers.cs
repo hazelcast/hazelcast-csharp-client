@@ -13,12 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
@@ -40,12 +42,13 @@ namespace Hazelcast.Clustering
         private readonly ISubsetClusterMembers _subsetClusterMembers;
         private readonly TerminateConnections _terminateConnections;
         private readonly MemberConnectionQueue _memberConnectionQueue;
-        
+        private readonly ClusterCPGroups _cpGroups;
+
         private MemberTable _members;
         // It's unfiltered member table to be used at HandleMembersGroupUpdated. If we use filtered members, we can miss some members.
         // Such as, members that are not in the subset result in non-overlap list between members and partition group.
-        private MemberTable _unfilteredMembersForReference; 
-        
+        private MemberTable _unfilteredMembersForReference;
+
         private bool _connected;
         private bool _usePublicAddresses;
 
@@ -56,6 +59,7 @@ namespace Hazelcast.Clustering
         // member id -> connection
         // not concurrent, always managed through the mutex
         private readonly Dictionary<Guid, MemberConnection> _connections = new();
+        private readonly ConcurrentDictionary<CPGroupId, CPGroupInfo> _cpMembers = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMembers"/> class.
@@ -71,25 +75,26 @@ namespace Hazelcast.Clustering
             _terminateConnections = terminateConnections;
             _subsetClusterMembers = subsetClusterMembers;
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
-
+            _cpGroups = new ClusterCPGroups(_clusterState, this);
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
 
             // members to connect either all or subset of members.
             if (clusterState.RoutingMode is RoutingModes.AllMembers or RoutingModes.MultiMember)
             {
                 _members = new MemberTable();
-                
+
                 // initialize the queue of members to connect
                 _memberConnectionQueue = new MemberConnectionQueue(x =>
                 {
                     lock (_mutex) return _members.ContainsMember(x);
                 }, _clusterState.LoggerFactory);
-            }else
+            }
+            else
             {
                 // Single member routing, regular member table.
                 _members = new MemberTable();
             }
-            
+
             _clusterState.Failover.ClusterChanged += cluster =>
             {
                 // Invalidate current member table. Cannot remove the tables due to the
@@ -144,10 +149,15 @@ namespace Hazelcast.Clustering
             //=> _clusterState.Options.Networking.SmartRouting || _clusterState.Options.Networking.Cloud.Enabled;
             => false;
 
+        /// <summary>
+        /// Gets <see cref="ClusterCPGroups"/>.
+        /// </summary>
+        public ClusterCPGroups ClusterCPGroups => _cpGroups;
+        
         // see notes above, if matching then addresses must match, else anything matches
         public bool IsMemberAddress(MemberInfo member, NetworkAddress address)
             => !MatchMemberAddress || member.ConnectAddress == address;
-        
+
         // Gets filtered members for multi member connections.
         public ISubsetClusterMembers SubsetClusterMembers => _subsetClusterMembers;
 
@@ -265,7 +275,7 @@ namespace Hazelcast.Clustering
         public async Task RemoveConnectionAsync(MemberConnection connection)
         {
             _subsetClusterMembers.RemoveSubsetMember(connection.MemberId);
-            
+
             lock (_mutex)
             {
                 // ignore unknown connections that were not added in the first place,
@@ -409,11 +419,11 @@ namespace Hazelcast.Clustering
 
             // replace the table
             var previousMembers = _members;
-            
+
             var filteredMembers = _clusterState.IsRoutingModeMultiMember
                 ? FilterMembers(members)
                 : members;
-            
+
             var newMembers = new MemberTable(version, filteredMembers);
             lock (_mutex)
             {
@@ -643,11 +653,16 @@ namespace Hazelcast.Clustering
         public async ValueTask HandleMemberPartitionGroupsUpdated()
         {
             if (!_clusterState.IsRoutingModeMultiMember) return;
-            
+
             // Only valid on routing is MultiMember
             // SetMembersAsync will handle any changes ın partition group.
             // Use latest unfiltered member table since partition group may contain members that are not the filtered _members.
             await SetMembersAsync(_unfilteredMembersForReference.Version, _unfilteredMembersForReference.Members.ToList()).CfAwait();
+        }
+
+        public void HandleCPGroupInfoUpdated(long version, ICollection<CPGroupInfo> groupInfo, IList<KeyValuePair<Guid, Guid>> cpToApUuids, object state)
+        {
+            _cpGroups.SetGroups(version, groupInfo);
         }
 
         #endregion
@@ -892,6 +907,14 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Gets the leader of given CP group if exists; otherwise, returns <c>null</c>.
+        /// </summary>
+        /// <param name="groupId">CP Group Id</param>
+        /// <returns>Leader of the group if exists</returns>
+        public MemberInfo GetLeaderMemberOf(CPGroupId groupId) 
+            => _cpGroups.TryGetGroup(groupId, out var groupInfo) ? GetMember(groupInfo.Leader.Uuid) : null;
+
+        /// <summary>
         /// Filters the members if subset cluster members is set
         /// </summary>
         /// <param name="members">Member list</param>
@@ -907,16 +930,16 @@ namespace Hazelcast.Clustering
             {
                 var removedMembers = members.Where(m
                     => !subsetMembersIds.Contains(m.Id)).ToList();
-                
+
                 _logger.LogDebug("Filtered members from member view: {RemovedCount} removed, {FilteredCount} filtered," +
                                  " {MembersCount} total. Removed Member Ids :[{Members}]",
                     removedMembers.Count, filteredMembers.Count, members.Count,
                     string.Join(", ", members.Select(m => m.Id.ToShortString())));
             }
-            
+
             return filteredMembers;
         }
-        
+
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
