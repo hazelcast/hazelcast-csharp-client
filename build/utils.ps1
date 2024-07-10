@@ -417,28 +417,28 @@ function Get-HazelcastRemote () {
 }
 
 function invoke-web-request($url, $dest, $headers) {
-    $args = @{ Uri = $url }
+    $args1 = @{ Uri = $url }
     if (![System.String]::IsNullOrWhiteSpace($dest)) {
-        $args.OutFile = $dest
-        $args.PassThru = $true
+        $args1.OutFile = $dest
+        $args1.PassThru = $true
     }
 
     if ($null -ne $headers) {
-        $args.Headers = $headers
+        $args1.Headers = $headers        
     }
 
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
 
     if (PowerShell-IsAtLeast("7.0.0")) {
-        $args.SkipHttpErrorCheck = $true
+        $args1.SkipHttpErrorCheck = $true
     }
 
     # on repository.hazelcast.com the default user-agent (mozilla) returns html content
-    $args.UserAgent = "hz"
+    $args1.UserAgent = "hz"
 
-    try {
-        $r = invoke-webRequest @args
+    try {        
+        $r = invoke-webRequest @args1        
         if ($null -ne $r) {
             #if ($r.StatusCode -ne 200) {
             #    Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
