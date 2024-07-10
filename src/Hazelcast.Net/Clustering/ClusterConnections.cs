@@ -932,6 +932,12 @@ namespace Hazelcast.Clustering
                 if (_completions.TryRemove(connection, out var completion)) completion.TrySetResult(null);
             }
 
+            // Override all cp leader information if CP direct to leader is enabled
+            // The design assumes each authentication could be a reconnection, so we need to update CP group information
+            // Although client state changes can deal with that. 
+            if(_clusterState.Options.Networking.CPDirectToLeaderEnabled)
+                _clusterMembers.ClusterCPGroups.SetCPGroupIds(result.CPGroupLeaders);
+            
             _clusterMembers.SubsetClusterMembers.SetSubsetMembers(result.MemberGroups);
             
             // connection is opened

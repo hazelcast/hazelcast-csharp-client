@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -27,20 +28,24 @@ namespace Hazelcast.CP
     /// <summary>
     /// Manages CP group information in the cluster.
     /// </summary>
-    internal class ClusterCPGroups : IAsyncDisposable
+    internal class ClusterCPGroups
     {
-        private long _version = -1;
+        private long _version = InitialVersion;
         private readonly object _mutex = new();
         private readonly object _listenerMutex = new();
-        private readonly ConcurrentDictionary<CPGroupId, CPGroupInfo> _groups = new();
+        private readonly ConcurrentDictionary<CPGroupId, Guid> _groups = new();
         private readonly ILogger _logger;
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
         private int _disposed;
         private MemberConnection _listenerConnection;
         private Task _listenerRegisterTask;
+        private long _correlationId;
 
         private CancellationTokenSource _cts;
+
+        public const string CPGroupsJsonField = "cp.leaders";
+        public const long InitialVersion = -1;
 
         public ClusterCPGroups(ClusterState clusterState, ClusterMembers members)
         {
@@ -50,110 +55,77 @@ namespace Hazelcast.CP
         }
 
         public long Version => _version;
+        public int Count => _groups.Count;
 
-        public void SetGroups(long version, ICollection<CPGroupInfo> groups)
+        public void SetGroups(long version, ICollection<CPGroupInfo> groups, IList<KeyValuePair<Guid, Guid>> cpToApUuids)
         {
             if (_version >= version)
                 return;
 
             var oldCount = _groups.Count;
+
+            var newGroup = MapCPtoAPUuids(cpToApUuids, groups);
+
             lock (_mutex)
             {
+                // One more check in safe env.
+                if (_version >= version)
+                    return;
+
                 _version = version;
+
                 _groups.Clear();
-                foreach (var group in groups)
+                foreach (var g in newGroup)
                 {
-                    _groups[group.GroupId] = group;
+                    _groups[g.Key] = g.Value;
                 }
+
             }
 
             _logger.IfDebug()?.LogDebug("CP groups updated to Version {Version}." +
                                         " Old groups count: {OldCount}, new count: {NewCount}", Version, oldCount, groups.Count);
         }
-
-        public CPGroupInfo GetGroup(CPGroupId groupId) => _groups.TryGetValue(groupId, out var group) ? group : null;
-
-        public bool TryGetGroup(CPGroupId groupId, out CPGroupInfo group) => _groups.TryGetValue(groupId, out group);
-
-
-        #region EventHandlers
-
-        // Since CP part is wanted to be keep seperated from regular client, the view listener is handled here.
-        // In the future, if we need other type of listeners, we can refactor ClusterEvents to support multiple listeners.
-
-        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster, ClusterVersion clusterVersion)
+        private Dictionary<CPGroupId, Guid> MapCPtoAPUuids(IList<KeyValuePair<Guid, Guid>> cpToApUuids, ICollection<CPGroupInfo> groupInfos)
         {
-            lock (_listenerMutex)
+            var mapIds = new Dictionary<CPGroupId, Guid>();
+
+            var leaderIds = cpToApUuids.ToDictionary(x => x.Key, x => x.Value);
+
+            foreach (var group in groupInfos)
             {
-                if (_listenerConnection == null)
-                    _listenerRegisterTask ??= RegisterViewListenerAsync(connection, _cts.Token);
-            }
-            return default;
-        }
-        private async Task RegisterViewListenerAsync(MemberConnection connection, CancellationToken token)
-        {
-            try
-            {
-                while (!token.IsCancellationRequested)
+                if (leaderIds.TryGetValue(group.Leader.Uuid, out var apUuid))
                 {
-                    MemberConnection validConnection = connection ?? _clusterMembers.GetRandomConnection();
-
-                    if (await TryRegisterViewListenerAsync(validConnection).CfAwait())
-                        break;
+                    mapIds[group.GroupId] = apUuid;
                 }
             }
-            finally
-            {
-                // If the task is cancelled, it means the object is disposed.
-                // If the task is completed, it means the listener is registered.
-                // In both cases, we don't need to keep the task reference.
-                _listenerRegisterTask = null;
-            }
-        }
-        private async Task<bool> TryRegisterViewListenerAsync(MemberConnection connection)
-        {
-            try
-            {
-                var request = ClientAddCPGroupViewListenerCodec.EncodeRequest();
-                _ = await connection.SendAsync(request).CfAwait();
-                _logger.IfDebug()?.LogDebug("CP group view listener added to {Connection}", connection.Id);
 
-                return true;
-            }
-            catch (Exception e) when (e is TargetDisconnectedException or ClientOfflineException)
-            {
-                _logger.IfDebug()?.LogDebug("Failed to subscribe to cp group view on connection {ConnectionId)} ({Reason}), may retry.", connection.Id.ToShortString(),
-                    e is ClientOfflineException o ? ("offline, " + o.State) : "disconnected");
-            }
-            catch (Exception ex)
-            {
-                _logger.IfDebug()?.LogDebug("Failed to subscribe to cp group view on connection {ConnectionId)} ({Reason}), may retry.", connection.Id.ToShortString(), ex);
-            }
-
-            return false;
+            return mapIds;
         }
 
-        public ValueTask OnConnectionClosed(MemberConnection connection)
+
+        public Guid GetLeaderMemberId(CPGroupId groupId) => _groups.TryGetValue(groupId, out var memberId) ? memberId : Guid.Empty;
+
+        public bool TryGetLeaderMemberId(CPGroupId groupId, out Guid group) => _groups.TryGetValue(groupId, out group);
+
+        /// <summary>
+        /// Overrides current leader mappings with the given ones.
+        /// Suitable for first time leader mappings.
+        /// </summary>
+        /// <param name="cpGroupLeaders">Mapped CP Group Ids and their leaders</param>
+        public void SetCPGroupIds(IDictionary<CPGroupId, Guid> cpGroupLeaders)
         {
-            lock (_listenerMutex)
+            lock (_mutex)
             {
-                if (connection != _listenerConnection) return default;
-
-                _listenerConnection = null;
-                _listenerRegisterTask ??= RegisterViewListenerAsync(null, _cts.Token);
+                if(cpGroupLeaders.Count == 0) return;
+                
+                _version = InitialVersion;
+                _groups.Clear();
+                foreach (var entry in cpGroupLeaders)
+                {
+                    _groups[entry.Key] = entry.Value;
+                }
             }
-
-            return default;
-        }
-
-        #endregion
-        
-        public async ValueTask DisposeAsync()
-        {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return;
-            _cts.Cancel();
-            await _listenerRegisterTask.MaybeNull().CfAwaitCanceled();
         }
     }
 }
+

@@ -21,6 +21,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
@@ -183,7 +184,8 @@ internal class Authenticator
                     response.TpcPorts,
                     response.TpcToken,
                     ParsePartitionMemberGroups(response), // Doesn't throw
-                    ParseClusterVersion(response) // Doesn't throw
+                    ParseClusterVersion(response), // Doesn't throw,
+                    ParseCPGroupLeaderIds(response) // Doesn't throw
                 ),
 
             AuthenticationStatus.CredentialsFailed
@@ -269,5 +271,44 @@ internal class Authenticator
         }
 
         return new MemberGroups(partitionGroups, version, response.ClusterId, response.MemberUuid);
+    }
+
+    internal IDictionary<CPGroupId, Guid> ParseCPGroupLeaderIds(ClientAuthenticationCodec.ResponseParameters response)
+    {
+        var cpGroupLeaderIds = new Dictionary<CPGroupId, Guid>();
+        
+        if (!response.IsKeyValuePairsExists)
+            return cpGroupLeaderIds;
+        
+        var isContainsCPGroupLeaderIds = response.KeyValuePairs.TryGetValue(ClusterCPGroups.CPGroupsJsonField, out var jsonMessage);
+        
+        if (isContainsCPGroupLeaderIds && string.IsNullOrEmpty(jsonMessage))
+        {
+            return cpGroupLeaderIds;
+        }
+        
+        try
+        {
+            var groupsObject = JsonNode.Parse(jsonMessage);
+            
+            foreach (var group in groupsObject.AsArray())
+            {
+                var cpGroupJson = group["raftId"];
+                var seed = cpGroupJson["seed"].GetValue<int>();
+                var id = cpGroupJson["id"].GetValue<int>();
+                var name = cpGroupJson["name"].GetValue<string>();
+                var leaderId = group["leaderUUID"].GetValue<Guid>();
+
+                var cpGroupId = new CPGroupId(name, seed, id);
+                cpGroupLeaderIds[cpGroupId] = leaderId;
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.IfDebug()?.LogDebug("Failed to parse CP group leader ids [{JsonMessage}]: {Message}. ", jsonMessage, e.Message);
+            cpGroupLeaderIds.Clear();
+        }
+
+        return cpGroupLeaderIds;
     }
 }

@@ -44,6 +44,7 @@ public class NetworkingOptions
         ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         UsePublicAddresses = other.UsePublicAddresses;
         RoutingMode = other.RoutingMode.Clone();
+        CPDirectToLeaderEnabled = other.CPDirectToLeaderEnabled;
 
         Tpc = other.Tpc.Clone();
         Ssl = other.Ssl.Clone();

@@ -662,7 +662,7 @@ namespace Hazelcast.Clustering
 
         public void HandleCPGroupInfoUpdated(long version, ICollection<CPGroupInfo> groupInfo, IList<KeyValuePair<Guid, Guid>> cpToApUuids, object state)
         {
-            _cpGroups.SetGroups(version, groupInfo);
+            _cpGroups.SetGroups(version, groupInfo, cpToApUuids);
         }
 
         #endregion
@@ -912,7 +912,7 @@ namespace Hazelcast.Clustering
         /// <param name="groupId">CP Group Id</param>
         /// <returns>Leader of the group if exists</returns>
         public MemberInfo GetLeaderMemberOf(CPGroupId groupId) 
-            => _cpGroups.TryGetGroup(groupId, out var groupInfo) ? GetMember(groupInfo.Leader.Uuid) : null;
+            => _cpGroups.TryGetLeaderMemberId(groupId, out var memberId) ? GetMember(memberId) : null;
 
         /// <summary>
         /// Filters the members if subset cluster members is set
