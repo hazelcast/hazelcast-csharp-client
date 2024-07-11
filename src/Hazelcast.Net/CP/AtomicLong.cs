@@ -41,7 +41,7 @@ namespace Hazelcast.CP
         public async Task<long> AddAndGetAsync(long value)
         {
             var requestMessage = AtomicLongAddAndGetCodec.EncodeRequest(CPGroupId, Name, value);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicLongAddAndGetCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -50,7 +50,7 @@ namespace Hazelcast.CP
         public async Task<bool> CompareAndSetAsync(long comparand, long value)
         {
             var requestMessage = AtomicLongCompareAndSetCodec.EncodeRequest(CPGroupId, Name, comparand, value);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicLongCompareAndSetCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -59,7 +59,7 @@ namespace Hazelcast.CP
         public async Task<long> GetAndAddAsync(long value)
         {
             var requestMessage = AtomicLongGetAndAddCodec.EncodeRequest(CPGroupId, Name, value);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicLongGetAndAddCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -68,7 +68,7 @@ namespace Hazelcast.CP
         public async Task<long> GetAndSetAsync(long value)
         {
             var requestMessage = AtomicLongGetAndSetCodec.EncodeRequest(CPGroupId, Name, value);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicLongGetAndSetCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -83,7 +83,7 @@ namespace Hazelcast.CP
         public async Task<long> GetAsync()
         {
             var requestMessage = AtomicLongGetCodec.EncodeRequest(CPGroupId, Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicLongGetCodec.DecodeResponse(responseMessage).Response;
             return response;
         }

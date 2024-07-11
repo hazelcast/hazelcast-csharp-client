@@ -49,7 +49,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
         permits.ThrowIfLessThanOrZero(nameof(permits));
 
         var requestMessage = SemaphoreInitCodec.EncodeRequest(CPGroupId, Name, permits);
-        var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreInitCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -68,7 +68,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
                 var requestMessage = SemaphoreAcquireCodec.EncodeRequest(
                     CPGroupId, Name, sessionId, threadId, invocationUid, permits,
                     -1);
-                var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+                var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
                 _ = SemaphoreAcquireCodec.DecodeResponse(responseMessage);
                 return; // cannot fail, since timeout -1 was specified
             }
@@ -108,7 +108,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
                 var requestMessage = SemaphoreAcquireCodec.EncodeRequest(
                     CPGroupId, Name, sessionId, threadId, invocationUid, permits, 
                     countdown.RemainingMilliseconds);
-                var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+                var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
                 var acquired = SemaphoreAcquireCodec.DecodeResponse(responseMessage).Response;
                 if (!acquired) _sessionManager.ReleaseSession(CPGroupId, sessionId, permits);
                 return acquired;
@@ -144,7 +144,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
         try
         {
             var requestMessage = SemaphoreReleaseCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid, permits);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             _ = SemaphoreReleaseCodec.DecodeResponse(responseMessage);
         }
         catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
@@ -161,7 +161,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
     public async Task<int> GetAvailablePermitsAsync()
     {
         var requestMessage = SemaphoreAvailablePermitsCodec.EncodeRequest(CPGroupId, Name);
-        var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreAvailablePermitsCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -176,7 +176,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
             try
             {
                 var requestMessage = SemaphoreDrainCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid);
-                var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+                var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
                 var count = SemaphoreDrainCodec.DecodeResponse(responseMessage).Response;
                 _sessionManager.ReleaseSession(CPGroupId, sessionId, DrainSessionAcqCount - count);
                 return count;
@@ -207,7 +207,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
         try
         {
             var requestMessage = SemaphoreChangeCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid, delta);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             _ = SemaphoreChangeCodec.DecodeResponse(responseMessage);
         }
         catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
