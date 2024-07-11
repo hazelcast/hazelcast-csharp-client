@@ -62,6 +62,7 @@ namespace Hazelcast.Tests.Clustering
             response.KeyValuePairs = new Dictionary<string, string>();
             response.KeyValuePairs[MemberPartitionGroup.PartitionGroupRootJsonField] = memberList;
             response.ClusterId = Guid.NewGuid();
+            response.IsKeyValuePairsExists = true;
             response.MemberUuid = string.IsNullOrEmpty(memberId) ? Guid.NewGuid() : Guid.Parse(memberId);
 
             var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())

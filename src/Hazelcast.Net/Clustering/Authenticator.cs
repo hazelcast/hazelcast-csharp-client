@@ -231,7 +231,7 @@ internal class Authenticator
     /// </summary>
     internal MemberGroups ParsePartitionMemberGroups(ClientAuthenticationCodec.ResponseParameters response)
     {
-        var emptyMemberGroups = new MemberGroups(new List<IList<Guid>>(0), 0, response.ClusterId, response.MemberUuid);
+        var emptyMemberGroups = new MemberGroups(new List<IList<Guid>>(0), MemberPartitionGroup.InvalidVersion, response.ClusterId, response.MemberUuid);
 
         if (!response.IsKeyValuePairsExists)
             return emptyMemberGroups;
