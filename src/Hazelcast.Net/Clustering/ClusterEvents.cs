@@ -33,6 +33,22 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal partial class ClusterEvents : IAsyncDisposable
     {
+        internal class ClusterViewProperties
+        {
+            public ClusterViewProperties(Func<MemberConnection, long, CancellationToken, Task<bool>> subscribeAsync, Type viewType)
+            {
+                SubscribeAsync = subscribeAsync;
+                ViewType = viewType;
+            }
+
+            public object Mutex { get; } = new();
+            public MemberConnection Connection { get; set; }
+            public long CorrelationId { get; set; }
+            public Task ViewTask { get; set; }
+            public Type ViewType { get; }
+            public Func<MemberConnection, long, CancellationToken, Task<bool>> SubscribeAsync { get; }
+        }
+
         private readonly TerminateConnections _terminateConnections;
 
         private readonly ClusterState _clusterState;
@@ -48,10 +64,8 @@ namespace Hazelcast.Clustering
         private Func<MembersUpdatedEventArgs, ValueTask> _membersUpdated;
         private Func<ValueTask> _memberPartitionGroupsUpdated;
 
-        private readonly object _clusterViewsMutex = new();
-        private MemberConnection _clusterViewsConnection; // the connection which supports the view event
-        private long _clusterViewsCorrelationId; // the correlation id of the view event subscription
-        private Task _clusterViewsTask; // the task that assigns a connection to support the view event
+        // Holds properties required for managing cluster views -> cluster view and CP view
+        private readonly ConcurrentDictionary<Type, ClusterViewProperties> _clusterViewProperties = new();
 
         private volatile int _disposed;
 
@@ -88,6 +102,13 @@ namespace Hazelcast.Clustering
             _clusterState = clusterState;
             _clusterMessaging = clusterMessaging;
             _clusterMembers = clusterMembers;
+
+            // Register cluster views
+            _clusterViewProperties[typeof(ClientAddClusterViewListenerCodec)] = new ClusterViewProperties(SubscribeToClusterViewsAsync, typeof(ClientAddClusterViewListenerCodec));
+            
+            // Subscribe when CP direct to leader is enabled
+            if(_clusterState.Options.Networking.CPDirectToLeaderEnabled)
+                _clusterViewProperties[typeof(ClientAddCPGroupViewListenerCodec)] = new ClusterViewProperties(SubscribeToClusterCPViewAsync, typeof(ClientAddCPGroupViewListenerCodec));
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterEvents>();
             _scheduler = new DistributedEventScheduler(_clusterState.LoggerFactory);
@@ -417,7 +438,7 @@ namespace Hazelcast.Clustering
         #region Cluster Members/Partitions Views
 
         /// <summary>
-        /// Clears the connection currently supporting the cluster view event, if it matches the specified <paramref name="connection"/>.
+        /// Clears the connection currently supporting the cluster and CP view event, if it matches the specified <paramref name="connection"/>.
         /// </summary>
         /// <param name="connection">A connection.</param>
         /// <remarks>
@@ -427,22 +448,24 @@ namespace Hazelcast.Clustering
         private void ClearClusterViewsConnection(MemberConnection connection)
         {
             // note: we do not "unsubscribe" - if we come here, the connection is gone
-
-            lock (_clusterViewsMutex)
+            foreach (var viewProp in _clusterViewProperties)
             {
-                // if the specified client is *not* the cluster events client, ignore
-                if (_clusterViewsConnection != connection)
-                    return;
+                lock (viewProp.Value.Mutex)
+                {
+                    // if the specified client is *not* the cluster events client, ignore
+                    if (viewProp.Value.Connection != connection)
+                        continue;
 
-                // otherwise, clear the connection
-                _clusterViewsConnection = null;
-                _correlatedSubscriptions.TryRemove(_clusterViewsCorrelationId, out _);
-                _clusterViewsCorrelationId = 0;
+                    // otherwise, clear the connection
+                    viewProp.Value.Connection = null;
+                    _correlatedSubscriptions.TryRemove(viewProp.Value.CorrelationId, out _);
+                    viewProp.Value.CorrelationId = 0;
 
-                _logger.IfDebug()?.LogDebug("Cleared cluster views connection (was {ConnectionId}).", connection.Id.ToShortString());
+                    _logger.IfDebug()?.LogDebug("Cleared cluster views connection (was {ConnectionId}).", connection.Id.ToShortString());
 
-                // assign another connection (async)
-                _clusterViewsTask ??= AssignClusterViewsConnectionAsync(null, _cancel.Token);
+                    // assign another connection (async)
+                    viewProp.Value.ViewTask ??= AssignClusterViewsConnectionAsync(null, viewProp.Value, _cancel.Token);
+                }
             }
         }
 
@@ -456,12 +479,19 @@ namespace Hazelcast.Clustering
         /// </remarks>
         private void ProposeClusterViewsConnection(MemberConnection connection)
         {
-            lock (_clusterViewsMutex)
+            foreach (var viewProperty in _clusterViewProperties)
             {
-                if (_clusterViewsConnection == null)
-                    _clusterViewsTask ??= AssignClusterViewsConnectionAsync(connection, _cancel.Token);
+                lock (viewProperty.Value.Mutex)
+                {
+                    if (viewProperty.Value.Connection == null)
+                    {
+                        viewProperty.Value.ViewTask ??= AssignClusterViewsConnectionAsync(connection, viewProperty.Value, _cancel.Token);
+                    }
+                }
             }
         }
+
+
 
         private ValueTask<MemberConnection> WaitForConnection(CancellationToken cancellationToken)
         {
@@ -491,10 +521,8 @@ namespace Hazelcast.Clustering
         /// <param name="connection">An optional candidate connection.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when a connection has been assigned to handle the cluster views event.</returns>
-        private async Task AssignClusterViewsConnectionAsync(MemberConnection connection, CancellationToken cancellationToken)
+        private async Task AssignClusterViewsConnectionAsync(MemberConnection connection, ClusterViewProperties viewProperty, CancellationToken cancellationToken)
         {
-            // TODO: consider throttling
-
             // this will only exit once a connection is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested && _disposed == 0)
@@ -504,11 +532,11 @@ namespace Hazelcast.Clustering
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
                 var correlationId = _clusterState.GetNextCorrelationId();
-                
+
                 // We can't use null connection here. Cancellation could be requested if it's null.
-                if(connection == null) break;
-                
-                if (!await SubscribeToClusterViewsAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
+                if (connection == null) break;
+
+                if (!await viewProperty.SubscribeAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
                 {
                     // failed => try another connection
                     connection = null;
@@ -516,14 +544,14 @@ namespace Hazelcast.Clustering
                 }
 
                 // success!
-                lock (_clusterViewsMutex)
+                lock (viewProperty.Mutex)
                 {
                     if (connection.Active)
                     {
-                        _clusterViewsConnection = connection;
-                        _clusterViewsCorrelationId = correlationId;
-                        _clusterViewsTask = null;
-                        HConsole.WriteLine(this, $"ClusterViews: connection {connection.Id.ToShortString()} [{correlationId}]");
+                        viewProperty.Connection = connection;
+                        viewProperty.CorrelationId = correlationId;
+                        viewProperty.ViewTask = null;
+                        HConsole.WriteLine(this, $"ClusterViews for {viewProperty.ViewType}: connection {connection.Id.ToShortString()} [{correlationId}]");
                         break;
                     }
                 }
@@ -531,6 +559,50 @@ namespace Hazelcast.Clustering
                 // if the connection was not active anymore, we have rejected it
                 // if the connection was active, and we have accepted it, and it de-activates,
                 // then ClearClusterViewsConnection will deal with it
+            }
+        }
+
+        /// <summary>
+        /// Subscribes a connection to the cluster CP view event.
+        /// </summary>
+        /// <param name="connection">Candidate connection </param>
+        /// <param name="correlationId">Correlation id</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>true if subscribed</returns>
+        private async Task<bool> SubscribeToClusterCPViewAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
+        {
+            _ = connection ?? throw new ArgumentNullException(nameof(connection));
+            _logger.IfDebug()?.LogDebug("Subscribe to cluster CP view on connection {ConnectionId}.", connection.Id.ToShortString());
+
+            ValueTask HandleEventAsync(ClientMessage message, object _)
+                => ClientAddCPGroupViewListenerCodec.HandleEventAsync(message,
+                    HandleCodecCPGroupViewEvent,
+                    connection.Id,
+                    _clusterState.LoggerFactory);
+
+            try
+            {
+                var request = ClientAddCPGroupViewListenerCodec.EncodeRequest();
+                request.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
+                _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
+                _ = await _clusterMessaging.SendToMemberAsync(request, connection, correlationId, cancellationToken).CfAwait();
+                _logger.IfDebug()?.LogDebug("Subscribed to cluster CP view on connection {ConnectionId}.", connection.Id.ToShortString());
+                return true;
+            }
+            catch (Exception e) when (e is TargetDisconnectedException or ClientOfflineException)
+            {
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                // if the connection has died... and that can happen when switching members... no need to worry the
+                // user with a warning, a debug message should be enough
+                _logger.IfDebug()?.LogDebug("Failed to subscribe to cluster CP view on connection {ConnectionId)} ({Reason}), may retry.", connection.Id.ToShortString(),
+                    e is ClientOfflineException o ? ("offline, " + o.State) : "disconnected");
+                return false;
+            }
+            catch (Exception e)
+            {
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                _logger.IfWarning()?.LogWarning(e, "Failed to subscribe to cluster CP view on connection {ConnectionId}, may retry.", connection.Id.ToShortString());
+                return false;
             }
         }
 
@@ -553,7 +625,7 @@ namespace Hazelcast.Clustering
                 => ClientAddClusterViewListenerCodec.HandleEventAsync(message,
                     HandleCodecMemberViewEvent,
                     HandleCodecPartitionViewEvent,
-                    (version,  memberGroups,  state) => HandleCodecMemberGroupsViewEvent(version, memberGroups, state, connection.ClusterId, connection.MemberId),
+                    (version, memberGroups, state) => HandleCodecMemberGroupsViewEvent(version, memberGroups, state, connection.ClusterId, connection.MemberId),
                     HandleCodecClusterVersionEvent,
                     connection.Id,
                     _clusterState.LoggerFactory);
@@ -564,7 +636,8 @@ namespace Hazelcast.Clustering
                 subscribeRequest.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
-                _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}.", connection.Id.ToShortString());
+                _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}", connection.Id.ToShortString());
+
                 return true;
             }
             catch (Exception e) when (e is TargetDisconnectedException or ClientOfflineException)
@@ -610,7 +683,7 @@ namespace Hazelcast.Clustering
         /// <param name="state">A state object.</param>
         private async ValueTask HandleCodecPartitionViewEvent(int version, IList<KeyValuePair<Guid, IList<int>>> partitions, object state)
         {
-            var clientId = (Guid)state;
+            var clientId = (Guid) state;
 
             var updated = _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
             if (!updated) return;
@@ -623,19 +696,26 @@ namespace Hazelcast.Clustering
             // On... does not throw
             await _partitionsUpdated.AwaitEach().CfAwait();
         }
-        
-        private  ValueTask HandleCodecClusterVersionEvent(ClusterVersion version, object state)
+
+        private ValueTask HandleCodecClusterVersionEvent(ClusterVersion version, object state)
         {
-            _logger.LogDebug("Handle ClusterVersion event.");
+            _logger.IfDebug()?.LogDebug("Handle ClusterVersion event");
             _clusterState.ChangeClusterVersion(version);
             return default;
         }
-        
+
         private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
         {
-            _logger.LogDebug("Handle MemberGroups event.");
+            _logger.IfDebug()?.LogDebug("Handle MemberGroups event");
             _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
             await _memberPartitionGroupsUpdated.AwaitEach().CfAwait();
+        }
+
+        private ValueTask HandleCodecCPGroupViewEvent(long version, ICollection<Hazelcast.CP.CPGroupInfo> groups, IList<KeyValuePair<Guid, Guid>> cpToApUuids, object state)
+        {
+            _logger.IfDebug()?.LogDebug("Handle CP Group event");
+            _clusterMembers.HandleCPGroupInfoUpdated(version, groups, cpToApUuids, state);
+            return default;
         }
 
         /// <summary>
@@ -647,8 +727,8 @@ namespace Hazelcast.Clustering
         {
             var map = new Dictionary<int, Guid>();
             foreach (var (memberId, partitionIds) in partitions)
-                foreach (var partitionId in partitionIds)
-                    map[partitionId] = memberId;
+            foreach (var partitionId in partitionIds)
+                map[partitionId] = memberId;
             return map;
         }
 
@@ -782,7 +862,7 @@ namespace Hazelcast.Clustering
                 _partitionsUpdated = value;
             }
         }
-        
+
         /// <summary>
         /// Internal event to emit when member partition groups have been updated.
         /// </summary>
@@ -913,7 +993,12 @@ namespace Hazelcast.Clustering
             _cancel.Cancel();
 
             HConsole.WriteLine(this, "Await cluster views task.");
-            await _clusterViewsTask.MaybeNull().CfAwaitCanceled();
+
+            foreach (var viewProp in _clusterViewProperties)
+            {
+                await viewProp.Value.ViewTask.MaybeNull().CfAwaitCanceled();
+            }
+
             HConsole.WriteLine(this, "Dispose collect task.");
             await _collectTask.MaybeNull().CfAwaitCanceled();
 
@@ -931,9 +1016,15 @@ namespace Hazelcast.Clustering
             // connection is going down
             // it will be disposed as well as all other connections
             // and subscriptions will terminate
-            _clusterViewsConnection = null;
+            foreach (var viewProp in _clusterViewProperties)
+            {
+                viewProp.Value.Connection = null;
+            }
 
             HConsole.WriteLine(this, "Down.");
         }
+
+
+
     }
 }

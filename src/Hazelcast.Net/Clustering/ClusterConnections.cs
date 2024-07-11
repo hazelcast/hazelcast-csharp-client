@@ -835,6 +835,9 @@ namespace Hazelcast.Clustering
             // connect to the server (may throw and that is ok here)
             var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
+            // we now that fail over is an ee feature.
+            _clusterState.IsEnterprise = result.FailoverSupported;
+            
             // if we are running a failover client but the cluster we just connected to does not support failover
             // then the client is not allowed in that cluster - in this case, terminate the connection and throw
             if (_clusterState.Options.FailoverOptions.Enabled && !result.FailoverSupported)
@@ -929,6 +932,12 @@ namespace Hazelcast.Clustering
                 if (_completions.TryRemove(connection, out var completion)) completion.TrySetResult(null);
             }
 
+            // Override all cp leader information if CP direct to leader is enabled
+            // The design assumes each authentication could be a reconnection, so we need to update CP group information
+            // Although client state changes can deal with that. 
+            if(_clusterState.Options.Networking.CPDirectToLeaderEnabled)
+                _clusterMembers.ClusterCPGroups.SetCPGroupIds(result.CPGroupLeaders);
+            
             _clusterMembers.SubsetClusterMembers.SetSubsetMembers(result.MemberGroups);
             
             // connection is opened

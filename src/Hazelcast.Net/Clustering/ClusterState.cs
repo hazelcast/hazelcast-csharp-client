@@ -36,6 +36,7 @@ namespace Hazelcast.Clustering
         private readonly object _mutex = new();
         private readonly StateChangeQueue _stateChangeQueue;
         private readonly Failover _failover;
+        private bool? _enterpriseCluster;
         private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
         private ClusterVersion _clusterVersion = new ClusterVersion(Models.ClusterVersion.Unknown, ClusterVersion.Unknown);
@@ -144,6 +145,13 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ClusterVersion ClusterVersion => _clusterVersion;
 
+        public bool IsEnterprise
+        {
+            get => _enterpriseCluster ?? false;
+            // only set if not already set which is first time.
+            set => _enterpriseCluster ??= value;
+        }
+
         #endregion
 
         #region ClientState
@@ -163,14 +171,14 @@ namespace Hazelcast.Clustering
         /// <param name="clusterVersion">The new cluster version.</param>
         public void ChangeClusterVersion(ClusterVersion clusterVersion)
         {
-            if(clusterVersion == null) return;
-            
+            if (clusterVersion == null) return;
+
             lock (_mutex)
             {
-                _clusterVersion = clusterVersion;    
+                _clusterVersion = clusterVersion;
             }
         }
-        
+
         /// <summary>
         /// Changes the state, and pushes the change to the events queue.
         /// </summary>

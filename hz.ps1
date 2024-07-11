@@ -197,7 +197,7 @@ $actions = @(
     },
     @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key", "certs" )
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key", "certs", "snapshot-repo")
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
@@ -220,13 +220,13 @@ $actions = @(
        uniq = $true;
        desc = "runs the remote controller for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key", "snapshot-repo" )
     },
     @{ name = "start-remote-controller";
        uniq = $true;
        desc = "starts the remote controller for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key", "snapshot-repo" )
     },
     @{ name = "stop-remote-controller";
        uniq = $true;
@@ -236,13 +236,13 @@ $actions = @(
        uniq = $true;
        desc = "runs a server for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key", "snapshot-repo" )
     },
     @{ name = "get-server";
        uniq = $true;
        desc = "gets a server for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key", "snapshot-repo" )
     },
     @{ name = "generate-codecs";
        uniq = $true;
@@ -364,13 +364,15 @@ $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
 # determine java code repositories for tests
-$mvnOssSnapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots"
+$mvnOssPublicRepo = "https://oss.sonatype.org/content/repositories/snapshots"
+$mvnOssSnapshotRepo = "https://hazelcast.jfrog.io/artifactory/snapshot-internal"
+$mvnOssSnapshotRepoBasicAuth = "https://repository.hazelcast.com/snapshot-internal"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
 $mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
 if ($isSnapshot) {
-
+    
     $mvnOssRepo = $mvnOssSnapshotRepo
     $mvnEntRepo = $mvnEntSnapshotRepo
 
@@ -468,6 +470,46 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
         }
     }
     $testFrameworks = $fwks
+}
+
+function ensure-snapshot-repo {
+    if ($isSnapshot) {
+
+        $ossRepoTokenType = ""
+        if (-not [System.String]::IsNullOrWhiteSpace($env:HZ_SNAPSHOT_REPO_TOKEN))
+        {
+            $token = $env:HZ_SNAPSHOT_REPO_TOKEN
+            $ossRepoTokenType = "Bearer"
+            Write-Output "Using token for OSS repository"
+            $strToken = "Bearer "+$token
+            $script:ossRepoRequestHeader =@{
+                Authorization = $strToken
+            }
+        }
+        elseif (-not [System.String]::IsNullOrWhiteSpace($env:HZ_SNAPSHOT_INTERNAL_USERNAME) -and
+                -not [System.String]::IsNullOrWhiteSpace($env:HZ_SNAPSHOT_INTERNAL_PASSWORD))
+        {
+            $ossRepoTokenType = "Basic"
+            $token = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$( $env:HZ_SNAPSHOT_INTERNAL_USERNAME ):$( $env:HZ_SNAPSHOT_INTERNAL_PASSWORD )"))
+            Write-Output "Using credentials for OSS repository from environment variables"
+            $mvnOssRepo = $mvnOssSnapshotRepoBasicAuth
+            $strToken = "Basic "+$token
+            $script:ossRepoRequestHeader =@{
+                Authorization = $strToken
+            }
+        }
+        else
+        {
+            $token = $null
+            $script:ossRepoRequestHeader = $null
+            Die "No token or credentials for OSS repository. Provide HZ_SNAPSHOT_REPO_TOKEN or 
+        HZ_SNAPSHOT_INTERNAL_USERNAME and HZ_SNAPSHOT_INTERNAL_PASSWORD environment variables."
+             
+        }
+        $script:ossRepoTokenType = $ossRepoTokenType
+        $script:ossRepoToken = $token
+
+    }
 }
 
 # ensure we have the enterprise key for testing
@@ -584,8 +626,10 @@ function determine-server-version {
     }
 
     $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
-    Write-Output "GET $url"
-    $response = invoke-web-request $url
+    Write-Output "GET1 $url"  
+    
+    $response = invoke-web-request $url $null $script:ossRepoRequestHeader
+
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
         return
@@ -594,8 +638,9 @@ function determine-server-version {
     Write-Output "Server: could not find version $version on Maven ($($response.StatusCode))"
 
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
-    Write-Output "GET $url2"
-    $response2 = invoke-web-request $url2
+    Write-Output "GET2 $url2"
+
+    $response2 = invoke-web-request $url $null $script:ossRepoRequestHeader
     if ($response2.StatusCode -ne 200) {
         Die "Error: could not download metadata from Maven ($($response2.StatusCode))"
     }
@@ -619,7 +664,8 @@ function determine-server-version {
         Write-Output "Server: try listed version $nodeVersion"
         $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$nodeVersion/maven-metadata.xml"
         Write-Output "Maven: $url"
-        $response = invoke-web-request $url
+
+        $response = invoke-web-request $url $null $script:ossRepoRequestHeader
         if ($response.StatusCode -eq 200) {
             Write-Output "Server: found version $nodeVersion on Maven, using this version"
             $script:serverVersion = $nodeVersion
@@ -636,9 +682,17 @@ function determine-server-version {
 # get a Maven artifact
 function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $classifier, $dest ) {
 
+    $headers = $null
+    
     if ($jversion.EndsWith("-SNAPSHOT")) {
         $url = "$repoUrl/$group/$artifact/$jversion/maven-metadata.xml"
-        $response = invoke-web-request $url
+        
+        if($repoUrl -eq $mvnOssSnapshotRepo){                  
+            $headers = $script:ossRepoRequestHeader
+        }
+        
+        $response = invoke-web-request $url $null $headers
+        
         if ($response.StatusCode -ne 200) {
             Die "Failed to download $url ($($response.StatusCode))"
         }
@@ -673,7 +727,7 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
         $url += "-$classifier"
     }
     $url += ".jar"
-    $response = invoke-web-request $url $dest
+    $response = invoke-web-request $url $dest $headers
     if ($response.StatusCode -ne 200) {
         Die "Failed to download $url ($($response.StatusCode))"
     }
@@ -754,6 +808,7 @@ function verify-server-files {
     return $true
 }
 
+
 # ensures we have all jars & config required for the remote controller and the server,
 # by downloading them if needed, and add them to the $script:options.classpath
 function ensure-server-files {
@@ -767,7 +822,7 @@ function ensure-server-files {
     if (-not (verify-server-files)) { determine-server-version }
 
     # ensure we have the remote controller + hazelcast test jar
-    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssPublicRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
     ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
 
     if ($options.enterprise) {
@@ -2593,10 +2648,12 @@ $needs = new-object Collections.Specialized.OrderedDictionary
 function register-needs { $args | foreach-object { $script:needs[$_] = $false } }
 register-needs git
 register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
+register-needs snapshot-repo
 register-needs java server-version server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
 register-needs build-proj can-sign docfx
 register-needs certs
+register-needs oss-snapshot-repo
 
 # gather needs from actions
 $actions | foreach-object {

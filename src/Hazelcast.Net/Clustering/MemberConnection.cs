@@ -269,7 +269,7 @@ namespace Hazelcast.Clustering
                 
                 // authenticate (does not return null, throws if it fails to authenticate)
                 result = await _authenticator
-                    .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, routingMode, cancellationToken)
+                    .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, routingMode, _networkingOptions.CPDirectToLeaderEnabled ,cancellationToken)
                     .CfAwait();
             }
             catch

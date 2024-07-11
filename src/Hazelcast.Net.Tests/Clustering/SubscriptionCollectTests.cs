@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Networking;
@@ -42,18 +43,25 @@ namespace Hazelcast.Tests.Clustering
         {
             var address0 = NetworkAddress.Parse("127.0.0.1:11001");
             var address1 = NetworkAddress.Parse("127.0.0.1:11002");
-            
+            var cpGroupIdFinal = new CPGroupId("testingGroup1", 2, 2);
+            var cpGroupIdInitial = new CPGroupId("testingGroup0", 1, 1);
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
 
-            var memberCollectionJson0 = "[[" +
+            var memberCollectionJson1 = "[[" +
                                             $"\"{memberId0}\"," +
                                             $"\"{memberId1}\"" +
+                                            $"\"{Guid.NewGuid()}\"" +
                                             "]]";
             
-            var memberCollectionJson1 = "[[" +
+            var memberCollectionJson0 = "[[" +
                                         $"\"{memberId0}\""+
                                         "]]";
+            
+            var cpGroupsJson = "[{" +
+                               $"\"raftId\":{{ \"name\": \"{cpGroupIdInitial.Name}\", \"seed\":{cpGroupIdInitial.Seed}, \"id\":{cpGroupIdInitial.Id} }}," +
+                               $"\"leaderUUID\":\"{memberId1}\" " +
+                               "}]";
 
             var clusterVersion = new ClusterVersion(5, 4);
             
@@ -73,10 +81,14 @@ namespace Hazelcast.Tests.Clustering
                 ClusterVersion = clusterVersion,
                 KeyValuePairs = new Dictionary<string, string>
                 {
-                    {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson1},
+                    {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson0},
                     {MemberPartitionGroup.VersionJsonField, "2"},
-                    {"cluster.version", "5.4"}
+                    {"cluster.version", "5.4"},
+                    {ClusterCPGroups.CPGroupsJsonField, cpGroupsJson}
                 },
+                CPGroupId = cpGroupIdFinal,
+                CPGroupVersion = 9
+                
             };
 
             await using var server0 = new Server(address0, loggerFactory, "0")
@@ -95,9 +107,12 @@ namespace Hazelcast.Tests.Clustering
                 ClusterVersion = clusterVersion,
                 KeyValuePairs = new Dictionary<string, string>
                 {
+                    // this member list should be ignored since server0 replied a list already.
                     {MemberPartitionGroup.PartitionGroupJsonField, memberCollectionJson1},
-                    {MemberPartitionGroup.VersionJsonField, "2"}
+                    {MemberPartitionGroup.VersionJsonField, "3"}
                 },
+                CPGroupId = cpGroupIdFinal,
+                CPGroupVersion = state0.CPGroupVersion
             };
 
             await using var server1 = new Server(address1, loggerFactory, "1")
@@ -116,6 +131,8 @@ namespace Hazelcast.Tests.Clustering
                 options.Networking.Addresses.Add("127.0.0.1:11001");
                 options.Networking.Addresses.Add("127.0.0.1:11002");
                 options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
+                // enable CP view subscription
+                options.Networking.CPDirectToLeaderEnabled = true;
             }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
             
@@ -126,7 +143,13 @@ namespace Hazelcast.Tests.Clustering
 
             var clusterEvents = client.Cluster.Events;
             Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0)); // no client subscription yet
-            Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1)); // but the cluster views subscription
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(2)); // but the cluster views and cp view subscriptions
+            }, 10_000, 500);
+            
+            
 
             HConsole.WriteLine(this, "Subscribe");
 
@@ -139,14 +162,25 @@ namespace Hazelcast.Tests.Clustering
             
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(3)); // 2 more correlated
+                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(4)); // 2 more correlated
                 Assert.That(subscription.Count, Is.EqualTo(2)); // 2 members
                 Assert.That(subscription.Active);
-                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count,Is.EqualTo(1)); // 1 member on v2
+                Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count,Is.EqualTo(2)); // we expect 2 members based on MemberIds field.
                 Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId0));
                 Assert.That(client.ClusterVersion, Is.EqualTo(clusterVersion));
-
-            }, 10000, 200);
+                
+                
+                Assert.That(client.Cluster.Members.ClusterCPGroups.Count, Is.EqualTo(1));
+                Assert.That(client.Cluster.Members.ClusterCPGroups.Version, Is.EqualTo(state0.CPGroupVersion));
+                // We know that the CP group is on server0 has the leader as memberId0
+                var leadMember = client.Cluster.Members.GetLeaderMemberOf(state0.CPGroupId);
+                Assert.That(leadMember, Is.Not.Null);
+                Assert.That(leadMember.Id, Is.EqualTo(memberId0));
+                
+                // Final cp group should be received over listener.
+                Assert.That(client.Cluster.Members.ClusterCPGroups.TryGetLeaderMemberId(cpGroupIdFinal, out _), Is.True);
+                
+            }, 15000, 200);
 
             HConsole.WriteLine(this, "Set");
 
@@ -167,8 +201,8 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(subscription.Active, Is.False, "active");
                 Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0), "count.1"); // is gone
-                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1), "count.2"); // are gone
-                Assert.That(subscription.Count, Is.EqualTo(1), "count.3"); // 1 remains
+                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(2), "count.2"); // are gone
+                Assert.That(subscription.Count, Is.EqualTo(1), "count.3"); // 1 remains 
                 Assert.That(clusterEvents.CollectSubscriptions.Count, Is.EqualTo(1), "count.4"); // is ghost
             }, 4000, 200);
 
@@ -210,6 +244,8 @@ namespace Hazelcast.Tests.Clustering
             public long SubscriptionCorrelationId { get; set; }
             public IDictionary<string, string> KeyValuePairs { get; set; }
             public ClusterVersion ClusterVersion { get; set; }
+            public CPGroupId CPGroupId { get; set; }
+            public int CPGroupVersion { get; set; } = 1;
         }
 
         
@@ -341,6 +377,43 @@ namespace Hazelcast.Tests.Clustering
                             // note: raising on *this* connection with the request's correlation id
                             await request.RaiseAsync(addedEvent, request.State.SubscriptionCorrelationId).CfAwait();
                         }
+                        break;
+                    }
+                
+                case ClientAddCPGroupViewListenerServerCodec.RequestMessageType:
+                    {
+                        HConsole.WriteLine(this, $"(server{request.State.Id}) AddCPGroupViewListener");
+                        _ = ClientAddCPGroupViewListenerServerCodec.DecodeRequest(request.Message);
+                        var addResponse = ClientAddCPGroupViewListenerServerCodec.EncodeResponse();
+                        await request.RespondAsync(addResponse).CfAwait();
+
+                        _ = Task.Run(async () =>
+                        {
+                            // Since first contact on auth can clear the cp group list due to lack of versioning information,
+                            // we need to send the cp group view multiple times for eventual state.
+                            for (int i = 0; i < 10; i++)
+                            {
+                                await Task.Delay(1000);
+
+                                var leaderId = request.State.MemberIds[0];
+                                var leaderMember = new CPMember(leaderId, request.State.Address);
+
+                                var cpGroups = new List<CPGroupInfo>
+                                {
+                                    new CPGroupInfo(request.State.CPGroupId, leaderMember, new List<CPMember>
+                                        { new CPMember(request.State.MemberId, request.State.Address) })
+                                };
+
+                                var cpToApUuids = new List<KeyValuePair<Guid, Guid>>
+                                {
+                                    new KeyValuePair<Guid, Guid>(leaderId, leaderId)
+                                };
+
+                                var response = ClientAddCPGroupViewListenerServerCodec.EncodeGroupsViewEvent(request.State.CPGroupVersion, cpGroups, cpToApUuids);
+                                response.CorrelationId = request.Message.CorrelationId;
+                                await request.RaiseAsync(response).CfAwait();
+                            }
+                        });
                         break;
                     }
 

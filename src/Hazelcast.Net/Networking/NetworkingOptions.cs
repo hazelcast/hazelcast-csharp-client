@@ -44,6 +44,7 @@ public class NetworkingOptions
         ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         UsePublicAddresses = other.UsePublicAddresses;
         RoutingMode = other.RoutingMode.Clone();
+        CPDirectToLeaderEnabled = other.CPDirectToLeaderEnabled;
 
         Tpc = other.Tpc.Clone();
         Ssl = other.Ssl.Clone();
@@ -190,6 +191,11 @@ public class NetworkingOptions
     /// based on the selected routing mode.
     /// </summary>
     public RoutingMode RoutingMode { get; } = new();
+
+    /// <summary>
+    /// Gets or sets whether client tries to redirect CP requests to CP group leaders.
+    /// </summary>
+    public bool CPDirectToLeaderEnabled { get; set; }
 
     /// <summary>
     /// Clones the options.
