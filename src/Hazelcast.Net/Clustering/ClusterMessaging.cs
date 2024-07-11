@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
     {
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
-        private Func<ClientMessage, ValueTask> _sendingMessage;
+        private Func<ClientMessage, Guid, ValueTask> _sendingMessage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMessaging"/> class.
@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or set an action that will be executed before sending a message.
         /// </summary>
-        public Func<ClientMessage, ValueTask> SendingMessage
+        public Func<ClientMessage, Guid, ValueTask> SendingMessage
         {
             get => _sendingMessage;
             set
@@ -241,7 +241,7 @@ namespace Hazelcast.Clustering
             // NOTE: *every* invocation sent to the cluster goes through the code below
 
             // trigger event
-            if (raiseEvents) await _sendingMessage.AwaitEach(message).CfAwait();
+            if (raiseEvents) await _sendingMessage.AwaitEach(message, targetMemberId).CfAwait();
 
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags

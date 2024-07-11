@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Aggregation;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
@@ -50,6 +51,29 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
+        [TestCase(@"[{ ""raftId"":{ ""seed"":9, ""id"":3, ""name"":""grp1"" }, ""leaderUUID"":""fa270257-5767-45bf-a3c6-bafe17bed525"" }]", "grp1",9, 3, "fa270257-5767-45bf-a3c6-bafe17bed525",1)]
+        [TestCase(@"[]", "grp1",0, 0, "",0)]
+        public void TestAuthenticatorCanParseCPGroups(string jsonString, string groupName, int seed, int id, string leaderId, int count)
+        {
+            ClientAuthenticationCodec.ResponseParameters response = new ClientAuthenticationCodec.ResponseParameters();
+            response.KeyValuePairs = new Dictionary<string, string>();
+            response.KeyValuePairs[ClusterCPGroups.CPGroupsJsonField] = jsonString;
+            response.IsKeyValuePairsExists = true;
+
+            var authenticator = CreateAuthenticator();
+            
+            var cpGroups = authenticator.ParseCPGroupLeaderIds(response);
+            
+            Assert.That(cpGroups.Count, Is.EqualTo(count));
+            foreach (var g in cpGroups)
+            {
+                Assert.That(g.Key.Name, Is.EqualTo(groupName));
+                Assert.That(g.Key.Seed, Is.EqualTo(seed));
+                Assert.That(g.Key.Id, Is.EqualTo(id));
+                Assert.That(g.Value, Is.EqualTo(Guid.Parse(leaderId)));  
+            }
+        }
+
         [TestCase("{ \"version\":\"1\", \"groups\":[[ \"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
         [TestCase("{\"version\":\"1\", \"groups\":[[\"fa270257-5767-45bf-a3c6-bafe17bed525\",\"fa756344-97ca-43f5-9d8d-23b960e4d445\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 2, 1)]
         [TestCase("{\"version\":\"5\", \"groups\":[[\"fa270257-5767-45bf-a3c6-bafe17bed525\"]]}", "fa270257-5767-45bf-a3c6-bafe17bed525", 1, 5)]
@@ -64,12 +88,7 @@ namespace Hazelcast.Tests.Clustering
             response.ClusterId = Guid.NewGuid();
             response.MemberUuid = string.IsNullOrEmpty(memberId) ? Guid.NewGuid() : Guid.Parse(memberId);
 
-            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
-                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
-                .AddHook<AggregatorDataSerializerHook>()
-                .Build();
-
-            var authenticator = new Authenticator(new AuthenticationOptions(), serializationService, NullLoggerFactory.Instance);
+            var authenticator = CreateAuthenticator();
 
             var memberGroup = authenticator.ParsePartitionMemberGroups(response);
             Assert.IsNotNull(memberGroup);
@@ -77,6 +96,16 @@ namespace Hazelcast.Tests.Clustering
             Assert.AreEqual(version, memberGroup.Version);
             Assert.AreEqual(response.ClusterId, memberGroup.ClusterId);
             Assert.AreEqual(response.MemberUuid, memberGroup.MemberReceivedFrom);
+        }
+        private static Authenticator CreateAuthenticator()
+        {
+            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddHook<AggregatorDataSerializerHook>()
+                .Build();
+
+            var authenticator = new Authenticator(new AuthenticationOptions(), serializationService, NullLoggerFactory.Instance);
+            return authenticator;
         }
 
         // TODO: add integration tests after having config.

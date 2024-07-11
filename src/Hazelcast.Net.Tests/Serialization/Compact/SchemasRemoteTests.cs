@@ -45,7 +45,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             
             public int SentMessageCount => _count;
 
-            public Func<ClientMessage, ValueTask> SendingMessage
+            public Func<ClientMessage, Guid, ValueTask> SendingMessage
             {
                 get => _messaging.SendingMessage;
                 set => _messaging.SendingMessage = value;

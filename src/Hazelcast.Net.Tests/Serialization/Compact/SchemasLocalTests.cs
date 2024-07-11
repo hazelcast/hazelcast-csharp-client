@@ -45,11 +45,11 @@ public class SchemasLocalTests
             _memberIds = memberIds;
         }
 
-        public Func<ClientMessage, ValueTask>? SendingMessage { get; set; }
+        public Func<ClientMessage, Guid, ValueTask>? SendingMessage { get; set; }
 
         public async Task<ClientMessage> SendAsync(ClientMessage requestMessage, bool triggerEvents, CancellationToken cancellationToken)
         {
-            if (triggerEvents && SendingMessage != null) await SendingMessage.AwaitEach(requestMessage).CfAwait();
+            if (triggerEvents && SendingMessage != null) await SendingMessage.AwaitEach(requestMessage, Guid.Empty).CfAwait();
             return await _respond(requestMessage);
         }
 
@@ -60,7 +60,7 @@ public class SchemasLocalTests
 
         public async Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken)
         {
-            if (SendingMessage != null) await SendingMessage.AwaitEach(requestMessage).CfAwait();
+            if (SendingMessage != null) await SendingMessage.AwaitEach(requestMessage, Guid.Empty).CfAwait();
             return await _respond(requestMessage);
         }
 

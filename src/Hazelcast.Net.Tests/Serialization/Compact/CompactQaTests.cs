@@ -161,7 +161,7 @@ public class CompactQaTests : ClusterRemoteTestBase
 
         // use a clean client + hook into cluster messaging to capture messages (before client starts)
         await using var client = HazelcastClientFactory.CreateClient(CreateHazelcastOptions());
-        client.Cluster.Messaging.SendingMessage += message =>
+        client.Cluster.Messaging.SendingMessage += (message, _) =>
         {
             messages.Add(message);
             return default;

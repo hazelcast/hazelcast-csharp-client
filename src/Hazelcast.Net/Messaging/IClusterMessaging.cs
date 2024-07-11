@@ -28,7 +28,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Triggers before a message is sent.
         /// </summary>
-        Func<ClientMessage, ValueTask> SendingMessage { get; set; }
+        Func<ClientMessage, Guid, ValueTask> SendingMessage { get; set; }
 
         /// <summary>
         /// Sends a message to a random member.

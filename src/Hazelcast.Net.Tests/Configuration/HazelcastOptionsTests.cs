@@ -275,7 +275,8 @@ namespace Hazelcast.Tests.Configuration
             
             Assert.AreEqual(RoutingModes.SingleMember, options.RoutingMode.Mode);
             Assert.AreEqual(RoutingStrategy.PartitionGroups, options.RoutingMode.Strategy);
-
+            Assert.That(options.CPDirectToLeaderEnabled, Is.True);
+            
             var sslOptions = options.Ssl;
             Assert.IsTrue(sslOptions.Enabled);
             Assert.IsFalse(sslOptions.ValidateCertificateChain);
