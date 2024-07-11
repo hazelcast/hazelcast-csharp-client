@@ -1541,7 +1541,7 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
-    $branchName = git symbolic-ref --short HEAD
+    $branchName = git name-rev --name-only HEAD
     $isReleaseBranch = $branchName.StartsWith("release/")
 
     Write-Output "Build"
