@@ -156,7 +156,6 @@ jobs:
       - name: Test
         id: test
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
           GITHUB_TOKEN_DEVOPS: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
           HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
@@ -169,9 +168,9 @@ jobs:
           $a = @( "$cmd", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
           if ($release -or -not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
-            if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
-              $a += $env:GITHUB_TOKEN_DEVOPS
-            }
+          }
+          if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
+            $a += $env:GITHUB_TOKEN_DEVOPS
           }
           ./hz.ps1 @a
 
