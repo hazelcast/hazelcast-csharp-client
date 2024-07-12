@@ -808,6 +808,29 @@ function verify-server-files {
     return $true
 }
 
+function Get-hazelcast-default-xml($refspec) {
+    $url = "https://api.github.com/repos/hazelcast/hazelcast-mono/contents/hazelcast/hazelcast/src/main/resources/hazelcast-default.xml?ref=$refspec"
+    $dest = "$libDir/hazelcast-$serverVersion.xml"
+    $response = invoke-web-request $url $dest
+    gh api $url --header "Accept: application/vnd.github.raw" > $dest
+
+    if ($?) {
+        Write-Output "Found hazelcast-default.xml from refspec $refspec"
+        return $true
+    }
+    else {
+        Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from refspec $refspec"
+        if (test-path $dest) { remove-item $dest }
+        return $false
+    }
+}
+
+function Get-hazelcast-default-xml-or-die($refspec) {
+    if (-not (Get-hazelcast-default-xml $refspec)) {
+        Die "Error: failed to download hazelcast-default.xml from refspec $refspec"
+    }
+    return $true
+}
 
 # ensures we have all jars & config required for the remote controller and the server,
 # by downloading them if needed, and add them to the $script:options.classpath
@@ -876,44 +899,17 @@ function ensure-server-files {
 
         # special master case
         if ($options.server -eq "master") {
-            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
-            $dest = "$libDir/hazelcast-$serverVersion.xml"
-            $response = invoke-web-request $url $dest
-            if ($response.StatusCode -ne 200) {
-                if (test-path $dest) { remove-item $dest }
-                Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
-            }
-            Write-Output "Found hazelcast-default.xml from branch master"
-            $found = $true
+            $found = Get-hazelcast-default-xml-or-die "main"
         }
 
         # special beta case
         if ($isBeta) {
-            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
-            $dest = "$libDir/hazelcast-$serverVersion.xml"
-            $response = invoke-web-request $url $dest
-            if ($response.StatusCode -ne 200) {
-                if (test-path $dest) { rm $dest }
-                Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
-            }
-            Write-Output "Found hazelcast-default.xml from branch $v"
-            $found = $true
+            $found = Get-hazelcast-default-xml-or-die $v
         }   
         
         if (-not $found) {
             # try tag eg 'v4.2.1' or 'v4.3'
-            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
-            $dest = "$libDir/hazelcast-$serverVersion.xml"
-            $response = invoke-web-request $url $dest
-
-            if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from tag v$v"
-                if (test-path $dest) { remove-item $dest }
-            }
-            else {
-                Write-Output "Found hazelcast-default.xml from tag v$v"
-                $found = $true
-            }
+            $found = Get-hazelcast-default-xml "v$v"
         }
 
         if (-not $found) {
@@ -924,32 +920,12 @@ function ensure-server-files {
             }
 
             # try branch eg '4.2.z' or '4.3.z'
-            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v.z/hazelcast/src/main/resources/hazelcast-default.xml"
-            $response = invoke-web-request $url $dest
-
-            if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v.z"
-                if (test-path $dest) { remove-item $dest }
-            }
-            else {
-                Write-Output "Found hazelcast-default.xml from branch $v.z"
-                $found = $true
-            }
+            $found = Get-hazelcast-default-xml "$v.z"
         }
 
         if (-not $found) {
             # try branch eg '4.3' because '5.0' exists but not '5.0.z'
-            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
-            $response = invoke-web-request $url $dest
-
-            if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
-                if (test-path $dest) { remove-item $dest }
-            }
-            else {
-                Write-Output "Found hazelcast-default.xml from branch $v"
-                $found = $true
-            }
+            $found = Get-hazelcast-default-xml $v
         }
 
         if (-not $found) {
@@ -958,15 +934,7 @@ function ensure-server-files {
             get-master-server-version $r
             if ($r.version -eq $serverVersion) {
                 Write-Output "Master branch is $($r.version), matches."
-                $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
-                $dest = "$libDir/hazelcast-$serverVersion.xml"
-                $response = invoke-web-request $url $dest
-                if ($response.StatusCode -ne 200) {
-                    if (test-path $dest) { remove-item $dest }
-                    Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
-                }
-                Write-Output "Found hazelcast-default.xml from branch master"
-                $found = $true
+                $found = Get-hazelcast-default-xml-or-die "master"
             }
             else {
                 Write-Output "Master branch is $($r.version), does not match $serverVersion."

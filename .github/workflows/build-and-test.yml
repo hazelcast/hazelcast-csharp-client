@@ -156,6 +156,7 @@ jobs:
       - name: Test
         id: test
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
           GITHUB_TOKEN_DEVOPS: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
           HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
