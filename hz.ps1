@@ -811,17 +811,18 @@ function verify-server-files {
 function Get-hazelcast-default-xml($refspec) {
     $url = "https://api.github.com/repos/hazelcast/hazelcast-mono/contents/hazelcast/hazelcast/src/main/resources/hazelcast-default.xml?ref=$refspec"
     $dest = "$libDir/hazelcast-$serverVersion.xml"
-    $response = invoke-web-request $url $dest
-    gh api $url --header "Accept: application/vnd.github.raw" > $dest
+    $token = get-github-token
+    $headers = @{ Authorization = "Token $token"; Accept = "application/vnd.github.v4.raw" }
+    $response = invoke-web-request $url $dest $headers
 
-    if ($?) {
-        Write-Output "Found hazelcast-default.xml from refspec $refspec"
-        return $true
-    }
-    else {
+    if ($response.StatusCode -ne 200) {
         Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from refspec $refspec"
         if (test-path $dest) { remove-item $dest }
         return $false
+    }
+    else {
+        Write-Output "Found hazelcast-default.xml from refspec $refspec"
+        return $true
     }
 }
 
@@ -1174,10 +1175,7 @@ function ensure-certs {
 # generate the test certificates
 function hz-generate-certs {
 
-    $token = ""
-    if ($options.commargs.Count -eq 1) {
-        $token = $options.commargs[0]
-    }
+    $token = get-github-token
 
     if ([string]::IsNullOrWhiteSpace($token)) {
         # no token provided, maybe the dev has auth to access the private repo?
@@ -2599,6 +2597,15 @@ function hz-copy-files (){
         }
     }
     Write-Output "$($count) item(s) copied."
+}
+
+function get-github-token() {
+    $token = ""
+    if ($options.commargs.Count -eq 1) {
+        $token = $options.commargs[0]
+    }
+
+    return $token
 }
 
 # ########
