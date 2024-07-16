@@ -1541,7 +1541,12 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
-    $branchName = git name-rev --name-only HEAD
+    try {
+        $branchName = git symbolic-ref --short HEAD
+    } catch {
+        # In the case of a detached branch
+        $branchName = ""
+    }
     $isReleaseBranch = $branchName.StartsWith("release/")
 
     Write-Output "Build"
