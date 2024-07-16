@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Core;
 namespace Hazelcast.Models
 {
     internal class MemberGroups
@@ -45,9 +46,9 @@ namespace Hazelcast.Models
         public override string ToString()
         {
             return $"MemberGroups[Version: {Version}," +
-                   $" ClusterId: {ClusterId}," +
-                   $" MemberReceivedFrom: {MemberReceivedFrom}," +
-                   $" Groups: {string.Join(",\n", Groups.Select(group => $"[{string.Join(", ", group)}]"))}]";
+                   $" ClusterId: {ClusterId.ToShortString()}," +
+                   $" MemberReceivedFrom: {MemberReceivedFrom.ToShortString()}," +
+                   $" Groups: {string.Join(",\n", Groups.Select(group => $"[{string.Join(", ", group.Select(id => id.ToShortString()))}]"))}";
         }
 
     }

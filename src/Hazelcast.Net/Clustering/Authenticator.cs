@@ -238,9 +238,9 @@ internal class Authenticator
         if (!response.IsKeyValuePairsExists)
             return emptyMemberGroups;
 
-        var isContainsPartitionGroups = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.PartitionGroupJsonField, out var jsonMessage);
+        var isContainsPartitionGroups = response.KeyValuePairs.TryGetValue(MemberPartitionGroup.PartitionGroupRootJsonField, out var jsonMessage);
 
-        if (isContainsPartitionGroups && string.IsNullOrEmpty(jsonMessage))
+        if (!isContainsPartitionGroups || string.IsNullOrEmpty(jsonMessage))
         {
             return emptyMemberGroups;
         }
@@ -282,7 +282,7 @@ internal class Authenticator
         
         var isContainsCPGroupLeaderIds = response.KeyValuePairs.TryGetValue(ClusterCPGroups.CPGroupsJsonField, out var jsonMessage);
         
-        if (isContainsCPGroupLeaderIds && string.IsNullOrEmpty(jsonMessage))
+        if (!isContainsCPGroupLeaderIds || string.IsNullOrEmpty(jsonMessage))
         {
             return cpGroupLeaderIds;
         }
