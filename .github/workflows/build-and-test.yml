@@ -168,9 +168,9 @@ jobs:
           $a = @( "$cmd", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
           if ($release -or -not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
-            if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
-              $a += $env:GITHUB_TOKEN_DEVOPS
-            }
+          }
+          if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
+            $a += $env:GITHUB_TOKEN_DEVOPS
           }
           ./hz.ps1 @a
 
