@@ -45,6 +45,10 @@ Please note that server should support this routing mode which is available with
 #### All Members Routing Mode
 In all members mode, the clients connect to each cluster member. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. Smart mode is the default mode.
 
+### Send CP Requests Directly To the Leader
+This `@Hazelcast.NetworkingOptions.CPDirectToLeaderEnabled` option allows to redirect CP related requests to the leader of the CP group. This option is only available for CP Subsystem enabled clusters. By default, this option is disabled.
+
+
 ## Reconnect Mode
 
 The client can, at times, become disconnected from the cluster, for instance in case of a brief network issue. What happens then is determined by the `@Hazelcast.Networking.NetworkingOptions.ReconnectMode` configuration option. Its default value is `@Hazelcast.Networking.ReconnectMode.ReconnectSync` which means that the client will try to reconnect transparently, queuing the invocations until the client is reconnected, or the invocations time out.
