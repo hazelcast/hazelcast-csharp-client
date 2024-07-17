@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -68,6 +69,6 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Handles a new connection.
         /// </summary>
-        ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster);
+        ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster, ClusterVersion clusterVersion);
     }
 }

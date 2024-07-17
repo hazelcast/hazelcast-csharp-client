@@ -239,7 +239,7 @@ namespace Hazelcast.DistributedObjects
 #pragma warning disable IDE0060 // Remove unused parameters
 #pragma warning disable CA1801 // Review unused parameters
         // unused parameters are required, this is an event handler
-        public async ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+        public async ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster, ClusterVersion clusterVersion)
 #pragma warning restore CA1801
 #pragma warning restore IDE0060
         {

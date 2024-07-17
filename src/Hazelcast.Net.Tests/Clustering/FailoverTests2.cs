@@ -82,55 +82,55 @@ public class FailoverTests2 : HazelcastTestBase
             .HandleFallback(ServerHandler);
 
         HConsole.Configure(options => options
-            .ConfigureDefaults(this)
-            .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
-        );
+                .ConfigureDefaults(this)
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
+            );
 
         var states = new ConcurrentQueue<ClientState>();
 
         var failoverOptions = new HazelcastFailoverOptionsBuilder()
-            .With(fo =>
-            {
-                fo.TryCount = 2;
+             .With(fo =>
+             {
+                 fo.TryCount = 2;
 
-                // first cluster is the primary, and able to configure everything
-                fo.Clients.Add(new HazelcastOptionsBuilder()
-                    .With(o =>
-                    {
-                        // this applies to this cluster only
-                        o.ClusterName = cluster0Id.ToString();
-                        o.Networking.Addresses.Clear();
-                        o.Networking.Addresses.Add(member0Address.ToString());
-                        o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-                        o.Networking.SmartRouting = true;
+                 // first cluster is the primary, and able to configure everything
+                 fo.Clients.Add(new HazelcastOptionsBuilder()
+                     .With(o =>
+                     {
+                         // this applies to this cluster only
+                         o.ClusterName = cluster0Id.ToString();
+                         o.Networking.Addresses.Clear();
+                         o.Networking.Addresses.Add(member0Address.ToString());
+                         o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                         o.Networking.SmartRouting = true;
 
-                        // each single socket connection attempt has a timeout
-                        // connection to a cluster has a total timeout
-                        o.Networking.ConnectionTimeoutMilliseconds = 4_000;
-                        o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 8_000;
+                         // each single socket connection attempt has a timeout
+                         // connection to a cluster has a total timeout
+                         o.Networking.ConnectionTimeoutMilliseconds = 4_000;
+                         o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 8_000;
 
-                        // this applies to all clusters
-                        o.AddSubscriber(events =>
-                            events.StateChanged((sender, arg) =>
-                            {
-                                HConsole.WriteLine(this, $"State changed to: {arg.State}");
-                                states.Enqueue(arg.State);
-                            }));
-                    })
-                    .Build());
+                         // this applies to all clusters
+                         o.AddSubscriber(events =>
+                             events.StateChanged((sender, arg) =>
+                             {
+                                 HConsole.WriteLine(this, $"State changed to: {arg.State}");
+                                 states.Enqueue(arg.State);
+                             }));
+                     })
+                     .Build());
 
-                // second cluster is alternate, only need to configure network
-                fo.Clients.Add(new HazelcastOptionsBuilder()
-                    .With(o =>
-                    {
-                        o.ClusterName = cluster1Id.ToString();
-                        o.Networking.Addresses.Clear();
-                        o.Networking.Addresses.Add(member1Address.ToString());
-                    })
-                    .Build());
-            })
-            .WithHConsoleLogger()
-            .Build();
+                 // second cluster is alternate, only need to configure network
+                 fo.Clients.Add(new HazelcastOptionsBuilder()
+                     .With(o =>
+                     {
+                         o.ClusterName = cluster1Id.ToString();
+                         o.Networking.Addresses.Clear();
+                         o.Networking.Addresses.Add(member1Address.ToString());
+                     })
+                     .Build());
+             })
+             .WithHConsoleLogger()
+             .Build();
 
         HConsole.WriteLine(this, "Start members of clusters 0 and 1");
         await member0.StartAsync();
@@ -214,63 +214,63 @@ public class FailoverTests2 : HazelcastTestBase
             .HandleFallback(ServerHandler);
 
         HConsole.Configure(options => options
-            .ConfigureDefaults(this)
-            .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
-        );
+                .ConfigureDefaults(this)
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel()
+            );
 
         var states = new ConcurrentQueue<ClientState>();
 
         var failoverOptions = new HazelcastFailoverOptionsBuilder()
-            .With(fo =>
-            {
-                fo.TryCount = 2;
+             .With(fo =>
+             {
+                 fo.TryCount = 2;
 
-                // first cluster is the primary, and able to configure everything
-                fo.Clients.Add(new HazelcastOptionsBuilder()
-                    .With(o =>
-                    {
-                        // this applies to this cluster only
-                        o.ClusterName = cluster0Id.ToString();
-                        o.Networking.Addresses.Clear();
-                        o.Networking.Addresses.Add(member0Address.ToString());
-                        o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-                        o.Networking.SmartRouting = true;
+                 // first cluster is the primary, and able to configure everything
+                 fo.Clients.Add(new HazelcastOptionsBuilder()
+                     .With(o =>
+                     {
+                         // this applies to this cluster only
+                         o.ClusterName = cluster0Id.ToString();
+                         o.Networking.Addresses.Clear();
+                         o.Networking.Addresses.Add(member0Address.ToString());
+                         o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                         o.Networking.SmartRouting = true;
 
-                        // each single socket connection attempt has a timeout
-                        // connection to a cluster has a total timeout
-                        o.Networking.ConnectionTimeoutMilliseconds = 4_000;
-                        o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 8_000;
+                         // each single socket connection attempt has a timeout
+                         // connection to a cluster has a total timeout
+                         o.Networking.ConnectionTimeoutMilliseconds = 4_000;
+                         o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 8_000;
 
-                        // this applies to all clusters
-                        o.AddSubscriber(events =>
-                            events.StateChanged((sender, arg) =>
-                            {
-                                HConsole.WriteLine(this, $"State changed to: {arg.State}");
-                                states.Enqueue(arg.State);
-                            }));
-                    })
-                    .Build());
+                         // this applies to all clusters
+                         o.AddSubscriber(events =>
+                             events.StateChanged((sender, arg) =>
+                             {
+                                 HConsole.WriteLine(this, $"State changed to: {arg.State}");
+                                 states.Enqueue(arg.State);
+                             }));
+                     })
+                     .Build());
 
-                // second cluster is alternate, only need to configure network
-                fo.Clients.Add(new HazelcastOptionsBuilder()
-                    .With(o =>
-                    {
-                        o.ClusterName = cluster1Id.ToString();
-                        o.Networking.Addresses.Clear();
-                        o.Networking.Addresses.Add(member1Address.ToString());
-                    })
-                    .Build());
-                fo.Clients.Add(new HazelcastOptionsBuilder()
-                    .With(o =>
-                    {
-                        o.ClusterName = cluster2Id.ToString();
-                        o.Networking.Addresses.Clear();
-                        o.Networking.Addresses.Add(member2Address.ToString());
-                    })
-                    .Build());
-            })
-            .WithHConsoleLogger()
-            .Build();
+                 // second cluster is alternate, only need to configure network
+                 fo.Clients.Add(new HazelcastOptionsBuilder()
+                     .With(o =>
+                     {
+                         o.ClusterName = cluster1Id.ToString();
+                         o.Networking.Addresses.Clear();
+                         o.Networking.Addresses.Add(member1Address.ToString());
+                     })
+                     .Build());
+                 fo.Clients.Add(new HazelcastOptionsBuilder()
+                     .With(o =>
+                     {
+                         o.ClusterName = cluster2Id.ToString();
+                         o.Networking.Addresses.Clear();
+                         o.Networking.Addresses.Add(member2Address.ToString());
+                     })
+                     .Build());
+             })
+             .WithHConsoleLogger()
+             .Build();
 
         HConsole.WriteLine(this, "Start members of clusters 0, 1 and 2");
         await member0.StartAsync();
@@ -320,63 +320,63 @@ public class FailoverTests2 : HazelcastTestBase
         {
             // must handle auth
             case ClientAuthenticationServerCodec.RequestMessageType:
-            {
-                HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
-                var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
-                var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
-                    0, address, memberId, SerializationService.SerializerVersion,
-                    "4.0", partitionsCount, request.Server.ClusterId, true, Array.Empty<int>(), Array.Empty<byte>(),
-                    0, Array.Empty<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(0));
-                await request.RespondAsync(authResponse).CfAwait();
-                break;
-            }
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
+                    var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
+                    var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
+                        0, address, memberId, SerializationService.SerializerVersion,
+                        "4.0", partitionsCount, request.Server.ClusterId, true,Array.Empty<int>(), 
+                        Array.Empty<byte>(), 0, new List<MemberInfo>(), 0, new List<KeyValuePair<Guid, IList<int>>>(),new Dictionary<string, string>());
+                    await request.RespondAsync(authResponse).CfAwait();
+                    break;
+                }
 
             // must handle events
             case ClientAddClusterViewListenerServerCodec.RequestMessageType:
-            {
-                HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
-                var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
-                var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                await request.RespondAsync(addResponse).CfAwait();
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
+                    var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
+                    var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                    await request.RespondAsync(addResponse).CfAwait();
 
-                if (request.State.SendMembershipEvents)
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(500).CfAwait();
-
-                        const int membersVersion = 1;
-                        var memberVersion = new MemberVersion(4, 0, 0);
-                        var memberAttributes = new Dictionary<string, string>();
-                        var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
+                    if (request.State.SendMembershipEvents)
+                        _ = Task.Run(async () =>
                         {
-                            new MemberInfo(memberId, address, memberVersion, false, memberAttributes)
+                            await Task.Delay(500).CfAwait();
+
+                            const int membersVersion = 1;
+                            var memberVersion = new MemberVersion(4, 0, 0);
+                            var memberAttributes = new Dictionary<string, string>();
+                            var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
+                            {
+                                    new MemberInfo(memberId, address, memberVersion, false, memberAttributes)
+                                });
+                            await request.RaiseAsync(membersEventMessage).CfAwait();
+
+                            await Task.Delay(500).CfAwait();
+
+                            const int partitionsVersion = 1;
+                            var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
+                            {
+                                    new KeyValuePair<Guid, IList<int>>(memberId, new List<int> { 0 }),
+                                    new KeyValuePair<Guid, IList<int>>(memberId, new List<int> { 1 }),
+                                });
+                            await request.RaiseAsync(partitionsEventMessage).CfAwait();
                         });
-                        await request.RaiseAsync(membersEventMessage).CfAwait();
 
-                        await Task.Delay(500).CfAwait();
-
-                        const int partitionsVersion = 1;
-                        var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
-                        {
-                            new KeyValuePair<Guid, IList<int>>(memberId, new List<int> { 0 }),
-                            new KeyValuePair<Guid, IList<int>>(memberId, new List<int> { 1 }),
-                        });
-                        await request.RaiseAsync(partitionsEventMessage).CfAwait();
-                    });
-
-                break;
-            }
+                    break;
+                }
 
             // ping
             case ClientPingServerCodec.RequestMessageType:
-            {
-                HConsole.WriteLine(this, $"(server{request.State.Id}) Ping");
-                var pingRequest = ClientPingServerCodec.DecodeRequest(request.Message);
+                {
+                    HConsole.WriteLine(this, $"(server{request.State.Id}) Ping");
+                    var pingRequest = ClientPingServerCodec.DecodeRequest(request.Message);
 
-                // no response, will timeout
+                    // no response, will timeout
 
-                break;
-            }
+                    break;
+                }
 
             // create object
             case ClientCreateProxyCodec.RequestMessageType:
@@ -448,12 +448,12 @@ public class FailoverTests2 : HazelcastTestBase
 
             // unexpected message = error
             default:
-            {
-                // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
-                var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
-                await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
-                break;
-            }
+                {
+                    // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
+                    var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
+                    await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
+                    break;
+                }
         }
     }
 
@@ -468,7 +468,7 @@ public class FailoverTests2 : HazelcastTestBase
         var value = _kv[expectedClusterName].Value;
         var otherKey = "";
         //var otherValue = "";
-        foreach (var kv in _kv)
+        foreach (var kv in _kv) 
         {
             if (kv.Key != expectedClusterName)
             {

@@ -57,6 +57,11 @@ namespace Hazelcast
         string ClusterName { get; }
 
         /// <summary>
+        /// Gets the cluster version.
+        /// </summary>
+        ClusterVersion ClusterVersion { get; }
+
+        /// <summary>
         /// Gets the CP subsystem.
         /// </summary>
         ICPSubsystem CPSubsystem { get; }
