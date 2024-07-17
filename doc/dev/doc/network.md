@@ -16,7 +16,7 @@ By default, the provided list is shuffled and tried in a random order. You can d
 The client has three operation modes because of the distributed nature of the data and cluster: all members, multi members and single member. All members routing is enabled by default, and is controlled by the `@Hazelcast.NetworkingOptions.RoutingMode` configuration option.
 
 > [!NOTE]
-> Smart Routing is deprecated and will be removed in the next major release. Please use the new RoutingMode mode instead.
+> Routing options are renamed and introduced new routing modes, such as `MultiMember`. Hence, `@Hazelcast.Networking.SmartRouting` API is deprecated and will be removed in the next major release. Please use the new `@Hazelcast.Networking.RoutingModes` API instead.
 
 
 ### Routing Mode
