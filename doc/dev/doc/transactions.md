@@ -73,6 +73,6 @@ Transactions can be configured via @Hazelcast.Transactions.TransactionOptions th
 
 * @Hazelcast.Transactions.TransactionOptions.Durability specifies the durability of the transaction (see below)
 * @Hazelcast.Transactions.TransactionOptions.Timeout specifies the timeout of the transaction
-* @Hazelcast.Transactions.TransactionOptions.Type can be either `TwoPhase` (by default) or `OnePhase`, See the [Reference Manual](https://docs.hazelcast.com/hazelcast/5.0-beta-1/transactions/creating-a-transaction-interface.html) for details
+* @Hazelcast.Transactions.TransactionOptions.Type can be either `TwoPhase` (by default) or `OnePhase`, See the [Reference Manual](https://docs.hazelcast.com/hazelcast/latest/transactions/creating-a-transaction-interface.html) for details
 
 The *durability* of a transaction is the number of members in the cluster that can take over if a member fails during a transaction commit or rollback. This value only has meaning when the @Hazelcast.Transactions.TransactionOptions.Type is `TwoPhase`.
