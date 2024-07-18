@@ -161,15 +161,23 @@ namespace Hazelcast
             Cluster.Connections.ConnectionOpened += Cluster.Events.OnConnectionOpened;
             
             // when a connection is opened, notify the heartbeat service
-            Cluster.Connections.ConnectionOpened += (conn, _, _, _) => { Cluster.Heartbeat.AddConnection(conn); return default; };
+            Cluster.Connections.ConnectionOpened += (conn, _, _, _, _) => { Cluster.Heartbeat.AddConnection(conn); return default; };
 
+            // when the first connection is opened, make sure version is set.
+            Cluster.Connections.ConnectionOpened += (_, isFirstEver, _, _, clusterVersion) =>
+            {
+                if(isFirstEver)
+                    Cluster.State.ChangeClusterVersion(clusterVersion);
+                return default;
+            };
+            
             // and now, we can change the client state and let user-level invocations go through
 
             // when a connection is opened, notify the members service (may change the client state)
-            Cluster.Connections.ConnectionOpened += (conn, _, _, isNewCluster) => { Cluster.Members.AddConnection(conn, isNewCluster); return default; };
+            Cluster.Connections.ConnectionOpened += (conn, _, _, isNewCluster, _) => { Cluster.Members.AddConnection(conn, isNewCluster); return default; };
 
             // when a connection is opened, trigger the user-level event.
-            Cluster.Connections.ConnectionOpened += (conn, _, _, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
+            Cluster.Connections.ConnectionOpened += (conn, _, _, isNewCluster, _) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
         }
 
         /// <summary>
@@ -185,6 +193,9 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public string ClusterName => Cluster.Name;
+        
+        /// <inheritdoc />
+        public ClusterVersion ClusterVersion => Cluster.State.ClusterVersion;
 
         /// <inheritdoc />
         // yes this is not really thread-safe but we don't care

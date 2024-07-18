@@ -63,7 +63,11 @@ namespace Hazelcast.Clustering
 
             // create components
             _terminateConnections = new TerminateConnections(loggerFactory);
-            Members = new ClusterMembers(State, _terminateConnections);
+            
+            //* TODO: [SMART ROUTING OPTIONS] create subsetMembers based on options after adding the config.
+            var subsetMembers = new MemberPartitionGroup();
+            
+            Members = new ClusterMembers(State, _terminateConnections, subsetMembers);
             Messaging = new ClusterMessaging(State, Members);
             Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
             SerializationService = serializationServiceFactory(Messaging);

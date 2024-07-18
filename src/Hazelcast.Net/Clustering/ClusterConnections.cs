@@ -50,7 +50,7 @@ namespace Hazelcast.Clustering
 
         private Authenticator _authenticator;
         private Action<MemberConnection> _connectionCreated;
-        private Func<MemberConnection, bool, bool, bool, ValueTask> _connectionOpened;
+        private Func<MemberConnection, bool, bool, bool, ClusterVersion, ValueTask> _connectionOpened;
         private Func<MemberConnection, ValueTask> _connectionClosed;
         private BackgroundTask _reconnect;
         private Guid _clusterId;
@@ -178,7 +178,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when a connection is opened.
         /// </summary>
-        public Func<MemberConnection, bool, bool, bool, ValueTask> ConnectionOpened
+        public Func<MemberConnection, bool, bool, bool, ClusterVersion, ValueTask> ConnectionOpened
         {
             get => _connectionOpened;
             set
@@ -188,14 +188,14 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async ValueTask RaiseConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+        private async ValueTask RaiseConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster, ClusterVersion clusterVersion)
         {
             if (_connectionOpened == null) return;
 
             try
             {
                 _logger.IfDebug()?.LogDebug("Raise ConnectionOpened");
-                await _connectionOpened.AwaitEach(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+                await _connectionOpened.AwaitEach(connection, isFirstEver, isFirst, isNewCluster, clusterVersion).CfAwait();
                 _logger.IfDebug()?.LogDebug("Raised ConnectionOpened");
             }
             catch (Exception e)
@@ -911,10 +911,12 @@ namespace Hazelcast.Clustering
                 if (_completions.TryRemove(connection, out var completion)) completion.TrySetResult(null);
             }
 
+            _clusterMembers.SubsetClusterMembers.SetSubsetMembers(result.MemberGroups);
+            
             // connection is opened
             try
             {
-                await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+                await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster, result.ClusterVersion).CfAwait();
             }
             catch
             {

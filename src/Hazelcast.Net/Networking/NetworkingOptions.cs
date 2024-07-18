@@ -180,6 +180,9 @@ public class NetworkingOptions
     /// socket. It is also the timeout for cloud discovery.</para>
     /// </remarks>
     public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
+    
+    // TODO: Refactor when new networking options are added.
+    internal byte RoutingMode { get; set; } 
 
     /// <summary>
     /// Clones the options.

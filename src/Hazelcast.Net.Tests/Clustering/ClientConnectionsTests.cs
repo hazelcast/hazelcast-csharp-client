@@ -37,7 +37,7 @@ public class ClientConnectionsTests
         var options = new HazelcastOptions();
         var serializationService = new SerializationServiceBuilder(loggerFactory).Build();
         var clusterState = new ClusterState(options, "cluster-name", "client-name", new Partitioner(), loggerFactory);
-        var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory));
+        var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory), new NoOpSubsetMembers());
         var clusterConnections = new ClusterConnections(clusterState, clusterMembers, serializationService);
 
         var connectMembersField = typeof (ClusterConnections).GetField("_connectMembers", BindingFlags.Instance | BindingFlags.NonPublic);
