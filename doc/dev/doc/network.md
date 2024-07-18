@@ -24,9 +24,9 @@ The client has three operation modes because of the distributed nature of the da
 Routing mode allows you to choose the routing strategy of the client. 
 
 There are three routing modes:
-* `@Hazelcast.Networking.RoutingModes.SingleMember` aka Unisocket mode.
-* `@Hazelcast.Networking.RoutingModes.MultiMember` connects to subset of the cluster.
-* `@Hazelcast.Networking.RoutingModes.AllMembers` connects to all members in the cluster aka Smart mode.
+* `@Hazelcast.Networking.RoutingModes.SingleMember` connects to a single member of the cluster (previously Unisocket routing).
+* `@Hazelcast.Networking.RoutingModes.MultiMember` connects to subset of members in the cluster.
+* `@Hazelcast.Networking.RoutingModes.AllMembers` connects to all members of the cluster (previously Smart routing).
 
 #### Single Member Routing Mode
 
@@ -40,10 +40,10 @@ on given strategy on `@Hazecast.Networking.NetworkingOptions.RoutingMode.Strateg
 Available strategies are:
 * `@Hazelcast.Networking.RoutingStrategy.PartitionGroups` which is the default strategy. Clients connects to subset of the cluster based on partition groups which contains the current connected member. 
 
-Please note that server should support this routing mode which is available with Hazelcast 5.5.0.
+Please note that server should support this routing mode which is available with Hazelcast Enterprise 5.5.0.
 
 #### All Members Routing Mode
-In all members mode, the clients connect to each cluster member. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. Smart mode is the default mode.
+In all members mode, the clients connect to each cluster member. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. This mode is the default mode.
 
 ## Reconnect Mode
 
