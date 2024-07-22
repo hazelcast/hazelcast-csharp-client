@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -429,7 +431,17 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Whether smart routing is enabled.
         /// </summary>
-        public bool IsSmartRouting => Options.Networking.SmartRouting;
+        public bool IsSmartRouting => RoutingMode == RoutingModes.AllMembers;
+
+        /// <summary>
+        /// Current routing mode.
+        /// </summary>
+        public RoutingModes RoutingMode => Options.Networking.RoutingMode.Mode;
+
+        /// <summary>
+        /// Gets whether current routing mode is MultiMember or not.
+        /// </summary>
+        public bool IsRoutingModeMultiMember => Options.Networking.RoutingMode.Mode is RoutingModes.MultiMember;
 
         /// <summary>
         /// Gets Failover service.

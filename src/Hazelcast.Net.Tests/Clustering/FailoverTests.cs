@@ -23,6 +23,7 @@ using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
+using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
@@ -261,9 +262,9 @@ internal class FailoverTests : RemoteTestBase
         Assert.False(failover.TryNextCluster());
     }
 
-    [TestCase(true, 1)]
-    [TestCase(false, 1)]
-    public async Task TestClientCanFailover(bool smartRouting, int memberCount)
+    [TestCase(RoutingModes.AllMembers, 1)]
+    [TestCase(RoutingModes.SingleMember, 1)]
+    public async Task TestClientCanFailover(RoutingModes routingMode, int memberCount)
     {
         HConsole.Configure(options => options
             .ConfigureDefaults(this)
@@ -286,7 +287,7 @@ internal class FailoverTests : RemoteTestBase
                         o.Networking.Addresses.Clear();
                         o.Networking.Addresses.Add(Cluster0Address);
                         o.Networking.ReconnectMode = Hazelcast.Networking.ReconnectMode.ReconnectAsync;
-                        o.Networking.SmartRouting = smartRouting;
+                        o.Networking.RoutingMode.Mode = routingMode;
 
                         // each single socket connection attempt has a 10s timeout
                         // connection to a cluster has a total timeout of 20s
@@ -309,7 +310,7 @@ internal class FailoverTests : RemoteTestBase
                     {
                         o.ClusterName = _cluster1.Id;
                         o.Networking.Addresses.Add(Cluster1Address);
-                        o.Networking.SmartRouting = smartRouting; // that doesn't override primary
+                        o.Networking.RoutingMode.Mode = routingMode; // that doesn't override primary
                     })
                     .Build());
             })
@@ -393,9 +394,9 @@ internal class FailoverTests : RemoteTestBase
         Assert.True(latchMembersUpdated.WaitOne(1_000));
     }
 
-    [TestCase(true, 1)]
-    [TestCase(false, 1)]
-    public async Task TestClientCanFailoverFirstClusterNotUp(bool smartRouting, int memberCount)
+    [TestCase(RoutingModes.AllMembers, 1)]
+    [TestCase(RoutingModes.SingleMember, 1)]
+    public async Task TestClientCanFailoverFirstClusterNotUp(RoutingModes routingMode, int memberCount)
     {
         HConsole.Configure(options => options.ConfigureDefaults(this));
 
@@ -415,7 +416,7 @@ internal class FailoverTests : RemoteTestBase
                         o.Networking.Addresses.Clear();
                         o.Networking.Addresses.Add(Cluster0Address);
                         o.Networking.ReconnectMode = Hazelcast.Networking.ReconnectMode.ReconnectAsync;
-                        o.Networking.SmartRouting = smartRouting;
+                        o.Networking.RoutingMode.Mode = routingMode;
 
                         // each single socket connection attempt has a 10s timeout
                         // connection to a cluster has a total timeout of 20s
@@ -438,7 +439,7 @@ internal class FailoverTests : RemoteTestBase
                     {
                         o.ClusterName = _cluster1.Id;
                         o.Networking.Addresses.Add(Cluster1Address);
-                        o.Networking.SmartRouting = smartRouting; // that doesn't override primary
+                        o.Networking.RoutingMode.Mode = routingMode; // that doesn't override primary
                     })
                     .Build());
             })

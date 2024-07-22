@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Networking;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -64,8 +65,7 @@ namespace Hazelcast.Clustering
             // create components
             _terminateConnections = new TerminateConnections(loggerFactory);
             
-            //* TODO: [SMART ROUTING OPTIONS] create subsetMembers based on options after adding the config.
-            var subsetMembers = new MemberPartitionGroup();
+            var subsetMembers = new MemberPartitionGroup(options.Networking, loggerFactory.CreateLogger<MemberPartitionGroup>());
             
             Members = new ClusterMembers(State, _terminateConnections, subsetMembers);
             Messaging = new ClusterMessaging(State, Members);

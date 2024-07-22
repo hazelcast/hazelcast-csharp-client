@@ -67,7 +67,7 @@ namespace Hazelcast
             CPSubsystem = new CPSubsystem(cluster, SerializationService, loggerFactory);
 
             // This option is internal and bound to SmartRouting for now.
-            options.Sql.ArgumentIndexCachingEnabled = options.Networking.SmartRouting;
+            options.Sql.ArgumentIndexCachingEnabled = Cluster.IsSmartRouting;
             Sql = new SqlService(options.Sql, cluster, SerializationService, loggerFactory);
 
             if (options.Metrics.Enabled)
@@ -121,6 +121,9 @@ namespace Hazelcast
 
             // when members are updated, trigger the user-level event
             Cluster.Events.MembersUpdated += Trigger<MembersUpdatedEventHandler, MembersUpdatedEventArgs>;
+
+            // When member partition groups are updated, member table should be updated accordingly.
+            Cluster.Events.MemberPartitionGroupsUpdated += Cluster.Members.HandleMemberPartitionGroupsUpdated;
 
             // -- ConnectionClosed -- order is *important* --
 

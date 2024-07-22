@@ -598,7 +598,14 @@ namespace Hazelcast.Clustering
                             {
                                 isExceptionThrown = true;
                                 _logger.IfWarning()?.LogWarning("Failed to connect to cluster since client is not allowed. " +
-                                                                $"Exception:{nameof(ClientNotAllowedInClusterException)}, Message:{attempt.Exception.Message}");
+                                                                "Exception:{Exception}, Message: {Message}", nameof(ClientNotAllowedInClusterException), attempt.Exception.Message);
+                                throw attempt.Exception; //no chance, give up
+                            }
+                            else if (attempt.Exception is InvalidPartitionGroupException)
+                            {
+                                isExceptionThrown = true;
+                                _logger.IfWarning()?.LogWarning("Failed to connect to cluster in multi member routing without partition group. " +
+                                                                "Exception:{Exception}, Message: {Message}", nameof(InvalidPartitionGroupException), attempt.Exception.Message);
                                 throw attempt.Exception; //no chance, give up
                             }
                             else
@@ -614,6 +621,12 @@ namespace Hazelcast.Clustering
                             _logger.IfWarning()?.LogWarning("Failed to connect to address {Address}.", address);
                         }
                     }
+                }
+                catch (InvalidPartitionGroupException)
+                {
+                    // Cannot connect to cluster in multi member routing without partition group.
+                    // If failover is possible, it will try next cluster.
+                    break;
                 }
                 catch (ClientNotAllowedInClusterException)
                 {
@@ -831,6 +844,10 @@ namespace Hazelcast.Clustering
                     "(client is configured with failover but cluster does not support failover. " +
                     "Failover is an Hazelcast Enterprise feature.).");
             }
+            
+            // if we are running a multi member routing client but the cluster we just connected to does not support multi member routing
+            if (result.MemberGroups.SelectedGroup.Count == 0 && _clusterState.Options.Networking.RoutingMode.Mode == RoutingModes.MultiMember)
+                await ThrowInvalidPartitionGroup(connection).CfAwait();
 
             // report
             _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}" +
@@ -899,7 +916,7 @@ namespace Hazelcast.Clustering
             if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
             if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
             if (!accepted) await ThrowRejected(connection).CfAwait();
-
+            
             // NOTE: connections are opened either by 'connect first' or by 'connect members' and
             // both ensure that one connection is opened after another - not concurrently - thus
             // making sure that there is no race condition here and the ConnectionOpened for the
@@ -932,6 +949,12 @@ namespace Hazelcast.Clustering
 
             RemoveCompletion();
             return connection;
+        }
+        private async Task ThrowInvalidPartitionGroup(MemberConnection connection)
+        {
+            await connection.DisposeAsync().CfAwait();
+            throw new InvalidPartitionGroupException("No member group is received from server as partition group." +
+                                                     " This should not happen in multi-member routing mode. Make sure that server supports multi member routing.");
         }
 
         /// <inheritdoc />

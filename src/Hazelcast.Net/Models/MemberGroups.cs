@@ -42,5 +42,13 @@ namespace Hazelcast.Models
             return (Groups.FirstOrDefault(group => group.Contains(memberId)) ?? Enumerable.Empty<Guid>()).ToList();
         }
 
+        public override string ToString()
+        {
+            return $"MemberGroups[Version: {Version}," +
+                   $" ClusterId: {ClusterId}," +
+                   $" MemberReceivedFrom: {MemberReceivedFrom}," +
+                   $" Groups: {string.Join(",\n", Groups.Select(group => $"[{string.Join(", ", group)}]"))}]";
+        }
+
     }
 }

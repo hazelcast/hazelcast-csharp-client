@@ -46,6 +46,7 @@ namespace Hazelcast.Clustering
 
         private Func<ValueTask> _partitionsUpdated;
         private Func<MembersUpdatedEventArgs, ValueTask> _membersUpdated;
+        private Func<ValueTask> _memberPartitionGroupsUpdated;
 
         private readonly object _clusterViewsMutex = new();
         private MemberConnection _clusterViewsConnection; // the connection which supports the view event
@@ -630,11 +631,11 @@ namespace Hazelcast.Clustering
             return default;
         }
         
-        private ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
+        private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
         {
             _logger.LogDebug("Handle MemberGroups event.");
             _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
-            return default;
+            await _memberPartitionGroupsUpdated.AwaitEach().CfAwait();
         }
 
         /// <summary>
@@ -779,6 +780,19 @@ namespace Hazelcast.Clustering
             {
                 _clusterState.ThrowIfPropertiesAreReadOnly();
                 _partitionsUpdated = value;
+            }
+        }
+        
+        /// <summary>
+        /// Internal event to emit when member partition groups have been updated.
+        /// </summary>
+        internal Func<ValueTask> MemberPartitionGroupsUpdated
+        {
+            get => _memberPartitionGroupsUpdated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _memberPartitionGroupsUpdated = value;
             }
         }
 

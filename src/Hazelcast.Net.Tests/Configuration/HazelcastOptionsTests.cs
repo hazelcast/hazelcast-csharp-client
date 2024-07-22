@@ -261,6 +261,27 @@ namespace Hazelcast.Tests.Configuration
         //}
 
         [Test]
+        public void TestSmartRoutingSetsRoutingMode()
+        {
+            var options = new HazelcastOptionsBuilder()
+                .With((opt) =>
+                {
+                    opt.Networking.SmartRouting = false;
+                }).Build();
+            
+            Assert.That(options.Networking.RoutingMode.Mode, Is.EqualTo(RoutingModes.SingleMember));
+            
+            var options2 = new HazelcastOptionsBuilder()
+                .With((opt) =>
+                {
+                    opt.Networking.SmartRouting = true;
+                }).Build();
+            
+            Assert.That(options2.Networking.RoutingMode.Mode, Is.EqualTo(RoutingModes.AllMembers));
+        }
+        
+        
+        [Test]
         public void NetworkingOptionsSection()
         {
             var options = ReadResource(Resources.HazelcastOptions).Networking;
@@ -269,10 +290,12 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsTrue(options.Addresses.Contains("localhost"));
             Assert.IsTrue(options.Addresses.Contains("otherhost"));
             Assert.IsFalse(options.ShuffleAddresses);
-            Assert.IsFalse(options.SmartRouting);
             Assert.IsFalse(options.RedoOperations);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
             Assert.IsFalse(options.ShuffleAddresses);
+            
+            Assert.AreEqual(RoutingModes.SingleMember, options.RoutingMode.Mode);
+            Assert.AreEqual(RoutingStrategy.PartitionGroups, options.RoutingMode.Strategy);
 
             var sslOptions = options.Ssl;
             Assert.IsTrue(sslOptions.Enabled);

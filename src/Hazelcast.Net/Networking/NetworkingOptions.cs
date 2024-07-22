@@ -43,6 +43,7 @@ public class NetworkingOptions
         ReconnectMode = other.ReconnectMode;
         ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         UsePublicAddresses = other.UsePublicAddresses;
+        RoutingMode = other.RoutingMode.Clone();
 
         Tpc = other.Tpc.Clone();
         Ssl = other.Ssl.Clone();
@@ -86,13 +87,25 @@ public class NetworkingOptions
     /// Whether smart routing is enabled.
     /// </summary>
     /// <remarks>
+    /// <para> Smart routing sets <see cref="RoutingMode"/> to <see cref="RoutingModes.AllMembers"/> if true, otherwise;
+    /// it sets it to <see cref="RoutingModes.SingleMember"/>. Please, prefer using <see cref="RoutingMode"/> directly.
+    /// </para>
     /// <para>If true (default), client will route the key based operations to owner of
     /// the key at the best effort.</para>
     /// <para>Note that it however does not guarantee that the operation will always be
     /// executed on the owner, as the member table is only updated every 10 seconds.</para>
     /// </remarks>
-    public bool SmartRouting { get; set; } = true;
-
+    public bool SmartRouting
+    {
+        get => _smartRouting;
+        set
+        {
+            _smartRouting = value;
+            // set the routing mode accordingly for backwards compatibility
+            RoutingMode.Mode = value ? RoutingModes.AllMembers : RoutingModes.SingleMember;
+        } 
+    }
+    private bool _smartRouting = true;
     /// <summary>
     /// Whether to retry operations.
     /// </summary>
@@ -180,9 +193,12 @@ public class NetworkingOptions
     /// socket. It is also the timeout for cloud discovery.</para>
     /// </remarks>
     public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
-    
-    // TODO: Refactor when new networking options are added.
-    internal byte RoutingMode { get; set; } 
+
+    /// <summary>
+    /// Sets or gets the <see cref="RoutingMode"/> for the client. The client connects to the cluster
+    /// based on the selected routing mode.
+    /// </summary>
+    public RoutingMode RoutingMode { get; } = new();
 
     /// <summary>
     /// Clones the options.

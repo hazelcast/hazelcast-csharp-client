@@ -15,17 +15,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Hazelcast.Core;
 using Hazelcast.Models;
+using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
+using System.Threading;
 namespace Hazelcast.Clustering
 {
     internal class MemberPartitionGroup : ISubsetClusterMembers
     {
         public const string VersionJsonField = "version";
-        public const string PartitionGroupJsonField = "partition.groups";
+        public const string PartitionGroupRootJsonField = "memberGroups";
+        public const string PartitionGroupJsonField = "groups";
         public const int InvalidVersion = -1;
+
+        private NetworkingOptions _networkingOptions;        
+        private ILogger _logger;
         private readonly ReaderWriterLockSlim _mutex = new ReaderWriterLockSlim();
         private MemberGroups _currentGroups
-            = new MemberGroups(null, -1, Guid.Empty, Guid.Empty);
+            = new MemberGroups(null, InvalidVersion, Guid.Empty, Guid.Empty);
+        public MemberPartitionGroup(NetworkingOptions networkingOptions, ILogger logger)
+        {
+            _networkingOptions = networkingOptions;
+            _logger = logger;
+        }
 
 
 #region SubsetPicking
@@ -77,7 +90,7 @@ namespace Hazelcast.Clustering
                     mostOverlappedGroup = examinedGroup;
                 }
             }
-
+          
             return mostOverlappedGroup is { Count: > 0 } ? newGroups : _currentGroups;
         }
 
@@ -120,7 +133,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        public IReadOnlyList<Guid> GetSubsetMembers() => CurrentGroups.SelectedGroup;
+        public IReadOnlyList<Guid> GetSubsetMemberIds() => CurrentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
@@ -130,12 +143,43 @@ namespace Hazelcast.Clustering
             {
                 var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup : PickBestGroup(newGroup);
                 _mutex.EnterWriteLock();
+                var old = _currentGroups;
                 _currentGroups = pickedGroup;
+                _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} \n New group: {PickedGroup}", old, pickedGroup);
             }
             finally
             {
                 _mutex.ExitWriteLock();
                 _mutex.ExitUpgradeableReadLock();
+            }
+        }
+        
+        public void RemoveSubsetMember(Guid memberId)
+        {
+            try
+            {
+                _mutex.EnterWriteLock();
+                if (_currentGroups.SelectedGroup.Contains(memberId))
+                {
+                    var clearedGroup = new List<IList<Guid>>();
+
+                    foreach (var group in _currentGroups.Groups)
+                    {
+                        var cleared = group.Where(id => id != memberId).ToList();
+                        if (cleared.Count > 0)
+                        {
+                            clearedGroup.Add(cleared);
+                        }
+                    }
+
+                    var newGroup = new MemberGroups(clearedGroup, _currentGroups.Version, _currentGroups.ClusterId, _currentGroups.MemberReceivedFrom);
+
+                    _currentGroups = newGroup.SelectedGroup.Count > 0 ? newGroup : new MemberGroups(new List<IList<Guid>>(0), MemberPartitionGroup.InvalidVersion, Guid.Empty, Guid.Empty);
+                }
+            }
+            finally
+            {
+                _mutex.ExitWriteLock();
             }
         }
     }

@@ -106,7 +106,7 @@ namespace Hazelcast.Tests.Networking
 
             var clientStart = CreateStartingClientAsync(options =>
             {
-                options.Networking.SmartRouting = smartRouting;
+                options.Networking.RoutingMode.Mode = smartRouting ? RoutingModes.AllMembers:RoutingModes.SingleMember;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
                 options.Networking.ReconnectMode = reconnectMode;
                 options.ClusterName = _cluster.Id;
@@ -147,7 +147,7 @@ namespace Hazelcast.Tests.Networking
             var member = await AddMember();
             await using var client = await CreateAndStartClientAsync(options =>
             {
-                options.Networking.SmartRouting = smartRouting;
+                options.Networking.RoutingMode.Mode = smartRouting ? RoutingModes.AllMembers:RoutingModes.SingleMember;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = long.MaxValue;
                 options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
                 options.Networking.Addresses.Clear();
@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Clear();
                 options.Networking.Addresses.Add(clientAddress);
-                options.Networking.SmartRouting = smartRouting;
+                options.Networking.RoutingMode.Mode = smartRouting ? RoutingModes.AllMembers:RoutingModes.SingleMember;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
                 options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
                 options.ClusterName = _cluster.Id;
@@ -242,7 +242,7 @@ namespace Hazelcast.Tests.Networking
 
             await using var client = await CreateAndStartClientAsync(options =>
             {
-                options.Networking.SmartRouting = smartRouting;
+                options.Networking.RoutingMode.Mode = smartRouting ? RoutingModes.AllMembers:RoutingModes.SingleMember;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
                 options.Networking.ReconnectMode = reconnectMode;
                 options.ClusterName = _cluster.Id;
