@@ -205,8 +205,8 @@ namespace Hazelcast.Tests.Clustering
         {
             HConsole.Configure(x => x.Configure<MemberPartitionGroupTests>().SetIndent(4).SetPrefix("MP_GRP"));
 
-            var address0 = NetworkAddress.Parse("127.0.0.1:11005");
-            var address1 = NetworkAddress.Parse("127.0.0.1:11006");
+            var address0 = NetworkAddress.Parse("127.0.0.1:11007");
+            var address1 = NetworkAddress.Parse("127.0.0.1:11008");
 
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
@@ -259,7 +259,7 @@ namespace Hazelcast.Tests.Clustering
             var server1 = CreateServer(state1, address1, "1", clusterId);
             await server1.StartAsync().CfAwait();
 
-            var client = await CreateClient(RoutingModes.MultiMember, address0, address1);
+            var client = await CreateClient(RoutingModes.MultiMember, address0);
 
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(1));
             Assert.That(((MemberPartitionGroup) client.Cluster.Members.SubsetClusterMembers).CurrentGroups.Version, Is.EqualTo(1));
