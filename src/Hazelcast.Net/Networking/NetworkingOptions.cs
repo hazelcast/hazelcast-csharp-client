@@ -88,16 +88,25 @@ public class NetworkingOptions
     /// Whether smart routing is enabled.
     /// </summary>
     /// <remarks>
+    /// <para> Smart routing sets <see cref="RoutingMode"/> to <see cref="RoutingModes.AllMembers"/> if true, otherwise;
+    /// it sets it to <see cref="RoutingModes.SingleMember"/>. Please, prefer using <see cref="RoutingMode"/> directly.
+    /// </para>
     /// <para>If true (default), client will route the key based operations to owner of
     /// the key at the best effort.</para>
     /// <para>Note that it however does not guarantee that the operation will always be
     /// executed on the owner, as the member table is only updated every 10 seconds.</para>
     /// </remarks>
-    [Obsolete("This option has no effect, use RoutingMode instead.", false)]
-    [ExcludeFromCodeCoverage]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public bool SmartRouting { get; set; } = true;
-
+    public bool SmartRouting
+    {
+        get => _smartRouting;
+        set
+        {
+            _smartRouting = value;
+            // set the routing mode accordingly for backwards compatibility
+            RoutingMode.Mode = value ? RoutingModes.AllMembers : RoutingModes.SingleMember;
+        } 
+    }
+    private bool _smartRouting = true;
     /// <summary>
     /// Whether to retry operations.
     /// </summary>

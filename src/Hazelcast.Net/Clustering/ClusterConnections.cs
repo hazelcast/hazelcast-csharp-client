@@ -919,7 +919,6 @@ namespace Hazelcast.Clustering
             if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
             if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
             if (!accepted) await ThrowRejected(connection).CfAwait();
-
             
             // NOTE: connections are opened either by 'connect first' or by 'connect members' and
             // both ensure that one connection is opened after another - not concurrently - thus
