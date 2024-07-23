@@ -17,7 +17,7 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Represents the exception that is thrown when invalid partition group is set.
     /// </summary>
-    public sealed class InvalidPartitionGroupException :HazelcastException
+    public sealed class InvalidPartitionGroupException : HazelcastException
     {
 
         /// <summary>

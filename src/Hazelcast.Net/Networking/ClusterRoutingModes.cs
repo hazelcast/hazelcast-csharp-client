@@ -21,6 +21,15 @@ namespace Hazelcast.Networking
         public RoutingMode()
         { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RoutingMode"/> class.
+        /// </summary>
+        /// <param name="smartRouting"></param>
+        public RoutingMode(bool smartRouting)
+        {
+            Mode = smartRouting ? RoutingModes.AllMembers : RoutingModes.SingleMember;
+        }
+
         internal RoutingMode(RoutingMode routingMode)
         {
             Mode = routingMode.Mode;
@@ -31,12 +40,12 @@ namespace Hazelcast.Networking
         /// Routing mode of the client.
         /// </summary>
         public RoutingModes Mode { get; set; } = RoutingModes.AllMembers;
-        
+
         /// <summary>
         /// The strategy for selected routing mode. Default is <see cref="RoutingStrategy.PartitionGroups"/>
         /// </summary>
-        public RoutingStrategy Strategy { get; set; } = RoutingStrategy.PartitionGroups; 
-        
+        public RoutingStrategy Strategy { get; set; } = RoutingStrategy.PartitionGroups;
+
         /// <summary>
         /// Clones the options.
         /// </summary>
