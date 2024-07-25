@@ -405,9 +405,9 @@ namespace Hazelcast.Clustering
         /// Set the members.
         /// </summary>
         /// <param name="version">The version.</param>
-        /// <param name="members">The members.</param>
+        /// <param name="rawMembers">The members.</param>
         /// <returns>The corresponding event arguments, if members were updated; otherwise <c>null</c>.</returns>
-        public async Task<MembersUpdatedEventArgs> SetMembersAsync(int version, ICollection<MemberInfo> members)
+        public async Task<MembersUpdatedEventArgs> SetMembersAsync(int version, ICollection<MemberInfo> rawMembers)
         {
             // skip old sets
             if (version < _members.Version)
@@ -420,15 +420,15 @@ namespace Hazelcast.Clustering
             // replace the table
             var previousMembers = _members;
 
-            var filteredMembers = _clusterState.IsRoutingModeMultiMember
-                ? FilterMembers(members)
-                : members;
+            var members = _clusterState.IsRoutingModeMultiMember
+                ? FilterMembers(rawMembers)
+                : rawMembers;
 
-            var newMembers = new MemberTable(version, filteredMembers);
+            var newMembers = new MemberTable(version, members);
             lock (_mutex)
             {
                 _members = newMembers;
-                _unfilteredMembersForReference = new MemberTable(version, members);
+                _unfilteredMembersForReference = new MemberTable(version, rawMembers);
             }
 
             // notify the load balancer of the new list of members
