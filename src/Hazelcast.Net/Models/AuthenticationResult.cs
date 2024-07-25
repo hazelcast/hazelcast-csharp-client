@@ -134,6 +134,8 @@ namespace Hazelcast.Models
         public ClusterVersion ClusterVersion { get; }
 
         /// <summary>
+        /// Member Ids of CP group leaders. Read from KeyValuePairs["cp.leaders"].
+        /// </summary>
         public IDictionary<CPGroupId, Guid> CPGroupLeaders { get; set; }
     }
 }

@@ -491,8 +491,6 @@ namespace Hazelcast.Clustering
             }
         }
 
-
-
         private ValueTask<MemberConnection> WaitForConnection(CancellationToken cancellationToken)
         {
             var c = _clusterMembers.GetRandomConnection();
@@ -699,14 +697,15 @@ namespace Hazelcast.Clustering
 
         private ValueTask HandleCodecClusterVersionEvent(ClusterVersion version, object state)
         {
-            _logger.IfDebug()?.LogDebug("Handle ClusterVersion event");
+            _logger.IfDebug()?.LogDebug("Handle ClusterVersion event, current version: {Current} received version:{Version}", _clusterState.ClusterVersion ,version);
             _clusterState.ChangeClusterVersion(version);
             return default;
         }
 
         private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
         {
-            _logger.IfDebug()?.LogDebug("Handle MemberGroups event");
+            _logger.IfDebug()?.LogDebug("Handle MemberGroups event for cluster {ClusterId} and member {MemberId}. Received version:{Version} Member Groups: [{Groups}]",
+                clusterId, memberId, version, (memberGroups == null ? "null" : string.Join(", ", memberGroups.Select(x => string.Join(", ", x)))));
             _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
             await _memberPartitionGroupsUpdated.AwaitEach().CfAwait();
         }
@@ -862,7 +861,7 @@ namespace Hazelcast.Clustering
                 _partitionsUpdated = value;
             }
         }
-
+        
         /// <summary>
         /// Internal event to emit when member partition groups have been updated.
         /// </summary>
@@ -1023,8 +1022,5 @@ namespace Hazelcast.Clustering
 
             HConsole.WriteLine(this, "Down.");
         }
-
-
-
     }
 }
