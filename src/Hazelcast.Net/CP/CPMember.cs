@@ -33,9 +33,11 @@ namespace Hazelcast.CP
 
         public override bool Equals(object obj)
         {
+            if(this == obj) return true;
+            
             if (obj is not CPMember other) return false;
 
-            return Uuid == other.Uuid || Address.Equals(other.Address);
+            return Uuid == other.Uuid && Address.Equals(other.Address);
         }
 
         public override int GetHashCode()
