@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.CP;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Models
@@ -49,7 +50,8 @@ namespace Hazelcast.Models
             IList<int> tpcPorts,
             byte[] tpcToken,
             MemberGroups memberGroups = null,
-            ClusterVersion clusterVersion = null)
+            ClusterVersion clusterVersion = null,
+            IDictionary<CPGroupId, Guid> cpGroups = null)
         {
             ClusterId = clusterId;
             MemberId = memberId;
@@ -63,6 +65,7 @@ namespace Hazelcast.Models
             TpcToken = tpcToken;
             MemberGroups = memberGroups;
             ClusterVersion = clusterVersion;
+            CPGroupLeaders = cpGroups;
         }
 
         /// <summary>
@@ -129,5 +132,10 @@ namespace Hazelcast.Models
         /// Cluster version. Read from KeyValuePairs["cluster.version"].
         /// </summary>
         public ClusterVersion ClusterVersion { get; }
+
+        /// <summary>
+        /// Member Ids of CP group leaders. Read from KeyValuePairs["cp.leaders"].
+        /// </summary>
+        public IDictionary<CPGroupId, Guid> CPGroupLeaders { get; set; }
     }
 }
