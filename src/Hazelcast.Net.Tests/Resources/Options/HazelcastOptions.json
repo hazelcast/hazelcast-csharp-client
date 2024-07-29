@@ -71,6 +71,8 @@
     // networking options
     "networking": {
 
+      "cpDirectToLeaderEnabled" : true,
+      
       // cluster addresses
       "addresses": [
         "localhost",
@@ -97,7 +99,7 @@
 
       // how to reconnect in case the client is disconnected from the cluster
       "reconnectMode": "doNotReconnect",
-
+      
       "ssl": {
         "enabled": true,
         "validateCertificateChain": false,

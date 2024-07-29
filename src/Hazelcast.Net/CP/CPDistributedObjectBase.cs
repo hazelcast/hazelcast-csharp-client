@@ -74,16 +74,15 @@ namespace Hazelcast.CP
         }
 
         /// <summary>
-        /// Sends the invocation to the CP group leader if leader connection exists
+        /// Sends the invocation to the CP group leader of the cp object if leader connection exists
         /// and <see cref="NetworkingOptions.CPDirectToLeaderEnabled"/> enabled and the cluster is Enterprise;
         /// otherwise sends to any member.
         /// </summary>
-        /// <returns></returns>
-        protected Task<ClientMessage> SendAsync(ClientMessage request, CPGroupId cpGroupId)
+        protected Task<ClientMessage> SendCPLeaderAsync(ClientMessage request)
         {
             if (Cluster.State.IsEnterprise && Cluster.State.Options.Networking.CPDirectToLeaderEnabled)
             {
-                var leader = Cluster.Members.GetLeaderMemberOf(cpGroupId);
+                var leader = Cluster.Members.GetLeaderMemberOf(CPGroupId);
 
                 if (leader != null)
                 {

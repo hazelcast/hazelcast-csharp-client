@@ -71,7 +71,7 @@ namespace Hazelcast.Clustering
             _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
             _connectRetryStrategy = new RetryStrategy("connect to cluster", _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
 
-            if (_clusterState.IsSmartRouting)
+            if (_clusterState.IsSmartRouting || _clusterState.Options.Networking.RoutingMode.Mode == RoutingModes.MultiMember)
                 _connectMembers = ConnectMembers(_cancel.Token);
 
             _clusterState.StateChanged += OnStateChanged;

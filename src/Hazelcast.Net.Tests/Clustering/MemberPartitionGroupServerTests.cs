@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
@@ -30,11 +31,15 @@ namespace Hazelcast.Tests.Clustering
     {
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
 
+        [OneTimeSetUp]
+        public async Task TearDown()
+        {
+            await CreateCluster();
+        }
+
         [TestCase(RoutingStrategy.PartitionGroups)]
         public async Task TestMultiMemberRoutingWorks(RoutingStrategy routingStrategy)
         {
-            await CreateCluster();
-
             var address1 = "127.0.0.1:5701";
             var address2 = "127.0.0.1:5702";
             var address3 = "127.0.0.1:5703";
@@ -98,6 +103,47 @@ namespace Hazelcast.Tests.Clustering
             AssertClientOnlySees(client3, address3);
         }
 
+        [TestCase(RoutingModes.MultiMember)]
+        [TestCase(RoutingModes.SingleMember)]
+        [TestCase(RoutingModes.AllMembers)]
+        public async Task TestClientCollectsClusterEvents(RoutingModes routingMode)
+        {
+            var address1 = "127.0.0.1:5701";
+            var address2 = "127.0.0.1:5702";
+            var keyCount = 3 * 271;
+
+            // create a client with the given routing strategy for catching the events.
+            var client1 = await CreateClient(RoutingStrategy.PartitionGroups, address1, routingMode);
+            var client1Count = 0;
+            var mapName = $"map_{routingMode}";
+            var map1 = await client1.GetMapAsync<int, int>(mapName);
+
+            await map1.SubscribeAsync((eventHandler) =>
+            {
+                eventHandler.EntryAdded((sender, args) =>
+                {
+                    Interlocked.Increment(ref client1Count);
+                });
+            }, false);
+
+
+            // create a dummy client  for creating events
+            var client2 = await CreateClient(RoutingStrategy.PartitionGroups, address2, RoutingModes.SingleMember);
+
+            var map2 = await client2.GetMapAsync<int, int>(map1.Name);
+
+            for (int i = 0; i < keyCount; i++)
+            {
+                await map2.PutAsync(i, i);
+            }
+
+            await AssertEx.SucceedsEventually(async () =>
+            {
+                Assert.That(await map1.GetSizeAsync(), Is.GreaterThan(271), "Entry Count");
+                Assert.That(client1Count, Is.GreaterThan(271), "Event Count");
+            }, 10_000, 200);
+        }
+
         private void AssertClientOnlySees(HazelcastClient client, string address)
         {
             var member = RcMembers.Values.FirstOrDefault(m => address.Equals($"{m.Host}:{m.Port}"));
@@ -112,17 +158,17 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds().Count(), Is.EqualTo(1));
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId));
         }
-        private async Task<HazelcastClient> CreateClient(RoutingStrategy routingStrategy, string address)
+        private async Task<HazelcastClient> CreateClient(RoutingStrategy routingStrategy, string address, RoutingModes routingMode = RoutingModes.MultiMember)
         {
             var options = new HazelcastOptionsBuilder()
                 .With(args =>
                 {
+                    args.ClientName = $"Client:{address}";
                     args.Networking.Addresses.Add(address);
                     args.ClusterName = RcCluster.Id;
-                    args.Networking.RoutingMode.Mode = RoutingModes.MultiMember;
+                    args.Networking.RoutingMode.Mode = routingMode;
                     args.Networking.RoutingMode.Strategy = routingStrategy;
                     args.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
-
 
                     args.AddSubscriber(on => on.StateChanged((client, eventArgs) =>
                     {

@@ -469,7 +469,7 @@ namespace Hazelcast.Serialization.Compact
                 input.ReadInt(start + index * BytesExtensions.SizeOfInt, _endianness); // specs say "otherwise offset are i32"
         }
 
-        public ValueTask BeforeSendingMessage(ClientMessage message)
+        public ValueTask BeforeSendingMessage(ClientMessage message, Guid targetMemberId)
             => message.HasSchemas ? Schemas.PublishAsync(message.SchemaIds) : default;
     }
 }

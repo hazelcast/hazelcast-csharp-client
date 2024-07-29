@@ -491,8 +491,6 @@ namespace Hazelcast.Clustering
             }
         }
 
-
-
         private ValueTask<MemberConnection> WaitForConnection(CancellationToken cancellationToken)
         {
             var c = _clusterMembers.GetRandomConnection();
@@ -863,7 +861,7 @@ namespace Hazelcast.Clustering
                 _partitionsUpdated = value;
             }
         }
-
+        
         /// <summary>
         /// Internal event to emit when member partition groups have been updated.
         /// </summary>
@@ -1024,8 +1022,5 @@ namespace Hazelcast.Clustering
 
             HConsole.WriteLine(this, "Down.");
         }
-
-
-
     }
 }
