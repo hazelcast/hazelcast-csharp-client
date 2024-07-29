@@ -46,7 +46,7 @@ Please note that server should support this routing mode which is available with
 In all members mode, the clients connect to each cluster member. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. This mode is the default mode.
 
 ### Send CP Requests Directly To the Leader
-This `@Hazelcast.NetworkingOptions.CPDirectToLeaderEnabled` option allows to redirect CP related requests to the leader of the CP group. This option is only available for CP Subsystem enabled clusters. By default, this option is disabled.
+This `@Hazelcast.NetworkingOptions.CPDirectToLeaderEnabled` option allows to CP related requests to be sent directly to the leader of the CP group. This option is only available for CP Subsystem enabled clusters which have the `AVANCED_CP` license component. By default, this option is disabled.
 
 
 ## Reconnect Mode
