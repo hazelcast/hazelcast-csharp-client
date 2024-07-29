@@ -280,9 +280,9 @@ internal class Authenticator
         if (!response.IsKeyValuePairsExists)
             return cpGroupLeaderIds;
         
-        var isContainsCPGroupLeaderIds = response.KeyValuePairs.TryGetValue(ClusterCPGroups.CPGroupsJsonField, out var jsonMessage);
+        var containsCPGroupLeaderIds = response.KeyValuePairs.TryGetValue(ClusterCPGroups.CPGroupsJsonField, out var jsonMessage);
         
-        if (!isContainsCPGroupLeaderIds || string.IsNullOrEmpty(jsonMessage))
+        if (!containsCPGroupLeaderIds || string.IsNullOrEmpty(jsonMessage))
         {
             return cpGroupLeaderIds;
         }

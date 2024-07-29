@@ -932,7 +932,7 @@ namespace Hazelcast.Clustering
                     => !subsetMembersIds.Contains(m.Id)).ToList();
 
                 _logger.LogDebug("Filtered members from member view: {RemovedCount} removed, {FilteredCount} filtered," +
-                                 " {MembersCount} total. Remaining members: [{NewMembers}] Removed Member Ids :[{Members}]",
+                                 " {MembersCount} total. Remaining members: [{NewMembers}] Removed Member Ids: [{Members}]",
                     removedMembers.Count, filteredMembers.Count, members.Count,
                     string.Join(", ", filteredMembers.Select(m => m.Id.ToShortString())),
                     string.Join(", ", removedMembers.Select(m => m.Id.ToShortString())));

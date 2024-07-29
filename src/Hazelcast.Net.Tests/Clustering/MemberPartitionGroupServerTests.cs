@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Clustering
             }, false);
 
 
-            // create a client with the given routing strategy for creating events
+            // create a dummy client  for creating events
             var client2 = await CreateClient(RoutingStrategy.PartitionGroups, address2, RoutingModes.SingleMember);
 
             var map2 = await client2.GetMapAsync<int, int>(map1.Name);
