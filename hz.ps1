@@ -1044,12 +1044,10 @@ function require-dotnet ( $full ) {
     $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
 
     # note:
-    # - net6.0 end of support is nov 12, 2024
-    # - net7.0 end of support is may 14, 2024
+    # - net6.0 end of support is nov 12, 2024    
     # - net8.0 end of support is nov 10, 2026
 
-    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
-    require-dotnet-version $result $sdks "7.0" $frameworks "net7.0" "7.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease    
     require-dotnet-version $result $sdks "8.0" $frameworks "net8.0" "8.0.x" $true $allowPrerelease
 
     # report
@@ -2420,7 +2418,7 @@ function hz-verify-version {
 # runs an example
 function hz-run-example {
 
-    if ($options.framework -ne $null) { $f = $options.framework } else { $f = "net7.0" }
+    if ($options.framework -ne $null) { $f = $options.framework } else { $f = "net8.0" }
     $ext = ""
     if ($isWindows) { $ext = ".exe" }
     $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
