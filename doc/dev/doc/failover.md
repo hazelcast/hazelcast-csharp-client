@@ -15,9 +15,10 @@ var options = new HazelcastFailoverOptionsBuilder()
                         opt.ClusterName = "blue";
                         opt.Networking.Addresses.Add("CLUSTER_ADDRESS");
                         opt.Networking.RoutingMode = RoutingModes.AllMembers;
+                        opt.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 5_000; //<3>
                     }).Build());
                     
-                    fo.Clients.Add(new HazelcastOptionsBuilder().With(opt => {//<3>
+                    fo.Clients.Add(new HazelcastOptionsBuilder().With(opt => {//<4>
                         opt.ClusterName = "green";
                         opt.Networking.Addresses.Add("CLUSTER_ADDRESS");
                     }).Build());
@@ -26,7 +27,7 @@ var options = new HazelcastFailoverOptionsBuilder()
                 .With(args)
                 .Build();
 
-await using var client = await HazelcastClientFactory.StartNewFailoverClientAsync(options); //<4>
+await using var client = await HazelcastClientFactory.StartNewFailoverClientAsync(options); //<5>
 
 ```
 
@@ -42,9 +43,11 @@ Let's assume both clusters are down, and we just initialize the client. Client w
 
 **(2)** Client configuration for the first cluster to be connected. Note that first `HazelcastOptionsBuilder` is able to configure to everything on the client, such as `HeartBeat`, `LoadBalancer` etc. This part is still `HazelcastOptions`. See details for client options [Options](configuration/options.md).
 
-**(3)** Alternative cluster options. Alternative options are only for connection and authentication. Alternative client options cannot override other fields. General configuration should be done in first client options which is step **1**. For example, here **3**, we cannot change the `RoutingMode` for each cluster. Also, for server side, provided cluster must have **same partition count**. Client cannot failover to a cluster with different partition count.
+**(3)** Since default `ClusterConnectionTimeoutMilliseconds` is set to infinite (-1), it should be set to a value. Otherwise, client will wait forever to connect to the cluster.
 
-**(4)** Initialize the client with failover feature. **Failover client uses different options builder and different factory method.**
+**(4)** Alternative cluster options. Alternative options are only for connection and authentication. Alternative client options cannot override other fields. General configuration should be done in first client options which is step **1**. For example, here **3**, we cannot change the `RoutingMode` for each cluster. Also, for server side, provided cluster must have **same partition count**. Client cannot failover to a cluster with different partition count.
+
+**(5)** Initialize the client with failover feature. **Failover client uses different options builder and different factory method.**
 
 ---
 
@@ -78,6 +81,9 @@ Alternatively, options can be also done in `appsettings.json`.
                     "enabled": true,
                     "discoveryToken": "token"                    
                 }, 
+                "connectionRetry": {                
+                    "clusterConnectionTimeoutMilliseconds": 5000
+                },
                 "ssl": {
                     "enabled": true,
                     "validateCertificateChain": false,
@@ -87,7 +93,7 @@ Alternatively, options can be also done in `appsettings.json`.
                     "certificatePath": "path",
                     "certificatePassword": "password",
                     "protocol": "tls11"
-                },
+                }
             }
         }
       ]  
