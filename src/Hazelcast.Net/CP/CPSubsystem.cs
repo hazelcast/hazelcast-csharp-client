@@ -88,8 +88,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<IAtomicLong> GetAtomicLongAsync(string name)
         {
-            var (groupName, objectName, _) = ParseName(name);
-            var groupId = await GetGroupIdAsync(name).CfAwait();
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             return new AtomicLong(objectName, groupId, _cluster, _serializationService);
         }
@@ -107,7 +107,7 @@ namespace Hazelcast.CP
         public async Task<IFencedLock> GetLockAsync(string name)
         {
             var (groupName, objectName, fullName) = ParseName(name);
-            var groupId = await GetGroupIdAsync(name).CfAwait();
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             // note: make sure to use the fully qualified fullName as a dictionary key
 
