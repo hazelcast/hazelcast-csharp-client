@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.CP
 
         protected IHazelcastClient Client;
         
-        [SetUp]
+        [OneTimeSetUp]
         public async Task SetUp()
         {
             // CP-subsystem wants at least 3 members

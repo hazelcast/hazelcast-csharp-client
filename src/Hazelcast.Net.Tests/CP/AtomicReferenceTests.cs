@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.CP
 
         protected IHazelcastClient Client;
         
-        [SetUp]
+        [OneTimeSetUp]
         public async Task SetUp()
         {
             // CP-subsystem wants at least 3 members
@@ -54,10 +54,7 @@ namespace Hazelcast.Tests.CP
             var groupName = CreateUniqueName();
             var objectName = CreateUniqueName() + "@"+ groupName;
             await using var atomicReference = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(objectName);
-
             Assert.That(atomicReference.GroupId.Name, Is.EqualTo(groupName));
-            Assert.That(await atomicReference.GetAsync(), Is.EqualTo(0));
-
             await atomicReference.DestroyAsync();
         }
 
