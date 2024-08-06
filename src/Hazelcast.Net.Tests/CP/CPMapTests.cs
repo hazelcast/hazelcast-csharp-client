@@ -53,6 +53,17 @@ public class CPMapTests : MultiMembersRemoteTestBase
     {
         Assert.ThrowsAsync<ArgumentException>(() => Client.CPSubsystem.GetMapAsync<int, int>(null));
     }
+    [Test]
+    public async Task GetWithGroup()
+    {
+        var groupName = CreateUniqueName();
+        var objectName = CreateUniqueName() + "@" + groupName;
+        await using var cpMap = await Client.CPSubsystem.GetMapAsync<string, string>(objectName);
+
+        Assert.That(cpMap.GroupId.Name, Is.EqualTo(groupName));
+
+        await cpMap.DestroyAsync();
+    }
 
     [Test]
     public async Task TestGetCPMap()
@@ -66,7 +77,7 @@ public class CPMapTests : MultiMembersRemoteTestBase
         Assert.AreEqual(ServiceNames.CPMap, doBase.ServiceName);
         Assert.AreEqual(_defaultMapName, doBase.Name);
         Assert.IsNull(doBase.PartitionKey);
-        
+
         Assert.AreEqual(CPSubsystem.DefaultGroupName, map.GroupId.Name);
     }
 
