@@ -22,14 +22,40 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.CP
 {
     [TestFixture]
-    public class AtomicLongTests : SingleMemberClientRemoteTestBase
+    public class AtomicLongTests : MultiMembersRemoteTestBase
     {
+        protected override string RcClusterConfiguration => TestFiles.ReadAllText(this, "Cluster/cp.xml");
+
+        protected IHazelcastClient Client;
+        
+        [OneTimeSetUp]
+        public async Task SetUp()
+        {
+            // CP-subsystem wants at least 3 members
+            for (var i = 0; i < 3; i++) await AddMember();
+            
+            Client = await CreateAndStartClientAsync();
+        }
+        
         [Test]
         public async Task Get()
         {
             var cpSubSystem = (CPSubsystem) Client.CPSubsystem;
             await using var along = await cpSubSystem.GetAtomicLongAsync(CreateUniqueName());
 
+            Assert.That(await along.GetAsync(), Is.EqualTo(0));
+
+            await along.DestroyAsync();
+        }
+        
+        [Test]
+        public async Task GetWithGroup()
+        {
+            var groupName = CreateUniqueName();
+            var objectName = CreateUniqueName() + "@"+ groupName;
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(objectName);
+
+            Assert.That(along.GroupId.Name, Is.EqualTo(groupName));
             Assert.That(await along.GetAsync(), Is.EqualTo(0));
 
             await along.DestroyAsync();

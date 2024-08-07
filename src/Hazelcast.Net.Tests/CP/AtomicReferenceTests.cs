@@ -22,8 +22,21 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.CP
 {
     [TestFixture]
-    public class AtomicReferenceTests: SingleMemberClientRemoteTestBase
+    public class AtomicReferenceTests : MultiMembersRemoteTestBase
     {
+        protected override string RcClusterConfiguration => TestFiles.ReadAllText(this, "Cluster/cp.xml");
+
+        protected IHazelcastClient Client;
+        
+        [OneTimeSetUp]
+        public async Task SetUp()
+        {
+            // CP-subsystem wants at least 3 members
+            for (var i = 0; i < 3; i++) await AddMember();
+            
+            Client = await CreateAndStartClientAsync();
+        }
+        
         [Test]
         public async Task TestName()
         {
@@ -33,6 +46,16 @@ namespace Hazelcast.Tests.CP
             Assert.That(aref.Name, Is.EqualTo(name));
 
             await aref.DestroyAsync();
+        }
+        
+        [Test]
+        public async Task GetWithGroup()
+        {
+            var groupName = CreateUniqueName();
+            var objectName = CreateUniqueName() + "@"+ groupName;
+            await using var atomicReference = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(objectName);
+            Assert.That(atomicReference.GroupId.Name, Is.EqualTo(groupName));
+            await atomicReference.DestroyAsync();
         }
 
         [Test]

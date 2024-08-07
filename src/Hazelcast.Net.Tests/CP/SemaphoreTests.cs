@@ -73,6 +73,17 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
         _groups.Add(semaphore.GroupId); // make sure we close the corresponding session when tearing down
         return semaphore;
     }
+    
+    public async Task GetWithGroup()
+    {
+        var groupName = CreateUniqueName();
+        var objectName = CreateUniqueName() + "@" + groupName;
+        await using var semaphore = await _client.CPSubsystem.GetSemaphore(objectName);
+
+        Assert.That(semaphore.GroupId.Name, Is.EqualTo(groupName));
+
+        await semaphore.DestroyAsync();
+    }
 
     [Test]
     public async Task CanGetSemaphore([Values] bool sessionLess)

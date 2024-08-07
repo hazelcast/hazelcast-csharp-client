@@ -74,8 +74,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<ISemaphore> GetSemaphore(string name)
         {
-            var (groupName, objectName, _) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
             var requestMessage = SemaphoreGetSemaphoreTypeCodec.EncodeRequest(objectName);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
             var noSession = SemaphoreGetSemaphoreTypeCodec.DecodeResponse(responseMessage).Response;
@@ -88,8 +88,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<IAtomicLong> GetAtomicLongAsync(string name)
         {
-            var (groupName, objectName, _) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             return new AtomicLong(objectName, groupId, _cluster, _serializationService);
         }
@@ -97,8 +97,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
         {
-            var (groupName, objectName, _) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
         }
@@ -107,7 +107,7 @@ namespace Hazelcast.CP
         public async Task<IFencedLock> GetLockAsync(string name)
         {
             var (groupName, objectName, fullName) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             // note: make sure to use the fully qualified fullName as a dictionary key
 
@@ -145,14 +145,14 @@ namespace Hazelcast.CP
                 if (fencedLock.GroupId.Equals(groupId))
                     return fencedLock;
 
-                groupId = await GetGroupIdAsync(groupName).CfAwait();
+                groupId = await GetGroupIdAsync(fullName).CfAwait();
             }
         }
         
         public async Task<ICPMap<TKey, TValue>> GetMapAsync<TKey, TValue>([NotNull] string name)
         {
             var (groupName, objectName, fullName) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             return new CPMap<TKey, TValue>(ServiceNames.CPMap, objectName, _cluster,
                 _serializationService, groupId);
@@ -160,8 +160,8 @@ namespace Hazelcast.CP
 
         public async Task<ICountDownLatch> GetCountDownLatchAsync(string name)
         {
-            var (groupName, objectName, _) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(fullName).CfAwait();
 
             return new CountDownLatch(objectName, groupId, _cluster, _serializationService);
         }

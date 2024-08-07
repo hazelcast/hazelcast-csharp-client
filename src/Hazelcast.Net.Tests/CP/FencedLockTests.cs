@@ -97,6 +97,7 @@ namespace Hazelcast.Tests.CP
             var cpSubSystem = (CPSubsystem) Client.CPSubsystem;
             _lock = await cpSubSystem.GetLockAsync(lockName);
 
+            Assert.That(_lock.GroupId.Name, Is.EqualTo("group1"));
             var lockContext = new LockContext();
             await _lock.LockAsync(lockContext);
             await _lock.LockAsync(lockContext);

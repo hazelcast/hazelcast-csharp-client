@@ -43,8 +43,7 @@
 
   <cp-subsystem>
     <base-dir>/custom-cp-dir</base-dir>
-    <cp-member-count>3</cp-member-count>
-    <group-size>3</group-size>
+    <cp-member-count>3</cp-member-count>   
 
     <!-- 
     Duration for a CP session to be kept alive after the last received heartbeat. A CP 

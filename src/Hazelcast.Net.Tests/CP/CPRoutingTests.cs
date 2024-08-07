@@ -40,6 +40,8 @@ namespace Hazelcast.Tests.CP
         [Test]
         public async Task TestCPRequestRoutingToLeader()
         {
+            const string groupName = "myGroup";
+            const string cpObjectName = "myAtomicLong";
             var options = new HazelcastOptionsBuilder()
                 .With((config =>
                 {
@@ -51,21 +53,43 @@ namespace Hazelcast.Tests.CP
                     config.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
                 })).Build();
 
+
+            // Assert multiple that the addAndGet operation is sent to the leader
+            // First round creates new group
+            // Second round uses the existing group
+            for (var i = 0; i < 2; i++)
+            {
+                var (msgList, leaderMemberId) = await AssertCPRoutes(options, cpObjectName, groupName);
+
+                var msgCount = 0;
+
+                foreach (var (msg, id) in msgList)
+                {
+                    if (msg.OperationName == "AtomicLong.AddAndGet" && id == leaderMemberId)
+                        msgCount++;
+                }
+
+                // There is one addAndGet operation sent to the leader
+                Assert.That(msgCount, Is.EqualTo(1));    
+            }
+        }
+        private static async Task<(List<(ClientMessage, Guid)>, Guid)> AssertCPRoutes(HazelcastOptions options, string cpObjectName, string groupName)
+        {
             var client = HazelcastClientFactory.CreateClient(options);
-            
+
             // Capture the message sent to the leader
             var msgList = new List<(ClientMessage, Guid)>();
             client.Cluster.Messaging.SendingMessage += (msg, targetMemberId) =>
             {
-                 msgList.Add((msg, targetMemberId));
+                msgList.Add((msg, targetMemberId));
                 return default;
             };
 
             AsyncContext.Ensure();
             var cts = new CancellationTokenSource();
             await client.StartAsync(cts.Token);
-            
-            
+
+
             Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(3));
 
             await AssertEx.SucceedsEventually(() =>
@@ -73,27 +97,19 @@ namespace Hazelcast.Tests.CP
                 // Authentications override the cp list, wait for event.
                 Assert.That(client.Cluster.Members.ClusterCPGroups.Count, Is.GreaterThan(0));
             }, 10_000, 200);
-            
+
 
             // Create a CP object
-            await using var cpAtomicLong = await client.CPSubsystem.GetAtomicLongAsync($"myAtomicLong");
+            await using var cpAtomicLong = await client.CPSubsystem.GetAtomicLongAsync($"{cpObjectName}@{groupName}");
+            Assert.That(cpAtomicLong.GroupId.Name, Is.EqualTo(groupName));
             var leaderMemberId = client.Cluster.Members.ClusterCPGroups.GetLeaderMemberId((CPGroupId) cpAtomicLong.GroupId);
+
             var val = await cpAtomicLong.AddAndGetAsync(1);
 
             // Dispose the client to stop the SendingMessage listener
             await client.DisposeAsync();
-            
-            var msgCount = 0;
-
-            foreach (var (msg, id) in msgList)
-            {
-                if(msg.OperationName == "AtomicLong.AddAndGet" && id == leaderMemberId)
-                    msgCount++;
-            }
-            
-            // There is one addAndGet operation sent to the leader
-            Assert.That(msgCount, Is.EqualTo(1));
+            return (msgList, leaderMemberId);
         }
-
+        
     }
 }

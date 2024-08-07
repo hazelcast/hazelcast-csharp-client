@@ -20,8 +20,34 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.CP;
 
 [TestFixture]
-public class CountDownLatchTests : SingleMemberClientRemoteTestBase
+public class CountDownLatchTests : MultiMembersRemoteTestBase
 {
+    protected override string RcClusterConfiguration => TestFiles.ReadAllText(this, "Cluster/cp.xml");
+
+    protected IHazelcastClient Client;
+        
+    [OneTimeSetUp]
+    public async Task SetUp()
+    {
+        // CP-subsystem wants at least 3 members
+        for (var i = 0; i < 3; i++) await AddMember();
+            
+        Client = await CreateAndStartClientAsync();
+    }
+    
+    [Test]
+    public async Task GetWithGroup()
+    {
+        var groupName = CreateUniqueName();
+        var objectName = CreateUniqueName() + "@"+ groupName;
+        await using var countDownLatch = await Client.CPSubsystem.GetCountDownLatchAsync(objectName);
+
+        Assert.That(countDownLatch.GroupId.Name, Is.EqualTo(groupName));
+
+        await countDownLatch.DestroyAsync();
+    }
+    
+    
     [Test]
     public async Task NormalTest()
     {
