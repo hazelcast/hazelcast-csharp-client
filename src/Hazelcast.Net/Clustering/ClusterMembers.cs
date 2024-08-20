@@ -45,9 +45,9 @@ namespace Hazelcast.Clustering
         private readonly ClusterCPGroups _cpGroups;
 
         private MemberTable _members;
-        // It's unfiltered member table to be used at HandleMembersGroupUpdated. If we use filtered members, we can miss some members.
-        // Such as, members that are not in the subset result in non-overlap list between members and partition group.
-        private MemberTable _unfilteredMembersForReference;
+        // Filtered members to connect. It means that the members to connect are a subset of the members according to
+        // RoutingMode. In SingleMember and AllMembers mode, it is the same as _members.
+        private MemberTable _filteredMembersToConnect;
 
         private bool _connected;
         private bool _usePublicAddresses;
@@ -82,17 +82,22 @@ namespace Hazelcast.Clustering
             if (clusterState.RoutingMode is RoutingModes.AllMembers or RoutingModes.MultiMember)
             {
                 _members = new MemberTable();
-
+                _filteredMembersToConnect = new MemberTable();
                 // initialize the queue of members to connect
                 _memberConnectionQueue = new MemberConnectionQueue(x =>
-                {
-                    lock (_mutex) return _members.ContainsMember(x);
-                }, _clusterState.LoggerFactory);
+                    {
+                        lock (_mutex) return _filteredMembersToConnect.ContainsMember(x);
+                    },
+                    memberId =>
+                    {
+                        lock (_mutex) return _filteredMembersToConnect.ContainsMember(memberId);
+                    }, _clusterState.LoggerFactory);
             }
             else
             {
                 // Single member routing, regular member table.
                 _members = new MemberTable();
+                _filteredMembersToConnect = new MemberTable();
             }
 
             _clusterState.Failover.ClusterChanged += cluster =>
@@ -100,7 +105,10 @@ namespace Hazelcast.Clustering
                 // Invalidate current member table. Cannot remove the tables due to the
                 // members updated event. It should be occur on AddConnection method.
                 lock (_mutex)
+                {
                     _members = new MemberTable(InvalidMemberTableVersion, _members.Members);
+                    _filteredMembersToConnect = new MemberTable(InvalidMemberTableVersion, _filteredMembersToConnect.Members);
+                }
             };
         }
 
@@ -153,7 +161,7 @@ namespace Hazelcast.Clustering
         /// Gets <see cref="ClusterCPGroups"/>.
         /// </summary>
         public ClusterCPGroups ClusterCPGroups => _cpGroups;
-        
+
         // see notes above, if matching then addresses must match, else anything matches
         public bool IsMemberAddress(MemberInfo member, NetworkAddress address)
             => !MatchMemberAddress || member.ConnectAddress == address;
@@ -405,9 +413,9 @@ namespace Hazelcast.Clustering
         /// Set the members.
         /// </summary>
         /// <param name="version">The version.</param>
-        /// <param name="rawMembers">The members.</param>
+        /// <param name="members">The members.</param>
         /// <returns>The corresponding event arguments, if members were updated; otherwise <c>null</c>.</returns>
-        public async Task<MembersUpdatedEventArgs> SetMembersAsync(int version, ICollection<MemberInfo> rawMembers)
+        public async Task<MembersUpdatedEventArgs> SetMembersAsync(int version, ICollection<MemberInfo> members)
         {
             // skip old sets
             if (version < _members.Version)
@@ -420,15 +428,15 @@ namespace Hazelcast.Clustering
             // replace the table
             var previousMembers = _members;
 
-            var members = _clusterState.IsRoutingModeMultiMember
-                ? FilterMembers(rawMembers)
-                : rawMembers;
+            var filteredMembers = _clusterState.IsRoutingModeMultiMember
+                ? FilterMembers(members)
+                : members;
 
             var newMembers = new MemberTable(version, members);
             lock (_mutex)
             {
                 _members = newMembers;
-                _unfilteredMembersForReference = new MemberTable(version, rawMembers);
+                _filteredMembersToConnect = new MemberTable(version, filteredMembers);
             }
 
             // notify the load balancer of the new list of members
@@ -657,7 +665,7 @@ namespace Hazelcast.Clustering
             // Only valid on routing is MultiMember
             // SetMembersAsync will handle any changes ın partition group.
             // Use latest unfiltered member table since partition group may contain members that are not the filtered _members.
-            await SetMembersAsync(_unfilteredMembersForReference.Version, _unfilteredMembersForReference.Members.ToList()).CfAwait();
+            await SetMembersAsync(_members.Version, _members.Members.ToList()).CfAwait();
         }
 
         public void HandleCPGroupInfoUpdated(long version, ICollection<CPGroupInfo> groupInfo, IList<KeyValuePair<Guid, Guid>> cpToApUuids, object state)
@@ -911,7 +919,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="groupId">CP Group Id</param>
         /// <returns>Leader of the group if exists</returns>
-        public MemberInfo GetLeaderMemberOf(CPGroupId groupId) 
+        public MemberInfo GetLeaderMemberOf(CPGroupId groupId)
             => _cpGroups.TryGetLeaderMemberId(groupId, out var memberId) ? GetMember(memberId) : null;
 
         /// <summary>

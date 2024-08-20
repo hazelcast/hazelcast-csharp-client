@@ -32,6 +32,7 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
     private readonly object _mutex = new();
     private readonly LinkedList<MemberConnectionRequest> _requests = new();
     private readonly Func<Guid, bool> _isMember;
+    private readonly Func<Guid, bool> _shouldConnect;
     private readonly ILogger _logger;
 
     private bool _disposed;
@@ -40,9 +41,10 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
     private TaskCompletionSource<object?> _available;
     private TaskCompletionSource<object?> _enabled;
 
-    public MemberConnectionQueue(Func<Guid, bool> isMember, ILoggerFactory loggerFactory)
+    public MemberConnectionQueue(Func<Guid, bool> isMember, Func<Guid, bool> shouldConnect, ILoggerFactory loggerFactory)
     {
         _isMember = isMember;
+        _shouldConnect = shouldConnect;
         _logger = loggerFactory.CreateLogger<MemberConnectionQueue>();
 
         _free = NewTaskCompletionSource(); // completed when the queue is free (no pending request)
@@ -54,7 +56,7 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
         //_enabled is not completed, queue is initially suspended
     }
 
-    private static TaskCompletionSource<object?> NewTaskCompletionSource() 
+    private static TaskCompletionSource<object?> NewTaskCompletionSource()
         => new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private bool TryTakeFirst([NotNullWhen(true)] out MemberConnectionRequest? request)
@@ -108,6 +110,12 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
 
     public void Add(MemberInfo member)
     {
+        if (_shouldConnect?.Invoke(member.Id) == false)
+        {
+            _logger.IfDebug()?.LogDebug($"Connection request rejected for member={member.Id.ToShortString()} because it is not in the filtered member list.");
+            return;
+        }
+
         var request = new MemberConnectionRequest(member);
 
         request.Completed += (_, ea) =>
@@ -206,7 +214,7 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
     {
         lock (_mutex)
         {
-            if (_disposed || cancellationToken.IsCancellationRequested) 
+            if (_disposed || cancellationToken.IsCancellationRequested)
                 return new ValueTask<MemberConnectionRequest?>((MemberConnectionRequest?) null);
 
             if (!_free.Task.IsCompleted)
@@ -240,7 +248,7 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
 
             lock (_mutex)
             {
-                if (_disposed || cancellationToken.IsCancellationRequested) 
+                if (_disposed || cancellationToken.IsCancellationRequested)
                     return null;
 
                 if (_enabled.Task.IsCompleted && TryTakeFirst(out var request))
@@ -256,7 +264,7 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
     {
         lock (_mutex)
         {
-            if (_enumeratorCancellation != null) 
+            if (_enumeratorCancellation != null)
                 throw new InvalidOperationException("Queue is already enumerating.");
             _enumeratorCancellation = new CancellationTokenSource().LinkedWith(cancellationToken);
             return new AsyncEnumerator(this, _enumeratorCancellation.Token);
