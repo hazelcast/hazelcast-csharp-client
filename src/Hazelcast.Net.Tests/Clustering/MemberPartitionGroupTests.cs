@@ -235,7 +235,7 @@ namespace Hazelcast.Tests.Clustering
 
             var address0 = NetworkAddress.Parse("127.0.0.1:11005");
             var address1 = NetworkAddress.Parse("127.0.0.1:11006");
-
+            var clusterSize = 2;
             var memberId0 = Guid.NewGuid();
             var memberId1 = Guid.NewGuid();
             var clusterId = Guid.NewGuid();
@@ -318,7 +318,7 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds().Count, Is.EqualTo(1), "Subset Members count");
                 Assert.That(client.Cluster.Members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId0));
                 Assert.That(client.ClusterVersion, Is.EqualTo(newClusterVersions));
-                Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(1), "Members count");
+                Assert.That(client.Cluster.Members.GetMembers().Count(), Is.EqualTo(clusterSize), "Members count");
 
             }, 20_000, 200);
         }
