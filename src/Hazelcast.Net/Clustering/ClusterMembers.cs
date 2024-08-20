@@ -897,9 +897,13 @@ namespace Hazelcast.Clustering
             return liteOnly ? members.Where(x => x.IsLiteMember).ToList() : members;
         }
 
+        /// <summary>
+        /// Gets members can be connected. If subset cluster members is set, returns only subset members.
+        /// </summary>
+        /// <returns>Members allowed to connect</returns>
         public IEnumerable<MemberInfo> GetMembersForConnection()
         {
-            return _members.Version == InvalidMemberTableVersion ? Enumerable.Empty<MemberInfo>() : GetMembers();
+            return _members.Version == InvalidMemberTableVersion ? Enumerable.Empty<MemberInfo>() : _filteredMembersToConnect.Members;
         }
 
         /// <summary>
