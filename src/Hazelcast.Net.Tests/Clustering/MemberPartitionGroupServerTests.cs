@@ -56,14 +56,19 @@ namespace Hazelcast.Tests.Clustering
             // Scale Up
             var member4 = await AddMember();
 
-            AssertClientOnlySees(client1, address1);
-            AssertClientOnlySees(client2, address2);
-            AssertClientOnlySees(client3, address3);
+            AssertClientOnlySees(client1, address1, 4);
+            AssertClientOnlySees(client2, address2, 4);
+            AssertClientOnlySees(client3, address3, 4);
 
             // Scale Down
             await RemoveMember(member4.Uuid);
 
-            AssertClientOnlySees(client1, address1);
+            // Scale down may take some time. So first assertion may occur few times.
+            await AssertEx.SucceedsEventually(() =>
+            {
+                AssertClientOnlySees(client1, address1);
+            }, 10_000, 500, "Client1 did not see the correct members");
+            
             AssertClientOnlySees(client2, address2);
             AssertClientOnlySees(client3, address3);
 
@@ -75,8 +80,12 @@ namespace Hazelcast.Tests.Clustering
             AssertClientOnlySees(client2, address2);
 
             await AssertEx.SucceedsEventually(()
-                    => Assert.That(client3.State, Is.EqualTo(ClientState.Disconnected)),
-                5000, 500);
+                    =>
+                {
+                    Assert.That(client3.Cluster.Connections.Count, Is.EqualTo(0));
+                    Assert.That(client3.State, Is.EqualTo(ClientState.Disconnected));
+                },
+                15_000, 500);
 
             Member member3;
             var nAddress3 = NetworkAddress.Parse(address3);
@@ -95,8 +104,8 @@ namespace Hazelcast.Tests.Clustering
 
             // Check if client1 is connected to the new member
             // cannot use the old member id since we can only either kill or create member
-            Assert.That(client3.Members.Count(), Is.EqualTo(1));
-            Assert.That(client3.Members.First().Member.ConnectAddress, Is.EqualTo(nAddress3));
+            Assert.That(client3.Cluster.Connections.Count, Is.EqualTo(1));
+            Assert.That(client3.Members.Select(p => p.Member.ConnectAddress), Contains.Item(nAddress3));
 
             AssertClientOnlySees(client1, address1);
             AssertClientOnlySees(client2, address2);
@@ -144,7 +153,7 @@ namespace Hazelcast.Tests.Clustering
             }, 10_000, 200);
         }
 
-        private void AssertClientOnlySees(HazelcastClient client, string address)
+        private void AssertClientOnlySees(HazelcastClient client, string address, int clusterSize = 3)
         {
             var member = RcMembers.Values.FirstOrDefault(m => address.Equals($"{m.Host}:{m.Port}"));
 
@@ -153,8 +162,9 @@ namespace Hazelcast.Tests.Clustering
             var members = client.Cluster.Members;
             var memberId = Guid.Parse(member.Uuid);
 
-            Assert.That(members.GetMembers().Count(), Is.EqualTo(1));
-            Assert.That(members.GetMembers().First().Uuid, Is.EqualTo(memberId));
+            Assert.That(members.GetMembers().Count(), Is.EqualTo(clusterSize));
+            Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
+            Assert.True(client.Cluster.Connections.Contains(memberId), "Member is not connected");
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds().Count(), Is.EqualTo(1));
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId));
         }

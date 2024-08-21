@@ -38,7 +38,7 @@ public class MemberConnectionQueueTests
     [Test]
     public async Task Works()
     {
-        await using var queue = new MemberConnectionQueue(id => true, NullLoggerFactory.Instance);
+        await using var queue = new MemberConnectionQueue(id => true,id => true, NullLoggerFactory.Instance);
         queue.Resume(); // queue is initially suspended
 
         var id1 = Guid.NewGuid();
@@ -75,7 +75,7 @@ public class MemberConnectionQueueTests
     [Test]
     public async Task FailedRequestsAreQueuedAgain()
     {
-        await using var queue = new MemberConnectionQueue(id => true, NullLoggerFactory.Instance);
+        await using var queue = new MemberConnectionQueue(id => true, id => true, NullLoggerFactory.Instance);
         queue.Resume(); // queue is initially suspended
 
         var id1 = Guid.NewGuid();
@@ -103,7 +103,7 @@ public class MemberConnectionQueueTests
     [Test]
     public async Task SuspendWhileFree()
     {
-        await using var queue = new MemberConnectionQueue(id => true, NullLoggerFactory.Instance);
+        await using var queue = new MemberConnectionQueue(id => true, id => true, NullLoggerFactory.Instance);
         queue.Resume(); // queue is initially suspended
 
         var id1 = Guid.NewGuid();
@@ -127,7 +127,7 @@ public class MemberConnectionQueueTests
     [Test]
     public async Task SuspendWhileBusy([Values] bool success)
     {
-        await using var queue = new MemberConnectionQueue(id => true, NullLoggerFactory.Instance);
+        await using var queue = new MemberConnectionQueue(id => true, id => true, NullLoggerFactory.Instance);
         queue.Resume(); // queue is initially suspended
 
         var id1 = Guid.NewGuid();
@@ -154,7 +154,7 @@ public class MemberConnectionQueueTests
     [Test]
     public async Task EnforceOneEnumerator()
     {
-        await using var queue = new MemberConnectionQueue(id => true, NullLoggerFactory.Instance);
+        await using var queue = new MemberConnectionQueue(id => true, id => true, NullLoggerFactory.Instance);
         queue.Resume(); // queue is initially suspended
 
         // can get an enumerator

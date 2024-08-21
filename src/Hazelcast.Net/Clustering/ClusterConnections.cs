@@ -338,6 +338,13 @@ namespace Hazelcast.Clustering
         /// Gets the number of open connections to members.
         /// </summary>
         public int Count => _connections.Count;
+        
+        /// <summary>
+        /// Whether given member is connected or not.
+        /// </summary>
+        /// <param name="memberId">Member UUID</param>
+        /// <returns>true if memberId has connection.</returns>
+        internal bool Contains(Guid memberId) => _connections.ContainsKey(memberId);
 
         #endregion
 

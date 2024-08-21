@@ -145,7 +145,7 @@ namespace Hazelcast.Clustering
                 _mutex.EnterWriteLock();
                 var old = _currentGroups;
                 _currentGroups = pickedGroup;
-                _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} \n New group: {PickedGroup}", old, pickedGroup);
+                _logger.IfDebug()?.LogDebug("Updated member partition group. Old group: {OldGroup} New group: {PickedGroup}", old, pickedGroup);
             }
             finally
             {

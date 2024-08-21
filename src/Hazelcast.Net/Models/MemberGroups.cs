@@ -48,7 +48,8 @@ namespace Hazelcast.Models
             return $"MemberGroups[Version: {Version}," +
                    $" ClusterId: {ClusterId.ToShortString()}," +
                    $" MemberReceivedFrom: {MemberReceivedFrom.ToShortString()}," +
-                   $" Groups: {string.Join(",\n", Groups.Select(group => $"[{string.Join(", ", group.Select(id => id.ToShortString()))}]"))}";
+                   $" Groups: {string.Join(",", Groups.Select(group => $"[{string.Join(", ", group.Select(id => id.ToShortString()))}]"))}" +
+                   "]";
         }
 
     }

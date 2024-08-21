@@ -49,7 +49,7 @@ namespace Hazelcast.Tests.Clustering
                 .AddFilter(level => true)
                 .AddHConsole());
             var logger = loggerFactory.CreateLogger("ConnectMembers");
-            var queue = new MemberConnectionQueue(x => true, loggerFactory);
+            var queue = new MemberConnectionQueue(x => true,x => true, loggerFactory);
 
             // background task that pretend to connect members
             var dequeuedRequests = 0;
@@ -208,7 +208,7 @@ namespace Hazelcast.Tests.Clustering
                 .AddFilter(level => true)
                 .AddHConsole());
             var logger = loggerFactory.CreateLogger("ConnectMembers");
-            var queue = new MemberConnectionQueue(x => true, loggerFactory);
+            var queue = new MemberConnectionQueue(x => true,x => true, loggerFactory);
             var memberCount = new Dictionary<Guid, int>();
 
             // background task that pretend to connect members

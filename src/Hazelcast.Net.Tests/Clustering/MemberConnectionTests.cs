@@ -202,19 +202,8 @@ namespace Hazelcast.Tests.Clustering
             void AssertMembers()
             {
                 var activeMemberIds = clusterMembers.GetMembers().Select(m => m.Id).ToList();
-
-                // filtered and current members must match in multi member mode
-                if (mode is RoutingModes.MultiMember)
-                {
-                    Assert.That(subsetMembers.GetSubsetMemberIds(), Is.EquivalentTo(activeMemberIds));
-                }
-                else
-                {
-                    // In the test, partition group is always a subset of the member list
-                    // So, it should never be equivalent to the member list in non multi member mode.
-                    Assert.That(subsetMembers.GetSubsetMemberIds(), Is.Not.EquivalentTo(activeMemberIds));
-                    Assert.That(refMemberList, Is.EquivalentTo(clusterMembers.GetMembers()));
-                }
+                Assert.That(subsetMembers.GetSubsetMemberIds(), Is.Not.EquivalentTo(activeMemberIds));
+                Assert.That(refMemberList, Is.EquivalentTo(clusterMembers.GetMembers()));
             }
 
             // Actual testing
@@ -229,7 +218,7 @@ namespace Hazelcast.Tests.Clustering
             // Partition Group changed
             partitionGroup = refMemberList.Skip(2).Select(m => m.Id).ToList();
             SetSubsetMembers(partitionGroup);
-            
+
             // This is event bound to Events.MemberPartitionGroupsUpdated on client level.
             // we mimic this behavior here.
             await clusterMembers.HandleMemberPartitionGroupsUpdated();
