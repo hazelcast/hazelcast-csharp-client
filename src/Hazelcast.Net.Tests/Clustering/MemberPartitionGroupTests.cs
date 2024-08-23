@@ -25,6 +25,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Networking;
+using Hazelcast.Partitioning;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
@@ -34,6 +35,7 @@ using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using static NSubstitute.Substitute;
 namespace Hazelcast.Tests.Clustering
 {
     // internal for class MemberPartitionGroup : ISubsetClusterMembers
@@ -50,8 +52,8 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
-        [TestCase(@"[{ ""raftId"":{ ""seed"":9, ""id"":3, ""name"":""grp1"" }, ""leaderUUID"":""fa270257-5767-45bf-a3c6-bafe17bed525"" }]", "grp1",9, 3, "fa270257-5767-45bf-a3c6-bafe17bed525",1)]
-        [TestCase(@"[]", "grp1",0, 0, "",0)]
+        [TestCase(@"[{ ""raftId"":{ ""seed"":9, ""id"":3, ""name"":""grp1"" }, ""leaderUUID"":""fa270257-5767-45bf-a3c6-bafe17bed525"" }]", "grp1", 9, 3, "fa270257-5767-45bf-a3c6-bafe17bed525", 1)]
+        [TestCase(@"[]", "grp1", 0, 0, "", 0)]
         public void TestAuthenticatorCanParseCPGroups(string jsonString, string groupName, int seed, int id, string leaderId, int count)
         {
             ClientAuthenticationCodec.ResponseParameters response = new ClientAuthenticationCodec.ResponseParameters();
@@ -60,16 +62,16 @@ namespace Hazelcast.Tests.Clustering
             response.IsKeyValuePairsExists = true;
 
             var authenticator = CreateAuthenticator();
-            
+
             var cpGroups = authenticator.ParseCPGroupLeaderIds(response);
-            
+
             Assert.That(cpGroups.Count, Is.EqualTo(count));
             foreach (var g in cpGroups)
             {
                 Assert.That(g.Key.Name, Is.EqualTo(groupName));
                 Assert.That(g.Key.Seed, Is.EqualTo(seed));
                 Assert.That(g.Key.Id, Is.EqualTo(id));
-                Assert.That(g.Value, Is.EqualTo(Guid.Parse(leaderId)));  
+                Assert.That(g.Value, Is.EqualTo(Guid.Parse(leaderId)));
             }
         }
 
@@ -129,6 +131,55 @@ namespace Hazelcast.Tests.Clustering
             Assert.AreEqual(expectedVersion, ((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.Version);
             Assert.That(memberPartitionGroup.GetSubsetMemberIds(), Contains.Item(expectedMemberId));
             Assert.That(((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.SelectedGroup.Count, Is.EqualTo(expectedGroupSize));
+        }
+
+        [TestCaseSource(nameof(MemberGroupCases))]
+        public void TestMemberFilteringWorks(MemberGroups group1,
+            MemberGroups group2,
+            Guid expectedMemberId,
+            int expectedVersion,
+            int expectedGroupSize)
+        {
+            // Create a list of members
+            var memberIds = group1.Groups.SelectMany(p => p).Distinct().ToList();
+            memberIds.AddRange(group2.Groups.SelectMany(p => p).Distinct());
+            memberIds = memberIds.Distinct().ToList();
+            var members = memberIds.Select(p => new MemberInfo(p, new NetworkAddress("127.0.0.1"),
+                new MemberVersion(5, 5, 0), false, new Dictionary<string, string>())).ToList();
+
+            // Prepare the member partition group
+            ISubsetClusterMembers memberPartitionGroup = new MemberPartitionGroup(new NetworkingOptions(), NullLogger.Instance);
+
+            var clusterMembers = For<ClusterMembers>(For<ClusterState>(new HazelcastOptions(), null, null, For<Partitioner>(), NullLoggerFactory.Instance), For<TerminateConnections>(NullLoggerFactory.Instance), memberPartitionGroup);
+
+            memberPartitionGroup.SetSubsetMembers(group1);
+
+            // Assume that MembersView is received from the server, and picking the filtered members for MultiMember mode.
+            var filteredMembers = clusterMembers.FilterMembers(members).Select(p => p.Id).ToList();
+
+            Assert.That(filteredMembers.Count, Is.EqualTo(group1.SelectedGroup.Count));
+            foreach (var memberId in filteredMembers)
+            {
+                Assert.That(group1.SelectedGroup.Contains(memberId), Is.True,
+                    $"Member {memberId} is not in the selected group [{string.Join(", ", group1.SelectedGroup.ToArray())}]");
+            }
+
+            if (group2.Version != MemberPartitionGroup.InvalidVersion)
+            {
+                //Assume new CP group is received from the server, then MemberView is received from the server.
+                memberPartitionGroup.SetSubsetMembers(group2);
+                filteredMembers = clusterMembers.FilterMembers(members).Select(p => p.Id).ToList();
+
+                // If Group 2 is selected than assert members.
+                if (((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.MemberReceivedFrom == group2.MemberReceivedFrom)
+                {
+                    foreach (var memberId in filteredMembers)
+                    {
+                        Assert.That(group2.SelectedGroup.Contains(memberId), Is.True,
+                            $"Member {memberId} is not in the selected group [{string.Join(", ", group2.SelectedGroup.ToArray())}]");
+                    }
+                }
+            }
         }
 
         [Test]
@@ -322,7 +373,7 @@ namespace Hazelcast.Tests.Clustering
 
             }, 20_000, 200);
         }
-     
+
         // Mock server over real TPC connection
         private static async Task<HazelcastClient> CreateClient(RoutingModes routingMode = RoutingModes.MultiMember, params NetworkAddress[] addresses)
         {
@@ -467,7 +518,7 @@ namespace Hazelcast.Tests.Clustering
                     break;
                 }
 
-                
+
                 // unexpected message = error
                 default:
                 {
@@ -480,6 +531,9 @@ namespace Hazelcast.Tests.Clustering
         }
 
 
+
+
+
         public static object[] MemberGroupCases =
         {
             // Case 1: New version wins.
@@ -490,7 +544,8 @@ namespace Hazelcast.Tests.Clustering
                     {
                         // Selected Group
                         new List<Guid>() { Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), Guid.Parse("bfc5a01b-884f-421b-b8a0-a7ce643b4085") },
-                        new List<Guid>() { Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6") }
+                        new List<Guid>() { Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"), Guid.Parse("07988585-f4cf-4473-8299-5575fa6bc93a") },
+                        new List<Guid>() { Guid.Parse("a722ab7a-d266-4911-91b3-5f9f9c7dbcab"), Guid.Parse("b6c07420-3971-4982-bdd4-4ad52b355b7a"), Guid.Parse("e29f6919-7d8a-4f44-91fe-0b48376993a2") }
                     },
                     1,
                     Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),

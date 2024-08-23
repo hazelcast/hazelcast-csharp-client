@@ -105,9 +105,9 @@ namespace Hazelcast.Clustering
 
             // Register cluster views
             _clusterViewProperties[typeof(ClientAddClusterViewListenerCodec)] = new ClusterViewProperties(SubscribeToClusterViewsAsync, typeof(ClientAddClusterViewListenerCodec));
-            
+
             // Subscribe when CP direct to leader is enabled
-            if(_clusterState.Options.Networking.CPDirectToLeaderEnabled)
+            if (_clusterState.Options.Networking.CPDirectToLeaderEnabled)
                 _clusterViewProperties[typeof(ClientAddCPGroupViewListenerCodec)] = new ClusterViewProperties(SubscribeToClusterCPViewAsync, typeof(ClientAddCPGroupViewListenerCodec));
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterEvents>();
@@ -697,7 +697,7 @@ namespace Hazelcast.Clustering
 
         private ValueTask HandleCodecClusterVersionEvent(ClusterVersion version, object state)
         {
-            _logger.IfDebug()?.LogDebug("Handle ClusterVersion event, current version: {Current} received version:{Version}", _clusterState.ClusterVersion ,version);
+            _logger.IfDebug()?.LogDebug("Handle ClusterVersion event, current version: {Current} received version:{Version}", _clusterState.ClusterVersion, version);
             _clusterState.ChangeClusterVersion(version);
             return default;
         }
@@ -705,8 +705,11 @@ namespace Hazelcast.Clustering
         private async ValueTask HandleCodecMemberGroupsViewEvent(int version, IList<IList<Guid>> memberGroups, object state, Guid clusterId, Guid memberId)
         {
             _logger.IfDebug()?.LogDebug("Handle MemberGroups event for cluster {ClusterId} and member {MemberId}. Received version:{Version} Member Groups: [{Groups}]",
-                clusterId, memberId, version, (memberGroups == null ? "null" : string.Join(", ", memberGroups.Select(x => string.Join(", ", x)))));
-            _clusterMembers.SubsetClusterMembers.SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
+                clusterId, memberId, version, (memberGroups == null ? "null" : string.Join(", ", memberGroups.Select(x => $"[{string.Join(", ", x)}]"))));
+            // Received memberId is Guid.Empty because we don't want to change the current member
+            // group of the member that received the event during auth.
+            _clusterMembers.SubsetClusterMembers
+                .SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, Guid.Empty));
             await _memberPartitionGroupsUpdated.AwaitEach().CfAwait();
         }
 
@@ -861,7 +864,7 @@ namespace Hazelcast.Clustering
                 _partitionsUpdated = value;
             }
         }
-        
+
         /// <summary>
         /// Internal event to emit when member partition groups have been updated.
         /// </summary>

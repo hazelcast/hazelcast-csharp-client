@@ -903,7 +903,7 @@ namespace Hazelcast.Clustering
         /// <returns>Members allowed to connect</returns>
         public IEnumerable<MemberInfo> GetMembersForConnection()
         {
-            return _members.Version == InvalidMemberTableVersion ? Enumerable.Empty<MemberInfo>() : _filteredMembersToConnect.Members;
+            return _filteredMembersToConnect.Version == InvalidMemberTableVersion ? Enumerable.Empty<MemberInfo>() : _filteredMembersToConnect.Members;
         }
 
         /// <summary>
