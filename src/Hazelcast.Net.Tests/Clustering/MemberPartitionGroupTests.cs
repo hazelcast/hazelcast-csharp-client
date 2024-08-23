@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregation;
@@ -557,10 +556,6 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
-
-
-
-
         public static object[] MemberGroupCases =
         {
             // Case 1: New version wins.
@@ -622,7 +617,7 @@ namespace Hazelcast.Tests.Clustering
                     },
                     1,
                     Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
 
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 1, // Expected version
@@ -668,7 +663,7 @@ namespace Hazelcast.Tests.Clustering
                     },
                     1,
                     Guid.Parse("a810df4f-a54c-437d-a945-99218688cf31"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
 
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 1, // Expected version
@@ -714,7 +709,7 @@ namespace Hazelcast.Tests.Clustering
                     },
                     1,
                     Guid.Parse("a810df4f-a54c-437d-a945-99218688cf31"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
 
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 1, // Expected version
@@ -762,7 +757,7 @@ namespace Hazelcast.Tests.Clustering
                     },
                     2,
                     Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 2, // Expected version
                 2 // Expected group size
@@ -812,7 +807,7 @@ namespace Hazelcast.Tests.Clustering
                     },
                     2,
                     Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 2, // Expected version
                 5 // Expected group size
@@ -862,7 +857,7 @@ namespace Hazelcast.Tests.Clustering
                     },
                     2,
                     Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 2, // Expected version
                 1 // Expected group size

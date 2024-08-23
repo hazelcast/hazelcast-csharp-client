@@ -19,7 +19,6 @@ using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 namespace Hazelcast.Clustering
 {
     internal class MemberPartitionGroup : ISubsetClusterMembers
@@ -51,37 +50,37 @@ namespace Hazelcast.Clustering
             if (newGroup is null || newGroup.Version <= 0)
                 return _currentGroups;
 
+            var isCurrentNull = _currentGroups.MemberReceivedFrom == Guid.Empty
+                                || _currentGroups.SelectedGroup.Count == 0
+                                || _currentGroups.ClusterId != newGroup.ClusterId;
+
             // Pick authenticator's group.
-            if (_currentGroups.MemberReceivedFrom != Guid.Empty && _currentGroups.MemberReceivedFrom != newGroup.MemberReceivedFrom)
-                return new MemberGroups(newGroup.Groups, newGroup.Version, newGroup.ClusterId, _currentGroups.MemberReceivedFrom);
-
-            if ((_currentGroups.ClusterId != newGroup.ClusterId || _currentGroups.SelectedGroup.Count == 0)
-                && newGroup.MemberReceivedFrom != Guid.Empty
-                && newGroup.SelectedGroup.Count > 0)
-            {
+            if (isCurrentNull && _currentGroups.MemberReceivedFrom != newGroup.MemberReceivedFrom)
                 return newGroup;
+
+            // Pick most overlapped group.
+            if (isCurrentNull == false)
+            { // Given group is stale. Stick with current one.
+                if (_currentGroups.Version <= newGroup.Version)
+                {
+                    var pickedGroup = GetMostOverlappedGroup(newGroup.ClusterId, _currentGroups.MemberReceivedFrom, newGroup);
+
+                    if (pickedGroup.SelectedGroup.Count > 0)
+                        return pickedGroup;
+                }
+                else
+                {
+                    return _currentGroups;
+                }
             }
 
-            if (_currentGroups.SelectedGroup.Count > 0)
-            {
-                var pickedGroup = GetMostOverlappedGroup(newGroup.ClusterId, _currentGroups.MemberReceivedFrom, newGroup);
-
-                if (pickedGroup.SelectedGroup.Count > 0)
-                    return pickedGroup;
-            }
-
+            // Pick biggest group.
             return GetBiggestGroup(newGroup);
         }
 
         // internal for testing
         internal MemberGroups GetMostOverlappedGroup(Guid clusterId, Guid memberIdOfGroup, MemberGroups newGroups)
         {
-            if (_currentGroups.Version > newGroups.Version)
-            {
-                // Given group is stale. Stick with current one.
-                return _currentGroups;
-            }
-
             // Find the group that has the most overlap with the given groups.
             var maxOverlap = 0;
             ICollection<Guid> mostOverlappedGroup = null;
@@ -189,7 +188,7 @@ namespace Hazelcast.Clustering
                                      && newGroup.SelectedGroup.Contains(_currentGroups.MemberReceivedFrom)
                         ? newGroup
                         : new MemberGroups(new List<HashSet<Guid>>(0),
-                            MemberPartitionGroup.InvalidVersion,
+                            InvalidVersion,
                             Guid.Empty,
                             Guid.Empty);
 
