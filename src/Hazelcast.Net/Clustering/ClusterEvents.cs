@@ -706,10 +706,9 @@ namespace Hazelcast.Clustering
         {
             _logger.IfDebug()?.LogDebug("Handle MemberGroups event for cluster {ClusterId} and member {MemberId}. Received version:{Version} Member Groups: [{Groups}]",
                 clusterId, memberId, version, (memberGroups == null ? "null" : string.Join(", ", memberGroups.Select(x => $"[{string.Join(", ", x)}]"))));
-            // Received memberId is Guid.Empty because we don't want to change the current member
-            // group of the member that received the event during auth.
+            
             _clusterMembers.SubsetClusterMembers
-                .SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, Guid.Empty));
+                .SetSubsetMembers(new MemberGroups(memberGroups, version, clusterId, memberId));
             await _memberPartitionGroupsUpdated.AwaitEach().CfAwait();
         }
 

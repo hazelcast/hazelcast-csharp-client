@@ -19,28 +19,31 @@ namespace Hazelcast.Models
 {
     internal class MemberGroups
     {
+        public MemberGroups(IList<IList<Guid>> groups, int version, Guid clusterId, Guid memberReceivedFrom) :
+            this(groups.Select(group => new HashSet<Guid>(group)).ToList(), version, clusterId, memberReceivedFrom)
+        { }
 
-        public MemberGroups(IList<IList<Guid>> groups, int version, Guid clusterId, Guid memberReceivedFrom)
+        public MemberGroups(IList<HashSet<Guid>> groups, int version, Guid clusterId, Guid memberReceivedFrom)
         {
-            Groups = groups ?? Enumerable.Empty<IList<Guid>>().ToList();
+            Groups = groups ?? Enumerable.Empty<HashSet<Guid>>().ToList();
             Version = version;
             ClusterId = clusterId;
             MemberReceivedFrom = memberReceivedFrom;
             SelectedGroup = GetGroupOf(MemberReceivedFrom);
         }
-        public IList<IList<Guid>> Groups { get; }
+        public IList<HashSet<Guid>> Groups { get; }
         public int Version { get; }
         public Guid ClusterId { get; }
         public Guid MemberReceivedFrom { get; }
 
         /// Group of the member that group information received from.
-        public IReadOnlyList<Guid> SelectedGroup { get; }
+        public HashSet<Guid> SelectedGroup { get; }
 
         // internal for testing
-        public IReadOnlyList<Guid> GetGroupOf(Guid memberId)
+        public HashSet<Guid> GetGroupOf(Guid memberId)
         {
             // Find given member's group.
-            return (Groups.FirstOrDefault(group => group.Contains(memberId)) ?? Enumerable.Empty<Guid>()).ToList();
+            return Groups.FirstOrDefault(group => group.Contains(memberId)) ?? new HashSet<Guid>();
         }
 
         public override string ToString()

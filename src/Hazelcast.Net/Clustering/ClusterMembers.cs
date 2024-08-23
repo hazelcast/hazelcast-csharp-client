@@ -473,7 +473,7 @@ namespace Hazelcast.Clustering
             foreach (var member in members) member.UsePublicAddress = _usePublicAddresses;
 
             // compute changes and if routing mode is MultiMember try to connect to the members
-            var (added, removed) = ComputeChanges(previousMembers, newMembers, members, _clusterState.IsRoutingModeMultiMember);
+            var (added, removed) = ComputeChanges(previousMembers, newMembers, members);
 
             var maybeDisconnected = false;
             lock (_mutex)
@@ -592,7 +592,7 @@ namespace Hazelcast.Clustering
             return new MembersUpdatedEventArgs(added, removed, members.ToList());
         }
 
-        private (List<MemberInfo> Added, List<MemberInfo> Removed) ComputeChanges(MemberTable previousTable, MemberTable currentTable, IEnumerable<MemberInfo> members, bool forceToConnect = false)
+        private (List<MemberInfo> Added, List<MemberInfo> Removed) ComputeChanges(MemberTable previousTable, MemberTable currentTable, IEnumerable<MemberInfo> members)
         {
             // compute changes
             // count 1 for old members, 2 for new members, and then the result is
@@ -644,7 +644,10 @@ namespace Hazelcast.Clustering
                         break;
 
                     case 3: // old and new = no change
-                        if (forceToConnect)
+                        // In MultiMember mode, while group is changed, the members table can be same.
+                        // In this case, we need to add the member to the queue to connect.
+                        if (_clusterState.IsRoutingModeMultiMember
+                            && _subsetClusterMembers.GetSubsetMemberIds().Contains(member.Id))
                         {
                             _memberConnectionQueue?.Add(member);
                         }

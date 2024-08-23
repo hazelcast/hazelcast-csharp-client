@@ -233,7 +233,7 @@ internal class Authenticator
     /// </summary>
     internal MemberGroups ParsePartitionMemberGroups(ClientAuthenticationCodec.ResponseParameters response)
     {
-        var emptyMemberGroups = new MemberGroups(new List<IList<Guid>>(0), MemberPartitionGroup.InvalidVersion, response.ClusterId, response.MemberUuid);
+        var emptyMemberGroups = new MemberGroups(new List<HashSet<Guid>>(0), MemberPartitionGroup.InvalidVersion, response.ClusterId, response.MemberUuid);
 
         if (!response.IsKeyValuePairsExists)
             return emptyMemberGroups;
@@ -245,7 +245,7 @@ internal class Authenticator
             return emptyMemberGroups;
         }
 
-        var partitionGroups = new List<IList<Guid>>();
+        var partitionGroups = new List<HashSet<Guid>>();
         var version = MemberPartitionGroup.InvalidVersion;
         try
         {
@@ -262,7 +262,7 @@ internal class Authenticator
                 {
                     group.Add(Guid.Parse(member.ToString()));
                 }
-                partitionGroups.Add(group.ToList());
+                partitionGroups.Add(group);
             }
         }
         catch (Exception e)

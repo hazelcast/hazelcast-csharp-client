@@ -22,9 +22,15 @@ namespace Hazelcast.Testing
 
         public IReadOnlyList<Guid> GetSubsetMemberIds()
             => throw new NotImplementedException();
+        HashSet<Guid> ISubsetClusterMembers.GetSubsetMemberIds()
+            => throw new NotImplementedException();
         public void SetSubsetMembers(MemberGroups newGroup)
         {
             throw new NotImplementedException();
+        }
+        public MemberGroups CurrentGroups
+        {
+            get;
         }
         public void RemoveSubsetMember(Guid memberId)
         {

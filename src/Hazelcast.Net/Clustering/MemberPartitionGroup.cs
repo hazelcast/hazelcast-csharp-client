@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
         private ILogger _logger;
         private readonly ReaderWriterLockSlim _mutex = new ReaderWriterLockSlim();
         private MemberGroups _currentGroups
-            = new MemberGroups(null, InvalidVersion, Guid.Empty, Guid.Empty);
+            = new MemberGroups(new List<HashSet<Guid>>(), InvalidVersion, Guid.Empty, Guid.Empty);
         public MemberPartitionGroup(NetworkingOptions networkingOptions, ILogger logger)
         {
             _networkingOptions = networkingOptions;
@@ -48,8 +48,12 @@ namespace Hazelcast.Clustering
         /// </summary>
         internal MemberGroups PickBestGroup(MemberGroups newGroup)
         {
-            if (newGroup is null)
+            if (newGroup is null || newGroup.Version <= 0)
                 return _currentGroups;
+
+            // Pick authenticator's group.
+            if (_currentGroups.MemberReceivedFrom != Guid.Empty && _currentGroups.MemberReceivedFrom != newGroup.MemberReceivedFrom)
+                return new MemberGroups(newGroup.Groups, newGroup.Version, newGroup.ClusterId, _currentGroups.MemberReceivedFrom);
 
             if ((_currentGroups.ClusterId != newGroup.ClusterId || _currentGroups.SelectedGroup.Count == 0)
                 && newGroup.MemberReceivedFrom != Guid.Empty
@@ -105,7 +109,7 @@ namespace Hazelcast.Clustering
         internal MemberGroups GetBiggestGroup(MemberGroups newGroup)
         {
             var maxCount = int.MinValue;
-            IList<Guid> biggestGroup = null;
+            HashSet<Guid> biggestGroup = null;
 
             for (var i = 0; i < newGroup.Groups.Count; i++)
             {
@@ -117,14 +121,14 @@ namespace Hazelcast.Clustering
             }
 
             return biggestGroup == null
-                ? new MemberGroups(null, 0, Guid.Empty, Guid.Empty)
+                ? new MemberGroups(new List<HashSet<Guid>>(), 0, Guid.Empty, Guid.Empty)
                 : new MemberGroups(newGroup.Groups, newGroup.Version, newGroup.ClusterId, biggestGroup.First());
         }
 
 #endregion
 
         // internal for testing
-        internal MemberGroups CurrentGroups
+        public MemberGroups CurrentGroups
         {
             get
             {
@@ -140,7 +144,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        public IReadOnlyList<Guid> GetSubsetMemberIds() => CurrentGroups.SelectedGroup;
+        public HashSet<Guid> GetSubsetMemberIds() => CurrentGroups.SelectedGroup;
 
         public void SetSubsetMembers(MemberGroups newGroup)
         {
@@ -148,7 +152,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var pickedGroup = _currentGroups.Version == InvalidVersion ? newGroup : PickBestGroup(newGroup);
+                var pickedGroup = PickBestGroup(newGroup);
                 _mutex.EnterWriteLock();
                 var old = _currentGroups;
                 _currentGroups = pickedGroup;
@@ -168,11 +172,11 @@ namespace Hazelcast.Clustering
                 _mutex.EnterWriteLock();
                 if (_currentGroups.SelectedGroup.Contains(memberId))
                 {
-                    var clearedGroup = new List<IList<Guid>>();
+                    var clearedGroup = new List<HashSet<Guid>>();
 
                     foreach (var group in _currentGroups.Groups)
                     {
-                        var cleared = group.Where(id => id != memberId).ToList();
+                        var cleared = group.Where(id => id != memberId).ToHashSet();
                         if (cleared.Count > 0)
                         {
                             clearedGroup.Add(cleared);
@@ -181,14 +185,14 @@ namespace Hazelcast.Clustering
 
                     var newGroup = new MemberGroups(clearedGroup, _currentGroups.Version, _currentGroups.ClusterId, _currentGroups.MemberReceivedFrom);
                     var old = _currentGroups;
-                    _currentGroups = newGroup.SelectedGroup.Count > 0 
+                    _currentGroups = newGroup.SelectedGroup.Count > 0
                                      && newGroup.SelectedGroup.Contains(_currentGroups.MemberReceivedFrom)
-                        ? newGroup 
-                        : new MemberGroups(new List<IList<Guid>>(0),
+                        ? newGroup
+                        : new MemberGroups(new List<HashSet<Guid>>(0),
                             MemberPartitionGroup.InvalidVersion,
                             Guid.Empty,
                             Guid.Empty);
-                    
+
                     _logger.IfDebug()?.LogDebug("Removed Member[{MemberId}] and updated member partition group. " +
                                                 "Old group: {OldGroup} New group: {PickedGroup}", memberId, old, _currentGroups);
                 }
