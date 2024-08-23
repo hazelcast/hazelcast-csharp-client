@@ -181,8 +181,16 @@ namespace Hazelcast.Clustering
 
                     var newGroup = new MemberGroups(clearedGroup, _currentGroups.Version, _currentGroups.ClusterId, _currentGroups.MemberReceivedFrom);
                     var old = _currentGroups;
-                    _currentGroups = newGroup.SelectedGroup.Count > 0 ? newGroup : new MemberGroups(new List<IList<Guid>>(0), MemberPartitionGroup.InvalidVersion, Guid.Empty, Guid.Empty);
-                    _logger.IfDebug()?.LogDebug("Removed Member[{MemberId}] and updated member partition group. Old group: {OldGroup} New group: {PickedGroup}", memberId, old, _currentGroups);
+                    _currentGroups = newGroup.SelectedGroup.Count > 0 
+                                     && newGroup.SelectedGroup.Contains(_currentGroups.MemberReceivedFrom)
+                        ? newGroup 
+                        : new MemberGroups(new List<IList<Guid>>(0),
+                            MemberPartitionGroup.InvalidVersion,
+                            Guid.Empty,
+                            Guid.Empty);
+                    
+                    _logger.IfDebug()?.LogDebug("Removed Member[{MemberId}] and updated member partition group. " +
+                                                "Old group: {OldGroup} New group: {PickedGroup}", memberId, old, _currentGroups);
                 }
             }
             finally
