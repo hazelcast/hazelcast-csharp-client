@@ -29,7 +29,7 @@ namespace Hazelcast.Clustering
         public const string PartitionGroupJsonField = "groups";
         public const int InvalidVersion = -1;
 
-        private NetworkingOptions _networkingOptions;        
+        private NetworkingOptions _networkingOptions;
         private ILogger _logger;
         private readonly ReaderWriterLockSlim _mutex = new ReaderWriterLockSlim();
         private MemberGroups _currentGroups
@@ -58,9 +58,9 @@ namespace Hazelcast.Clustering
                 return newGroup;
             }
 
-            if (_currentGroups.SelectedGroup.Count == 0)
+            if (_currentGroups.SelectedGroup.Count > 0)
             {
-                var pickedGroup = GetMostOverlappedGroup(newGroup.ClusterId, newGroup.MemberReceivedFrom, newGroup);
+                var pickedGroup = GetMostOverlappedGroup(newGroup.ClusterId, _currentGroups.MemberReceivedFrom, newGroup);
 
                 if (pickedGroup.SelectedGroup.Count > 0)
                     return pickedGroup;
@@ -81,8 +81,12 @@ namespace Hazelcast.Clustering
             // Find the group that has the most overlap with the given groups.
             var maxOverlap = 0;
             ICollection<Guid> mostOverlappedGroup = null;
+
             foreach (var examinedGroup in newGroups.Groups)
             {
+                if (examinedGroup.Contains(memberIdOfGroup) == false)
+                    continue;
+
                 var overlap = _currentGroups.SelectedGroup.Intersect(examinedGroup).Count();
                 if (overlap > maxOverlap)
                 {
@@ -90,8 +94,11 @@ namespace Hazelcast.Clustering
                     mostOverlappedGroup = examinedGroup;
                 }
             }
-          
-            return mostOverlappedGroup is { Count: > 0 } ? newGroups : _currentGroups;
+
+            return mostOverlappedGroup is { Count: > 0 }
+                // Selected the new group that has the most overlap with the current group.
+                ? new MemberGroups(newGroups.Groups, newGroups.Version, newGroups.ClusterId, memberIdOfGroup)
+                : _currentGroups;
         }
 
         // internal for testing
@@ -99,7 +106,7 @@ namespace Hazelcast.Clustering
         {
             var maxCount = int.MinValue;
             IList<Guid> biggestGroup = null;
-            
+
             for (var i = 0; i < newGroup.Groups.Count; i++)
             {
                 if (newGroup.Groups[i].Count > maxCount)
@@ -153,7 +160,7 @@ namespace Hazelcast.Clustering
                 _mutex.ExitUpgradeableReadLock();
             }
         }
-        
+
         public void RemoveSubsetMember(Guid memberId)
         {
             try
