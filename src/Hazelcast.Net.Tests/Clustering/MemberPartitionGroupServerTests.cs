@@ -81,7 +81,28 @@ namespace Hazelcast.Tests.Clustering
             AssertClientOnlySees(client1, address1);
             AssertClientOnlySees(client2, address2);
 
-            var nAddress3 = await AssertClientReConnected(client3, address3);
+            await AssertEx.SucceedsEventually(()
+                    =>
+                {
+                    Assert.That(client3.Cluster.Connections.Count, Is.EqualTo(0));
+                    Assert.That(client3.State, Is.EqualTo(ClientState.Disconnected));
+                },
+                15_000, 500);
+
+            Member member;
+            var nAddress3 = NetworkAddress.Parse(address3);
+            while (true)
+            {
+                member = await AddMember();
+                var created = new NetworkAddress(member.Host, member.Port);
+                if (created == nAddress3) break;
+
+                await RemoveMember(member.Uuid);
+            }
+
+            await AssertEx.SucceedsEventually(()
+                    => Assert.That(client3.State, Is.EqualTo(ClientState.Connected)),
+                10_000, 500);
 
             // Check if client1 is connected to the new member
             // cannot use the old member id since we can only either kill or create member
@@ -136,34 +157,6 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(client.Members.Where(p => p.IsConnected).Select(p => p.Member.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
             Assert.That(effectiveMembers.Count(), Is.EqualTo(1));
             Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
-        }
-
-        private async Task<NetworkAddress> AssertClientReConnected(HazelcastClient client, string address, bool createMember = true)
-        {
-            await AssertEx.SucceedsEventually(()
-                    =>
-                {
-                    Assert.That(client.Cluster.Connections.Count, Is.EqualTo(0));
-                    Assert.That(client.State, Is.EqualTo(ClientState.Disconnected));
-                },
-                15_000, 500);
-
-            Member member;
-            var nAddress3 = NetworkAddress.Parse(address);
-            while (createMember)
-            {
-                member = await AddMember();
-                var created = new NetworkAddress(member.Host, member.Port);
-                if (created == nAddress3) break;
-
-                await RemoveMember(member.Uuid);
-            }
-
-            await AssertEx.SucceedsEventually(()
-                    => Assert.That(client.State, Is.EqualTo(ClientState.Connected)),
-                10_000, 500);
-
-            return nAddress3;
         }
 
         [TestCase(RoutingModes.MultiMember)]
