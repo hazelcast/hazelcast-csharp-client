@@ -32,9 +32,18 @@ namespace Hazelcast.Tests.Clustering
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
 
         [OneTimeSetUp]
-        public async Task TearDown()
+        public async Task OneTimeSetUp()
         {
             await CreateCluster();
+        }
+
+        [SetUp]
+        public async Task TearUp()
+        {
+            var diff = 3 - RcMembers.Count;
+            if (diff is > 0 and < 3)
+                for (var i = 0; i < diff; i++)
+                    await AddMember();
         }
 
         [TestCase(RoutingStrategy.PartitionGroups)]
