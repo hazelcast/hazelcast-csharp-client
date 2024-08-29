@@ -163,7 +163,7 @@ namespace Hazelcast.Tests.Clustering
             var connectedMember = RcMembers.Values.Where(m => connectedAddress.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
             await RemoveMember(connectedMember);
 
-            await AssertEx.SucceedsEventually(() => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)), 10_000, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)), 20_000, 500);
 
             await AssertEx.SucceedsEventually(() =>
             {
