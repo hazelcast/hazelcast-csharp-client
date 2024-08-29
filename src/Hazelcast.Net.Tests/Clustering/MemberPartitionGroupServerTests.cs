@@ -15,13 +15,13 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using Thrift.Protocol;
 namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise")]
@@ -31,24 +31,36 @@ namespace Hazelcast.Tests.Clustering
     {
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
 
-        [OneTimeSetUp]
+        [SetUp]
         public async Task OneTimeSetUp()
         {
             await CreateCluster();
         }
+        [TearDown]
+        public async Task TearDown()
+        {
+            await MembersOneTimeTearDown();
+        }
 
-        [SetUp]
+        /*[SetUp]
         public async Task TearUp()
         {
             var diff = 3 - RcMembers.Count;
             if (diff is > 0 and < 3)
                 for (var i = 0; i < diff; i++)
-                    await AddMember();
-        }
+                {
+                    var member = await AddMember();
+                    HConsole.WriteLine(this, member.Uuid+ " was missing, added.");
+                }
+                    
+        }*/
 
         [TestCase(RoutingStrategy.PartitionGroups)]
         public async Task TestMultiMemberRoutingWorks(RoutingStrategy routingStrategy)
         {
+            Assert.That(RcMembers.Count, Is.EqualTo(3));
+            HConsole.Configure(c => c.ConfigureDefaults(this));
+
             var address1 = "127.0.0.1:5701";
             var address2 = "127.0.0.1:5702";
             var address3 = "127.0.0.1:5703";
@@ -60,7 +72,8 @@ namespace Hazelcast.Tests.Clustering
             var client2 = await CreateClient(routingStrategy, new string[] { address2 }, "client2");
             var client3 = await CreateClient(routingStrategy, new string[] { address3 }, "client3");
 
-            AssertClientOnlySees(client1, address1);
+            // wait until cluster forms of 3 members
+            await AssertEx.SucceedsEventually(() => AssertClientOnlySees(client1, address1), 15_000, 500);
             AssertClientOnlySees(client2, address2);
             AssertClientOnlySees(client3, address3);
 
@@ -148,7 +161,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(connectedAddress));
             // Kill the connected member so that client can go to next group
             var connectedMember = RcMembers.Values.Where(m => connectedAddress.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
-            RemoveMember(connectedMember);
+            await RemoveMember(connectedMember);
 
             await AssertEx.SucceedsEventually(() => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)), 10_000, 500);
 
@@ -156,16 +169,29 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
                 Assert.That(client.State, Is.EqualTo(ClientState.Connected));
+                var reConnectedAddress = client.Members.First(p => p.IsConnected).Member.ConnectAddress.ToString();
+                effectiveMembers = client.Cluster.Members.GetMembersForConnection();
+
+                Assert.That(reConnectedAddress, Is.Not.EqualTo(connectedAddress));
+                Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
+                Assert.That(client.Members.Where(p => p.IsConnected).Select(p => p.Member.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
+                Assert.That(effectiveMembers.Count(), Is.EqualTo(1));
+                Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
             }, 20_000, 500);
 
-            var reConnectedAddress = client.Members.First(p => p.IsConnected).Member.ConnectAddress.ToString();
-            effectiveMembers = client.Cluster.Members.GetMembersForConnection();
+        }
+        private async Task AddMemberFor(string connectedAddress)
+        {
+            Member member;
+            var nAddress3 = NetworkAddress.Parse(connectedAddress);
+            while (true)
+            {
+                member = await AddMember();
+                var created = new NetworkAddress(member.Host, member.Port);
+                if (created == nAddress3) break;
 
-            Assert.That(reConnectedAddress, Is.Not.EqualTo(connectedAddress));
-            Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
-            Assert.That(client.Members.Where(p => p.IsConnected).Select(p => p.Member.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
-            Assert.That(effectiveMembers.Count(), Is.EqualTo(1));
-            Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
+                await RemoveMember(member.Uuid);
+            }
         }
 
         [TestCase(RoutingModes.MultiMember)]
@@ -219,7 +245,7 @@ namespace Hazelcast.Tests.Clustering
             var members = client.Cluster.Members;
             var memberId = Guid.Parse(member.Uuid);
 
-            Assert.That(members.GetMembers().Count(), Is.EqualTo(clusterSize));
+            Assert.That(members.GetMembers().Count(), Is.EqualTo(clusterSize), "Current cluster size " + RcMembers.Count);
             Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
             Assert.True(client.Cluster.Connections.Contains(memberId), "Member is not connected");
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds().Count(), Is.EqualTo(1));
