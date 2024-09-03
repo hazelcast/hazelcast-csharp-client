@@ -170,7 +170,7 @@ jobs:
 
       # download the tests coverage artifacts
       - name: Download tests coverage artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           # only net6.0 on windows-latest, that's what goes to codecov
           path: ./temp/artifacts/test-coverage
@@ -237,7 +237,7 @@ jobs:
 
       # download docs patch artifact
       - name: Download docs patch artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
@@ -336,14 +336,14 @@ jobs:
 
       # download nuget packages
       - name: Download NuGet packages artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: NuGet-Packages
           path: ./temp/output
 
       # download docs patch artifact
       - name: Download docs patch artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
