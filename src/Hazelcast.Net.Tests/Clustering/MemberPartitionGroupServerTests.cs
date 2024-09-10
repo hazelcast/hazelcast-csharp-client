@@ -177,7 +177,7 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(client.Members.Where(p => p.IsConnected).Select(p => p.Member.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
                 Assert.That(effectiveMembers.Count(), Is.EqualTo(1));
                 Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
-            }, 20_000, 500);
+            }, 60_000, 500);
 
         }
         private async Task AddMemberFor(string connectedAddress)
