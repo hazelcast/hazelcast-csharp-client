@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -32,7 +33,7 @@ namespace Hazelcast.Tests.Clustering
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
 
         [SetUp]
-        public async Task OneTimeSetUp()
+        public async Task Setup()
         {
             await CreateCluster();
         }
@@ -58,7 +59,7 @@ namespace Hazelcast.Tests.Clustering
         [TestCase(RoutingStrategy.PartitionGroups)]
         public async Task TestMultiMemberRoutingWorks(RoutingStrategy routingStrategy)
         {
-            Assert.That(RcMembers.Count, Is.EqualTo(3));
+            await AssertEx.SucceedsEventually(() => Assert.That(RcMembers.Count, Is.EqualTo(3)), 30_000, 500);
             HConsole.Configure(c => c.ConfigureDefaults(this));
 
             var address1 = "127.0.0.1:5701";
