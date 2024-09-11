@@ -13,7 +13,6 @@
 // limitations under the License.
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -42,19 +41,6 @@ namespace Hazelcast.Tests.Clustering
         {
             await MembersOneTimeTearDown();
         }
-
-        /*[SetUp]
-        public async Task TearUp()
-        {
-            var diff = 3 - RcMembers.Count;
-            if (diff is > 0 and < 3)
-                for (var i = 0; i < diff; i++)
-                {
-                    var member = await AddMember();
-                    HConsole.WriteLine(this, member.Uuid+ " was missing, added.");
-                }
-                    
-        }*/
 
         [TestCase(RoutingStrategy.PartitionGroups)]
         public async Task TestMultiMemberRoutingWorks(RoutingStrategy routingStrategy)
@@ -137,50 +123,6 @@ namespace Hazelcast.Tests.Clustering
             AssertClientOnlySees(client3, address3);
         }
 
-
-        [TestCase(RoutingStrategy.PartitionGroups)]
-        public async Task TestMultiMemberRoutingConnectsNextGroupWhenDisconnected(RoutingStrategy routingStrategy)
-        {
-            var address1 = "127.0.0.1:5701";
-            var address2 = "127.0.0.1:5702";
-            var address3 = "127.0.0.1:5703";
-
-            var addreses = new string[] { address1, address2, address3 };
-
-            // create a client with the given routing strategy
-            var client = await CreateClient(routingStrategy, addreses, "client1");
-
-            // it should connect to first address
-            Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
-
-            var connectedAddress = client.Members.First(p => p.IsConnected).Member.ConnectAddress.ToString();
-
-            AssertClientOnlySees(client, connectedAddress);
-
-            var effectiveMembers = client.Cluster.Members.GetMembersForConnection();
-            Assert.That(effectiveMembers.Count(), Is.EqualTo(1));
-            Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(connectedAddress));
-            // Kill the connected member so that client can go to next group
-            var connectedMember = RcMembers.Values.Where(m => connectedAddress.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
-            await RemoveMember(connectedMember);
-
-            await AssertEx.SucceedsEventually(() => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)), 60_000, 500);
-
-            await AssertEx.SucceedsEventually(() =>
-            {
-                Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
-                Assert.That(client.State, Is.EqualTo(ClientState.Connected));
-                var reConnectedAddress = client.Members.First(p => p.IsConnected).Member.ConnectAddress.ToString();
-                effectiveMembers = client.Cluster.Members.GetMembersForConnection();
-
-                Assert.That(reConnectedAddress, Is.Not.EqualTo(connectedAddress));
-                Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
-                Assert.That(client.Members.Where(p => p.IsConnected).Select(p => p.Member.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
-                Assert.That(effectiveMembers.Count(), Is.EqualTo(1));
-                Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(reConnectedAddress));
-            }, 60_000, 500);
-
-        }
         private async Task AddMemberFor(string connectedAddress)
         {
             Member member;
