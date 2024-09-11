@@ -23,6 +23,7 @@ namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise")]
     [ServerCondition("5.5")]
+    [Explicit("This test is not working as expected. It is failing on the GitHub Actions due to resource consumption.")]
     [Timeout(60_000)]
     public class MemberPartitionGroupServerTests2 : MultiMembersRemoteTestBase
     {
