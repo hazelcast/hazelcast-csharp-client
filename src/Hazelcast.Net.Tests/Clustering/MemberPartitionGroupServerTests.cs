@@ -67,9 +67,13 @@ namespace Hazelcast.Tests.Clustering
             // Scale Up
             var member4 = await AddMember();
 
-            AssertClientOnlySees(client1, address1, 4);
-            AssertClientOnlySees(client2, address2, 4);
-            AssertClientOnlySees(client3, address3, 4);
+            await AssertEx.SucceedsEventually(() =>
+            {
+                AssertClientOnlySees(client1, address1, 4);
+                AssertClientOnlySees(client2, address2, 4);
+                AssertClientOnlySees(client3, address3, 4);
+                
+            }, 20_000, 100);
 
             // Scale Down
             await RemoveMember(member4.Uuid);
