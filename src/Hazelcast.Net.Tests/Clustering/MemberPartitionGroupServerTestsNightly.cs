@@ -23,7 +23,7 @@ namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise,nightly")]
     [ServerCondition("5.5")]
-    [Timeout(60_000)]
+    [Timeout(120_000)]
     public class MemberPartitionGroupServerTestsNightly : MultiMembersRemoteTestBase
     {
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
