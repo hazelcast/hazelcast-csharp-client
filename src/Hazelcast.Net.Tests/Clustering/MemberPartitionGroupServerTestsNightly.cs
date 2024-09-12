@@ -63,7 +63,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(effectiveMembers.Select(p => p.ConnectAddress.ToString()), Contains.Item(connectedAddress));
             // Kill the connected member so that client can go to next group
             var connectedMember = RcMembers.Values.Where(m => connectedAddress.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
-            await RemoveMember(connectedMember);
+            RemoveMember(connectedMember);
 
             await AssertEx.SucceedsEventually(() => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)), 60_000, 500);
 
