@@ -125,8 +125,7 @@ namespace Hazelcast.Clustering
         }
 
 #endregion
-
-        // internal for testing
+        
         public MemberGroups CurrentGroups
         {
             get

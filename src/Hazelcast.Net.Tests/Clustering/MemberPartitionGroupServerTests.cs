@@ -123,20 +123,6 @@ namespace Hazelcast.Tests.Clustering
             AssertClientOnlySees(client3, address3);
         }
 
-        private async Task AddMemberFor(string connectedAddress)
-        {
-            Member member;
-            var nAddress3 = NetworkAddress.Parse(connectedAddress);
-            while (true)
-            {
-                member = await AddMember();
-                var created = new NetworkAddress(member.Host, member.Port);
-                if (created == nAddress3) break;
-
-                await RemoveMember(member.Uuid);
-            }
-        }
-
         [TestCase(RoutingModes.MultiMember)]
         [TestCase(RoutingModes.SingleMember)]
         [TestCase(RoutingModes.AllMembers)]
