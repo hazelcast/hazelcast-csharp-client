@@ -130,11 +130,11 @@ namespace Hazelcast.Tests.Clustering
         {
             var address1 = "127.0.0.1:5701";
             var address2 = "127.0.0.1:5702";
-            var addreses = new string[] { address1, address2 };
+            var addresses = new string[] { address1, address2 };
             var keyCount = 3 * 271;
 
             // create a client with the given routing strategy for catching the events.
-            var client1 = await CreateClient(RoutingStrategy.PartitionGroups, addreses, "client1", routingMode);
+            var client1 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client1", routingMode);
             var client1Count = 0;
             var mapName = $"map_{routingMode}";
             var map1 = await client1.GetMapAsync<int, int>(mapName);
@@ -149,7 +149,7 @@ namespace Hazelcast.Tests.Clustering
 
 
             // create a dummy client  for creating events
-            var client2 = await CreateClient(RoutingStrategy.PartitionGroups, addreses, "client2", RoutingModes.SingleMember);
+            var client2 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client2", RoutingModes.SingleMember);
 
             var map2 = await client2.GetMapAsync<int, int>(map1.Name);
 
