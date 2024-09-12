@@ -13,10 +13,10 @@
 // limitations under the License.
 
 // ReSharper disable once CheckNamespace
+using System.Diagnostics.Tracing;
 namespace System.Collections.Generic;
 
 #if NETSTANDARD2_0
-
 internal static class CollectionExtensions
 {
     /// <summary>Tries to add the specified <paramref name="key" /> and <paramref name="value" /> to the <paramref name="dictionary" />.</summary>
@@ -40,6 +40,20 @@ internal static class CollectionExtensions
             return false;
         dictionary.Add(key, value);
         return true;
+    }
+
+    /// <summary>
+    /// Creates a HashSet<T> from an IEnumerable<T>.
+    /// </summary>
+    /// <param name="source">An IEnumerable<T> to create a HashSet<T> from.</param>
+    /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+    /// <returns>A HashSet<T> that contains values of type TSource selected from the input sequence.</returns>
+    public static System.Collections.Generic.HashSet<TSource> ToHashSet<TSource>(this System.Collections.Generic.IEnumerable<TSource> source)
+    {
+        var set = new HashSet<TSource>();
+        foreach (var item in source)
+            set.Add(item);
+        return set;
     }
 }
 

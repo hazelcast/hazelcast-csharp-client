@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregation;
@@ -25,6 +24,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Networking;
+using Hazelcast.Partitioning;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
@@ -34,6 +34,7 @@ using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using static NSubstitute.Substitute;
 namespace Hazelcast.Tests.Clustering
 {
     // internal for class MemberPartitionGroup : ISubsetClusterMembers
@@ -50,8 +51,8 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
-        [TestCase(@"[{ ""raftId"":{ ""seed"":9, ""id"":3, ""name"":""grp1"" }, ""leaderUUID"":""fa270257-5767-45bf-a3c6-bafe17bed525"" }]", "grp1",9, 3, "fa270257-5767-45bf-a3c6-bafe17bed525",1)]
-        [TestCase(@"[]", "grp1",0, 0, "",0)]
+        [TestCase(@"[{ ""raftId"":{ ""seed"":9, ""id"":3, ""name"":""grp1"" }, ""leaderUUID"":""fa270257-5767-45bf-a3c6-bafe17bed525"" }]", "grp1", 9, 3, "fa270257-5767-45bf-a3c6-bafe17bed525", 1)]
+        [TestCase(@"[]", "grp1", 0, 0, "", 0)]
         public void TestAuthenticatorCanParseCPGroups(string jsonString, string groupName, int seed, int id, string leaderId, int count)
         {
             ClientAuthenticationCodec.ResponseParameters response = new ClientAuthenticationCodec.ResponseParameters();
@@ -60,16 +61,16 @@ namespace Hazelcast.Tests.Clustering
             response.IsKeyValuePairsExists = true;
 
             var authenticator = CreateAuthenticator();
-            
+
             var cpGroups = authenticator.ParseCPGroupLeaderIds(response);
-            
+
             Assert.That(cpGroups.Count, Is.EqualTo(count));
             foreach (var g in cpGroups)
             {
                 Assert.That(g.Key.Name, Is.EqualTo(groupName));
                 Assert.That(g.Key.Seed, Is.EqualTo(seed));
                 Assert.That(g.Key.Id, Is.EqualTo(id));
-                Assert.That(g.Value, Is.EqualTo(Guid.Parse(leaderId)));  
+                Assert.That(g.Value, Is.EqualTo(Guid.Parse(leaderId)));
             }
         }
 
@@ -108,7 +109,29 @@ namespace Hazelcast.Tests.Clustering
             return authenticator;
         }
 
-        // TODO: add integration tests after having config.
+
+        [TestCaseSource(nameof(MemberGroupCases))]
+        public void TestMemberPartitionGroupRemovesCorrectMember(MemberGroups group1,
+            MemberGroups group2,
+            Guid expectedMemberId,
+            int expectedVersion,
+            int expectedGroupSize)
+        {
+
+            ISubsetClusterMembers memberPartitionGroup = new MemberPartitionGroup(new NetworkingOptions(), NullLogger.Instance);
+
+            memberPartitionGroup.SetSubsetMembers(group1);
+            memberPartitionGroup.SetSubsetMembers(group2);
+
+            var removedId = memberPartitionGroup.GetSubsetMemberIds().Where(p => p != expectedMemberId).FirstOrDefault();
+            memberPartitionGroup.RemoveSubsetMember(removedId);
+
+            Assert.AreEqual(expectedVersion, ((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.Version);
+            Assert.That(memberPartitionGroup.GetSubsetMemberIds(), Is.Not.Contains(removedId));
+
+            if (removedId != Guid.Empty)
+                Assert.That(((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.SelectedGroup.Count, Is.EqualTo(expectedGroupSize - 1));
+        }
 
         [TestCaseSource(nameof(MemberGroupCases))]
         public void TestMemberPartitionGroupPicksCorrectGroup(MemberGroups group1,
@@ -120,15 +143,69 @@ namespace Hazelcast.Tests.Clustering
 
             ISubsetClusterMembers memberPartitionGroup = new MemberPartitionGroup(new NetworkingOptions(), NullLogger.Instance);
 
-            memberPartitionGroup.SetSubsetMembers(group1);
-            if (group2.Version != MemberPartitionGroup.InvalidVersion)
+            for (int i = 0; i < 2; i++)
             {
-                memberPartitionGroup.SetSubsetMembers(group2);
+                memberPartitionGroup.SetSubsetMembers(group1);
+                if (group2.Version != MemberPartitionGroup.InvalidVersion)
+                {
+                    memberPartitionGroup.SetSubsetMembers(group2);
+                }
             }
 
             Assert.AreEqual(expectedVersion, ((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.Version);
             Assert.That(memberPartitionGroup.GetSubsetMemberIds(), Contains.Item(expectedMemberId));
             Assert.That(((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.SelectedGroup.Count, Is.EqualTo(expectedGroupSize));
+        }
+
+        [TestCaseSource(nameof(MemberGroupCases))]
+        public void TestMemberFilteringWorks(MemberGroups group1,
+            MemberGroups group2,
+            Guid expectedMemberId,
+            int expectedVersion,
+            int expectedGroupSize)
+        {
+            // Create a list of members
+            var memberIds = group1.Groups.SelectMany(p => p).Distinct().ToList();
+            memberIds.AddRange(group2.Groups.SelectMany(p => p).Distinct());
+            memberIds = memberIds.Distinct().ToList();
+            var members = memberIds.Select(p => new MemberInfo(p, new NetworkAddress("127.0.0.1"),
+                new MemberVersion(5, 5, 0), false, new Dictionary<string, string>())).ToList();
+
+            // Prepare the member partition group
+            ISubsetClusterMembers memberPartitionGroup = new MemberPartitionGroup(new NetworkingOptions(), NullLogger.Instance);
+
+            var clusterMembers = For<ClusterMembers>(For<ClusterState>(new HazelcastOptions(),
+                    null, null, For<Partitioner>(), NullLoggerFactory.Instance),
+                For<TerminateConnections>(NullLoggerFactory.Instance), memberPartitionGroup);
+
+            memberPartitionGroup.SetSubsetMembers(group1);
+
+            // Assume that MembersView is received from the server, and picking the filtered members for MultiMember mode.
+            var filteredMembers = clusterMembers.FilterMembers(members).Select(p => p.Id).ToList();
+
+            Assert.That(filteredMembers.Count, Is.EqualTo(group1.SelectedGroup.Count));
+            foreach (var memberId in filteredMembers)
+            {
+                Assert.That(group1.SelectedGroup.Contains(memberId), Is.True,
+                    $"Member {memberId} is not in the selected group [{string.Join(", ", group1.SelectedGroup.ToArray())}]");
+            }
+
+            if (group2.Version != MemberPartitionGroup.InvalidVersion)
+            {
+                //Assume new CP group is received from the server, then MemberView is received from the server.
+                memberPartitionGroup.SetSubsetMembers(group2);
+                filteredMembers = clusterMembers.FilterMembers(members).Select(p => p.Id).ToList();
+
+                // If Group 2 is selected than assert members.
+                if (((MemberPartitionGroup) memberPartitionGroup).CurrentGroups.MemberReceivedFrom == group2.MemberReceivedFrom)
+                {
+                    foreach (var memberId in filteredMembers)
+                    {
+                        Assert.That(group2.SelectedGroup.Contains(memberId), Is.True,
+                            $"Member {memberId} is not in the selected group [{string.Join(", ", group2.SelectedGroup.ToArray())}]");
+                    }
+                }
+            }
         }
 
         [Test]
@@ -322,7 +399,7 @@ namespace Hazelcast.Tests.Clustering
 
             }, 20_000, 200);
         }
-     
+
         // Mock server over real TPC connection
         private static async Task<HazelcastClient> CreateClient(RoutingModes routingMode = RoutingModes.MultiMember, params NetworkAddress[] addresses)
         {
@@ -467,7 +544,7 @@ namespace Hazelcast.Tests.Clustering
                     break;
                 }
 
-                
+
                 // unexpected message = error
                 default:
                 {
@@ -479,7 +556,6 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
-
         public static object[] MemberGroupCases =
         {
             // Case 1: New version wins.
@@ -490,7 +566,8 @@ namespace Hazelcast.Tests.Clustering
                     {
                         // Selected Group
                         new List<Guid>() { Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), Guid.Parse("bfc5a01b-884f-421b-b8a0-a7ce643b4085") },
-                        new List<Guid>() { Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6") }
+                        new List<Guid>() { Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"), Guid.Parse("07988585-f4cf-4473-8299-5575fa6bc93a") },
+                        new List<Guid>() { Guid.Parse("a722ab7a-d266-4911-91b3-5f9f9c7dbcab"), Guid.Parse("b6c07420-3971-4982-bdd4-4ad52b355b7a"), Guid.Parse("e29f6919-7d8a-4f44-91fe-0b48376993a2") }
                     },
                     1,
                     Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
@@ -553,10 +630,15 @@ namespace Hazelcast.Tests.Clustering
                 // Group 1
                 new MemberGroups(new List<IList<Guid>>()
                     {
-                        new List<Guid>() { Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6") },
                         new List<Guid>()
                         {
-                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6")
+                        },
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
                         }
                     },
                     1,
@@ -569,10 +651,15 @@ namespace Hazelcast.Tests.Clustering
                         // Selected Group
                         new List<Guid>()
                         {
-                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9"),
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9"),
                             Guid.Parse("03d9a78b-6380-49c8-9bf3-8044f2cfa75d")
                         },
-                        new List<Guid>() { Guid.Parse("dd8803e6-16ae-4d62-921e-ffe4f5c8ce49"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6") }
+                        new List<Guid>()
+                        {
+                            Guid.Parse("dd8803e6-16ae-4d62-921e-ffe4f5c8ce49"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6")
+                        }
                     },
                     1,
                     Guid.Parse("a810df4f-a54c-437d-a945-99218688cf31"),
@@ -583,16 +670,21 @@ namespace Hazelcast.Tests.Clustering
                 3 // Expected group size
             },
 
-            // Case 2: Biggest wins
+            // Case 3: Biggest wins
             new object[]
             {
                 // Group 1
                 new MemberGroups(new List<IList<Guid>>()
                     {
-                        new List<Guid>() { Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6") },
                         new List<Guid>()
                         {
-                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6")
+                        },
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
                         }
                     },
                     1,
@@ -605,20 +697,171 @@ namespace Hazelcast.Tests.Clustering
                         // Selected Group
                         new List<Guid>()
                         {
-                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9"),
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9"),
                             Guid.Parse("03d9a78b-6380-49c8-9bf3-8044f2cfa75d")
                         },
-                        new List<Guid>() { Guid.Parse("dd8803e6-16ae-4d62-921e-ffe4f5c8ce49"), Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6") }
+                        new List<Guid>()
+                        {
+                            Guid.Parse("dd8803e6-16ae-4d62-921e-ffe4f5c8ce49"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6")
+                        }
                     },
                     1,
                     Guid.Parse("a810df4f-a54c-437d-a945-99218688cf31"),
-                    Guid.Empty),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
 
                 Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
                 1, // Expected version
                 3 // Expected group size
             },
 
+            // Case 4: PG Group not changing after auth.
+            new object[]
+            {
+                // Group 1
+                new MemberGroups(new List<IList<Guid>>()
+                    {
+                        new List<Guid>()
+                        {
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"),
+                            Guid.Parse("d8ee9c15-ac9a-4357-9698-ade761ced554")
+                        },
+                        // Selected Group
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
+                        }
+                    },
+                    1,
+                    Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
+
+                // Group 2
+                new MemberGroups(new List<IList<Guid>>()
+                    {
+                        new List<Guid>()
+                        {
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"),
+                            Guid.Parse("d8ee9c15-ac9a-4357-9698-ade761ced554"),
+                            Guid.Parse("79d63bcf-339d-449b-aa55-a2cb4f3bad8b")
+                        },
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
+                        }
+                    },
+                    2,
+                    Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
+                Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
+                2, // Expected version
+                2 // Expected group size
+            },
+
+            // Case 5: Bigger overlap with auth group wins.
+            new object[]
+            {
+                // Group 1
+                new MemberGroups(new List<IList<Guid>>()
+                    {
+                        new List<Guid>()
+                        {
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"),
+                            Guid.Parse("d8ee9c15-ac9a-4357-9698-ade761ced554")
+                        },
+                        // Selected Group
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9")
+                        }
+                    },
+                    1,
+                    Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
+
+                // Group 2
+                new MemberGroups(new List<IList<Guid>>()
+                    {
+                        new List<Guid>()
+                        {
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"),
+                            Guid.Parse("d8ee9c15-ac9a-4357-9698-ade761ced554"),
+                            Guid.Parse("79d63bcf-339d-449b-aa55-a2cb4f3bad8b")
+                        },
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9"),
+                            Guid.Parse("6878f2be-5153-4b7a-8896-edab76011c9c"),
+                            Guid.Parse("7bff264d-426d-44e3-928e-a6200a0a5271"),
+                            Guid.Parse("ce74ca59-3061-47c4-b56b-ddf5727fa312")
+                        }
+                    },
+                    2,
+                    Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
+                Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
+                2, // Expected version
+                5 // Expected group size
+            },
+
+            // Case 5: Scale down
+            new object[]
+            {
+                // Group 1
+                new MemberGroups(new List<IList<Guid>>()
+                    {
+                        new List<Guid>()
+                        {
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"),
+                            Guid.Parse("d8ee9c15-ac9a-4357-9698-ade761ced554"),
+                            Guid.Parse("79d63bcf-339d-449b-aa55-a2cb4f3bad8b")
+                        },
+                        // Selected Group
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"),
+                            Guid.Parse("d3c34048-a055-4025-8c00-c70b2dcd47b9"),
+                            Guid.Parse("6878f2be-5153-4b7a-8896-edab76011c9c"),
+                            Guid.Parse("7bff264d-426d-44e3-928e-a6200a0a5271"),
+                            Guid.Parse("ce74ca59-3061-47c4-b56b-ddf5727fa312")
+                        }
+                    },
+                    1,
+                    Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
+
+                // Group 2
+                new MemberGroups(new List<IList<Guid>>()
+                    {
+                        new List<Guid>()
+                        {
+                            Guid.Parse("efdb670f-d0d5-4482-84eb-0354e4278112"),
+                            Guid.Parse("6965aaa2-d6eb-483a-bb6c-99388c348bc6"),
+                            Guid.Parse("d8ee9c15-ac9a-4357-9698-ade761ced554"),
+                            Guid.Parse("79d63bcf-339d-449b-aa55-a2cb4f3bad8b")
+                        },
+                        new List<Guid>()
+                        {
+                            Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")
+                        }
+                    },
+                    2,
+                    Guid.Parse("81b1ac67-1238-42d6-84b7-ef869e60f262"),
+                    Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e")),
+                Guid.Parse("64082773-bc1b-408c-8ea6-1150c3c6477e"), // Expected group member
+                2, // Expected version
+                1 // Expected group size
+            },
 
         };
     }

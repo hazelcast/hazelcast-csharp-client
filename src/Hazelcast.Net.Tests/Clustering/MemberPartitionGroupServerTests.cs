@@ -15,41 +15,52 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using Thrift.Protocol;
 namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise")]
     [ServerCondition("5.5")]
-    [Timeout(30_000)]
+    [Timeout(60_000)]
     public class MemberPartitionGroupServerTests : MultiMembersRemoteTestBase
     {
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
 
-        [OneTimeSetUp]
-        public async Task TearDown()
+        [SetUp]
+        public async Task Setup()
         {
             await CreateCluster();
+        }
+        [TearDown]
+        public async Task TearDown()
+        {
+            await MembersOneTimeTearDown();
         }
 
         [TestCase(RoutingStrategy.PartitionGroups)]
         public async Task TestMultiMemberRoutingWorks(RoutingStrategy routingStrategy)
         {
+            await AssertEx.SucceedsEventually(() => Assert.That(RcMembers.Count, Is.EqualTo(3)), 30_000, 500);
+            HConsole.Configure(c => c.ConfigureDefaults(this));
+
             var address1 = "127.0.0.1:5701";
             var address2 = "127.0.0.1:5702";
             var address3 = "127.0.0.1:5703";
 
-            // create a client with the given routing strategy
-            var client1 = await CreateClient(routingStrategy, address1);
-            var client2 = await CreateClient(routingStrategy, address2);
-            var client3 = await CreateClient(routingStrategy, address3);
+            var addreses = new string[] { address1, address2, address3 };
 
-            AssertClientOnlySees(client1, address1);
+            // create a client with the given routing strategy
+            var client1 = await CreateClient(routingStrategy, new string[] { address1 }, "client1");
+            var client2 = await CreateClient(routingStrategy, new string[] { address2 }, "client2");
+            var client3 = await CreateClient(routingStrategy, new string[] { address3 }, "client3");
+
+            // wait until cluster forms of 3 members
+            await AssertEx.SucceedsEventually(() => AssertClientOnlySees(client1, address1), 15_000, 500);
             AssertClientOnlySees(client2, address2);
             AssertClientOnlySees(client3, address3);
 
@@ -68,7 +79,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 AssertClientOnlySees(client1, address1);
             }, 10_000, 500, "Client1 did not see the correct members");
-            
+
             AssertClientOnlySees(client2, address2);
             AssertClientOnlySees(client3, address3);
 
@@ -87,15 +98,15 @@ namespace Hazelcast.Tests.Clustering
                 },
                 15_000, 500);
 
-            Member member3;
+            Member member;
             var nAddress3 = NetworkAddress.Parse(address3);
             while (true)
             {
-                member3 = await AddMember();
-                var created = new NetworkAddress(member3.Host, member3.Port);
+                member = await AddMember();
+                var created = new NetworkAddress(member.Host, member.Port);
                 if (created == nAddress3) break;
 
-                await RemoveMember(member3.Uuid);
+                await RemoveMember(member.Uuid);
             }
 
             await AssertEx.SucceedsEventually(()
@@ -105,7 +116,7 @@ namespace Hazelcast.Tests.Clustering
             // Check if client1 is connected to the new member
             // cannot use the old member id since we can only either kill or create member
             Assert.That(client3.Cluster.Connections.Count, Is.EqualTo(1));
-            Assert.That(client3.Members.Select(p => p.Member.ConnectAddress), Contains.Item(nAddress3));
+            Assert.That(client3.Members.Where(p => p.IsConnected).Select(p => p.Member.ConnectAddress.ToString()), Contains.Item(address3));
 
             AssertClientOnlySees(client1, address1);
             AssertClientOnlySees(client2, address2);
@@ -119,10 +130,11 @@ namespace Hazelcast.Tests.Clustering
         {
             var address1 = "127.0.0.1:5701";
             var address2 = "127.0.0.1:5702";
+            var addresses = new string[] { address1, address2 };
             var keyCount = 3 * 271;
 
             // create a client with the given routing strategy for catching the events.
-            var client1 = await CreateClient(RoutingStrategy.PartitionGroups, address1, routingMode);
+            var client1 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client1", routingMode);
             var client1Count = 0;
             var mapName = $"map_{routingMode}";
             var map1 = await client1.GetMapAsync<int, int>(mapName);
@@ -137,7 +149,7 @@ namespace Hazelcast.Tests.Clustering
 
 
             // create a dummy client  for creating events
-            var client2 = await CreateClient(RoutingStrategy.PartitionGroups, address2, RoutingModes.SingleMember);
+            var client2 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client2", RoutingModes.SingleMember);
 
             var map2 = await client2.GetMapAsync<int, int>(map1.Name);
 
@@ -162,19 +174,23 @@ namespace Hazelcast.Tests.Clustering
             var members = client.Cluster.Members;
             var memberId = Guid.Parse(member.Uuid);
 
-            Assert.That(members.GetMembers().Count(), Is.EqualTo(clusterSize));
+            Assert.That(members.GetMembers().Count(), Is.EqualTo(clusterSize), "Current cluster size " + RcMembers.Count);
             Assert.That(client.Cluster.Connections.Count, Is.EqualTo(1));
             Assert.True(client.Cluster.Connections.Contains(memberId), "Member is not connected");
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds().Count(), Is.EqualTo(1));
             Assert.That(members.SubsetClusterMembers.GetSubsetMemberIds(), Contains.Item(memberId));
         }
-        private async Task<HazelcastClient> CreateClient(RoutingStrategy routingStrategy, string address, RoutingModes routingMode = RoutingModes.MultiMember)
+        private async Task<HazelcastClient> CreateClient(RoutingStrategy routingStrategy, string[] address, string clientName, RoutingModes routingMode = RoutingModes.MultiMember)
         {
             var options = new HazelcastOptionsBuilder()
                 .With(args =>
                 {
-                    args.ClientName = $"Client:{address}";
-                    args.Networking.Addresses.Add(address);
+                    for (int i = 0; i < address.Length; i++)
+                    {
+
+                        args.Networking.Addresses.Add(address[i]);
+                    }
+                    args.ClientName = clientName;
                     args.ClusterName = RcCluster.Id;
                     args.Networking.RoutingMode.Mode = routingMode;
                     args.Networking.RoutingMode.Strategy = routingStrategy;
