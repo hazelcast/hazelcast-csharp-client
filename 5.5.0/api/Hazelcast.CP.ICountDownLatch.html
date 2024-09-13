@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>ICountDownLatch Interface
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="ICountDownLatch Interface
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.5.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.CP.ICountDownLatch">
+
+
+
+  <h1 id="Hazelcast_CP_ICountDownLatch" data-uid="Hazelcast.CP.ICountDownLatch" class="text-break">ICountDownLatch Interface
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.CP.html">CP</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents a countdown latch which is a backed-up distributed alternative to the
+java.util.concurrent.CountDownLatch. It is a cluster-wide synchronization aid
+that allows one or more threads to wait until a set of operations being
+performed in other threads completes.
+It works on top of the Raft consensus algorithm. It offers linearizability
+during crash failures and network partitions. It is CP with respect to the CAP
+principle. If a network partition occurs, it remains available on at most one
+side of the partition.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public interface ICountDownLatch : ICPDistributedObject, IDistributedObject, IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.CP.ICPDistributedObject.GroupId.html#Hazelcast_CP_ICPDistributedObject_GroupId">ICPDistributedObject.GroupId</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_CP_ICountDownLatch_AwaitAsync_System_TimeSpan_" data-uid="Hazelcast.CP.ICountDownLatch.AwaitAsync(System.TimeSpan)">
+          <a class="xref" href="Hazelcast.CP.ICountDownLatch.AwaitAsync.html#Hazelcast_CP_ICountDownLatch_AwaitAsync_System_TimeSpan_">AwaitAsync(TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Waits until the latch has counted down to zero, or the specified timeout
+waiting time has expired.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ICountDownLatch_CountDownAsync" data-uid="Hazelcast.CP.ICountDownLatch.CountDownAsync">
+          <a class="xref" href="Hazelcast.CP.ICountDownLatch.CountDownAsync.html#Hazelcast_CP_ICountDownLatch_CountDownAsync">CountDownAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Decrements the count of the latch.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ICountDownLatch_GetCountAsync" data-uid="Hazelcast.CP.ICountDownLatch.GetCountAsync">
+          <a class="xref" href="Hazelcast.CP.ICountDownLatch.GetCountAsync.html#Hazelcast_CP_ICountDownLatch_GetCountAsync">GetCountAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the current count of the latch.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_CP_ICountDownLatch_TrySetCountAsync_System_Int32_" data-uid="Hazelcast.CP.ICountDownLatch.TrySetCountAsync(System.Int32)">
+          <a class="xref" href="Hazelcast.CP.ICountDownLatch.TrySetCountAsync.html#Hazelcast_CP_ICountDownLatch_TrySetCountAsync_System_Int32_">TrySetCountAsync(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets the count to the specified value if it is zero.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

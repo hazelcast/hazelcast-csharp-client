@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>MapOptions Class
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="MapOptions Class
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.5.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Models.MapOptions">
+
+
+
+  <h1 id="Hazelcast_Models_MapOptions" data-uid="Hazelcast.Models.MapOptions" class="text-break">MapOptions Class
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Models.html">Models</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents options for map.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public class MapOptions : IIdentifiedDataSerializable, INamedOptions</code></pre>
+  </div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+    <div class="level1"><span class="xref">MapOptions</span></div>
+  </div>
+  <div class="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.html">IIdentifiedDataSerializable</a></div>
+    <div><a class="xref" href="Hazelcast.Models.INamedOptions.html">INamedOptions</a></div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+  </div>
+  <h3 id="constructors">Constructors
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions__ctor" data-uid="Hazelcast.Models.MapOptions.#ctor">
+          <a class="xref" href="Hazelcast.Models.MapOptions.-ctor.html#Hazelcast_Models_MapOptions__ctor">MapOptions()</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions__ctor_Hazelcast_Models_MapOptions_" data-uid="Hazelcast.Models.MapOptions.#ctor(Hazelcast.Models.MapOptions)">
+          <a class="xref" href="Hazelcast.Models.MapOptions.-ctor.html#Hazelcast_Models_MapOptions__ctor_Hazelcast_Models_MapOptions_">MapOptions(MapOptions)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions__ctor_System_String_" data-uid="Hazelcast.Models.MapOptions.#ctor(System.String)">
+          <a class="xref" href="Hazelcast.Models.MapOptions.-ctor.html#Hazelcast_Models_MapOptions__ctor_System_String_">MapOptions(string)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_AsyncBackupCount" data-uid="Hazelcast.Models.MapOptions.AsyncBackupCount">
+          <a class="xref" href="Hazelcast.Models.MapOptions.AsyncBackupCount.html#Hazelcast_Models_MapOptions_AsyncBackupCount">AsyncBackupCount</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the asynchronous backup count for this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_Attributes" data-uid="Hazelcast.Models.MapOptions.Attributes">
+          <a class="xref" href="Hazelcast.Models.MapOptions.Attributes.html#Hazelcast_Models_MapOptions_Attributes">Attributes</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_BackupCount" data-uid="Hazelcast.Models.MapOptions.BackupCount">
+          <a class="xref" href="Hazelcast.Models.MapOptions.BackupCount.html#Hazelcast_Models_MapOptions_BackupCount">BackupCount</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the backup count for this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_CacheDeserializedValues" data-uid="Hazelcast.Models.MapOptions.CacheDeserializedValues">
+          <a class="xref" href="Hazelcast.Models.MapOptions.CacheDeserializedValues.html#Hazelcast_Models_MapOptions_CacheDeserializedValues">CacheDeserializedValues</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the value cache settings.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_ClassId" data-uid="Hazelcast.Models.MapOptions.ClassId">
+          <a class="xref" href="Hazelcast.Models.MapOptions.ClassId.html#Hazelcast_Models_MapOptions_ClassId">ClassId</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the identifier of the class.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_DataPersistence" data-uid="Hazelcast.Models.MapOptions.DataPersistence">
+          <a class="xref" href="Hazelcast.Models.MapOptions.DataPersistence.html#Hazelcast_Models_MapOptions_DataPersistence">DataPersistence</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the data persistence config.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_EntryListeners" data-uid="Hazelcast.Models.MapOptions.EntryListeners">
+          <a class="xref" href="Hazelcast.Models.MapOptions.EntryListeners.html#Hazelcast_Models_MapOptions_EntryListeners">EntryListeners</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the entry listener configurations.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_EventJournal" data-uid="Hazelcast.Models.MapOptions.EventJournal">
+          <a class="xref" href="Hazelcast.Models.MapOptions.EventJournal.html#Hazelcast_Models_MapOptions_EventJournal">EventJournal</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the event journal config.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_Eviction" data-uid="Hazelcast.Models.MapOptions.Eviction">
+          <a class="xref" href="Hazelcast.Models.MapOptions.Eviction.html#Hazelcast_Models_MapOptions_Eviction">Eviction</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the eviction configuration.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_FactoryId" data-uid="Hazelcast.Models.MapOptions.FactoryId">
+          <a class="xref" href="Hazelcast.Models.MapOptions.FactoryId.html#Hazelcast_Models_MapOptions_FactoryId">FactoryId</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the identifier of the <a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a> that can create instances of the class.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_HotRestart" data-uid="Hazelcast.Models.MapOptions.HotRestart">
+          <a class="xref" href="Hazelcast.Models.MapOptions.HotRestart.html#Hazelcast_Models_MapOptions_HotRestart">HotRestart</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the hot restart config.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_InMemoryFormat" data-uid="Hazelcast.Models.MapOptions.InMemoryFormat">
+          <a class="xref" href="Hazelcast.Models.MapOptions.InMemoryFormat.html#Hazelcast_Models_MapOptions_InMemoryFormat">InMemoryFormat</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the data type that will be used for storing records.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_Indexes" data-uid="Hazelcast.Models.MapOptions.Indexes">
+          <a class="xref" href="Hazelcast.Models.MapOptions.Indexes.html#Hazelcast_Models_MapOptions_Indexes">Indexes</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_IsNearCacheEnabled" data-uid="Hazelcast.Models.MapOptions.IsNearCacheEnabled">
+          <a class="xref" href="Hazelcast.Models.MapOptions.IsNearCacheEnabled.html#Hazelcast_Models_MapOptions_IsNearCacheEnabled">IsNearCacheEnabled</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether Near Cache is enabled.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_MapStore" data-uid="Hazelcast.Models.MapOptions.MapStore">
+          <a class="xref" href="Hazelcast.Models.MapOptions.MapStore.html#Hazelcast_Models_MapOptions_MapStore">MapStore</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the map store configuration.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_MaxIdleSeconds" data-uid="Hazelcast.Models.MapOptions.MaxIdleSeconds">
+          <a class="xref" href="Hazelcast.Models.MapOptions.MaxIdleSeconds.html#Hazelcast_Models_MapOptions_MaxIdleSeconds">MaxIdleSeconds</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the maximum number of seconds for each entry to stay idle in the map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_MergePolicy" data-uid="Hazelcast.Models.MapOptions.MergePolicy">
+          <a class="xref" href="Hazelcast.Models.MapOptions.MergePolicy.html#Hazelcast_Models_MapOptions_MergePolicy">MergePolicy</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the merge policy configuration.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_MerkleTree" data-uid="Hazelcast.Models.MapOptions.MerkleTree">
+          <a class="xref" href="Hazelcast.Models.MapOptions.MerkleTree.html#Hazelcast_Models_MapOptions_MerkleTree">MerkleTree</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the merkle tree config.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_MetadataPolicy" data-uid="Hazelcast.Models.MapOptions.MetadataPolicy">
+          <a class="xref" href="Hazelcast.Models.MapOptions.MetadataPolicy.html#Hazelcast_Models_MapOptions_MetadataPolicy">MetadataPolicy</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the <a class="xref" href="Hazelcast.Models.MapOptions.MetadataPolicy.html#Hazelcast_Models_MapOptions_MetadataPolicy">MetadataPolicy</a> for this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_Name" data-uid="Hazelcast.Models.MapOptions.Name">
+          <a class="xref" href="Hazelcast.Models.MapOptions.Name.html#Hazelcast_Models_MapOptions_Name">Name</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the name of the map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_NearCache" data-uid="Hazelcast.Models.MapOptions.NearCache">
+          <a class="xref" href="Hazelcast.Models.MapOptions.NearCache.html#Hazelcast_Models_MapOptions_NearCache">NearCache</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the NearCache configuration.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_PartitionLostListeners" data-uid="Hazelcast.Models.MapOptions.PartitionLostListeners">
+          <a class="xref" href="Hazelcast.Models.MapOptions.PartitionLostListeners.html#Hazelcast_Models_MapOptions_PartitionLostListeners">PartitionLostListeners</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_PartitioningAttributes" data-uid="Hazelcast.Models.MapOptions.PartitioningAttributes">
+          <a class="xref" href="Hazelcast.Models.MapOptions.PartitioningAttributes.html#Hazelcast_Models_MapOptions_PartitioningAttributes">PartitioningAttributes</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the partition attribute configurations.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_PartitioningStrategy" data-uid="Hazelcast.Models.MapOptions.PartitioningStrategy">
+          <a class="xref" href="Hazelcast.Models.MapOptions.PartitioningStrategy.html#Hazelcast_Models_MapOptions_PartitioningStrategy">PartitioningStrategy</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the partitioning strategy config.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_PerEntryStatsEnabled" data-uid="Hazelcast.Models.MapOptions.PerEntryStatsEnabled">
+          <a class="xref" href="Hazelcast.Models.MapOptions.PerEntryStatsEnabled.html#Hazelcast_Models_MapOptions_PerEntryStatsEnabled">PerEntryStatsEnabled</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether entry level statistics are enabled for this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_QueryCaches" data-uid="Hazelcast.Models.MapOptions.QueryCaches">
+          <a class="xref" href="Hazelcast.Models.MapOptions.QueryCaches.html#Hazelcast_Models_MapOptions_QueryCaches">QueryCaches</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the query cache configs.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_ReadBackupData" data-uid="Hazelcast.Models.MapOptions.ReadBackupData">
+          <a class="xref" href="Hazelcast.Models.MapOptions.ReadBackupData.html#Hazelcast_Models_MapOptions_ReadBackupData">ReadBackupData</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether read-backup-data (reading local backup entries) is enabled for this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_SplitBrainProtectionName" data-uid="Hazelcast.Models.MapOptions.SplitBrainProtectionName">
+          <a class="xref" href="Hazelcast.Models.MapOptions.SplitBrainProtectionName.html#Hazelcast_Models_MapOptions_SplitBrainProtectionName">SplitBrainProtectionName</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the split brain protection name.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_StatisticsEnabled" data-uid="Hazelcast.Models.MapOptions.StatisticsEnabled">
+          <a class="xref" href="Hazelcast.Models.MapOptions.StatisticsEnabled.html#Hazelcast_Models_MapOptions_StatisticsEnabled">StatisticsEnabled</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether statistics are enabled for this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_TieredStore" data-uid="Hazelcast.Models.MapOptions.TieredStore">
+          <a class="xref" href="Hazelcast.Models.MapOptions.TieredStore.html#Hazelcast_Models_MapOptions_TieredStore">TieredStore</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the tiered-store config.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_TimeToLiveSeconds" data-uid="Hazelcast.Models.MapOptions.TimeToLiveSeconds">
+          <a class="xref" href="Hazelcast.Models.MapOptions.TimeToLiveSeconds.html#Hazelcast_Models_MapOptions_TimeToLiveSeconds">TimeToLiveSeconds</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the maximum number of seconds for each entry to stay in the map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_TotalBackupCount" data-uid="Hazelcast.Models.MapOptions.TotalBackupCount">
+          <a class="xref" href="Hazelcast.Models.MapOptions.TotalBackupCount.html#Hazelcast_Models_MapOptions_TotalBackupCount">TotalBackupCount</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the total number of backups (BackupCount plus AsyncBackupCount).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_WanReplicationRef" data-uid="Hazelcast.Models.MapOptions.WanReplicationRef">
+          <a class="xref" href="Hazelcast.Models.MapOptions.WanReplicationRef.html#Hazelcast_Models_MapOptions_WanReplicationRef">WanReplicationRef</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the WAN target replication reference.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_ReadData_Hazelcast_Serialization_IObjectDataInput_" data-uid="Hazelcast.Models.MapOptions.ReadData(Hazelcast.Serialization.IObjectDataInput)">
+          <a class="xref" href="Hazelcast.Models.MapOptions.ReadData.html#Hazelcast_Models_MapOptions_ReadData_Hazelcast_Serialization_IObjectDataInput_">ReadData(IObjectDataInput)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Deserializes the object by reading from an <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.html">IObjectDataInput</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_ToString" data-uid="Hazelcast.Models.MapOptions.ToString">
+          <a class="xref" href="Hazelcast.Models.MapOptions.ToString.html#Hazelcast_Models_MapOptions_ToString">ToString()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns a string that represents the current object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_MapOptions_WriteData_Hazelcast_Serialization_IObjectDataOutput_" data-uid="Hazelcast.Models.MapOptions.WriteData(Hazelcast.Serialization.IObjectDataOutput)">
+          <a class="xref" href="Hazelcast.Models.MapOptions.WriteData.html#Hazelcast_Models_MapOptions_WriteData_Hazelcast_Serialization_IObjectDataOutput_">WriteData(IObjectDataOutput)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Serializes the object by writing to an <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.html">IObjectDataOutput</a>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

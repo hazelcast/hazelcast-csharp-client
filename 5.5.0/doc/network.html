@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Client Network | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Client Network | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.5.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="client-network">Client Network</h1>
+
+<p>The Hazelcast .NET client network is composed of all the connections between the client and the members of the cluster. It is configured via the <a href="configuration/options.html#networking">Networking</a> configuration options.</p>
+<h2 id="member-addresses">Member Addresses</h2>
+<p>The address list contains the initial list of cluster member addresses which the client will try to connect to. The client uses this
+list to find an alive member. Although it may be enough to give only one address of a member in the cluster
+(since all members communicate with each other), it is recommended that you give the addresses for all the members.</p>
+<p>You can specify multiple addresses, with or without the port information. If the port part of an address is omitted, then 5701, 5702 and 5703 will be tried in a random order for that address. By default, if the list is empty, the client will try to connect to <code>localhost</code>.</p>
+<p>By default, the provided list is shuffled and tried in a random order. You can disable this behaviour by setting the configuration option <code>hazelcast.networking.shuffleAddresses</code> to <code>false</code>. In this case the address list will be tried in the specified order.</p>
+<h2 id="operation-mode">Operation Mode</h2>
+<p>The client has three operation modes because of the distributed nature of the data and cluster: all members, multi members and single member. All members routing is enabled by default, and is controlled by the <code>@Hazelcast.NetworkingOptions.RoutingMode</code> configuration option.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Routing options are renamed and introduced new routing modes, such as <code>MultiMember</code>. Hence, <code>@Hazelcast.Networking.SmartRouting</code> API is deprecated and will be removed in the next major release. Please use the new <code>@Hazelcast.Networking.RoutingModes</code> API instead.</p>
+</div>
+<h3 id="routing-mode">Routing Mode</h3>
+<p>Routing mode allows you to choose the routing strategy of the client.</p>
+<p>There are three routing modes:</p>
+<ul>
+<li><code>@Hazelcast.Networking.RoutingModes.SingleMember</code> connects to a single member of the cluster (previously Unisocket routing).</li>
+<li><code>@Hazelcast.Networking.RoutingModes.MultiMember</code> connects to subset of members in the cluster.</li>
+<li><code>@Hazelcast.Networking.RoutingModes.AllMembers</code> connects to all members of the cluster (previously Smart routing).</li>
+</ul>
+<h4 id="single-member-routing-mode">Single Member Routing Mode</h4>
+<p>For some cases, the clients can be required to connect to a single member instead of each member in the cluster. Firewalls, security or some custom networking issues can be the reason for these cases.</p>
+<p>In the unisocket client mode, the client will only connect to one of the configured addresses. This single member will behave as a gateway to the other members. For any operation requested from the client, it will redirect the request to the relevant member and return the response back to the client returned from this member.</p>
+<h4 id="multi-member-routing-mode">Multi Member Routing Mode</h4>
+<p>Multi member routing mode is a mode where the client connects to a subset of the cluster members. This mode behaves based
+on given strategy on <code>@Hazecast.Networking.NetworkingOptions.RoutingMode.Strategy</code>.</p>
+<p>Available strategies are:</p>
+<ul>
+<li><code>@Hazelcast.Networking.RoutingStrategy.PartitionGroups</code> which is the default strategy. Clients connects to subset of the cluster based on partition groups which contains the current connected member.</li>
+</ul>
+<p>Please note that server should support this routing mode which is available with Hazelcast Enterprise 5.5.0.</p>
+<h4 id="all-members-routing-mode">All Members Routing Mode</h4>
+<p>In all members mode, the clients connect to each cluster member. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. This mode is the default mode.</p>
+<h3 id="send-cp-requests-directly-to-the-leader">Send CP Requests Directly To the Leader</h3>
+<p>This <code>@Hazelcast.NetworkingOptions.CPDirectToLeaderEnabled</code> option allows to CP related requests to be sent directly to the leader of the CP group. This option is only available for CP Subsystem enabled clusters which have the <code>AVANCED_CP</code> license component. By default, this option is disabled.</p>
+<h2 id="reconnect-mode">Reconnect Mode</h2>
+<p>The client can, at times, become disconnected from the cluster, for instance in case of a brief network issue. What happens then is determined by the <code>@Hazelcast.Networking.NetworkingOptions.ReconnectMode</code> configuration option. Its default value is <code>@Hazelcast.Networking.ReconnectMode.ReconnectSync</code> which means that the client will try to reconnect transparently, queuing the invocations until the client is reconnected, or the invocations time out.</p>
+<p>Alternatively, the option can be set to <code>@Hazelcast.Networking.ReconnectMode.ReconnectAsync</code> to let the client try to reconnect, but fail all invocations immediately for as long as the client has not reconnected.</p>
+<p>Finally, it can be set to <code>@Hazelcast.Networking.ReconnectMode.DoNotReconnect</code> to prevent the client from reconnecting. The client shuts down, it cannot be used anymore. The client must be destroyed and a new client must be recreated.</p>
+<h2 id="connection-timeout">Connection Timeout</h2>
+<p>The connection timeout is controlled by the <code>hazelcast.networking.connectionTimeoutMilliseconds</code> configuration option. It is the timeout value in milliseconds for a member to accept the client connection requests. More precisely, it is the client socket connection timeout for connecting to a member.
+If the member does not respond within the timeout, the client will retry to connect as many as <code>ClientNetworkConfig.GetConnectionAttemptPeriod()</code> times.</p>
+<p>This timeout is also used to control other socket connections such as Cloud Discovery.</p>
+<p>The default value is <code>5000</code> milliseconds.</p>
+<h2 id="connection-attempt-limit-and-period">Connection Attempt Limit and Period</h2>
+<div class="NOTE">
+<h5>Note</h5>
+<p>This do not apply to version 4 and above of the client. It is kept here for reference only until we document how to achieve the same result in version 4 and above.</p>
+</div>
+<p>If a member does not accept a connection within the specified timeout, the client will retry a specified amount of times waiting for some amount of time  between each tries. Default value for attempts is <code>2</code>, and for delay is 3000ms.</p>
+<h2 id="tlsssl">TLS/SSL</h2>
+<p>You can use TLS/SSL to secure the connection between the clients and members. Please refer to the <a href="security/tlsssl.html">TLS/SSL</a> section for details.</p>
+<h2 id="hazelcast-cloud-discovery">Hazelcast Cloud Discovery</h2>
+<p>Hazelcast Cloud Discovery enables clients to discover the cluster IP addresses through the Hazelcast Orchestrator. It is enabled by assigning a discovery token to the <code>hazelcast.networking.cloud.discoveryToken</code> configuration option.</p>
+<p>To be able to connect to the provided IP addresses, you will need to use secure TLS/SSL connection between the client and members.
+Therefore, you should set an SSL configuration as described in the the <a href="security/tlsssl.html">TLS/SSL</a> section.</p>
+<h2 id="failover-bluegreen-deployment">Failover (Blue/Green Deployment)</h2>
+<p>.NET Client allows you to set failover cluster(s). In order to use the backup cluster, it should be configured under <code>hazelcast-failover</code> in your appsettings.json or via <code>HazelcastFailoverOptionsBuilder</code>, and client should be initialized with failover factory methods under <code>HazelcastClientFactory</code>. The client will use first client configuration as default for all options. Alternative clients can only change network and authentication options. In case of connection failure, first, client will retry to connect to current cluster. If the connection fails, client will try to connect to next cluster. Another case is that client is blacklisted from cluster, client will do failover without retrying. Client will try alternative clusters until <code>TryCount</code> is exhausted. The cluster list that is composed from <code>clients</code>, the list is visited as in a circle way, such as
+<code>clients[0] -&gt; clients[1] -&gt;  clients[0] -&gt; ...</code> When one of the clusters is connected, <code>TryCount</code> will be reset. After connection is established, client state will be <code>ClusterChanged</code> and then <code>Connected</code>.</p>
+<blockquote>
+<p>Note: <code>RoutingMode</code> option cannot be different between given client configurations. Client will use the <code>clients[0].Networking.RoutingMode</code> option for all clusters, and it cannot be overwritten by alternative client configurations.</p>
+</blockquote>
+<blockquote>
+<p>Note: Please be aware of that failover can occur during very first connection to the cluster. Whenever client cannot connect on <code>Started</code> state, failover can also happen.</p>
+</blockquote>
+<p><a href="failover.html">More about failover</a></p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
