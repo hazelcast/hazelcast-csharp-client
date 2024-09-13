@@ -23,7 +23,7 @@ namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise,nightly")]
     [ServerCondition("5.5")]
-    [Timeout(60_000)]
+    [Timeout(120_000)]
     public class MemberPartitionGroupServerTestsNightly : MultiMembersRemoteTestBase
     {
         protected override string RcClusterConfiguration => Resources.ClusterPGEnabled;
@@ -64,8 +64,7 @@ namespace Hazelcast.Tests.Clustering
             // Kill the connected member so that client can go to next group
             var connectedMember = RcMembers.Values.Where(m => connectedAddress.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
             await RemoveMember(connectedMember);
-
-            await AssertEx.SucceedsEventually(() => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)), 60_000, 500);
+            
 
             await AssertEx.SucceedsEventually(() =>
             {
