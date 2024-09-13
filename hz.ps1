@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.5.0-SNAPSHOT"
+$defaultServerVersion="5.5.0"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -1701,7 +1701,7 @@ function hz-build-docs {
     # and patch the deps file, this really is not pretty - hardcoding the target path
     $depsFile = "~/.nuget/packages/docfx/$v/tools/$target/any/docfx.deps.json"
     $deps = get-content $depsFile | convertFrom-json
-    $deps = patch-deps $deps "Hazelcast.DocAsCode.Build/$($options.version)" ".NETCoreApp,Version=v7.0"
+    $deps = patch-deps $deps "Hazelcast.DocAsCode.Build/$($options.version)" ".NETCoreApp,Version=v8.0"
     $deps | convertto-json -depth 32 | set-content $depsFile
 
     # prepare docfx.json
