@@ -59,11 +59,6 @@
     <!-- ContinuousIntegrationBuild is set via a dotnet pack option -->
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="PublicAPI\net8.0\PublicAPI.Unshipped.txt" />
-    <None Remove="PublicAPI\netstandard2.1\PublicAPI.Shipped.txt" />
-    <None Remove="PublicAPI\netstandard2.1\PublicAPI.Unshipped.txt" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
@@ -99,13 +94,11 @@
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
     <AdditionalFiles Include="PublicAPI/net6.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net6.0' " />
-    <AdditionalFiles Include="PublicAPI/net7.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net7.0' " />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.1' " />
 
     <AdditionalFiles Include="PublicAPI/net6.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net6.0' " />
-    <AdditionalFiles Include="PublicAPI/net7.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net7.0' " />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.1' " />
