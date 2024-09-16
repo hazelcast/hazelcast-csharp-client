@@ -21,8 +21,8 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 namespace Hazelcast.Tests.Clustering
 {
-    [Category("enterprise,nightly")]
-    [ServerCondition("5.5")]
+    [Category("enterprise")]
+    [ServerCondition("[5.5)")]
     [Timeout(120_000)]
     public class MemberPartitionGroupServerTestsNightly : MultiMembersRemoteTestBase
     {
