@@ -21,10 +21,12 @@ using Hazelcast.CP;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 namespace Hazelcast.Tests.CP
 {
     [Category("enterprise")]
+    [ServerCondition("5.5")]
     [Timeout(30_000)]
     public class CPRoutingTests : MultiMembersRemoteTestBase
     {
