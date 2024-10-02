@@ -99,7 +99,7 @@ public class QueryCacheOptions : IIdentifiedDataSerializable
     /// </summary>
     public QueryCacheOptions(string name)
     {
-        name = name;
+        _name = name;
     }
 
     /// <summary>
