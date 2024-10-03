@@ -11,7 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using Hazelcast.Core;
 using Hazelcast.Models;
+using Hazelcast.NearCaching;
+using Hazelcast.Serialization;
+using Hazelcast.Tests.Serialization.Compact;
+using NSubstitute;
 using NUnit.Framework;
 namespace Hazelcast.Tests.Models
 {
@@ -51,6 +57,21 @@ namespace Hazelcast.Tests.Models
                 // Assert
                 Assert.AreEqual(expectedValueInBytes, actualValueInBytes);
             }
+        }
+        
+        [Test]
+        public void Abbrev_ShouldReturnCorrectAbbreviation()
+        {
+            Assert.AreEqual("B", MemoryUnit.Bytes.Abbrev());
+            Assert.AreEqual("KB", MemoryUnit.KiloBytes.Abbrev());
+            Assert.AreEqual("MB", MemoryUnit.MegaBytes.Abbrev());
+            Assert.AreEqual("GB", MemoryUnit.GigaBytes.Abbrev());
+        }
+
+        [Test]
+        public void Abbrev_ShouldThrowExceptionForInvalidMemoryUnit()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => ((MemoryUnit)999).Abbrev());
         }
 
         [Test]
@@ -144,7 +165,79 @@ namespace Hazelcast.Tests.Models
             Assert.AreEqual(enabled, actualEnabled);
             Assert.AreEqual(fsync, actualFsync);
         }
+
+        [Test]
+        public void TestReadDataAndWriteData()
+        {
+
+            var eviction = new EvictionOptions { Size = 100, EvictionPolicy = EvictionPolicy.Lru };
+            var preloader = new NearCachePreloaderOptions { Enabled = true, Directory = "TestDirectory", StoreInitialDelaySeconds = 5, StoreIntervalSeconds = 10 };
+            // Arrange
+            var originalOptions = new NearCacheOptions
+            {
+                Name = "Test",
+                InvalidateOnChange = true,
+                TimeToLiveSeconds = 60,
+                MaxIdleSeconds = 30,
+                InMemoryFormat = InMemoryFormat.Binary,
+                LocalUpdatePolicy = UpdatePolicy.Invalidate,
+                Eviction = eviction,
+                Preloader = preloader
+            };
+
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
+            orw.Read<EvictionOptions>(Arg.Any<IObjectDataInput>()).Returns(eviction);
+            orw.Read<NearCachePreloaderOptions>(Arg.Any<IObjectDataInput>()).Returns(preloader);
+
+            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian);
+            var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
+
+            // Act
+            originalOptions.WriteData(output);
+            var newOptions = new NearCacheOptions();
+            newOptions.ReadData(input);
+
+            // Assert
+            Assert.AreEqual(originalOptions.Name, newOptions.Name);
+            Assert.AreEqual(originalOptions.InvalidateOnChange, newOptions.InvalidateOnChange);
+            Assert.AreEqual(originalOptions.TimeToLiveSeconds, newOptions.TimeToLiveSeconds);
+            Assert.AreEqual(originalOptions.MaxIdleSeconds, newOptions.MaxIdleSeconds);
+            Assert.AreEqual(originalOptions.InMemoryFormat, newOptions.InMemoryFormat);
+            Assert.AreEqual(originalOptions.LocalUpdatePolicy, newOptions.LocalUpdatePolicy);
+            Assert.AreEqual(originalOptions.Eviction.Size, newOptions.Eviction.Size);
+            Assert.AreEqual(originalOptions.Eviction.EvictionPolicy, newOptions.Eviction.EvictionPolicy);
+            Assert.AreEqual(originalOptions.Preloader.Enabled, newOptions.Preloader.Enabled);
+            Assert.AreEqual(originalOptions.Preloader.Directory, newOptions.Preloader.Directory);
+            Assert.AreEqual(originalOptions.Preloader.StoreInitialDelaySeconds, newOptions.Preloader.StoreInitialDelaySeconds);
+            Assert.AreEqual(originalOptions.Preloader.StoreIntervalSeconds, newOptions.Preloader.StoreIntervalSeconds);
+        }
         
-        
+        [Test]
+        public void ReadDataAndWriteData_ShouldPreserveState()
+        {
+            // Arrange
+            var originalOptions = new NearCachePreloaderOptions
+            {
+                Enabled = true,
+                Directory = "TestDirectory",
+                StoreInitialDelaySeconds = 5,
+                StoreIntervalSeconds = 10
+            };
+
+            var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian);
+            var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
+
+            // Act
+            originalOptions.WriteData(output);
+            var newOptions = new NearCachePreloaderOptions();
+            newOptions.ReadData(input);
+
+            // Assert
+            Assert.AreEqual(originalOptions.Enabled, newOptions.Enabled);
+            Assert.AreEqual(originalOptions.Directory, newOptions.Directory);
+            Assert.AreEqual(originalOptions.StoreInitialDelaySeconds, newOptions.StoreInitialDelaySeconds);
+            Assert.AreEqual(originalOptions.StoreIntervalSeconds, newOptions.StoreIntervalSeconds);
+        }
     }
 }
