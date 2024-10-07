@@ -182,7 +182,7 @@ jobs:
       # upload test results artifact
       - name: Upload test results artifact
         if: (success() || failure()) && steps.build.conclusion == 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/results/*.trx'
@@ -190,7 +190,7 @@ jobs:
       # upload test coverage artifact
       - name: Upload test coverage artifact
         if: steps.test.conclusion == 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
@@ -207,7 +207,7 @@ jobs:
       # upload nuget packages
       - name: Upload NuGet packages artifact
         if: steps.release-artifacts.outputs.build == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NuGet-Packages
           path: './temp/output/Hazelcast.Net.*pkg'
@@ -221,7 +221,7 @@ jobs:
       # archive examples (windows only)
       - name: Archive examples artifact
         if: steps.release-artifacts.outputs.build == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Examples
           path: './temp/examples/*.zip'
@@ -241,7 +241,7 @@ jobs:
       # archive docs patch
       - name: Upload docs patch artifact
         if: steps.release-artifacts.outputs.build == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Docs-Patch
           path: './temp/gh-pages-patches/*.patch'

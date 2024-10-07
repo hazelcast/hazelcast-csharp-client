@@ -67,7 +67,7 @@ jobs:
       # cannot use script because we get artifacts from same run
       - name: Download tests results and coverage artifacts (this run)
         if: inputs.run_id == ''
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           # don't specify name = download all available artifacts
           path: ./temp/artifacts
