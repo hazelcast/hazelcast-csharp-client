@@ -3387,7 +3387,7 @@
   "5.5.0/api/Hazelcast.Models.ClusterVersion.IsUnknown.html": {
     "href": "5.5.0/api/Hazelcast.Models.ClusterVersion.IsUnknown.html",
     "title": "IsUnknown Property | Hazelcast .NET Documentation",
-    "keywords": "IsUnknown Property IsUnknown Either cluster version is know or not. Declaration public bool IsUnknown { get; } Property Value bool"
+    "keywords": "IsUnknown Property IsUnknown Declaration public bool IsUnknown { get; } Property Value bool"
   },
   "5.5.0/api/Hazelcast.Models.ClusterVersion.Major.html": {
     "href": "5.5.0/api/Hazelcast.Models.ClusterVersion.Major.html",
@@ -3417,7 +3417,7 @@
   "5.5.0/api/Hazelcast.Models.ClusterVersion.html": {
     "href": "5.5.0/api/Hazelcast.Models.ClusterVersion.html",
     "title": "ClusterVersion Class | Hazelcast .NET Documentation",
-    "keywords": "ClusterVersion Class Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll Represents the version of the cluster. public sealed class ClusterVersion Inheritance object ClusterVersion Inherited Members object.Equals(object, object) object.GetType() object.ReferenceEquals(object, object) Constructors Name Description ClusterVersion(byte, byte) Initializes a new instance of the ClusterVersion class. Fields Name Description Unknown Properties Name Description IsUnknown Either cluster version is know or not. Major Gets the major version number. Minor Gets the minor version number. Methods Name Description Equals(object) Determines whether the specified object is equal to the current object. GetHashCode() Serves as the default hash function. Parse(string) Parses a string representation of the cluster version. ToString() Returns a string representation of the cluster version."
+    "keywords": "ClusterVersion Class Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll Represents the version of the cluster. public sealed class ClusterVersion Inheritance object ClusterVersion Inherited Members object.Equals(object, object) object.GetType() object.ReferenceEquals(object, object) Constructors Name Description ClusterVersion(byte, byte) Initializes a new instance of the ClusterVersion class. Fields Name Description Unknown Properties Name Description IsUnknown Major Gets the major version number. Minor Gets the minor version number. Methods Name Description Equals(object) Determines whether the specified object is equal to the current object. GetHashCode() Serves as the default hash function. Parse(string) Parses a string representation of the cluster version. ToString() Returns a string representation of the cluster version."
   },
   "5.5.0/api/Hazelcast.Models.CollectionItemEventTypes.html": {
     "href": "5.5.0/api/Hazelcast.Models.CollectionItemEventTypes.html",
