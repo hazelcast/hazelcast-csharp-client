@@ -18,6 +18,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.CP
 {
+    [Category("enterprise")]
     [TestFixture]
     public class RaftTests
     {

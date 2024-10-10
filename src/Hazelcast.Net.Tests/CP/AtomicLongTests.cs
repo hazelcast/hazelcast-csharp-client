@@ -22,6 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.CP
 {
     [TestFixture]
+    [Category("enterprise")]
     public class AtomicLongTests : MultiMembersRemoteTestBase
     {
         protected override string RcClusterConfiguration => TestFiles.ReadAllText(this, "Cluster/cp.xml");
