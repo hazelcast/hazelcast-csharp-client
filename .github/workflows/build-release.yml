@@ -42,7 +42,7 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 2 # needed to validate parents
@@ -164,7 +164,7 @@ jobs:
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -200,7 +200,7 @@ jobs:
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -215,7 +215,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
@@ -251,7 +251,7 @@ jobs:
 
       # checkout documentation
       - name: Checkout documentation
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: gh-pages
@@ -289,7 +289,7 @@ jobs:
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -303,7 +303,7 @@ jobs:
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
@@ -319,7 +319,7 @@ jobs:
       # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different
       # repository that is private you will need to provide your own PAT."
       - name: Checkout devops
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: hazelcast/DevOps
           ref: master
@@ -367,7 +367,7 @@ jobs:
 
       # checkout documentation
       - name: Checkout documentation
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: gh-pages
