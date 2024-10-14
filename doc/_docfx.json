@@ -11,7 +11,7 @@
       "dest": "obj/dev/api",
       "disableGitFeatures": true,
       "disableDefaultFilter": false,
-      "properties": { "TargetFramework": "net7.0" },
+      "properties": { "TargetFramework": "net8.0" },
       "memberLayout": "separatePages"
     }
   ],

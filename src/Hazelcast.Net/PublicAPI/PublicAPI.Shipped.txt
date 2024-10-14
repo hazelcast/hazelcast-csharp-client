@@ -2622,3 +2622,35 @@ Hazelcast.CP.ISemaphore
 ~Hazelcast.CP.ISemaphore.ReducePermitsAsync(int delta) -> System.Threading.Tasks.Task
 ~Hazelcast.CP.ISemaphore.ReleaseAsync(int permits = 1) -> System.Threading.Tasks.Task
 ~Hazelcast.CP.ISemaphore.TryAcquireAsync(int permits = 1, long timeoutMs = 0) -> System.Threading.Tasks.Task<bool>
+const Hazelcast.Models.ClusterVersion.Unknown = 0 -> byte
+Hazelcast.Exceptions.InvalidPartitionGroupException
+Hazelcast.Exceptions.InvalidPartitionGroupException.InvalidPartitionGroupException() -> void
+Hazelcast.Models.ClusterVersion
+Hazelcast.Models.ClusterVersion.ClusterVersion(byte major, byte minor) -> void
+Hazelcast.Models.ClusterVersion.IsUnknown.get -> bool
+Hazelcast.Models.ClusterVersion.Major.get -> byte
+Hazelcast.Models.ClusterVersion.Minor.get -> byte
+Hazelcast.Networking.NetworkingOptions.CPDirectToLeaderEnabled.get -> bool
+Hazelcast.Networking.NetworkingOptions.CPDirectToLeaderEnabled.set -> void
+Hazelcast.Networking.RoutingMode
+Hazelcast.Networking.RoutingMode.Mode.get -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingMode.Mode.set -> void
+Hazelcast.Networking.RoutingMode.RoutingMode() -> void
+Hazelcast.Networking.RoutingMode.RoutingMode(bool smartRouting) -> void
+Hazelcast.Networking.RoutingMode.Strategy.get -> Hazelcast.Networking.RoutingStrategy
+Hazelcast.Networking.RoutingMode.Strategy.set -> void
+Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingModes.AllMembers = 2 -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingModes.MultiMember = 1 -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingModes.SingleMember = 0 -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingStrategy
+Hazelcast.Networking.RoutingStrategy.PartitionGroups = 0 -> Hazelcast.Networking.RoutingStrategy
+override Hazelcast.Models.ClusterVersion.GetHashCode() -> int
+~Hazelcast.Exceptions.InvalidPartitionGroupException.InvalidPartitionGroupException(string message) -> void
+~Hazelcast.Exceptions.InvalidPartitionGroupException.InvalidPartitionGroupException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.InvalidPartitionGroupException.InvalidPartitionGroupException(System.Exception innerException) -> void
+~Hazelcast.IHazelcastClient.ClusterVersion.get -> Hazelcast.Models.ClusterVersion
+~Hazelcast.Networking.NetworkingOptions.RoutingMode.get -> Hazelcast.Networking.RoutingMode
+~override Hazelcast.Models.ClusterVersion.Equals(object obj) -> bool
+~override Hazelcast.Models.ClusterVersion.ToString() -> string
+~static Hazelcast.Models.ClusterVersion.Parse(string value) -> Hazelcast.Models.ClusterVersion
