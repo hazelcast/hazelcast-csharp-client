@@ -25,6 +25,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.CP;
 
+[Category("enterprise")]
 [TestFixture]
 [Category("enterprise")]
 public class SemaphoreTests : MultiMembersRemoteTestBase

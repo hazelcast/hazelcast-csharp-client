@@ -46,6 +46,7 @@ namespace Hazelcast.Tests.CP
         }
     }
     
+    [Category("enterprise")]
     [Timeout(30_000)]
     [Category("enterprise")]
     internal class FencedLockTests : MultiMembersRemoteTestBase

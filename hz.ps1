@@ -1,4 +1,4 @@
-## Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+## Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -1656,7 +1656,7 @@ function patch-deps ($deps, $name, $target) {
 function hz-build-docs {
   
     # global dotnet tool package in ~/.dotnet/tools/.store/...
-    # local dotnet tool package in ~/.nuget/packages/docfx/2.64.0/tools/net7.0/any/
+    # local dotnet tool package in ~/.nuget/packages/docfx/2.77.0/tools/net8.0/any/
   
     $r = "release"
     if ($isPreRelease) { $r = "pre-$r" }
@@ -1692,7 +1692,7 @@ function hz-build-docs {
     #cp $pluginDll "$docDir/templates/hz/Plugins/"
     
     # so we have to do things differently
-    $v = &dotnet docfx --version # docfx 2.64.0+6a1e6d7eda3339dd5c7cd7a387f5637132122c2d
+    $v = &dotnet docfx --version # docfx 2.77.0+bd00e2b93951e9e7fa6e5abd990d2cd77d7a83bd
     $v = $v.Substring($v.IndexOf(" ")+1)
     $v = $v.Substring(0, $v.IndexOf("+"))
     remove-item ~/.nuget/packages/docfx/$v/tools/$target/any/Hazelcast*
