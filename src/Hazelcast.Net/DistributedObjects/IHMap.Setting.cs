@@ -103,8 +103,8 @@ namespace Hazelcast.DistributedObjects
         /// Updates an entry if it exists, and its value is equal to <paramref name="comparisonValue"/>.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="newValue">The new value.</param>
         /// <param name="comparisonValue">The value that is compared with the value of the entry.</param>
+        /// <param name="newValue">The new value.</param>
         /// <returns><c>true</c> if the entry was updated; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If an existing entry with the specified key and expected value is found, then its
@@ -115,7 +115,7 @@ namespace Hazelcast.DistributedObjects
         /// If write-through persistence is configured, before the value is stored in memory,
         /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
         /// </remarks>
-        Task<bool> ReplaceAsync(TKey key, TValue newValue, TValue comparisonValue);
+        Task<bool> ReplaceAsync(TKey key, TValue comparisonValue, TValue newValue);
 
         /// <summary>
         /// Tries to set (add or update) an entry.
