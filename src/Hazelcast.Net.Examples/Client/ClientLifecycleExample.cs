@@ -28,6 +28,7 @@ namespace Hazelcast.Examples.Client
                 .WithConsoleLogger()
                 .Build();
 
+            //Have some file changes
             // create an Hazelcast client and connect to a server running on localhost
             var hz1 = await HazelcastClientFactory.StartNewClientAsync(options);
 
