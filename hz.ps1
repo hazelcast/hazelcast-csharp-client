@@ -1,4 +1,4 @@
-## Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+## Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.5.0-SNAPSHOT"
+$defaultServerVersion="5.5.0"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -1656,7 +1656,7 @@ function patch-deps ($deps, $name, $target) {
 function hz-build-docs {
   
     # global dotnet tool package in ~/.dotnet/tools/.store/...
-    # local dotnet tool package in ~/.nuget/packages/docfx/2.64.0/tools/net7.0/any/
+    # local dotnet tool package in ~/.nuget/packages/docfx/2.77.0/tools/net8.0/any/
   
     $r = "release"
     if ($isPreRelease) { $r = "pre-$r" }
@@ -1692,7 +1692,7 @@ function hz-build-docs {
     #cp $pluginDll "$docDir/templates/hz/Plugins/"
     
     # so we have to do things differently
-    $v = &dotnet docfx --version # docfx 2.64.0+6a1e6d7eda3339dd5c7cd7a387f5637132122c2d
+    $v = &dotnet docfx --version # docfx 2.77.0+bd00e2b93951e9e7fa6e5abd990d2cd77d7a83bd
     $v = $v.Substring($v.IndexOf(" ")+1)
     $v = $v.Substring(0, $v.IndexOf("+"))
     remove-item ~/.nuget/packages/docfx/$v/tools/$target/any/Hazelcast*
@@ -1701,7 +1701,7 @@ function hz-build-docs {
     # and patch the deps file, this really is not pretty - hardcoding the target path
     $depsFile = "~/.nuget/packages/docfx/$v/tools/$target/any/docfx.deps.json"
     $deps = get-content $depsFile | convertFrom-json
-    $deps = patch-deps $deps "Hazelcast.DocAsCode.Build/$($options.version)" ".NETCoreApp,Version=v7.0"
+    $deps = patch-deps $deps "Hazelcast.DocAsCode.Build/$($options.version)" ".NETCoreApp,Version=v8.0"
     $deps | convertto-json -depth 32 | set-content $depsFile
 
     # prepare docfx.json

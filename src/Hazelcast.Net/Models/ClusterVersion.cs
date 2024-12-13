@@ -37,6 +37,9 @@ namespace Hazelcast.Models
         /// <summary> Returns a string representation of the cluster version. </summary>
         public override string ToString() => $"{Major}.{Minor}";
         
+        /// <summary>
+        /// Either cluster version is know or not.
+        /// </summary>
         public bool IsUnknown => Major == Unknown && Minor == Unknown;
 
         /// <summary> Parses a string representation of the cluster version. </summary>
@@ -56,6 +59,7 @@ namespace Hazelcast.Models
 
             return new ClusterVersion(major, minor);
         }
+/// <inheritdoc/>
 
 
         public override bool Equals(object obj)
@@ -72,6 +76,7 @@ namespace Hazelcast.Models
 
             return false;
         }
+        /// <inheritdoc/>
         
         public override int GetHashCode()
         {

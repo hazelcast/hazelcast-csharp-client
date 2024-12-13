@@ -44,7 +44,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # no need for submodules, but we need the .github directory
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: false
@@ -67,7 +67,7 @@ jobs:
       # cannot use script because we get artifacts from same run
       - name: Download tests results and coverage artifacts (this run)
         if: inputs.run_id == ''
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           # don't specify name = download all available artifacts
           path: ./temp/artifacts
@@ -239,7 +239,7 @@ jobs:
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
         if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./temp/test-coverage/windows/cover-net6.0.xml
