@@ -103,5 +103,10 @@ namespace Hazelcast.DistributedObjects
         /// The name of the CountDown Latch service.
         /// </summary>
         public const string CountDownLatch = "hz:raft:countDownLatchService";
+        
+        /// <summary>
+        /// The name of the VectorCollection Latch service.
+        /// </summary>
+        public const string VectorCollection = "hz:service:vector";
     }
 }

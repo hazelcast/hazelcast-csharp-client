@@ -21,8 +21,12 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HVectorCollection<TKey, TVal> : DistributedObjectBase, IHVectorCollection<TKey, TVal>
     {
-        
-        public HVectorCollection( string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory) 
+
+        public HVectorCollection(string name,
+            DistributedObjectFactory factory,
+            Cluster cluster,
+            SerializationService serializationService,
+            ILoggerFactory loggerFactory)
             : base(ServiceNames.VectorCollection, name, factory, cluster, serializationService, loggerFactory)
         { }
 
@@ -30,15 +34,17 @@ namespace Hazelcast.DistributedObjects.Impl
             => throw new System.NotImplementedException();
         public Task<VectorDocument<TVal>> PutAsync(TKey key, VectorDocument<TVal> valueVectorDocument)
             => throw new System.NotImplementedException();
-        public Task<VectorDocument<TVal>> SetAsync(TKey key, VectorDocument<TVal> vectorDocument)
+        public Task SetAsync(TKey key, VectorDocument<TVal> vectorDocument)
             => throw new System.NotImplementedException();
         public Task<VectorDocument<TVal>> PutIfAbsentAsync(TKey key, VectorDocument<TVal> vectorDocument)
             => throw new System.NotImplementedException();
-        public Task<VectorDocument<TVal>> PutAllAsync(IDictionary<TKey, VectorDocument<TVal>> vectorDocumentMap)
+        public Task PutAllAsync(IDictionary<TKey, VectorDocument<TVal>> vectorDocumentMap)
             => throw new System.NotImplementedException();
         public Task<VectorDocument<TVal>> RemoveAsync(TKey key)
             => throw new System.NotImplementedException();
-        public Task OptimizeAsync(TKey key)
+        public Task OptimizeAsync()
+            => throw new System.NotImplementedException();
+        public Task OptimizeAsync(string indexName)
             => throw new System.NotImplementedException();
         public Task ClearAsync()
             => throw new System.NotImplementedException();
@@ -46,6 +52,5 @@ namespace Hazelcast.DistributedObjects.Impl
             => throw new System.NotImplementedException();
         public Task<IVectorSearchResult<TKey, TVal>> SearchAsync(VectorValues vectorValues, VectorSearchOptions searchOptions)
             => throw new System.NotImplementedException();
-
     }
 }
