@@ -13,15 +13,44 @@
 // limitations under the License.
 namespace Hazelcast.Models
 {
+    /// <summary>
+    /// Represents a document containing a value and associated vector values.
+    /// </summary>
+    /// <typeparam name="TVal">The type of the value contained in the document.</typeparam>
     public class VectorDocument<TVal>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VectorDocument{TVal}"/> class.
+        /// </summary>
         private VectorDocument() { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VectorDocument{TVal}"/> class with the specified value and vector values.
+        /// </summary>
+        /// <param name="value">The value contained in the document.</param>
+        /// <param name="vectorValues">The vector values associated with the document.</param>
         public VectorDocument(TVal value, VectorValues vectorValues)
         {
-            
+            Value = value;
+            Vectors = vectorValues;
         }
+
+        /// <summary>
+        /// Gets the value contained in the document.
+        /// </summary>
         public TVal Value { get; }
-        public  VectorValues Vectors { get; }
+
+        /// <summary>
+        /// Gets the vector values associated with the document.
+        /// </summary>
+        public VectorValues Vectors { get; }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="VectorDocument{TVal}"/> class with the specified value and vector values.
+        /// </summary>
+        /// <param name="value">The value contained in the document.</param>
+        /// <param name="vectorValues">The vector values associated with the document.</param>
+        /// <returns>A new instance of the <see cref="VectorDocument{TVal}"/> class.</returns>
         public static VectorDocument<TVal> Of(TVal value, VectorValues vectorValues)
             => new VectorDocument<TVal>(value, vectorValues);
     }

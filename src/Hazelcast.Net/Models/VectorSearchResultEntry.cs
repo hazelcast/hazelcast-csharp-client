@@ -13,8 +13,21 @@
 // limitations under the License.
 namespace Hazelcast.Models
 {
+    /// <summary>
+    /// Represents an entry in the vector search result.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key associated with the entry.</typeparam>
+    /// <typeparam name="TVal">The type of the value associated with the entry.</typeparam>
     public class VectorSearchResultEntry<TKey, TVal>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VectorSearchResultEntry{TKey, TVal}"/> class with the specified key,
+        /// value, vector values, and score.
+        /// </summary>
+        /// <param name="key">The key associated with the entry.</param>
+        /// <param name="value">The value associated with the entry.</param>
+        /// <param name="vectors">The vector values associated with the entry.</param>
+        /// <param name="score">The score of the entry.</param>
         internal VectorSearchResultEntry(TKey key, TVal value, VectorValues vectors, float score)
         {
             Key = key;
@@ -22,9 +35,25 @@ namespace Hazelcast.Models
             Vectors = vectors;
             Score = score;
         }
+        
+        /// <summary>
+        /// Gets the key associated with the entry.
+        /// </summary>
         public TKey Key { get; }
+        
+        /// <summary>
+        /// Gets the value associated with the entry.
+        /// </summary>
         public TVal Value { get; }
+        
+        /// <summary>
+        /// Gets the vector values associated with the entry.
+        /// </summary>
         public VectorValues Vectors { get; }
+        
+        /// <summary>
+        /// Gets the score of the entry.
+        /// </summary>
         public float Score { get; }
     }
 }

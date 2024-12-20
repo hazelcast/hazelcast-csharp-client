@@ -14,20 +14,43 @@
 using System.Collections.Generic;
 namespace Hazelcast.Models
 {
+    /// <summary>
+    /// Represents a base class for collection of vector values.
+    /// </summary>
     public abstract class VectorValues
     {
-        private VectorValues() { }
-        /*Single Index Vector*/
+        internal VectorValues() { }
+        
+        /// <summary>
+        /// Creates a new instance of the <see cref="VectorValues"/> class with a single vector.
+        /// </summary>
+        /// <param name="vector">The vector values.</param>
+        /// <returns>A new instance of the <see cref="SingleVectorValues"/> class containing the specified vector.</returns>
         public static VectorValues Of(float[] vector)
         {
             return new SingleVectorValues(vector);
         }
-        /*Multi Index Vector*/
+        
+        /// <summary>
+        /// Creates a new instance of the <see cref="VectorValues"/> class with multiple vectors indexed by names.
+        /// </summary>
+        /// <param name="indexToVectors">An array of tuples containing index names and their corresponding vector values.</param>
+        /// <returns>A new instance of the <see cref="MultiVectorValues"/> class containing the specified indexed vectors.</returns>
         public static VectorValues Of(params (string indexName, float[] vector)[] indexToVectors)
         {
-            return null;
+            var indexNameToVector = new Dictionary<string, float[]>();
+            foreach (var (indexName, vector) in indexToVectors)
+            {
+                indexNameToVector[indexName] = vector;
+            }
+            return new MultiVectorValues(indexNameToVector);
         }
-        /*Multi Index Vector*/
+        
+        /// <summary>
+        /// Creates a new instance of the <see cref="VectorValues"/> class with multiple vectors indexed by names.
+        /// </summary>
+        /// <param name="indexNameToVector">A dictionary containing index names and their corresponding vector values.</param>
+        /// <returns>A new instance of the <see cref="MultiVectorValues"/> class containing the specified indexed vectors.</returns>
         public static VectorValues Of(IDictionary<string, float[]> indexNameToVector)
         {
             return new MultiVectorValues(indexNameToVector);
