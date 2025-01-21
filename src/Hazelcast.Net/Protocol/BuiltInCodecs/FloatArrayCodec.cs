@@ -11,10 +11,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Collections.Generic;
+using Hazelcast.Core;
+using Hazelcast.Messaging;
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    public class FloatArrayCodec
+    internal class FloatArrayCodec
     {
-        
+        public static void Encode(ClientMessage msg, float[] floatArray)
+        {
+            var floatArrayFrame = new Frame(new byte[floatArray.Length * BytesExtensions.SizeOfFloat]);
+            for (var i = 0; i < floatArray.Length; i++)
+            {
+                floatArrayFrame.Bytes.WriteFloat(i * BytesExtensions.SizeOfFloat, floatArray[i], Endianness.LittleEndian);
+            }
+            msg.Append(floatArrayFrame);
+        }
+        public static float[] Decode(IEnumerator<Frame> iterator)
+        {
+            return Decode(iterator.Take());
+        }
+
+        public static float[] Decode(Frame frame)
+        {
+            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfFloat;
+            var floatArray = new float[itemCount];
+            for (var i = 0; i < itemCount; i++)
+            {
+                floatArray[i] = frame.Bytes.ReadFloat(i * BytesExtensions.SizeOfFloat, Endianness.LittleEndian);
+            }
+
+            return floatArray;
+        }
     }
 }

@@ -14,14 +14,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HVectorCollection<TKey, TVal> : DistributedObjectBase, IHVectorCollection<TKey, TVal>
     {
-
         public HVectorCollection(string name,
             DistributedObjectFactory factory,
             Cluster cluster,
@@ -30,10 +32,31 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(ServiceNames.VectorCollection, name, factory, cluster, serializationService, loggerFactory)
         { }
 
-        public Task<VectorDocument<TVal>> GetAsync(TKey key)
-            => throw new System.NotImplementedException();
-        public Task<VectorDocument<TVal>> PutAsync(TKey key, VectorDocument<TVal> valueVectorDocument)
-            => throw new System.NotImplementedException();
+        public async Task<VectorDocument<TVal>> GetAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var message = VectorCollectionGetCodec.EncodeRequest(Name, keyData);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var rawResponse = VectorCollectionGetCodec.DecodeResponse(response).Value;
+            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+        }
+        private async Task<VectorDocument<TVal>> DeserializeVectorDocumentAsync<TVal>(VectorDocument<IData> rawResponse)
+        {
+            var userObject = await ToObjectAsync<TVal>(rawResponse.Value).CfAwait();
+            return new VectorDocument<TVal>(userObject, rawResponse.Vectors);
+        }
+
+        public async Task<VectorDocument<TVal>> PutAsync(TKey key, VectorDocument<TVal> valueVectorDocument)
+        {
+            var dataKey = ToSafeData(key);
+            var dataValue = ToSafeData(valueVectorDocument.Value);
+            var rawDocument = new VectorDocument<IData>(dataValue, valueVectorDocument.Vectors);
+            var message = VectorCollectionPutCodec.EncodeRequest(Name, dataKey, rawDocument);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var rawResponse = VectorCollectionPutCodec.DecodeResponse(response).Value;
+            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+        }
+
         public Task SetAsync(TKey key, VectorDocument<TVal> vectorDocument)
             => throw new System.NotImplementedException();
         public Task<VectorDocument<TVal>> PutIfAbsentAsync(TKey key, VectorDocument<TVal> vectorDocument)

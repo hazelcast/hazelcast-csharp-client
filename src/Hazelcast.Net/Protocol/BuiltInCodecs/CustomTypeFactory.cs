@@ -20,10 +20,10 @@ using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.NearCaching;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Sql;
-
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class CustomTypeFactory
@@ -91,7 +91,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             if (!Enum.IsDefined(typeof(SqlColumnType), type))
                 throw new NotSupportedException($"Column type #{type} is not supported.");
 
-            var sqlColumnType = (SqlColumnType)type;
+            var sqlColumnType = (SqlColumnType) type;
 
             return new SqlColumnMetadata(name, sqlColumnType,
                 // By default, columns are nullable
@@ -101,10 +101,10 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         }
 
         public static SchemaField CreateFieldDescriptor(string name, int kind)
-          => new SchemaField(name, FieldKindEnum.Parse(kind));
+            => new SchemaField(name, FieldKindEnum.Parse(kind));
 
         public static Schema CreateSchema(string typename, IEnumerable<SchemaField> fields)
-          => new Schema(typename, fields.ToArray());
+            => new Schema(typename, fields.ToArray());
 
         public static Capacity CreateCapacity(long value, int unit) => new(value, (MemoryUnit) unit);
 
@@ -114,8 +114,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static BTreeIndexOptions CreateBTreeIndexConfig(Capacity pageSize, MemoryTierOptions options)
             => new() { PageSize = pageSize, MemoryTier = options };
 
-        public static DataPersistenceOptions CreateDataPersistenceConfig(bool enabled, bool fsync) 
-            => new() {Enabled = enabled, Fsync = fsync};
+        public static DataPersistenceOptions CreateDataPersistenceConfig(bool enabled, bool fsync)
+            => new() { Enabled = enabled, Fsync = fsync };
 
         public static DurationOptions CreateDurationConfig(long durationAmount, int timeUnit)
             => new(durationAmount, (TimeUnit) timeUnit);
@@ -128,25 +128,30 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         }
 
         public static EventJournalOptions CreateEventJournalConfig(bool enabled, int capacity, int timeToLiveSeconds)
-            => new() {Enabled = enabled, Capacity = capacity, TimeToLiveSeconds = timeToLiveSeconds};
+            => new() { Enabled = enabled, Capacity = capacity, TimeToLiveSeconds = timeToLiveSeconds };
 
         public static TieredStoreOptions CreateTieredStoreConfig(bool enabled, MemoryTierOptions memoryTierConfig, DiskTierOptions diskTierConfig)
-            => new() {Enabled = enabled, MemoryTier = memoryTierConfig, DiskTier = diskTierConfig};
+            => new() { Enabled = enabled, MemoryTier = memoryTierConfig, DiskTier = diskTierConfig };
 
         public static HotRestartOptions CreateHotRestartConfig(bool enabled, bool fsync)
-            => new() {Enabled = enabled, Fsync = fsync};
+            => new() { Enabled = enabled, Fsync = fsync };
 
         public static NearCachePreloaderOptions CreateNearCachePreloaderConfig(bool enabled, string directory, int storeInitialDelaySeconds, int storeIntervalSeconds)
-            => new() { Enabled = enabled, Directory = directory, StoreInitialDelaySeconds = storeInitialDelaySeconds, StoreIntervalSeconds = storeIntervalSeconds};
+            => new() { Enabled = enabled, Directory = directory, StoreInitialDelaySeconds = storeInitialDelaySeconds, StoreIntervalSeconds = storeIntervalSeconds };
 
         public static TimedExpiryPolicyFactoryOptions CreateTimedExpiryPolicyFactoryConfig(int expiryPolicyType, DurationOptions durationConfig)
             => new((ExpiryPolicyType) expiryPolicyType, durationConfig);
 
         public static CacheSimpleEntryListenerOptions CreateCacheSimpleEntryListenerConfig(bool oldValueRequired, bool synchronous, string cacheEntryListenerFactory, string cacheEntryEventFilterFactory)
-            => new() {OldValueRequired = oldValueRequired, Synchronous = synchronous, CacheEntryListenerFactory = cacheEntryListenerFactory, CacheEntryEventFilterFactory = cacheEntryEventFilterFactory};
+            => new() { OldValueRequired = oldValueRequired, Synchronous = synchronous, CacheEntryListenerFactory = cacheEntryListenerFactory, CacheEntryEventFilterFactory = cacheEntryEventFilterFactory };
 
         public static DiskTierOptions CreateDiskTierConfig(bool enabled, string deviceName)
-            => new() {Enabled = enabled, DeviceName = deviceName};
+            => new() { Enabled = enabled, DeviceName = deviceName };
         public static ClusterVersion CreateVersion(byte major, byte minor) => new ClusterVersion(major, minor);
+        public static VectorDocument<IData> CreateVectorDocument(IData value, List<VectorPairHolder> vectors)
+        {
+            var vectorValues = CodecUtil.ToVectorValues(vectors);
+            return new VectorDocument<IData>(value, vectorValues);
+        }
     }
 }

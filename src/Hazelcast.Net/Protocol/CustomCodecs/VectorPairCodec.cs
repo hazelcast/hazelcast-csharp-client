@@ -31,6 +31,7 @@ using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Clustering;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -41,7 +42,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int TypeFieldOffset = 0;
         private const int InitialFrameSize = TypeFieldOffset + BytesExtensions.SizeOfByte;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Models.VectorPairHolder vectorPair)
+        public static void Encode(ClientMessage clientMessage, VectorPairHolder vectorPair)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 

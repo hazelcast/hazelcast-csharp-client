@@ -13,9 +13,9 @@
 // limitations under the License.
 using System;
 using System.Linq;
-namespace Hazelcast.Models
+namespace Hazelcast.Protocol.Models
 {
-    public class VectorPair
+    public class VectorPairHolder
     {
         public const string SingleVectorName = "";
         public const byte DenseFloatVector = 0;
@@ -25,7 +25,7 @@ namespace Hazelcast.Models
         public string Name { get; }
         public float[] Vector { get; }
 
-        public VectorPair(string name, byte type, float[] vector)
+        public VectorPairHolder(string name, byte type, float[] vector)
         {
             Type = type;
             Name = name;
@@ -37,7 +37,7 @@ namespace Hazelcast.Models
         {
             if (this == obj) return true;
             if (obj == null || GetType() != obj.GetType()) return false;
-            var that = (VectorPair) obj;
+            var that = (VectorPairHolder) obj;
             return Name.Equals(that.Name) && Vector.SequenceEqual(that.Vector);
         }
 
