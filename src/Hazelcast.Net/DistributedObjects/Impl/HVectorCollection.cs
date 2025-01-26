@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -40,17 +41,12 @@ namespace Hazelcast.DistributedObjects.Impl
             var rawResponse = VectorCollectionGetCodec.DecodeResponse(response).Value;
             return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
-        private async Task<VectorDocument<TVal>> DeserializeVectorDocumentAsync<TVal>(VectorDocument<IData> rawResponse)
-        {
-            var userObject = await ToObjectAsync<TVal>(rawResponse.Value).CfAwait();
-            return new VectorDocument<TVal>(userObject, rawResponse.Vectors);
-        }
+
 
         public async Task<VectorDocument<TVal>> PutAsync(TKey key, VectorDocument<TVal> valueVectorDocument)
         {
-            var dataKey = ToSafeData(key);
-            var dataValue = ToSafeData(valueVectorDocument.Value);
-            var rawDocument = new VectorDocument<IData>(dataValue, valueVectorDocument.Vectors);
+            var (dataKey, rawDocument) = PrepareForPut(key, valueVectorDocument);
+
             var message = VectorCollectionPutCodec.EncodeRequest(Name, dataKey, rawDocument);
             var response = await Cluster.Messaging.SendAsync(message).CfAwait();
             var rawResponse = VectorCollectionPutCodec.DecodeResponse(response).Value;
@@ -58,22 +54,100 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task SetAsync(TKey key, VectorDocument<TVal> vectorDocument)
-            => throw new System.NotImplementedException();
-        public Task<VectorDocument<TVal>> PutIfAbsentAsync(TKey key, VectorDocument<TVal> vectorDocument)
-            => throw new System.NotImplementedException();
-        public Task PutAllAsync(IDictionary<TKey, VectorDocument<TVal>> vectorDocumentMap)
-            => throw new System.NotImplementedException();
-        public Task<VectorDocument<TVal>> RemoveAsync(TKey key)
-            => throw new System.NotImplementedException();
+        {
+            var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
+            var message = VectorCollectionSetCodec.EncodeRequest(Name, dataKey, rawDocument);
+            return Cluster.Messaging.SendAsync(message);
+        }
+        public async Task<VectorDocument<TVal>> PutIfAbsentAsync(TKey key, VectorDocument<TVal> vectorDocument)
+        {
+            var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
+            var message = VectorCollectionPutIfAbsentCodec.EncodeRequest(Name, dataKey, rawDocument);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var rawResponse = VectorCollectionPutIfAbsentCodec.DecodeResponse(response).Value;
+            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+        }
+        public Task PutAllAsync([NotNull] IDictionary<TKey, VectorDocument<TVal>> vectorDocumentMap)
+        {
+            vectorDocumentMap.ThrowIfNull();
+
+            var rawEntries = new List<KeyValuePair<IData, VectorDocument<IData>>>();
+            foreach (var kvp in vectorDocumentMap)
+            {
+                var key = kvp.Key ?? throw new ArgumentException($"Key cannot be null in {nameof(vectorDocumentMap)}.");
+                var val = kvp.Value ?? throw new ArgumentException($"Value cannot be null in {nameof(vectorDocumentMap)}.");
+                var dataKey = ToSafeData(key);
+                var dataValue = ToSafeData(val);
+                var rawDocument = new VectorDocument<IData>(dataValue, kvp.Value.Vectors);
+                rawEntries.Add(new KeyValuePair<IData, VectorDocument<IData>>(dataKey, rawDocument));
+            }
+            var message = VectorCollectionPutAllCodec.EncodeRequest(Name, rawEntries);
+            return Cluster.Messaging.SendAsync(message);
+        }
+        public async Task<VectorDocument<TVal>> RemoveAsync(TKey key)
+        {
+            if (key is null) throw new ArgumentNullException(nameof(key));
+
+            var dataKey = ToSafeData(key);
+            var message = VectorCollectionRemoveCodec.EncodeRequest(Name, dataKey);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var rawResponse = VectorCollectionRemoveCodec.DecodeResponse(response).Value;
+            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+        }
+
+
         public Task OptimizeAsync()
-            => throw new System.NotImplementedException();
+        {
+            var message = VectorCollectionOptimizeCodec.EncodeRequest(Name, null, Guid.NewGuid());
+            return Cluster.Messaging.SendAsync(message);
+        }
+
         public Task OptimizeAsync(string indexName)
-            => throw new System.NotImplementedException();
+        {
+            var message = VectorCollectionOptimizeCodec.EncodeRequest(Name, indexName, Guid.NewGuid());
+            return Cluster.Messaging.SendAsync(message);
+        }
         public Task ClearAsync()
-            => throw new System.NotImplementedException();
-        public Task<long> GetSizeAsync()
-            => throw new System.NotImplementedException();
-        public Task<IVectorSearchResult<TKey, TVal>> SearchAsync(VectorValues vectorValues, VectorSearchOptions searchOptions)
-            => throw new System.NotImplementedException();
+        {
+            var message = VectorCollectionClearCodec.EncodeRequest(Name);
+            return Cluster.Messaging.SendAsync(message);
+        }
+        public async Task<long> GetSizeAsync()
+        {
+            var message = VectorCollectionSizeCodec.EncodeRequest(Name);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            return VectorCollectionSizeCodec.DecodeResponse(response).Response;
+        }
+        public async Task<IVectorSearchResult<TKey, TVal>> SearchAsync(VectorValues vectorValues, VectorSearchOptions searchOptions)
+        {
+            searchOptions.ThrowIfNull();
+            var message = VectorCollectionSearchNearVectorCodec.EncodeRequest(Name, vectorValues, searchOptions);
+            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var rawResponse = VectorCollectionSearchNearVectorCodec.DecodeResponse(response).Result;
+
+            var entries = new List<VectorSearchResultEntry<TKey, TVal>>();
+            foreach (var rawEntry in rawResponse)
+            {
+                var key = await ToObjectAsync<TKey>(rawEntry.Key);
+                var value = await ToObjectAsync<TVal>(rawEntry.Value);
+                var entry = new VectorSearchResultEntry<TKey, TVal>(key, value, rawEntry.Vectors, rawEntry.Score);
+                entries.Add(entry);
+            }
+
+            return new VectorSearchResult<TKey, TVal>(entries.Count, entries);
+        }
+
+        private async Task<VectorDocument<TVal>> DeserializeVectorDocumentAsync<TVal>(VectorDocument<IData> rawResponse)
+        {
+            var userObject = await ToObjectAsync<TVal>(rawResponse.Value).CfAwait();
+            return new VectorDocument<TVal>(userObject, rawResponse.Vectors);
+        }
+        private (IData dataKey, VectorDocument<IData> rawDocument) PrepareForPut(TKey key, VectorDocument<TVal> valueVectorDocument)
+        {
+            var dataKey = ToSafeData(key);
+            var dataValue = ToSafeData(valueVectorDocument.Value);
+            var rawDocument = new VectorDocument<IData>(dataValue, valueVectorDocument.Vectors);
+            return (dataKey, rawDocument);
+        }
     }
 }

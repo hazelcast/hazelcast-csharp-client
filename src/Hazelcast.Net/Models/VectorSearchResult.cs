@@ -14,21 +14,19 @@
 using System.Collections.Generic;
 namespace Hazelcast.Models
 {
-    /// <summary>
-    /// Represents the result of a vector search operation.
-    /// </summary>
-    /// <typeparam name="TKey">The type of the key associated with the search results.</typeparam>
-    /// <typeparam name="TVal">The type of the value contained in the search results.</typeparam>
-    public interface IVectorSearchResult<TKey, TVal>
+    class VectorSearchResult<TKey, TVal> : IVectorSearchResult<TKey, TVal>
     {
-        /// <summary>
-        /// Gets the number of search results.
-        /// </summary>
-        int Size { get; }
+        private IEnumerable<VectorSearchResultEntry<TKey, TVal>> _results;
 
-        /// <summary>
-        /// Gets an enumerator for iterating over the search results on each call.
-        /// </summary>
-        IEnumerator<VectorSearchResultEntry<TKey, TVal>> Results { get; }
+        public VectorSearchResult(int size, IEnumerable<VectorSearchResultEntry<TKey, TVal>> results)
+        {
+            Size = size;
+            _results = results;
+        }
+
+        //<inheritdoc/>
+        public int Size { get; }
+        //<inheritdoc/>
+        public IEnumerator<VectorSearchResultEntry<TKey, TVal>> Results => _results.GetEnumerator();
     }
 }
