@@ -75,15 +75,15 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name)
+            Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name)
         {
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
             var task = _distributedOjects.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(ServiceNames.ReplicatedMap, name, true,
                 (n, f, c, sr, lf)
-                    => new HReplicatedMap<TKey,TValue>(n, f, c, sr, partitionId, lf));
+                    => new HReplicatedMap<TKey, TValue>(n, f, c, sr, partitionId, lf));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -95,9 +95,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
+            Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
                 (n, f, c, sr, lf)
@@ -113,9 +113,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHTopic<T>> GetTopicAsync<T>(string name)
+            Task<IHTopic<T>> GetTopicAsync<T>(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(ServiceNames.Topic, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
@@ -127,7 +127,7 @@ namespace Hazelcast
             return await task.CfAwait();
 #endif
         }
-        
+
         // Reliable topic is heavily implemented on the client side unlike the other data structures. Since we do not 
         // pass the client object around, it is better to create ring buffer at the high level. So, this method is excluded 
         // from HZ_OPTIMIZE_ASYNC optimization.
@@ -143,7 +143,7 @@ namespace Hazelcast
 
             var task = _distributedOjects.GetOrCreateAsync<IHReliableTopic<T>, HReliableTopic<T>>(ServiceNames.ReliableTopic, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HReliableTopic<T>(ServiceNames.ReliableTopic, n, factory,  rtOptions, cluster,serializationService, ringBuffer, loggerFactory));
+                    => new HReliableTopic<T>(ServiceNames.ReliableTopic, n, factory, rtOptions, cluster, serializationService, ringBuffer, loggerFactory));
 
             return await task.CfAwait();
         }
@@ -151,9 +151,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHList<T>> GetListAsync<T>(string name)
+            Task<IHList<T>> GetListAsync<T>(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IHList<T>, HList<T>>(ServiceNames.List, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
@@ -169,9 +169,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHSet<T>> GetSetAsync<T>(string name)
+            Task<IHSet<T>> GetSetAsync<T>(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IHSet<T>, HSet<T>>(ServiceNames.Set, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
@@ -187,9 +187,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHQueue<T>> GetQueueAsync<T>(string name)
+            Task<IHQueue<T>> GetQueueAsync<T>(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(ServiceNames.Queue, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
@@ -205,9 +205,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name)
+            Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(ServiceNames.RingBuffer, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
@@ -223,13 +223,35 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name)
+            Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name)
         {
             var task = _distributedOjects.GetOrCreateAsync<IFlakeIdGenerator, FlakeIdGenerator>(ServiceNames.FlakeIdGenerator, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new FlakeIdGenerator(n, factory, cluster, serializationService, loggerFactory, _options.GetFlakeIdGeneratorOptions(n)));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task<IHVectorCollection<TKey, TVal>> GetVectorCollectionAsync<TKey, TVal>(string name)
+        {
+            var task = _distributedOjects
+                .GetOrCreateAsync<IHVectorCollection<TKey, TVal>, HVectorCollection<TKey, TVal>>(
+                    ServiceNames.VectorCollection,
+                    name,
+                    true,
+                    (n, factory, cluster, serializationService, loggerFactory)
+                        => new HVectorCollection<TKey, TVal>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

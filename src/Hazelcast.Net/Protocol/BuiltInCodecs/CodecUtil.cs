@@ -15,6 +15,8 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
@@ -39,6 +41,31 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static T DecodeNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decode) where T : class
         {
             return iterator.SkipNull() ? null : decode(iterator);
+        }
+        public static VectorValues ToVectorValues(List<VectorPairHolder> vectors)
+        {
+            if (vectors.Count == 1 && vectors[0].Name == VectorPairHolder.SingleVectorName)
+            {
+                if (vectors[0].Type == VectorPairHolder.DenseFloatVector)
+                {
+                    return VectorValues.Of(vectors[0].Vector);
+                }
+                throw new ArgumentException("Unsupported vector type: " + vectors[0].Type);
+            }
+
+            var indexNameToVector = new Dictionary<string, float[]>();
+            foreach (var vector in vectors)
+            {
+                if (vector.Type == VectorPairHolder.DenseFloatVector)
+                {
+                    indexNameToVector[vector.Name] = vector.Vector;
+                }
+                else
+                {
+                    throw new ArgumentException("Unsupported vector type: " + vector.Type);
+                }
+            }
+            return VectorValues.Of(indexNameToVector);
         }
     }
 }
