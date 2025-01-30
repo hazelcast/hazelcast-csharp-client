@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 namespace Hazelcast.Models
 {
     /// <summary>
@@ -53,5 +54,30 @@ namespace Hazelcast.Models
         /// <returns>A new instance of the <see cref="VectorDocument{TVal}"/> class.</returns>
         public static VectorDocument<TVal> Of(TVal value, VectorValues vectorValues)
             => new VectorDocument<TVal>(value, vectorValues);
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            if (this == obj) return true;
+            if (obj == null || GetType() != obj.GetType()) return false;
+            var that = (VectorDocument<TVal>) obj;
+            return Equals(Value, that.Value) && Equals(Vectors, that.Vectors);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Value, Vectors);
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return "VectorDocument{"
+                   + "value=" + Value
+                   + ", vectors=" + Vectors
+                   + '}'
+                ;
+        }
     }
 }
