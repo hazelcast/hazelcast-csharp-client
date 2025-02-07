@@ -391,7 +391,7 @@ if ($isWindows) { $userHome = $env:USERPROFILE }
 else { 
     $userHome = $env:HOME
     # required for Ubuntu https://github.com/dotnet/core/issues/2186#issuecomment-671105420
-    export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+    $env:DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 }
 
 # nuget packages
