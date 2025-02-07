@@ -23,7 +23,7 @@ namespace Hazelcast.Core
     internal static class ClientVersion
     {
         private static string _clientVersion;
-        private static string _clientVersionPure;
+        private static string _clientMajorMinorPatchVersion;
 
         /// <summary>
         /// (for tests only)
@@ -59,18 +59,38 @@ namespace Hazelcast.Core
         /// <summary>
         /// (for tests only)
         /// Gets the major.minor version of a SemVer-compliant version.
-        /// Outside of tests, prefer the <see cref="MajorMinorVersion"/> property.
+        /// Outside of tests, prefer the <see cref="MajorMinorPatchMajorMinorPatchVersion"/> property.
         /// </summary>
         /// <param name="version">The SemVer-compliant version.</param>
         /// <returns>The "pure" version corresponding to the specified <paramref name="version"/>.</returns>
-        internal static string GetMajorMinorVersion(string version)
+        internal static string GetMajorMinorPatchVersion(string version)
         {
             var pos0 = version.IndexOf('.', StringComparison.OrdinalIgnoreCase);
             var pos1 = version.IndexOf('.', pos0 + 1);
-            if (pos1 >= 0)
+            var pos2 = -1;
+            
+            // Check the patch version segment, expecting max 2 digits
+            if (pos1 + 1 < version.Length && int.TryParse(version[pos1 + 1] + "", out _))
             {
-                // two dots = major.minor.whatever
-                // take everything until the second '.' = major.minor
+                pos2 = pos1 + 1; 
+
+                if (pos2 + 1 < version.Length && int.TryParse(version[pos2 + 1] + "", out _))
+                {
+                    pos2 = pos2 + 1;
+                }
+
+                pos2++; // because splitting excludes the last index
+            }
+
+            if (pos2 >= 0)
+            {
+                // two dots = major.minor.patch
+                // take everything until the second '.' = major.minor.patch
+                version = version[..pos2];
+            }
+            else if (pos1 >= 0)
+            {
+                // major.minor
                 version = version[..pos1];
             }
             else
@@ -110,6 +130,14 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>Returns the pure version, ie major.minor.</para>
         /// </remarks>
-        internal static string MajorMinorVersion => _clientVersionPure ??= GetMajorMinorVersion(Version);
+        internal static string MajorMinorPatchVersion
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(_clientMajorMinorPatchVersion)) return _clientMajorMinorPatchVersion;
+                _clientMajorMinorPatchVersion = GetMajorMinorPatchVersion(Version);
+                return _clientMajorMinorPatchVersion;
+            }
+        }
     }
 }
