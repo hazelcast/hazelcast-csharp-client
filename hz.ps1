@@ -387,7 +387,12 @@ $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
 $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
 $libDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/lib")
 
-if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
+if ($isWindows) { $userHome = $env:USERPROFILE } 
+else { 
+    $userHome = $env:HOME
+    # required for Ubuntu https://github.com/dotnet/core/issues/2186#issuecomment-671105420
+    $env:DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+}
 
 # nuget packages
 $nugetPackages = "$userHome/.nuget"
