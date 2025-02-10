@@ -52,7 +52,10 @@
 
   <ItemGroup>
     <!-- BEWARE, version must align with build/build.proj! -->
-    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" />
+    <!-- for old .net Framework targets -->
+    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" Condition=" '$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net48'" />
+    <!-- for new .net Core targets -->
+    <DotNetCliToolReference Include="JetBrains.dotCover.GlobalTool" Version="2023.2.5" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'" />
   </ItemGroup>
 
   <ItemGroup>

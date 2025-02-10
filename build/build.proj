@@ -25,17 +25,22 @@
 
     <!-- non-Windows does not build for Framework and does not need this, Windows does -->
     <!-- version is detected by hz.ps1 automatically from this project file -->
-    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2021.1.2" Condition=" '$(OS)' == 'Windows_NT' ">
+    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2021.1.2" Condition=" '$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net48'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- Used on .Net Core targets -->
+    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2024.3.5" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
     <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
     <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
-    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
+    <PackageReference Include="JetBrains.dotCover.GlobalTool" Version="2023.2.5" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-
+    </PackageReference>      
   </ItemGroup>
-</Project>
+</Project> 
