@@ -1514,7 +1514,7 @@ function hz-build {
         $branchName = git symbolic-ref --short HEAD
     } catch {
         # In the case of a detached branch
-        $branchName = ""
+        $branchName = "NA"
     }
     $isReleaseBranch = $branchName.StartsWith("release/")
 
