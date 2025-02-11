@@ -389,8 +389,7 @@ $libDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/lib")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } 
 else { 
-    $userHome = $env:HOME
-    $env:DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+    $userHome = $env:HOME    
 }
 
 # nuget packages
