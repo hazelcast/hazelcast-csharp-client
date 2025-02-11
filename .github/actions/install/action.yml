@@ -41,7 +41,10 @@ runs:
         rm packages-microsoft-prod.deb
         sudo apt-get update
         sudo add-apt-repository universe
-        sudo apt-get install -y powershell        
+        sudo apt-get install -y powershell    
+        # we need to install dotnet here since actions/setup-dotnet@v4 does not install required dependencies 
+        sudo apt-get install -y dotnet-sdk-6.0
+        sudo apt-get install -y dotnet-sdk-8.0
 
     # Install .NET
     - name: Install .NET
@@ -50,10 +53,8 @@ runs:
       with:
         dotnet-version: |
           3.1.x
-          5.0.x
-          6.0.x
-          7.0.x
-          8.0.x
+          5.0.x          
+          7.0.x          
 
     # Install Java
     - name: Install JDK
