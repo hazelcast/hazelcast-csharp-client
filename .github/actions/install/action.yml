@@ -24,9 +24,7 @@ runs:
     - name: Install utilities
       if: inputs.os == 'ubuntu-latest'
       shell: bash
-      run: |
-        # we need to install dotnet 6.0 
-        sudo add-apt-repository ppa:dotnet/backports
+      run: |        
         sudo apt-get update
         # ubuntu-latest does not have proper git installed so we have to install it
         sudo apt-get install --yes --no-install-recommends \
@@ -46,6 +44,11 @@ runs:
         sudo apt-get install -y powershell    
         # we need to install dotnet here since actions/setup-dotnet@v4 does not install required dependencies 
         # for dependencies we need to install over apt-get    
+        sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+        sudo apt remove 'dotnet*'
+        sudo add-apt-repository ppa:dotnet/backports
+        sudo apt-get update
+        # we need to install dotnet 6.0         
         sudo apt-get install -y dotnet-sdk-6.0
         sudo apt-get install -y dotnet-sdk-8.0
 
@@ -56,10 +59,8 @@ runs:
       with:
         dotnet-version: |
           3.1.x
-          5.0.x
-          6.0.x
-          7.0.x
-          8.0.x
+          5.0.x          
+          7.0.x         
 
     # Install Java
     - name: Install JDK
