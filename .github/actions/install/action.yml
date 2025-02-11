@@ -44,8 +44,13 @@ runs:
         sudo apt-get install -y powershell    
         # we need to install dotnet here since actions/setup-dotnet@v4 does not install required dependencies 
         # for dependencies we need to install over apt-get    
-        sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+        sudo snap remove dotnet-sdk
         sudo apt remove 'dotnet*'
+        sudo apt remove 'aspnetcore*'
+        sudo apt remove 'netstandard*'
+        sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+        sudo rm /etc/apt/sources.list.d/microsoft-prod.list.save
+        sudo apt update
         sudo add-apt-repository ppa:dotnet/backports
         sudo apt-get update
         # we need to install dotnet 6.0         
