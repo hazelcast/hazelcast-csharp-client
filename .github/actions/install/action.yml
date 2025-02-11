@@ -25,6 +25,8 @@ runs:
       if: inputs.os == 'ubuntu-latest'
       shell: bash
       run: |
+        # we need to install dotnet 6.0 
+        sudo add-apt-repository ppa:dotnet/backports
         sudo apt-get update
         # ubuntu-latest does not have proper git installed so we have to install it
         sudo apt-get install --yes --no-install-recommends \
@@ -43,6 +45,7 @@ runs:
         sudo add-apt-repository universe
         sudo apt-get install -y powershell    
         # we need to install dotnet here since actions/setup-dotnet@v4 does not install required dependencies 
+        # for dotnet 6.0        
         sudo apt-get install -y dotnet-sdk-6.0
         sudo apt-get install -y dotnet-sdk-8.0
 
