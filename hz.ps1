@@ -1510,6 +1510,9 @@ function hz-build {
 
     try {
         $branchName = git symbolic-ref --short HEAD
+        if([string]::IsNullOrWhiteSpace($branchName)) {
+            $branchName = "NA"
+        }
     } catch {
         # In the case of a detached branch
         $branchName = "NA"
@@ -2076,7 +2079,10 @@ function run-tests ( $f ) {
     if ($options.cover) {
         $coveragePath = "$tmpDir/tests/cover"
         if (!(test-path $coveragePath)) {
-            mkdir "-p $coveragePath" > $null
+            $mkdirArgs = @(
+                "-p", $coveragePath
+            )
+            mkdir $mkdirArgs > $null
         }
 
         $dotCoverArgs = @(
