@@ -2076,7 +2076,7 @@ function run-tests ( $f ) {
     if ($options.cover) {
         $coveragePath = "$tmpDir/tests/cover"
         if (!(test-path $coveragePath)) {
-            mkdir "-p" $coveragePath > $null
+            mkdir "-p $coveragePath" > $null
         }
 
         $dotCoverArgs = @(
