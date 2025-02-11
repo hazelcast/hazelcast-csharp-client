@@ -48,8 +48,7 @@ runs:
         sudo apt remove 'dotnet*'
         sudo apt remove 'aspnetcore*'
         sudo apt remove 'netstandard*'
-        sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-        sudo rm /etc/apt/sources.list.d/microsoft-prod.list.save
+        sudo rm /etc/apt/sources.list.d/microsoft-prod.list        
         sudo apt update
         sudo add-apt-repository ppa:dotnet/backports
         sudo apt-get update
