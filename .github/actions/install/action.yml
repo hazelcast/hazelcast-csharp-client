@@ -55,16 +55,7 @@ runs:
         # we need to install dotnet 6.0         
         sudo apt-get install -y dotnet-sdk-6.0
         sudo apt-get install -y dotnet-sdk-8.0
-
-    # Install .NET
-#    - name: Install .NET
-#      if: inputs.dotnet == 'true'
-#      uses: actions/setup-dotnet@v4
-#      with:
-#        dotnet-version: |
-#          3.1.x
-#          5.0.x          
-#          7.0.x         
+   
 
     # Install Java
     - name: Install JDK
