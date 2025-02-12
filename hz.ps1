@@ -389,9 +389,7 @@ $libDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/lib")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } 
 else { 
-    $userHome = $env:HOME
-    # required for Ubuntu https://github.com/dotnet/core/issues/2186#issuecomment-671105420
-    $env:DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+    $userHome = $env:HOME    
 }
 
 # nuget packages
@@ -1512,9 +1510,12 @@ function hz-build {
 
     try {
         $branchName = git symbolic-ref --short HEAD
+        if([string]::IsNullOrWhiteSpace($branchName)) {
+            $branchName = "NA"
+        }
     } catch {
         # In the case of a detached branch
-        $branchName = ""
+        $branchName = "NA"
     }
     $isReleaseBranch = $branchName.StartsWith("release/")
 
@@ -2078,7 +2079,10 @@ function run-tests ( $f ) {
     if ($options.cover) {
         $coveragePath = "$tmpDir/tests/cover"
         if (!(test-path $coveragePath)) {
-            mkdir $coveragePath > $null
+            $mkdirArgs = @(
+                "-p", $coveragePath
+            )
+            mkdir $mkdirArgs > $null
         }
 
         $dotCoverArgs = @(
