@@ -242,5 +242,5 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/windows/cover-net6.0.xml
+          files: ./temp/test-coverage/linux/cover-net8.0.xml
           override_commit: ${{ inputs.head_sha }} # required since report runs on 'master'
