@@ -82,7 +82,7 @@ jobs:
 
       # validate code
       - name: Validate code
-        if: inputs.release == false && inputs.merged-ref != '' && false
+        if: inputs.release == false && inputs.merged-ref != ''
         shell: bash
         run: |
           git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
