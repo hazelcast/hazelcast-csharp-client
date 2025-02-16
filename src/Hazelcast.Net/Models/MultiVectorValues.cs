@@ -18,40 +18,21 @@ namespace Hazelcast.Models
     /// <summary>
     /// Represents a collection of vector values indexed by names.
     /// </summary>
-    public class MultiVectorValues : VectorValues, IIdentifiedDataSerializable
+    public class MultiVectorValues : VectorValues
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiVectorValues"/> class with the specified indexed vectors.
         /// </summary>
         /// <param name="indexNameToVector">A dictionary containing index names and their corresponding vector values.</param>
-        public MultiVectorValues(IDictionary<string, float[]> indexNameToVector) { }
+        public MultiVectorValues(IDictionary<string, float[]> indexNameToVector)
+        {
+            IndexNameToVector = indexNameToVector;
+        }
 
         /// <summary>
         /// Gets the dictionary containing index names and their corresponding vector values.
         /// </summary>
         public IDictionary<string, float[]> IndexNameToVector { get; }
-
-        ///<inheritdoc/>
-        public void ReadData(IObjectDataInput input)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        ///<inheritdoc/>
-        public void WriteData(IObjectDataOutput output)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        ///<inheritdoc/>
-        public int FactoryId
-        {
-            get;
-        }
-        ///<inheritdoc/>
-        public int ClassId
-        {
-            get;
-        }
+        
     }
 }

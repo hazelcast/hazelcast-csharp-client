@@ -40,6 +40,15 @@
       </data-serializable-factory>
     </data-serializable-factories>
   </serialization>
+
+  <vector-collection name="vector*">
+    <indexes>
+      <index name="dummy-index">
+        <dimension>3</dimension>
+        <metric>DOT</metric>
+      </index>  
+    </indexes>
+  </vector-collection>
   
   <queue name="ClientQueueTest*">
     <!--

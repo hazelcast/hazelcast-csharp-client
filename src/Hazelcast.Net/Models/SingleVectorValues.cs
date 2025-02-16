@@ -14,26 +14,13 @@
 using Hazelcast.Serialization;
 namespace Hazelcast.Models
 {
-    public class SingleVectorValues: VectorValues, IIdentifiedDataSerializable
+    public class SingleVectorValues: VectorValues
     {
         internal SingleVectorValues() { }
-        internal SingleVectorValues(float[] vector) { }
+        internal SingleVectorValues(float[] vector)
+        {
+            Vector = vector;
+        }
         public float[] Vector { get; }
-        public void ReadData(IObjectDataInput input)
-        {
-            throw new System.NotImplementedException();
-        }
-        public void WriteData(IObjectDataOutput output)
-        {
-            throw new System.NotImplementedException();
-        }
-        public int FactoryId
-        {
-            get;
-        }
-        public int ClassId
-        {
-            get;
-        }
     }
 }

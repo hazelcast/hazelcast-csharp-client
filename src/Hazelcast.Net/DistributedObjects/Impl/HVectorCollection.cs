@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var message = VectorCollectionGetCodec.EncodeRequest(Name, keyData);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, keyData).CfAwait();
             var rawResponse = VectorCollectionGetCodec.DecodeResponse(response).Value;
             return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (dataKey, rawDocument) = PrepareForPut(key, valueVectorDocument);
 
             var message = VectorCollectionPutCodec.EncodeRequest(Name, dataKey, rawDocument);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionPutCodec.DecodeResponse(response).Value;
             return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
@@ -57,13 +57,13 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
             var message = VectorCollectionSetCodec.EncodeRequest(Name, dataKey, rawDocument);
-            return Cluster.Messaging.SendAsync(message);
+            return Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey);
         }
         public async Task<VectorDocument<TVal>> PutIfAbsentAsync(TKey key, VectorDocument<TVal> vectorDocument)
         {
             var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
             var message = VectorCollectionPutIfAbsentCodec.EncodeRequest(Name, dataKey, rawDocument);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionPutIfAbsentCodec.DecodeResponse(response).Value;
             return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var dataKey = ToSafeData(key);
             var message = VectorCollectionRemoveCodec.EncodeRequest(Name, dataKey);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionRemoveCodec.DecodeResponse(response).Value;
             return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
@@ -139,6 +139,11 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<VectorDocument<TVal>> DeserializeVectorDocumentAsync<TVal>(VectorDocument<IData> rawResponse)
         {
+            if (rawResponse is null)
+            {
+                return null;
+            }
+            
             var userObject = await ToObjectAsync<TVal>(rawResponse.Value).CfAwait();
             return new VectorDocument<TVal>(userObject, rawResponse.Vectors);
         }

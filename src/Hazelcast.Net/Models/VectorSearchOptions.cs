@@ -22,16 +22,16 @@ namespace Hazelcast.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="VectorSearchOptions"/> class with the specified options.
         /// </summary>
-        /// <param name="includeValues">Whether to include values in the search results.</param>
+        /// <param name="includeValue">Whether to include values in the search results.</param>
         /// <param name="includeVectors">Whether to include vectors in the search results.</param>
         /// <param name="limit">The maximum number of results to return.</param>
         /// <param name="hints">Additional hints for the search.</param>
-        public VectorSearchOptions(bool includeValues = default,
+        public VectorSearchOptions(bool includeValue = default,
             bool includeVectors = default,
             int limit = default,
             IDictionary<string, string> hints = null)
         {
-            IncludeValues = includeValues;
+            IncludeValue = includeValue;
             IncludeVectors = includeVectors;
             Limit = limit;
             Hints = hints;
@@ -40,7 +40,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets a value indicating whether to include values in the search results.
         /// </summary>
-        public bool IncludeValues { get; }
+        public bool IncludeValue { get; }
 
         /// <summary>
         /// Gets a value indicating whether to include vectors in the search results.
