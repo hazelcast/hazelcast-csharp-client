@@ -153,5 +153,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var vectorValues = CodecUtil.ToVectorValues(vectors);
             return new VectorDocument<IData>(value, vectorValues);
         }
+        public static VectorSearchResultEntry<IData, IData> CreateVectorSearchResult(IData key, IData value, float score, List<VectorPairHolder> vectors)
+        {
+            var vectorValues = CodecUtil.ToVectorValues(vectors);
+            return new VectorSearchResultEntry<IData, IData>(key, value, vectorValues, score);
+        }
+        public static VectorSearchOptions CreateVectorSearchOptions(bool includeValue, bool includeVectors, int limit, Dictionary<string, string> hints)
+        {
+            return new VectorSearchOptions(includeValue, includeVectors, limit, hints);
+        }
     }
 }

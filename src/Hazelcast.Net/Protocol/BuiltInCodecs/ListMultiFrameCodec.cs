@@ -90,6 +90,18 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 Encode(clientMessage, collection, encodeFunction);
             }
         }
+        
+        public static void EncodeNullable(ClientMessage clientMessage, VectorValues collection, Action<ClientMessage, VectorPairHolder> encodeFunction)
+        {
+            if (collection == null)
+            {
+                clientMessage.Append(Frame.CreateNull());
+            }
+            else
+            {
+                Encode(clientMessage, collection, encodeFunction);
+            }
+        }
 
         public static List<T> Decode<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction)
         {
