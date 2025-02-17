@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         }
         public static VectorValues ToVectorValues(List<VectorPairHolder> vectors)
         {
-            if (vectors.Count == 1 && vectors[0].Name == VectorPairHolder.SingleVectorName)
+            if (vectors.Count == 1 && VectorPairHolder.SingleVectorName.Equals(vectors[0].Name, StringComparison.Ordinal))
             {
                 if (vectors[0].Type == VectorPairHolder.DenseFloatVector)
                 {

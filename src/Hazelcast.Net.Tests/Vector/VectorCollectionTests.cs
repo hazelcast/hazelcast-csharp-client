@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Vector
     //[ServerCondition("[5.5.0")]
     public class VectorCollectionTests : SingleMemberClientRemoteTestBase
     {
-
+        protected override string RcClusterConfiguration => Resources.Vector;
         private string basicKey = "key";
         private string basicValue = "value";
         private float[] testVector = new float[] { 1.0f, 2.0f, 3.0f };
