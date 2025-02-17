@@ -11,8 +11,11 @@
     <!-- testing -->
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.11.1" />
 
-    <!--test coverage -->
-    <!--
+
+   
+  </ItemGroup>
+  <!--test coverage -->
+  <!--
         see https://blog.jetbrains.com/dotnet/2019/08/26/cross-platform-dotcover-console-runner-whats-new-dotcover-2019-2/
 
         For .NET Framework (net462, net48) we use the dotCover.exe which comes with the CommandLineTools package, we
@@ -21,21 +24,31 @@
         works cross-platform, both on Windows and Linux.
 
         Therefore, we need to restore both.
-    -->
+  -->
 
-    <!-- non-Windows does not build for Framework and does not need this, Windows does -->
-    <!-- version is detected by hz.ps1 automatically from this project file -->
-    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2021.1.2" Condition=" '$(OS)' == 'Windows_NT' ">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-
-    <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
-    <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
-    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-
-  </ItemGroup>
-</Project>
+  <Choose>
+        <When Condition="'$(TargetFramework)' != 'net462' or '$(TargetFramework)' != 'net48'">
+            <ItemGroup>
+                <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
+                <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
+                <PackageReference Include="JetBrains.dotCover.DotNetCliTool " Version="2022.2.4">
+                    <PrivateAssets>all</PrivateAssets>
+                    <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+                </PackageReference>                       
+            </ItemGroup>
+        </When>
+    </Choose>  
+    
+    <Choose>
+        <When Condition="'$(OS)' == 'Windows_NT'">
+            <ItemGroup>
+                <!-- non-Windows does not build for Framework and does not need this, Windows does -->
+                <!-- version is detected by hz.ps1 automatically from this project file -->
+                <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2021.1.2">
+                    <PrivateAssets>all</PrivateAssets>
+                    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+                </PackageReference>
+            </ItemGroup>
+        </When>
+    </Choose>
+</Project> 
