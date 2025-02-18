@@ -794,7 +794,7 @@ internal class TpcLocalTests
                 0,
                 request.Server.Address, request.Server.MemberId,
                 SerializationService.SerializerVersion,
-                ClientVersion.MajorMinorPatchVersion,
+                ClientVersion.Version,
                 1,
                 request.Server.ClusterId,
                 false,
