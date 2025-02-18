@@ -60,17 +60,7 @@ jobs:
     steps:
       - name: Report
         shell: bash
-        run: echo "User ${{ github.actorImprove GitHub Actions `hazelcast` membership check
-
-We restrict actions' execution to members of the `hazelcast` organisation using `hazelcast/hazelcast-tpm/membership`, passing in the user derviced from `github.event.pull_request.head.repo.owner.login`.
-
-This is the owner of the repository, _not_ the user itself.
-
-In the case of a non-fork PR - i.e. one in the `hazelcast` original repo - the `owner` will be `hazelcast` (which _isn't_ a GitHub user, and _isn't_ a member of the `hazelcast` organisation) and will fail.
-
-This nuance prevented https://github.com/hazelcast/hazelcast-python-client/pull/720 from being merged.
-
-Instead we should query `github.actor` as [already used in the C++ client](https://github.com/hazelcast/hazelcast-cpp-client/blame/b63e40748aa8e06f790510d86e1eae87cc36925a/.github/workflows/build-pr.yml#L50). }} is a member of the Hazelcast organization"
+        run: echo "User ${{ github.event.pull_request.head.repo.owner.login }} is a member of the Hazelcast organization"
 
   # get frameworks
   get-fwks:
