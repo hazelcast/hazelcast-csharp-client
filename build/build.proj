@@ -27,7 +27,7 @@
   -->
 
   <Choose>
-        <When Condition="'$(TargetFramework)' != 'net462' or '$(TargetFramework)' != 'net48'">
+        <When Condition="'$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
             <ItemGroup>
                 <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
                 <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
