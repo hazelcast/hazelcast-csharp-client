@@ -106,14 +106,12 @@ internal class Authenticator
         return true; // response is empty
     }
 
-    private static string ClientVersion
+    internal static string ClientVersion
     {
         get
         {
             if (_clientVersion != null) return _clientVersion;
-            var version = typeof(Authenticator).Assembly.GetName().Version;
-            _clientVersion = version.Major + "." + version.Minor;
-            if (version.Build > 0) _clientVersion += "." + version.Build;
+            _clientVersion = Hazelcast.Core.ClientVersion.GetSemVerWithoutBuildingMetadata();
             return _clientVersion;
         }
     }
