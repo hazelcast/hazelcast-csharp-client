@@ -27,7 +27,7 @@ namespace Hazelcast.Tests.Core
         public void WriteVersions()
         {
             Console.WriteLine(ClientVersion.Version);
-            Console.WriteLine(ClientVersion.MajorMinorPatchVersion);
+            Console.WriteLine(ClientVersion.GetSemVerWithoutBuildingMetadata());
         }
 
 
@@ -68,5 +68,15 @@ namespace Hazelcast.Tests.Core
         {
             Assert.That(ClientVersion.GetMajorMinorPatchVersion(semverVersion), Is.EqualTo(expectedVersion));
         }
+
+        [TestCase("1.2.3", "1.2.3")]
+        [TestCase("1.2.3-preview.0", "1.2.3-preview.0")]
+        [TestCase("1.2.3+ae12b5d9", "1.2.3")]
+        [TestCase("1.2.3-preview.0+ae12b5", "1.2.3-preview.0")]
+        public void TestGetSemVerWithoutBuildingMetadata(string semverVersion, string expectedVersion)
+        {
+            Assert.That(ClientVersion.GetSemVerWithoutBuildingMetadata(semverVersion), Is.EqualTo(expectedVersion));
+        }
+        
     }
 }

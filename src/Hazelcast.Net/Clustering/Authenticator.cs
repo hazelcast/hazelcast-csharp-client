@@ -111,7 +111,7 @@ internal class Authenticator
         get
         {
             if (_clientVersion != null) return _clientVersion;
-            _clientVersion = Hazelcast.Core.ClientVersion.Version;
+            _clientVersion = Hazelcast.Core.ClientVersion.GetSemVerWithoutBuildingMetadata();
             return _clientVersion;
         }
     }

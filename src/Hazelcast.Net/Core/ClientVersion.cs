@@ -57,6 +57,25 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Returns the SemVer-compliant version without the build metadata.
+        /// Ex: 5.1.2-preview.0+ab16ec43 -> 5.1.2-preview.0
+        /// </summary>
+        /// /// <param name="version">The SemVer-compliant version.</param>
+        internal static string GetSemVerWithoutBuildingMetadata(string version)
+        {
+            var pos = version.IndexOf('+', StringComparison.OrdinalIgnoreCase);
+            return pos > 0 ? version[..pos] : version;
+        }
+        
+        /// <summary>
+        /// Returns the SemVer-compliant version without the build metadata.
+        /// </summary>
+        internal static string GetSemVerWithoutBuildingMetadata()
+        {
+            return GetSemVerWithoutBuildingMetadata(Version);
+        }
+        
+        /// <summary>
         /// (for tests only)
         /// Gets the major.minor version of a SemVer-compliant version.
         /// Outside of tests, prefer the <see cref="MajorMinorPatchMajorMinorPatchVersion"/> property.
@@ -65,6 +84,11 @@ namespace Hazelcast.Core
         /// <returns>The "pure" version corresponding to the specified <paramref name="version"/>.</returns>
         internal static string GetMajorMinorPatchVersion(string version)
         {
+            // one single dot = major.minor[+whatever]
+            // remove the +whatever part if any
+            var pos = version.IndexOf('+', StringComparison.OrdinalIgnoreCase);
+            if (pos >= 0) version = version[..pos];
+            
             var pos0 = version.IndexOf('.', StringComparison.OrdinalIgnoreCase);
             var pos1 = version.IndexOf('.', pos0 + 1);
             var pos2 = -1;
@@ -93,13 +117,7 @@ namespace Hazelcast.Core
                 // major.minor
                 version = version[..pos1];
             }
-            else
-            {
-                // one single dot = major.minor[+whatever]
-                // remove the +whatever part if any
-                var pos = version.IndexOf('+', StringComparison.OrdinalIgnoreCase);
-                if (pos >= 0) version = version[..pos];
-            }
+            
             return version;
         }
 
@@ -135,7 +153,7 @@ namespace Hazelcast.Core
             get
             {
                 if (!string.IsNullOrWhiteSpace(_clientMajorMinorPatchVersion)) return _clientMajorMinorPatchVersion;
-                _clientMajorMinorPatchVersion = GetMajorMinorPatchVersion(Version);
+                _clientMajorMinorPatchVersion = GetMajorMinorPatchVersion(GetSemVerWithoutBuildingMetadata());
                 return _clientMajorMinorPatchVersion;
             }
         }
