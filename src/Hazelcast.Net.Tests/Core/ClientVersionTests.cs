@@ -62,6 +62,7 @@ namespace Hazelcast.Tests.Core
 
         [TestCase("1.2.3", "1.2.3")]
         [TestCase("1.2.3-preview.0", "1.2.3")]
+        [TestCase("1.2.3-SNAPSHOT", "1.2.3")]
         [TestCase("1.2.3+ae12b5d9", "1.2.3")]
         [TestCase("1.2.3-preview.0+ae12b5", "1.2.3")]
         public void ClientVersionReturnsMajorMinorPatchVersion(string semverVersion, string expectedVersion)
@@ -70,6 +71,7 @@ namespace Hazelcast.Tests.Core
         }
 
         [TestCase("1.2.3", "1.2.3")]
+        [TestCase("1.2.3-SNAPSHOT", "1.2.3-SNAPSHOT")]
         [TestCase("1.2.3-preview.0", "1.2.3-preview.0")]
         [TestCase("1.2.3+ae12b5d9", "1.2.3")]
         [TestCase("1.2.3-preview.0+ae12b5", "1.2.3-preview.0")]
