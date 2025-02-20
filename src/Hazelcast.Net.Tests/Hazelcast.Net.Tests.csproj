@@ -50,11 +50,15 @@
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- BEWARE, version must align with build/build.proj! -->
-    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" />
-  </ItemGroup>
-
+  <Choose>
+    <When Condition="'$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
+      <ItemGroup>
+        <!-- BEWARE, version must align with build/build.proj! -->        
+        <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2022.2.4" />
+      </ItemGroup>
+    </When>    
+  </Choose>
+  
   <ItemGroup>
     <None Include="..\Hazelcast.Net\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
