@@ -89,7 +89,7 @@ namespace Hazelcast.Metrics
 
             yield return MetricDescriptors.Enterprise.WithValue(false);
             yield return MetricDescriptors.ClientType.WithValue(clientType);
-            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.MajorMinorVersion);
+            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.GetSemVerWithoutBuildingMetadata());
             yield return MetricDescriptors.ClientName.WithValue(_cluster.ClientName);
             yield return MetricDescriptors.ClusterConnectionTimestamp.WithValue(Clock.ToEpoch(connection.ConnectTime.UtcDateTime)); // TODO: ToEpoch supports DateTimeOffset
             yield return MetricDescriptors.ClientAddress.WithValue(connection.LocalEndPoint.Address.ToString());
