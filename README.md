@@ -54,4 +54,3 @@ Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
 
 Visit [www.hazelcast.com](http://www.hazelcast.com) for more information.
 
-
