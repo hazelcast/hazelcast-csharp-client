@@ -25,7 +25,28 @@ namespace Hazelcast.Tests.Vector
             Assert.AreEqual("value", vectorDocument.Value);
             Assert.AreEqual(vectorValues, vectorDocument.Vectors);
         }
-        
+
+        [Test]
+        public void TestConstructorWithMultipleIndexes()
+        {
+            var pair1 = ("index1", new float[] { 1.0f, 2.0f, 3.0f });
+            var pair2 = ("index2", new float[] { 4.0f, 5.0f, 6.0f });
+            var vectorValues = VectorValues.Of(pair1, pair2);
+
+            var value = "valueForDoc";
+            var vectorDocument = VectorDocument<string>.Of(value, vectorValues);
+
+            Assert.AreEqual(value, vectorDocument.Value);
+
+            Assert.IsInstanceOf<MultiVectorValues>(vectorDocument.Vectors);
+
+            var multiVectorValues = (MultiVectorValues) vectorDocument.Vectors;
+            Assert.AreEqual(2, multiVectorValues.IndexNameToVector.Count);
+            
+            Assert.AreEqual(pair1.Item2, multiVectorValues.IndexNameToVector[pair1.Item1]);
+            Assert.AreEqual(pair2.Item2, multiVectorValues.IndexNameToVector[pair2.Item1]);
+        }
+
         [Test]
         public void TestEquals()
         {

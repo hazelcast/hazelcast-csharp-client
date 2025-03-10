@@ -21,7 +21,8 @@ using Hazelcast.Tests.TestObjects;
 using NUnit.Framework;
 namespace Hazelcast.Tests.Vector
 {
-    //[ServerCondition("[5.5.0")]
+    [ServerCondition("[5.5.0")]
+    [Category("enterprise")]
     public class VectorCollectionTests : SingleMemberClientRemoteTestBase
     {
         protected override string RcClusterConfiguration => Resources.Vector;
