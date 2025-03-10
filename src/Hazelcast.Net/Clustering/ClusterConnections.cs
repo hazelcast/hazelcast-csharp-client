@@ -864,7 +864,7 @@ namespace Hazelcast.Clustering
                                    " on connection {ConnectionId} from {LocalAddress}" +
                                    " to member {MemberId} at {Address}" +
                                    " of cluster '{ClusterName}' ({ClusterId}) running version {HazelcastServerVersion}.",
-                _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.Version,
+                _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.GetSemVerWithoutBuildingMetadata(),
                 connection.Id.ToShortString(), connection.LocalEndPoint,
                 result.MemberId.ToShortString(), address,
                 _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
