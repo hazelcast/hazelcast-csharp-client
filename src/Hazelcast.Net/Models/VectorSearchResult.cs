@@ -27,6 +27,6 @@ namespace Hazelcast.Models
         //<inheritdoc/>
         public int Size { get; }
         //<inheritdoc/>
-        public IEnumerator<VectorSearchResultEntry<TKey, TVal>> Results => _results.GetEnumerator();
+        public IEnumerable<VectorSearchResultEntry<TKey, TVal>> Results => _results;
     }
 }

@@ -161,10 +161,12 @@ namespace Hazelcast.Tests.Vector
 
             Assert.AreEqual(1, result.Size);
 
-            var enumerator = result.Results;
-            enumerator.MoveNext();
-            Assert.IsNotNull(enumerator.Current);
-            Assert.AreEqual(basicValue, enumerator.Current);
+            foreach (var entry in result.Results)
+            {
+                Assert.IsNotNull(entry.Key);
+                Assert.IsNotNull(entry.Value);
+                Assert.AreEqual(basicValue, entry.Value);    
+            }
         }
 
     }

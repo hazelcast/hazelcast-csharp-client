@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Serialization;
 namespace Hazelcast.Models
 {
@@ -33,6 +34,15 @@ namespace Hazelcast.Models
         /// Gets the dictionary containing index names and their corresponding vector values.
         /// </summary>
         public IDictionary<string, float[]> IndexNameToVector { get; }
-        
+
+        public override string ToString()
+        {
+            var val = IndexNameToVector == null
+                ? "null"
+                : $"{{ {string.Join(", ", IndexNameToVector.Select(entry => $"Index:{entry.Key}, Vectors:{string.Join(", ", entry.Value)}"))} }}";
+            
+            return $"MultiVectorValues{{{val}}}";
+        }
+
     }
 }

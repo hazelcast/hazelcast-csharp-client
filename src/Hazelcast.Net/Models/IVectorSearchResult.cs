@@ -27,8 +27,8 @@ namespace Hazelcast.Models
         int Size { get; }
 
         /// <summary>
-        /// Gets an enumerator for iterating over the search results on each call.
+        /// Gets the search results.
         /// </summary>
-        IEnumerator<VectorSearchResultEntry<TKey, TVal>> Results { get; }
+        IEnumerable<VectorSearchResultEntry<TKey, TVal>> Results { get; }
     }
 }

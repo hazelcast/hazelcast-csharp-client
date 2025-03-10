@@ -14,7 +14,7 @@
 using Hazelcast.Serialization;
 namespace Hazelcast.Models
 {
-    public class SingleVectorValues: VectorValues
+    public class SingleVectorValues : VectorValues
     {
         internal SingleVectorValues() { }
         internal SingleVectorValues(float[] vector)
@@ -22,5 +22,12 @@ namespace Hazelcast.Models
             Vector = vector;
         }
         public float[] Vector { get; }
+
+        public override string ToString()
+        {
+            var val = Vector == null ? "null" : $"[{string.Join(", ", Vector)}]";
+            return $"SingleVectorValues{{vector={val}}}";
+        }
+
     }
 }
