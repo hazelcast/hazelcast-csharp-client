@@ -147,6 +147,25 @@ namespace Hazelcast.Tests.Vector
             var result = await vectorCollection.GetSizeAsync();
             Assert.AreEqual(1, result);
         }
+        [Test]
+        public async Task TestClearAsync()
+        {
+            var vectorCollection = await Client.GetVectorCollectionAsync<string, string>(GetRandomName("vector"));
+            var vectorDocument = VectorDocument<string>.Of(basicValue, VectorValues.Of(testVector));
+            await vectorCollection.PutAsync(basicKey, vectorDocument);
+            await vectorCollection.ClearAsync();
+            var result = await vectorCollection.GetSizeAsync();
+            Assert.AreEqual(0, result);
+        }
+        
+        [Test]
+        public async Task TestOptimizeAsync()
+        {
+            var vectorCollection = await Client.GetVectorCollectionAsync<string, string>(GetRandomName("vector"));
+            var vectorDocument = VectorDocument<string>.Of(basicValue, VectorValues.Of(testVector));
+            await vectorCollection.PutAsync(basicKey, vectorDocument);
+            await vectorCollection.OptimizeAsync();
+        }
 
         [Test]
         public async Task TestSearchAsync()

@@ -2,7 +2,7 @@
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.5.0.xsd">
+           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
 
   <properties>
     <property name="hazelcast.map.invalidation.batch.enabled">false</property>
@@ -40,6 +40,7 @@
       </data-serializable-factory>
     </data-serializable-factories>
   </serialization>  
+  
   <queue name="ClientQueueTest*">
     <!--
             Maximum size of the queue. When a JVM's local queue size reaches the maximum,
