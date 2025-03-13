@@ -41,6 +41,9 @@ namespace Hazelcast.Core
 
         public static void WriteByteL(this byte[] bytes, int position, byte value)
             => bytes.WriteByte(position, value);
+        
+        public static void WriteFloatL(this byte[] bytes, int position, float value)
+            => bytes.WriteFloat(position, value, Endianness.LittleEndian);
 
         public static short ReadShortL(this byte[] bytes, int position)
             => bytes.ReadShort(position, Endianness.LittleEndian);

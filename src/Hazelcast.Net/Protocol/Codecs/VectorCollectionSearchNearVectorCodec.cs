@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// Returns the VectorDocuments closest to the given vector.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionSearchNearVectorServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionSearchNearVectorCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2361344; // 0x240800
+        public const int ResponseMessageType = 2361345; // 0x240801
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -57,30 +57,36 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// Name of the VectorCollection.
+            /// Name of the Vector Collection.
             ///</summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Key for the entry.
+            /// Vector for which closest neighbours should be returned.
             ///</summary>
-            public IData Key { get; set; }
+            public ICollection<Hazelcast.Protocol.Models.VectorPairHolder> Vectors { get; set; }
+
+            /// <summary>
+            /// Search options.
+            ///</summary>
+            public Hazelcast.Models.VectorSearchOptions Options { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Models.VectorValues vectors, Hazelcast.Models.VectorSearchOptions options)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                IsRetryable = true,
+                OperationName = "VectorCollection.SearchNearVector"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
+            ListMultiFrameCodec.Encode(clientMessage, vectors, VectorPairCodec.Encode);
+            VectorSearchOptionsCodec.Encode(clientMessage, options);
             return clientMessage;
         }
 
@@ -91,22 +97,29 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
+            request.Vectors = ListMultiFrameCodec.Decode(iterator, VectorPairCodec.Decode);
+            request.Options = VectorSearchOptionsCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// <summary>
+            /// Zero or more VectorSearchResult values.
+            ///</summary>
+            public ICollection<Hazelcast.Models.VectorSearchResultEntry<IData, IData>> Result { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(ICollection<Hazelcast.Models.VectorSearchResultEntry<IData, IData>> result)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, result, VectorSearchResultCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -116,6 +129,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
+            response.Result = ListMultiFrameCodec.Decode(iterator, VectorSearchResultCodec.Decode);
             return response;
         }
 

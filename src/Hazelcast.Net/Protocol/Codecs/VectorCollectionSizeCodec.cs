@@ -39,48 +39,43 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// Size of vector collection.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionSizeServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionSizeCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2362112; // 0x240B00
+        public const int ResponseMessageType = 2362113; // 0x240B01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// <summary>
-            /// Name of the VectorCollection.
+            /// Name of the Vector Collection.
             ///</summary>
             public string Name { get; set; }
-
-            /// <summary>
-            /// Key for the entry.
-            ///</summary>
-            public IData Key { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                IsRetryable = true,
+                OperationName = "VectorCollection.Size"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -91,21 +86,26 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// <summary>
+            /// the number of entries in this collection
+            ///</summary>
+            public long Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(long response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -115,7 +115,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadLongL(ResponseResponseFieldOffset);
             return response;
         }
 

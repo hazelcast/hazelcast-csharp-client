@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// Puts a document into the Vector Collection without returning previous value.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionSetServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionSetCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2360832; // 0x240600
+        public const int ResponseMessageType = 2360833; // 0x240601
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -57,23 +57,28 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// Name of the VectorCollection.
+            /// Name of the Vector Collection.
             ///</summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Key for the entry.
+            /// Key for the document.
             ///</summary>
             public IData Key { get; set; }
+
+            /// <summary>
+            /// Value for the entry.
+            ///</summary>
+            public Hazelcast.Models.IVectorDocument<IData> Value { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name, IData key, Hazelcast.Models.IVectorDocument<IData> @value)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                OperationName = "VectorCollection.Set"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -81,6 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
+            VectorDocumentCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -92,6 +98,7 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
+            request.Value = VectorDocumentCodec.Decode(iterator);
             return request;
         }
 #endif
