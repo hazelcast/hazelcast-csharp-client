@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 namespace Hazelcast.Models
 {
     /// <summary>
@@ -29,6 +30,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the search results.
         /// </summary>
+        [NotNull]
         IEnumerable<VectorSearchResultEntry<TKey, TVal>> Results { get; }
     }
 }

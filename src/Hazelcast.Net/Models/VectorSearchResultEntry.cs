@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Diagnostics.CodeAnalysis;
 namespace Hazelcast.Models
 {
     /// <summary>
@@ -28,29 +29,32 @@ namespace Hazelcast.Models
         /// <param name="value">The value associated with the entry.</param>
         /// <param name="vectors">The vector values associated with the entry.</param>
         /// <param name="score">The score of the entry.</param>
-        internal VectorSearchResultEntry(TKey key, TVal value, VectorValues vectors, float score)
+        internal VectorSearchResultEntry([NotNull] TKey key, [NotNull] TVal value, [NotNull] VectorValues vectors, float score)
         {
             Key = key;
             Value = value;
             Vectors = vectors;
             Score = score;
         }
-        
+
         /// <summary>
         /// Gets the key associated with the entry.
         /// </summary>
+        [NotNull]
         public TKey Key { get; }
-        
+
         /// <summary>
         /// Gets the value associated with the entry.
         /// </summary>
+        [NotNull]
         public TVal Value { get; }
-        
+
         /// <summary>
         /// Gets the vector values associated with the entry.
         /// </summary>
+        [NotNull]
         public VectorValues Vectors { get; }
-        
+
         /// <summary>
         /// Gets the score of the entry.
         /// </summary>

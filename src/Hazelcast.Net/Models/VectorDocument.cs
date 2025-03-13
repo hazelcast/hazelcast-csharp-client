@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 namespace Hazelcast.Models
 {
     /// <summary>
@@ -30,7 +31,7 @@ namespace Hazelcast.Models
         /// </summary>
         /// <param name="value">The value contained in the document.</param>
         /// <param name="vectorValues">The vector values associated with the document.</param>
-        public VectorDocument(TVal value, VectorValues vectorValues)
+        public VectorDocument([NotNull] TVal value, [NotNull] VectorValues vectorValues)
         {
             Value = value;
             Vectors = vectorValues;
@@ -39,11 +40,13 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the value contained in the document.
         /// </summary>
+        [NotNull]
         public TVal Value { get; }
 
         /// <summary>
         /// Gets the vector values associated with the document.
         /// </summary>
+        [NotNull]
         public VectorValues Vectors { get; }
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace Hazelcast.Models
         /// <param name="value">The value contained in the document.</param>
         /// <param name="vectorValues">The vector values associated with the document.</param>
         /// <returns>A new instance of the <see cref="VectorDocument{TVal}"/> class.</returns>
-        public static VectorDocument<TVal> Of(TVal value, VectorValues vectorValues)
+        public static VectorDocument<TVal> Of([NotNull] TVal value, [NotNull] VectorValues vectorValues)
             => new VectorDocument<TVal>(value, vectorValues);
 
         /// <inheritdoc />

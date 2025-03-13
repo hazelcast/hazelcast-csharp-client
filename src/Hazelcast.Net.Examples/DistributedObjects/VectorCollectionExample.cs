@@ -52,14 +52,6 @@ namespace Hazelcast.Examples.DistributedObjects
             var vectorDoc = VectorDocument<HazelcastJsonValue>
                 .Of(bookMetaData, VectorValues.Of(new float[] { 0.1f, 0.2f, 0.3f }));
 
-            /*
-            //If the collection has multiple indexes, you can add the vector to a specific index
-
-            var vectorDocMultipleIndex = VectorDocument<HazelcastJsonValue>
-                .Of(bookMetaData, VectorValues.Of(
-                    ("index-1", new float[] {0.1f, 0.2f, 0.3f}),
-                    ("index-2", new float[] {0.3f, 0.7f, 0.5f})));
-            */
 
             // add the vector to the collection
             await vectorCollection.SetAsync("book-1", vectorDoc);

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
@@ -29,7 +30,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key of the vector document to retrieve.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the vector document associated
         /// with the specified key.</returns>
-        Task<VectorDocument<TValue>> GetAsync(TKey key);
+        Task<VectorDocument<TValue>> GetAsync([NotNull] TKey key);
 
         /// <summary>
         /// Puts the specified vector document into the collection with the specified key.
@@ -38,7 +39,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="valueVectorDocument">The vector document to put into the collection.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the previous vector document
         /// associated with the specified key, or null if there was no mapping for the key.</returns>
-        Task<VectorDocument<TValue>> PutAsync(TKey key, VectorDocument<TValue> valueVectorDocument);
+        Task<VectorDocument<TValue>> PutAsync([NotNull] TKey key, [NotNull] VectorDocument<TValue> valueVectorDocument);
 
         /// <summary>
         /// Sets the specified vector document into the collection with the specified key.
@@ -46,7 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key of the vector document to set.</param>
         /// <param name="vectorDocument">The vector document to set into the collection.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task SetAsync(TKey key, VectorDocument<TValue> vectorDocument);
+        Task SetAsync([NotNull] TKey key, [NotNull] VectorDocument<TValue> vectorDocument);
 
         /// <summary>
         /// Puts the specified vector document into the collection with the specified key if the key is not already associated
@@ -57,14 +58,14 @@ namespace Hazelcast.DistributedObjects
         /// a vector document.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the previous vector document
         /// associated with the specified key, or null if there was no mapping for the key.</returns>
-        Task<VectorDocument<TValue>> PutIfAbsentAsync(TKey key, VectorDocument<TValue> vectorDocument);
+        Task<VectorDocument<TValue>> PutIfAbsentAsync([NotNull] TKey key, [NotNull] VectorDocument<TValue> vectorDocument);
 
         /// <summary>
         /// Puts all the specified vector documents into the collection.
         /// </summary>
         /// <param name="vectorDocumentMap">A dictionary containing the keys and vector documents to put into the collection.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task PutAllAsync(IDictionary<TKey, VectorDocument<TValue>> vectorDocumentMap);
+        Task PutAllAsync([NotNull] IDictionary<TKey, VectorDocument<TValue>> vectorDocumentMap);
 
         /// <summary>
         /// Removes the vector document associated with the specified key from the collection.
@@ -72,7 +73,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key of the vector document to remove.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the removed vector document,
         /// or null if there was no mapping for the key.</returns>
-        Task<VectorDocument<TValue>> RemoveAsync(TKey key);
+        Task<VectorDocument<TValue>> RemoveAsync([NotNull] TKey key);
 
         /// <summary>
         /// Optimizes the only index by fully removing nodes marked for deletion,
@@ -99,7 +100,7 @@ namespace Hazelcast.DistributedObjects
         /// or completed exceptionally with an <see cref="IndexMutationDisallowedException"/> if the index is currently
         /// undergoing an optimization operation; or completed exceptionally with an <see cref="System.ArgumentException"/>
         /// if the collection has more than one index.</returns>
-        Task OptimizeAsync(string indexName);
+        Task OptimizeAsync([NotNull] string indexName);
 
         /// <summary>
         /// Asynchronously clears all entries in the collection.
@@ -126,6 +127,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="searchOptions">The search options.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="IVectorSearchResult{TKey, TValue}"/> object
         /// that allows iterating over search results in order of descending similarity score.</returns>
-        Task<IVectorSearchResult<TKey, TValue>> SearchAsync(VectorValues vectorValues, VectorSearchOptions searchOptions);
+        Task<IVectorSearchResult<TKey, TValue>> SearchAsync([NotNull] VectorValues vectorValues, [NotNull] VectorSearchOptions searchOptions);
     }
 }
