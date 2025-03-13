@@ -30,16 +30,16 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key of the vector document to retrieve.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the vector document associated
         /// with the specified key.</returns>
-        Task<VectorDocument<TValue>> GetAsync([NotNull] TKey key);
+        Task<IVectorDocument<TValue>> GetAsync([NotNull] TKey key);
 
         /// <summary>
         /// Puts the specified vector document into the collection with the specified key.
         /// </summary>
         /// <param name="key">The key of the vector document to put.</param>
-        /// <param name="valueVectorDocument">The vector document to put into the collection.</param>
+        /// <param name="valueIVectorDocument">The vector document to put into the collection.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the previous vector document
         /// associated with the specified key, or null if there was no mapping for the key.</returns>
-        Task<VectorDocument<TValue>> PutAsync([NotNull] TKey key, [NotNull] VectorDocument<TValue> valueVectorDocument);
+        Task<IVectorDocument<TValue>> PutAsync([NotNull] TKey key, [NotNull] IVectorDocument<TValue> valueIVectorDocument);
 
         /// <summary>
         /// Sets the specified vector document into the collection with the specified key.
@@ -47,25 +47,25 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key of the vector document to set.</param>
         /// <param name="vectorDocument">The vector document to set into the collection.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task SetAsync([NotNull] TKey key, [NotNull] VectorDocument<TValue> vectorDocument);
+        Task SetAsync([NotNull] TKey key, [NotNull] IVectorDocument<TValue> vectorDocument);
 
         /// <summary>
         /// Puts the specified vector document into the collection with the specified key if the key is not already associated
         /// with a vector document.
         /// </summary>
         /// <param name="key">The key of the vector document to put if absent.</param>
-        /// <param name="vectorDocument">The vector document to put into the collection if the key is not already associated with
+        /// <param name="IVectorDocument">The vector document to put into the collection if the key is not already associated with
         /// a vector document.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the previous vector document
         /// associated with the specified key, or null if there was no mapping for the key.</returns>
-        Task<VectorDocument<TValue>> PutIfAbsentAsync([NotNull] TKey key, [NotNull] VectorDocument<TValue> vectorDocument);
+        Task<IVectorDocument<TValue>> PutIfAbsentAsync([NotNull] TKey key, [NotNull] IVectorDocument<TValue> IVectorDocument);
 
         /// <summary>
         /// Puts all the specified vector documents into the collection.
         /// </summary>
         /// <param name="vectorDocumentMap">A dictionary containing the keys and vector documents to put into the collection.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        Task PutAllAsync([NotNull] IDictionary<TKey, VectorDocument<TValue>> vectorDocumentMap);
+        Task PutAllAsync([NotNull] IDictionary<TKey, IVectorDocument<TValue>> vectorDocumentMap);
 
         /// <summary>
         /// Removes the vector document associated with the specified key from the collection.
@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key of the vector document to remove.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the removed vector document,
         /// or null if there was no mapping for the key.</returns>
-        Task<VectorDocument<TValue>> RemoveAsync([NotNull] TKey key);
+        Task<IVectorDocument<TValue>> RemoveAsync([NotNull] TKey key);
 
         /// <summary>
         /// Optimizes the only index by fully removing nodes marked for deletion,

@@ -69,11 +69,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Value for the entry.
             ///</summary>
-            public Hazelcast.Models.VectorDocument<IData> Value { get; set; }
+            public Hazelcast.Models.IVectorDocument<IData> Value { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, Hazelcast.Models.VectorDocument<IData> @value)
+        public static ClientMessage EncodeRequest(string name, IData key, Hazelcast.Models.IVectorDocument<IData> @value)
         {
             var clientMessage = new ClientMessage
             {
@@ -109,11 +109,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Value previously associated with the key if any.
             ///</summary>
-            public Hazelcast.Models.VectorDocument<IData> Value { get; set; }
+            public Hazelcast.Models.IVectorDocument<IData> Value { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(Hazelcast.Models.VectorDocument<IData> @value)
+        public static ClientMessage EncodeResponse(Hazelcast.Models.IVectorDocument<IData> @value)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);

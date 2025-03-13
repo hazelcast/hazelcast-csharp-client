@@ -39,7 +39,7 @@
         com.hazelcast.client.test.IdentifiedFactory
       </data-serializable-factory>
     </data-serializable-factories>
-  </serialization>  
+  </serialization>
   
   <queue name="ClientQueueTest*">
     <!--

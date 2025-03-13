@@ -39,7 +39,7 @@ namespace Hazelcast.Protocol.CustomCodecs
     internal static class VectorDocumentCodec
     {
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.VectorDocument<IData> vectorDocument)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.IVectorDocument<IData> vectorDocument)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -49,7 +49,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Models.VectorDocument<IData> Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.IVectorDocument<IData> Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

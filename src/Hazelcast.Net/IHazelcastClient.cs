@@ -302,7 +302,7 @@ namespace Hazelcast
         /// <para>If a vector collection with the specified <paramref name="collectionName"/> does not
         /// exist already in the cluster, a new vector collection is created.</para>
         /// </remarks>
-        Task<IHVectorCollection<TKey,TVal>> GetVectorCollectionAsync<TKey, TVal>(string collectionName);
+        Task<IHVectorCollection<TKey,TVal>> GetVectorCollectionAsync<TKey, TVal>([NotNull] string collectionName);
 
         /// <summary>
         /// Gets a service that can dynamically configure cluster-side objects.

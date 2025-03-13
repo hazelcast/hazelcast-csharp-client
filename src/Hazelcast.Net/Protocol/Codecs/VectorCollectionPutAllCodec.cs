@@ -68,11 +68,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Key/VectorDocument entries to be stored in this VectorCollection.
             ///</summary>
-            public ICollection<KeyValuePair<IData, Hazelcast.Models.VectorDocument<IData>>> Entries { get; set; }
+            public ICollection<KeyValuePair<IData, Hazelcast.Models.IVectorDocument<IData>>> Entries { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<IData, Hazelcast.Models.VectorDocument<IData>>> entries)
+        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<IData, Hazelcast.Models.IVectorDocument<IData>>> entries)
         {
             var clientMessage = new ClientMessage
             {

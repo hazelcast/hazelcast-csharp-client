@@ -96,7 +96,7 @@ namespace Hazelcast.Tests.Vector
             var vectorCollection = await Client.GetVectorCollectionAsync<string, string>(GetRandomName("vector"));
             var vectorDocument = VectorDocument<string>.Of(basicValue, VectorValues.Of(testVector));
             var vectorDocument2 = VectorDocument<string>.Of(basicValue, VectorValues.Of(testVector));
-            var vectorDocumentMap = new System.Collections.Generic.Dictionary<string, VectorDocument<string>>()
+            var vectorDocumentMap = new System.Collections.Generic.Dictionary<string, IVectorDocument<string>>()
             {
                 { basicKey, vectorDocument },
                 { basicKey + "2", vectorDocument2 }

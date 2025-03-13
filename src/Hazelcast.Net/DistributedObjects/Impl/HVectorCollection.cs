@@ -33,45 +33,45 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(ServiceNames.VectorCollection, name, factory, cluster, serializationService, loggerFactory)
         { }
 
-        public async Task<VectorDocument<TVal>> GetAsync(TKey key)
+        public async Task<IVectorDocument<TVal>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var message = VectorCollectionGetCodec.EncodeRequest(Name, keyData);
             var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, keyData).CfAwait();
             var rawResponse = VectorCollectionGetCodec.DecodeResponse(response).Value;
-            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+            return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
 
 
-        public async Task<VectorDocument<TVal>> PutAsync(TKey key, VectorDocument<TVal> valueVectorDocument)
+        public async Task<IVectorDocument<TVal>> PutAsync(TKey key, IVectorDocument<TVal> valueIVectorDocument)
         {
-            var (dataKey, rawDocument) = PrepareForPut(key, valueVectorDocument);
+            var (dataKey, rawDocument) = PrepareForPut(key, valueIVectorDocument);
 
             var message = VectorCollectionPutCodec.EncodeRequest(Name, dataKey, rawDocument);
             var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionPutCodec.DecodeResponse(response).Value;
-            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+            return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
 
-        public Task SetAsync(TKey key, VectorDocument<TVal> vectorDocument)
+        public Task SetAsync(TKey key, IVectorDocument<TVal> vectorDocument)
         {
             var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
             var message = VectorCollectionSetCodec.EncodeRequest(Name, dataKey, rawDocument);
             return Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey);
         }
-        public async Task<VectorDocument<TVal>> PutIfAbsentAsync(TKey key, VectorDocument<TVal> vectorDocument)
+        public async Task<IVectorDocument<TVal>> PutIfAbsentAsync(TKey key, IVectorDocument<TVal> IVectorDocument)
         {
-            var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
+            var (dataKey, rawDocument) = PrepareForPut(key, IVectorDocument);
             var message = VectorCollectionPutIfAbsentCodec.EncodeRequest(Name, dataKey, rawDocument);
             var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionPutIfAbsentCodec.DecodeResponse(response).Value;
-            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+            return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
-        public Task PutAllAsync([NotNull] IDictionary<TKey, VectorDocument<TVal>> vectorDocumentMap)
+        public Task PutAllAsync([NotNull] IDictionary<TKey, IVectorDocument<TVal>> vectorDocumentMap)
         {
             vectorDocumentMap.ThrowIfNull();
 
-            var rawEntries = new List<KeyValuePair<IData, VectorDocument<IData>>>();
+            var rawEntries = new List<KeyValuePair<IData, IVectorDocument<IData>>>();
             foreach (var kvp in vectorDocumentMap)
             {
                 var key = kvp.Key ?? throw new ArgumentException($"Key cannot be null in {nameof(vectorDocumentMap)}.");
@@ -79,12 +79,12 @@ namespace Hazelcast.DistributedObjects.Impl
                 var dataKey = ToSafeData(key);
                 var dataValue = ToSafeData(val);
                 var rawDocument = new VectorDocument<IData>(dataValue, kvp.Value.Vectors);
-                rawEntries.Add(new KeyValuePair<IData, VectorDocument<IData>>(dataKey, rawDocument));
+                rawEntries.Add(new KeyValuePair<IData, IVectorDocument<IData>>(dataKey, rawDocument));
             }
             var message = VectorCollectionPutAllCodec.EncodeRequest(Name, rawEntries);
             return Cluster.Messaging.SendAsync(message);
         }
-        public async Task<VectorDocument<TVal>> RemoveAsync(TKey key)
+        public async Task<IVectorDocument<TVal>> RemoveAsync(TKey key)
         {
             if (key is null) throw new ArgumentNullException(nameof(key));
 
@@ -92,7 +92,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var message = VectorCollectionRemoveCodec.EncodeRequest(Name, dataKey);
             var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionRemoveCodec.DecodeResponse(response).Value;
-            return await DeserializeVectorDocumentAsync<TVal>(rawResponse).CfAwait();
+            return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
 
 
@@ -137,7 +137,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new VectorSearchResult<TKey, TVal>(entries.Count, entries);
         }
 
-        private async Task<VectorDocument<TVal>> DeserializeVectorDocumentAsync<TVal>(VectorDocument<IData> rawResponse)
+        private async Task<IVectorDocument<TVal>> DeserializeIVectorDocumentAsync<TVal>(IVectorDocument<IData> rawResponse)
         {
             if (rawResponse is null)
             {
@@ -147,11 +147,11 @@ namespace Hazelcast.DistributedObjects.Impl
             var userObject = await ToObjectAsync<TVal>(rawResponse.Value).CfAwait();
             return new VectorDocument<TVal>(userObject, rawResponse.Vectors);
         }
-        private (IData dataKey, VectorDocument<IData> rawDocument) PrepareForPut(TKey key, VectorDocument<TVal> valueVectorDocument)
+        private (IData dataKey, IVectorDocument<IData> rawDocument) PrepareForPut(TKey key, IVectorDocument<TVal> valueIVectorDocument)
         {
             var dataKey = ToSafeData(key);
-            var dataValue = ToSafeData(valueVectorDocument.Value);
-            var rawDocument = new VectorDocument<IData>(dataValue, valueVectorDocument.Vectors);
+            var dataValue = ToSafeData(valueIVectorDocument.Value);
+            var rawDocument = new VectorDocument<IData>(dataValue, valueIVectorDocument.Vectors);
             return (dataKey, rawDocument);
         }
     }

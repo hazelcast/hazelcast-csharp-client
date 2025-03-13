@@ -19,7 +19,7 @@ namespace Hazelcast.Models
     /// Represents a document containing a value and associated vector values.
     /// </summary>
     /// <typeparam name="TVal">The type of the value contained in the document.</typeparam>
-    public class VectorDocument<TVal>
+    public class VectorDocument<TVal> : IVectorDocument<TVal>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="VectorDocument{TVal}"/> class.
@@ -37,16 +37,10 @@ namespace Hazelcast.Models
             Vectors = vectorValues;
         }
 
-        /// <summary>
-        /// Gets the value contained in the document.
-        /// </summary>
-        [NotNull]
+        /// <inheritdoc />
         public TVal Value { get; }
 
-        /// <summary>
-        /// Gets the vector values associated with the document.
-        /// </summary>
-        [NotNull]
+        /// <inheritdoc />
         public VectorValues Vectors { get; }
 
         /// <summary>
@@ -55,7 +49,7 @@ namespace Hazelcast.Models
         /// <param name="value">The value contained in the document.</param>
         /// <param name="vectorValues">The vector values associated with the document.</param>
         /// <returns>A new instance of the <see cref="VectorDocument{TVal}"/> class.</returns>
-        public static VectorDocument<TVal> Of([NotNull] TVal value, [NotNull] VectorValues vectorValues)
+        public static IVectorDocument<TVal> Of([NotNull] TVal value, [NotNull] VectorValues vectorValues)
             => new VectorDocument<TVal>(value, vectorValues);
 
         /// <inheritdoc />
