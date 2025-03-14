@@ -108,6 +108,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protocol", "protocol", "{39
 		protocol\cs\__init__.py = protocol\cs\__init__.py
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Analyzers", "src\Hazelcast.Net.Analyzers\Hazelcast.Net.Analyzers.csproj", "{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -162,6 +164,10 @@ Global
 		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
