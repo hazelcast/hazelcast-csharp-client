@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="Releases\BuildAnalyzers.Shipped.md" />
-    <AdditionalFiles Include="Releases\BuildAnalyzers.Unshipped.md" />
+    <AdditionalFiles Include="Releases\AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="Releases\AnalyzerReleases.Unshipped.md" />
   </ItemGroup>
 
 </Project>
