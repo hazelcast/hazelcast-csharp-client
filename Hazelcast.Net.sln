@@ -108,7 +108,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protocol", "protocol", "{39
 		protocol\cs\__init__.py = protocol\cs\__init__.py
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Analyzers", "src\Hazelcast.Net.Analyzers\Hazelcast.Net.Analyzers.csproj", "{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.BuildAnalyzers", "src\Hazelcast.Net.Analyzers\Hazelcast.Net.BuildAnalyzers.csproj", "{32B7A10F-B1F2-4AC2-A6FA-6D11CD0E9968}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
