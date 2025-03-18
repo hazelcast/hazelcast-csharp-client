@@ -14,11 +14,37 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class ListMultiFrameCodec
     {
+        public static void Encode(ClientMessage clientMessage, VectorValues vectorValues, Action<ClientMessage, VectorPairHolder> encodeFunction)
+        {
+            if (vectorValues is SingleVectorValues svv)
+            {
+                Encode(clientMessage,
+                    new List<VectorPairHolder>
+                    {
+                        new VectorPairHolder(VectorPairHolder.SingleVectorName,
+                            VectorPairHolder.DenseFloatVector,
+                            svv.Vector)
+                    },
+                    encodeFunction);
+            }
+            else if (vectorValues is MultiVectorValues mvv)
+            {
+                var listOfPairs = new List<VectorPairHolder>();
+                foreach (var (indexName, vector) in mvv.IndexNameToVector)
+                {
+                    listOfPairs.Add(new VectorPairHolder(indexName, VectorPairHolder.DenseFloatVector, vector));
+                }
+                Encode(clientMessage, listOfPairs, encodeFunction);
+            }
+        }
+
         public static void Encode<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
@@ -63,6 +89,18 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 Encode(clientMessage, collection, encodeFunction);
             }
         }
+        
+        public static void EncodeNullable(ClientMessage clientMessage, VectorValues collection, Action<ClientMessage, VectorPairHolder> encodeFunction)
+        {
+            if (collection == null)
+            {
+                clientMessage.Append(Frame.CreateNull());
+            }
+            else
+            {
+                Encode(clientMessage, collection, encodeFunction);
+            }
+        }
 
         public static List<T> Decode<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction)
         {
@@ -79,7 +117,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
 
-        public static List<T> DecodeContainsNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction) where T: class
+        public static List<T> DecodeContainsNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction) where T : class
         {
             var result = new List<T>();
             //begin frame, list

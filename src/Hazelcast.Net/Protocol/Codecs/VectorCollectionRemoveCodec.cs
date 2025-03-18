@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// Removes the mapping for a key from this VectorCollection.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionRemoveServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionRemoveCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2360576; // 0x240500
+        public const int ResponseMessageType = 2360577; // 0x240501
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -73,7 +73,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                OperationName = "VectorCollection.Remove"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -98,15 +98,21 @@ namespace Hazelcast.Protocol.Codecs
 
         public sealed class ResponseParameters
         {
+
+            /// <summary>
+            /// Value previously associated with the key if any.
+            ///</summary>
+            public Hazelcast.Models.IVectorDocument<IData> Value { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(Hazelcast.Models.IVectorDocument<IData> @value)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, @value, VectorDocumentCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -116,6 +122,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
+            response.Value = CodecUtil.DecodeNullable(iterator, VectorDocumentCodec.Decode);
             return response;
         }
 

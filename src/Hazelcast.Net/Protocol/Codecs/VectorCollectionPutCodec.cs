@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// Puts a document into the Vector Collection.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionPutServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionPutCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2359552; // 0x240100
+        public const int ResponseMessageType = 2359553; // 0x240101
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -57,23 +57,28 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// Name of the VectorCollection.
+            /// Name of the Vector Collection.
             ///</summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Key for the entry.
+            /// Key for the document.
             ///</summary>
             public IData Key { get; set; }
+
+            /// <summary>
+            /// Value for the entry.
+            ///</summary>
+            public Hazelcast.Models.IVectorDocument<IData> Value { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name, IData key, Hazelcast.Models.IVectorDocument<IData> @value)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                OperationName = "VectorCollection.Put"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -81,6 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
+            VectorDocumentCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -92,21 +98,28 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
+            request.Value = VectorDocumentCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// <summary>
+            /// Value previously associated with the key if any.
+            ///</summary>
+            public Hazelcast.Models.IVectorDocument<IData> Value { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(Hazelcast.Models.IVectorDocument<IData> @value)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, @value, VectorDocumentCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -116,6 +129,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
+            response.Value = CodecUtil.DecodeNullable(iterator, VectorDocumentCodec.Decode);
             return response;
         }
 

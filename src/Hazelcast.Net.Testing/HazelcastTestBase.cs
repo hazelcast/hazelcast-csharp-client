@@ -105,5 +105,10 @@ namespace Hazelcast.Testing
         /// <returns>A logger factory.</returns>
         protected virtual ILoggerFactory CreateLoggerFactory() =>
             Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
+        
+        /// <summary>
+        /// Gets a random name.
+        /// </summary>
+        protected static string GetRandomName(string prefix) => $"{prefix}-{Guid.NewGuid().ToString("N")[..7]}";
     }
 }

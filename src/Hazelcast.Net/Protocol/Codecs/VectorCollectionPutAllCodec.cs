@@ -39,16 +39,20 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// The effect of this call is equivalent to set(k, v) on this VectorCollection once for each mapping from key k to value v.
+    /// The behavior of this operation is undefined if the specified collection is modified while the operation is in progress.
+    /// Note that all keys in the request should belong to the partition ID to which this request is being sent.
+    /// Any key that matches to a different partition ID shall be ignored.
+    /// The API implementation using this request may need to send multiple of these request messages for different partitions.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionPutAllServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionPutAllCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2360064; // 0x240300
+        public const int ResponseMessageType = 2360065; // 0x240301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -57,30 +61,30 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// Name of the VectorCollection.
+            /// Name of the Vector Collection.
             ///</summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Key for the entry.
+            /// Key/VectorDocument entries to be stored in this VectorCollection.
             ///</summary>
-            public IData Key { get; set; }
+            public ICollection<KeyValuePair<IData, Hazelcast.Models.IVectorDocument<IData>>> Entries { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<IData, Hazelcast.Models.IVectorDocument<IData>>> entries)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                OperationName = "VectorCollection.PutAll"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
+            EntryListCodec.Encode(clientMessage, entries, DataCodec.Encode, VectorDocumentCodec.Encode);
             return clientMessage;
         }
 
@@ -91,7 +95,7 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
+            request.Entries = EntryListCodec.Decode(iterator, DataCodec.Decode, VectorDocumentCodec.Decode);
             return request;
         }
 #endif

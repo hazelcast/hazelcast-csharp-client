@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Removes the mapping for a key from this VectorCollection without returning previous value.
+    /// Clear vector collection.
     ///</summary>
 #if SERVER_CODEC
-    internal static class VectorCollectionDeleteServerCodec
+    internal static class VectorCollectionClearServerCodec
 #else
-    internal static class VectorCollectionDeleteCodec
+    internal static class VectorCollectionClearCodec
 #endif
     {
-        public const int RequestMessageType = 2361088; // 0x240700
-        public const int ResponseMessageType = 2361089; // 0x240701
+        public const int RequestMessageType = 2361856; // 0x240A00
+        public const int ResponseMessageType = 2361857; // 0x240A01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -57,30 +57,24 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// Name of the VectorCollection.
+            /// Name of the Vector Collection.
             ///</summary>
             public string Name { get; set; }
-
-            /// <summary>
-            /// Key for the entry.
-            ///</summary>
-            public IData Key { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = "VectorCollection.Delete"
+                OperationName = "VectorCollection.Clear"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -91,7 +85,6 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
