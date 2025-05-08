@@ -365,8 +365,7 @@ $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 
 # determine java code repositories for tests
 $mvnOssPublicRepo = "https://oss.sonatype.org/content/repositories/snapshots"
-$mvnOssSnapshotRepo = "https://hazelcast.jfrog.io/artifactory/snapshot-internal"
-$mvnOssSnapshotRepoBasicAuth = "https://repository.hazelcast.com/snapshot-internal"
+$mvnOssSnapshotRepo = "https://repository.hazelcast.com/snapshot-internal"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
 $mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
@@ -495,7 +494,7 @@ function ensure-snapshot-repo {
             $ossRepoTokenType = "Basic"
             $token = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$( $env:HZ_SNAPSHOT_INTERNAL_USERNAME ):$( $env:HZ_SNAPSHOT_INTERNAL_PASSWORD )"))
             Write-Output "Using credentials for OSS repository from environment variables"
-            $mvnOssRepo = $mvnOssSnapshotRepoBasicAuth
+            $mvnOssRepo = $mvnOssSnapshotRepo
             $strToken = "Basic "+$token
             $script:ossRepoRequestHeader =@{
                 Authorization = $strToken
