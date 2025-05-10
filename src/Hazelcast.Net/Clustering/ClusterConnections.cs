@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -864,7 +863,7 @@ namespace Hazelcast.Clustering
                                    " on connection {ConnectionId} from {LocalAddress}" +
                                    " to member {MemberId} at {Address}" +
                                    " of cluster '{ClusterName}' ({ClusterId}) running version {HazelcastServerVersion}.",
-                _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.Version,
+                _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.GetSemVerWithoutBuildingMetadata(),
                 connection.Id.ToShortString(), connection.LocalEndPoint,
                 result.MemberId.ToShortString(), address,
                 _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -124,5 +124,47 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(1, countOfClients);
         }
 
+
+        [Test]
+        [ServerCondition("[6.0)")]
+        public async Task TestRoutingModesInOrderWithServer()
+        {
+            var script = @"result = com.hazelcast.client.config.RoutingMode.SINGLE_MEMBER.getId() +
+                           "","" + com.hazelcast.client.config.RoutingMode.ALL_MEMBERS.getId() + 
+                           "","" + com.hazelcast.client.config.RoutingMode.MULTI_MEMBER.getId();
+            ";
+
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
+
+            var result = Encoding.UTF8.GetString(response.Result);
+            var arrayString = result.Split(',');
+            var expectedEnums = Array.ConvertAll(arrayString, int.Parse);
+            var expectedRoutingModes = Array.ConvertAll(expectedEnums, x => (RoutingModes) x);
+
+            Assert.AreEqual(RoutingModes.SingleMember, expectedRoutingModes[0]);
+            Assert.AreEqual(RoutingModes.AllMembers, expectedRoutingModes[1]);
+            Assert.AreEqual(RoutingModes.MultiMember, expectedRoutingModes[2]);
+        }
+        
+        [Test]
+        [ServerCondition("[5.5.0,6.0)")]
+        public async Task TestRoutingModesInOrderWithServerWithPreviousPackage()
+        {
+            var script = @"result = com.hazelcast.client.impl.connection.tcp.RoutingMode.SINGLE_MEMBER.getId() +
+                           "","" + com.hazelcast.client.impl.connection.tcp.RoutingMode.ALL_MEMBERS.getId() + 
+                           "","" + com.hazelcast.client.impl.connection.tcp.RoutingMode.MULTI_MEMBER.getId();
+            ";
+
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
+
+            var result = Encoding.UTF8.GetString(response.Result);
+            var arrayString = result.Split(',');
+            var expectedEnums = Array.ConvertAll(arrayString, int.Parse);
+            var expectedRoutingModes = Array.ConvertAll(expectedEnums, x => (RoutingModes) x);
+
+            Assert.AreEqual(RoutingModes.SingleMember, expectedRoutingModes[0]);
+            Assert.AreEqual(RoutingModes.AllMembers, expectedRoutingModes[1]);
+            Assert.AreEqual(RoutingModes.MultiMember, expectedRoutingModes[2]);
+        }
     }
 }

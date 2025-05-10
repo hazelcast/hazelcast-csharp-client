@@ -387,7 +387,10 @@ $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
 $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
 $libDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/lib")
 
-if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
+if ($isWindows) { $userHome = $env:USERPROFILE } 
+else { 
+    $userHome = $env:HOME    
+}
 
 # nuget packages
 $nugetPackages = "$userHome/.nuget"
@@ -1507,9 +1510,12 @@ function hz-build {
 
     try {
         $branchName = git symbolic-ref --short HEAD
+        if([string]::IsNullOrWhiteSpace($branchName)) {
+            $branchName = "NA"
+        }
     } catch {
         # In the case of a detached branch
-        $branchName = ""
+        $branchName = "NA"
     }
     $isReleaseBranch = $branchName.StartsWith("release/")
 
@@ -2073,7 +2079,10 @@ function run-tests ( $f ) {
     if ($options.cover) {
         $coveragePath = "$tmpDir/tests/cover"
         if (!(test-path $coveragePath)) {
-            mkdir $coveragePath > $null
+            $mkdirArgs = @(
+                "-p", $coveragePath
+            )
+            mkdir $mkdirArgs > $null
         }
 
         $dotCoverArgs = @(

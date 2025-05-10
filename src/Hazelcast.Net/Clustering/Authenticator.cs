@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -106,14 +105,12 @@ internal class Authenticator
         return true; // response is empty
     }
 
-    private static string ClientVersion
+    internal static string ClientVersion
     {
         get
         {
             if (_clientVersion != null) return _clientVersion;
-            var version = typeof(Authenticator).Assembly.GetName().Version;
-            _clientVersion = version.Major + "." + version.Minor;
-            if (version.Build > 0) _clientVersion += "." + version.Build;
+            _clientVersion = Hazelcast.Core.ClientVersion.GetSemVerWithoutBuildingMetadata();
             return _clientVersion;
         }
     }

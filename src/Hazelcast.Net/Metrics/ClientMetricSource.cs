@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -89,7 +88,7 @@ namespace Hazelcast.Metrics
 
             yield return MetricDescriptors.Enterprise.WithValue(false);
             yield return MetricDescriptors.ClientType.WithValue(clientType);
-            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.MajorMinorVersion);
+            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.GetSemVerWithoutBuildingMetadata());
             yield return MetricDescriptors.ClientName.WithValue(_cluster.ClientName);
             yield return MetricDescriptors.ClusterConnectionTimestamp.WithValue(Clock.ToEpoch(connection.ConnectTime.UtcDateTime)); // TODO: ToEpoch supports DateTimeOffset
             yield return MetricDescriptors.ClientAddress.WithValue(connection.LocalEndPoint.Address.ToString());

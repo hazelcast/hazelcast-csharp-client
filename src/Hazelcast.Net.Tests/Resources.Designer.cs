@@ -188,13 +188,13 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
         ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/configd
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
         ///           http://www.hazelcast.com/schema/config/hazelcast-config-5.4.xsd&quot;&gt;
         ///
         ///  &lt;properties&gt;
         ///    &lt;property name=&quot;hazelcast.map.invalidation.batch.enabled&quot;&gt;false&lt;/property&gt;
         ///    &lt;property name=&quot;hazelcast.cache.invalidation.batch.size&quot;&gt;10&lt;/property&gt;
-        ///    &lt;property name=&quot;haz [rest of string was truncated]&quot;;.
+        ///    &lt;property name=&quot;haze [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClusterPGEnabled {
             get {
@@ -286,6 +286,24 @@ namespace Hazelcast.Tests {
         internal static string HazelcastOptions {
             get {
                 return ResourceManager.GetString("HazelcastOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-6.0.xsd&quot;&gt;
+        ///
+        ///  &lt;properties&gt;
+        ///    &lt;property name=&quot;hazelcast.map.invalidation.batch.enabled&quot;&gt;false&lt;/property&gt;
+        ///    &lt;property name=&quot;hazelcast.cache.invalidation.batch.size&quot;&gt;10&lt;/property&gt;
+        ///    &lt;property name=&quot;haze [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Vector {
+            get {
+                return ResourceManager.GetString("Vector", resourceCulture);
             }
         }
     }

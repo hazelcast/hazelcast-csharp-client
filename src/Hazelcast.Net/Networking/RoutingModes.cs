@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,6 @@ namespace Hazelcast.Networking
         SingleMember = 0,
 
         /// <summary>
-        /// Connects only to selected group of members in the cluster based on selected grouping strategy.
-        /// </summary>
-        MultiMember = 1,
-
-        /// <summary>
         /// Connects to all members in the cluster. The client will receive
         /// member list updates and connect to all members.
         /// <para>Client will route the key based operations to owner of
@@ -36,7 +31,12 @@ namespace Hazelcast.Networking
         /// <para>Note that it however does not guarantee that the operation will always be
         /// executed on the owner, as the member table is only updated every 10 seconds.</para>
         /// </summary>
-        AllMembers = 2
+        AllMembers = 1,
+
+        /// <summary>
+        /// Connects only to selected group of members in the cluster based on selected grouping strategy.
+        /// </summary>
+        MultiMember = 2,
     }
 
     /// <summary>

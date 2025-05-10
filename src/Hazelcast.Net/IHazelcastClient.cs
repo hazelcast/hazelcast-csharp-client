@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2024, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -20,6 +19,7 @@ using Hazelcast.Configuration;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Sql;
 using Hazelcast.Transactions;
 
@@ -289,6 +289,20 @@ namespace Hazelcast
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name);
+        
+        /// <summary>
+        /// Gets an <see cref="IHVectorCollection{TKey,TVal}"/> distributed vector collection with the specified name.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the vector collection.</typeparam>
+        /// <typeparam name="TVal">The type of the values in the vector collection.</typeparam>
+        /// <param name="collectionName">The unique name of the vector collection.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the vector collection that was
+        /// retrieved or created.</returns>
+        /// <remarks>
+        /// <para>If a vector collection with the specified <paramref name="collectionName"/> does not
+        /// exist already in the cluster, a new vector collection is created.</para>
+        /// </remarks>
+        Task<IHVectorCollection<TKey,TVal>> GetVectorCollectionAsync<TKey, TVal>([NotNull] string collectionName);
 
         /// <summary>
         /// Gets a service that can dynamically configure cluster-side objects.
