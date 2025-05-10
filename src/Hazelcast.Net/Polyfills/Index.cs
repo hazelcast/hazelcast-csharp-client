@@ -17,7 +17,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#if NETSTANDARD2_0 || NET6
+#if NETSTANDARD2_0
 
 // brings C# 8 index & range to netstandard 2.0
 // see https://www.meziantou.net/how-to-use-nullable-reference-types-in-dotnet-standard-2-0-and-dotnet-.htm
