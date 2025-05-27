@@ -17,3 +17,5 @@ Hazelcast.Serialization.SerializationException.SerializationException(System.Run
 ~override Hazelcast.Protocol.RemoteException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 ~override Hazelcast.Sql.HazelcastSqlException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 override Hazelcast.Serialization.UnknownCompactSchemaException.GetObjectData(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Hazelcast.Networking.RoutingModes.AllMembers = 1 -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingModes.MultiMember = 2 -> Hazelcast.Networking.RoutingModes
