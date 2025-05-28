@@ -174,7 +174,7 @@ jobs:
         with:
           # only net6.0 on windows-latest, that's what goes to codecov
           path: ./temp/artifacts/test-coverage
-          name: 'Test-Coverage ubuntu-latest-net6.0'
+          name: 'Test-Coverage windows-latest-net6.0'
 
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
