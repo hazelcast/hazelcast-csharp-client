@@ -172,9 +172,9 @@ jobs:
       - name: Download tests coverage artifacts
         uses: actions/download-artifact@v4
         with:
-          # only net6.0 on windows-latest, that's what goes to codecov
+          # only net8.0 on windows-latest, that's what goes to codecov
           path: ./temp/artifacts/test-coverage
-          name: 'Test-Coverage windows-latest-net6.0'
+          name: 'Test-Coverage windows-latest-net8.0'
 
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
@@ -182,7 +182,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/artifacts/test-coverage/cover-net6.0.xml
+          files: ./temp/artifacts/test-coverage/cover-net8.0.xml
           fail_ci_if_error: true
 
 
