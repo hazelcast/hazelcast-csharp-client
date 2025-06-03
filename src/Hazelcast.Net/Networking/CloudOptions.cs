@@ -49,7 +49,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the cloud url base.
         /// </summary>
-        public Uri Url { get; set; } = new Uri("https://api.viridian.hazelcast.com");
+        public Uri Url { get; set; } = new Uri("https://api.cloud.hazelcast.com");
 
         /// <summary>
         /// Clones the options.
