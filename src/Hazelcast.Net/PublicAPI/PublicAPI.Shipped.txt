@@ -2640,8 +2640,8 @@ Hazelcast.Networking.RoutingMode.RoutingMode(bool smartRouting) -> void
 Hazelcast.Networking.RoutingMode.Strategy.get -> Hazelcast.Networking.RoutingStrategy
 Hazelcast.Networking.RoutingMode.Strategy.set -> void
 Hazelcast.Networking.RoutingModes
-Hazelcast.Networking.RoutingModes.AllMembers = 2 -> Hazelcast.Networking.RoutingModes
-Hazelcast.Networking.RoutingModes.MultiMember = 1 -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingModes.AllMembers = 1 -> Hazelcast.Networking.RoutingModes
+Hazelcast.Networking.RoutingModes.MultiMember = 2 -> Hazelcast.Networking.RoutingModes
 Hazelcast.Networking.RoutingModes.SingleMember = 0 -> Hazelcast.Networking.RoutingModes
 Hazelcast.Networking.RoutingStrategy
 Hazelcast.Networking.RoutingStrategy.PartitionGroups = 0 -> Hazelcast.Networking.RoutingStrategy
