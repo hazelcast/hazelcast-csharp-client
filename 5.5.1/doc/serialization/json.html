@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>HazelcastJsonValue Serialization | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="HazelcastJsonValue Serialization | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../../styles/docfx.css">
+      <link rel="stylesheet" href="../../../styles/main.css">
+      <link rel="stylesheet" href="../../../styles/hz.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.5.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="hazelcastjsonvalue-serialization">HazelcastJsonValue Serialization</h1>
+
+<p>You can use the JSON formatted strings as objects in Hazelcast cluster. Starting with Hazelcast IMDG 3.12, the JSON serialization is one of the formerly supported serialization methods. Creating JSON objects in the cluster does not require any server side coding and hence you can just send a JSON formatted string object to the cluster and query these objects by fields.</p>
+<p>In order to use JSON serialization, you should use the <code>HazelcastJsonValue</code> object for the key or value. Here is an example IMap usage:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, HazelcastJsonValue&gt;(&quot;map&quot;);
+</code></pre>
+<p>We constructed a map in the cluster which has <code>string</code> as the key and <code>HazelcastJsonValue</code> as the value. <code>HazelcastJsonValue</code> is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the <code>HazelcastJsonValue</code> object by using the <code>ToString()</code> method.</p>
+<p>You can construct a <code>HazelcastJsonValue</code> using the <code>HazelcastJsonValue(string jsonString)</code> constructor. No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.</p>
+<p>Here is an example of how you can construct a <code>HazelcastJsonValue</code> and put to the map:</p>
+<pre><code class="lang-csharp">await map.PutAsync(&quot;item1&quot;, new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 4 }&quot;));
+await map.PutAsync(&quot;item2&quot;, new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 20 }&quot;));
+</code></pre>
+<p>You can query JSON objects in the cluster using the <code>Predicate</code>s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:</p>
+<pre><code class="lang-csharp">    // Get the objects whose age is less than 6
+    var result = await map.GetValues(Predicates.IsLessThan(&quot;age&quot;, 6));
+
+    Console.WriteLine($&quot;Retrieved {result.Count} values whose age is less than 6.&quot;);
+    Console.WriteLine($&quot;Entry is: {result.First()}&quot;);
+</code></pre>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2024 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

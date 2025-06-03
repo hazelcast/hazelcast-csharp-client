@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>TLS/SSL | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="TLS/SSL | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../../styles/docfx.css">
+      <link rel="stylesheet" href="../../../styles/main.css">
+      <link rel="stylesheet" href="../../../styles/hz.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.5.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="tlsssl">TLS/SSL</h1>
+
+<p>This page describes the TLS/SSL security features of Hazelcast .NET client, for connections between members and between clients and members, and mutual authentication. These security features require <strong>Hazelcast IMDG Enterprise</strong> edition.</p>
+<p>One of the offers of Hazelcast is the TLS/SSL protocol which you can use to establish an encrypted communication across your cluster with key stores and trust stores.</p>
+<ul>
+<li>A Java <code>keyStore</code> is a file that includes a private key and a public certificate.</li>
+<li>A Java <code>trustStore</code> is a file that includes a list of certificates trusted by your application which is named as  &quot;certificate authority&quot;.</li>
+</ul>
+<p>You should set <code>keyStore</code> and <code>trustStore</code> before starting the members. See the next section on setting <code>keyStore</code> and <code>trustStore</code> on the server side.</p>
+<h2 id="tlsssl-for-hazelcast-members">TLS/SSL for Hazelcast Members</h2>
+<p>Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members, for end to end encryption. To use it, see the <a href="https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl#tlsssl-for-hazelcast-members">TLS/SSL for Hazelcast Members section</a>.</p>
+<h2 id="tlsssl-for-hazelcast-net-clients">TLS/SSL for Hazelcast .NET Clients</h2>
+<p>TLS/SSL for the Hazelcast .NET client can be configured using the <code>SslOptions</code> class. Let's first give an example of a sample configuration and then go over the configuration options one by one:</p>
+<pre><code class="lang-csharp">    var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+    var sslOptions = hazelcastOptions.Networking.Ssl;
+
+    sslOptions.Enabled = true;
+    sslOptions.ValidateCertificateChain = true;
+    sslOptions.ValidateCertificateName = false;
+    sslOptions.CheckCertificateRevocation = false;
+    sslOptions.CertificateName = &quot;CN or SAN of server certificate&quot;;
+    sslOptions.CertificatePath = &quot;client pfx file path&quot;;
+    sslOptions.CertificatePassword = &quot;client pfx password&quot;;
+    sslOptions.SslProtocol = SslProtocols.Tls12;
+</code></pre>
+<p>Of course these can also be configured via command-line options or environment variables, or via the Hazelcast configuration file. See the <a href="../configuration.html">configuration</a> page for details.</p>
+<h3 id="enabling-tlsssl">Enabling TLS/SSL</h3>
+<p>TLS/SSL for the Hazelcast .NET client can be enabled/disabled using the <code>Enabled</code> option. When this option is set to <code>true</code>, TLS/SSL will be configured with respect to the other <code>SslOptions</code> options. Setting this option to <code>false</code> will result in discarding other <code>SslOptions</code> properties.</p>
+<p>Default value is <code>false</code> (disabled).</p>
+<h3 id="certificate-chain-validation">Certificate Chain validation</h3>
+<p>Remote SSL certificate chain validation can be enabled/disabled using the <code>SslOptions.ValidateCertificateChain</code> option. It is enabled by default. If you need to bypass certificate validation for some reason, you can disable it by setting the value to <code>false</code>.</p>
+<p>Validation is done by .NET and delegated to OS, and you need to make sure your server certificate is trusted by your OS.
+Please refer to <a href="https://blogs.msdn.microsoft.com/webdev/2017/11/29/configuring-https-in-asp-net-core-across-different-platforms/">this blog</a> for information on how to configure your OS to trust your server certificates.</p>
+<h3 id="certificate-name-validation">Certificate Name Validation</h3>
+<p>Server certificate CN or SAN field can be validated against a value you set into configuration. This option is disabled by default. You can enable it by setting <code>SslOptions.ValidateCertificateName</code> to <code>true</code> and providing a name with <code>SslOptions.CertificateName</code>.</p>
+<h3 id="tlsssl-protocol">TLS/SSL Protocol</h3>
+<p>You can configure the TLS/SSL protocol using the <code>SslOptions.Protocol</code> option. Valid options are values of the <code>System.Security.Authentication.SslProtocols</code> enum. Depending on your .NET version, below values are valid:</p>
+<ul>
+<li><strong>None</strong>    : Allows the operating system to choose the best protocol to use.</li>
+<li><strong>Ssl2</strong>    : SSL 2.0 Protocol. <em>RFC 6176 prohibits the usage of SSL 2.0.</em></li>
+<li><strong>Ssl3</strong>    : SSL 3.0 Protocol. <em>RFC 7568 prohibits the usage of SSL 3.0.</em></li>
+<li><strong>Tls</strong>     : TLS 1.0 Protocol described in RFC 2246. <em>deprecated.</em></li>
+<li><strong>Tls11</strong>   : TLS 1.1 Protocol described in RFC 4346. <em>deprecated.</em></li>
+<li><strong>Tls12</strong>   : TLS 1.2 Protocol described in RFC 5246. <em>recommended.</em></li>
+</ul>
+<h2 id="mutual-authentication">Mutual Authentication</h2>
+<p>As explained above, Hazelcast members have key stores used to identify themselves (to other members) and Hazelcast clients have trust stores used to define which members they can trust.</p>
+<p>Using mutual authentication, the clients also have their key stores and members have their trust stores so that the members can know which clients they can trust.</p>
+<p>To enable mutual authentication, firstly, you need to set the following property on the server side in the <code>hazelcast.xml</code> file:</p>
+<pre><code class="lang-xml">&lt;network&gt;
+    &lt;ssl enabled=&quot;true&quot;&gt;
+        &lt;properties&gt;
+            &lt;property name=&quot;javax.net.ssl.mutualAuthentication&quot;&gt;REQUIRED&lt;/property&gt;
+        &lt;/properties&gt;
+    &lt;/ssl&gt;
+&lt;/network&gt;
+</code></pre>
+<p>You can see the details of setting mutual authentication on the server side in the <a href="https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl#mutual-authentication">Mutual Authentication section</a> of the Hazelcast IMDG Reference Manual.</p>
+<p>On the client side, you have to provide the client certificate and its password if there is one. Here is how you do it:</p>
+<pre><code class="lang-csharp">sslOptions.CertificatePath = &quot;client pfx file path&quot;;
+sslOptions.CertificatePassword = &quot;client pfx password&quot;;
+</code></pre>
+<p>The provided certificate file should be a PFX file that has private and public keys. The file path should be set with <code>SslOptions.CertificatePath</code>.
+If you choose to set a password to it, you need to provide it to the configuration using the <code>SslOptions.CertificatePassword</code> option.</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2024 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

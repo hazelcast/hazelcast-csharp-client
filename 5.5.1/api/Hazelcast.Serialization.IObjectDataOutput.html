@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>IObjectDataOutput Interface
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="IObjectDataOutput Interface
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.5.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Serialization.IObjectDataOutput">
+
+
+
+  <h1 id="Hazelcast_Serialization_IObjectDataOutput" data-uid="Hazelcast.Serialization.IObjectDataOutput" class="text-break">IObjectDataOutput Interface
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.Serialization.html">Serialization</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Provides encoding methods for primitive and array of primitive types writing to the serialized byte array.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public interface IObjectDataOutput</code></pre>
+  </div>
+  <h3 id="properties">Properties
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_Endianness" data-uid="Hazelcast.Serialization.IObjectDataOutput.Endianness">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.Endianness.html#Hazelcast_Serialization_IObjectDataOutput_Endianness">Endianness</a>
+        </td>
+        <td class="markdown level1 summary"><p>The configured endianness via <a class="xref" href="Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness">Endianness</a></p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_ToByteArray_System_Int32_" data-uid="Hazelcast.Serialization.IObjectDataOutput.ToByteArray(System.Int32)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.ToByteArray.html#Hazelcast_Serialization_IObjectDataOutput_ToByteArray_System_Int32_">ToByteArray(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Creates a new byte array with the internal content of the serialized data.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_Write_System_Byte___" data-uid="Hazelcast.Serialization.IObjectDataOutput.Write(System.Byte[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.Write.html#Hazelcast_Serialization_IObjectDataOutput_Write_System_Byte___">Write(byte[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the content of the provided byte array to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_Write_System_Byte___System_Int32_System_Int32_" data-uid="Hazelcast.Serialization.IObjectDataOutput.Write(System.Byte[],System.Int32,System.Int32)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.Write.html#Hazelcast_Serialization_IObjectDataOutput_Write_System_Byte___System_Int32_System_Int32_">Write(byte[], int, int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the content of the provided byte array to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteBoolean_System_Boolean_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteBoolean(System.Boolean)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteBoolean.html#Hazelcast_Serialization_IObjectDataOutput_WriteBoolean_System_Boolean_">WriteBoolean(bool)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>bool</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteBooleanArray_System_Boolean___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteBooleanArray(System.Boolean[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteBooleanArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteBooleanArray_System_Boolean___">WriteBooleanArray(bool[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>bool[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteByte_System_Byte_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteByte(System.Byte)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteByte.html#Hazelcast_Serialization_IObjectDataOutput_WriteByte_System_Byte_">WriteByte(byte)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>byte</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteByteArray_System_Byte___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteByteArray(System.Byte[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteByteArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteByteArray_System_Byte___">WriteByteArray(byte[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>byte[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteBytes_System_String_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteBytes(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteBytes.html#Hazelcast_Serialization_IObjectDataOutput_WriteBytes_System_String_">WriteBytes(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes each <code>char</code> of the <code class="paramref">value</code> with <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteByte.html#Hazelcast_Serialization_IObjectDataOutput_WriteByte_System_Byte_">WriteByte(byte)</a> method to this serialization output        ///</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteChar_System_Char_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteChar(System.Char)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteChar.html#Hazelcast_Serialization_IObjectDataOutput_WriteChar_System_Char_">WriteChar(char)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>char</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteCharArray_System_Char___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteCharArray(System.Char[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteCharArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteCharArray_System_Char___">WriteCharArray(char[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>char[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteChars_System_String_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteChars(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteChars.html#Hazelcast_Serialization_IObjectDataOutput_WriteChars_System_String_">WriteChars(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes each <code>char</code> of the <code class="paramref">value</code> with <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteChar.html#Hazelcast_Serialization_IObjectDataOutput_WriteChar_System_Char_">WriteChar(char)</a> method to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteDouble_System_Double_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteDouble(System.Double)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteDouble.html#Hazelcast_Serialization_IObjectDataOutput_WriteDouble_System_Double_">WriteDouble(double)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>double</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteDoubleArray_System_Double___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteDoubleArray(System.Double[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteDoubleArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteDoubleArray_System_Double___">WriteDoubleArray(double[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>double[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteFloat_System_Single_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteFloat(System.Single)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteFloat.html#Hazelcast_Serialization_IObjectDataOutput_WriteFloat_System_Single_">WriteFloat(float)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>float</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteFloatArray_System_Single___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteFloatArray(System.Single[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteFloatArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteFloatArray_System_Single___">WriteFloatArray(float[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>float[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteInt_System_Int32_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteInt(System.Int32)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteInt.html#Hazelcast_Serialization_IObjectDataOutput_WriteInt_System_Int32_">WriteInt(int)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>int</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteIntArray_System_Int32___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteIntArray(System.Int32[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteIntArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteIntArray_System_Int32___">WriteIntArray(int[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>int[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteLong_System_Int64_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteLong(System.Int64)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteLong.html#Hazelcast_Serialization_IObjectDataOutput_WriteLong_System_Int64_">WriteLong(long)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>long</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteLongArray_System_Int64___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteLongArray(System.Int64[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteLongArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteLongArray_System_Int64___">WriteLongArray(long[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>long[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteObject_System_Object_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteObject(System.Object)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteObject.html#Hazelcast_Serialization_IObjectDataOutput_WriteObject_System_Object_">WriteObject(object)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes an object to this serialization output using hazelcast serialization</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteSByte_System_SByte_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteSByte(System.SByte)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteSByte.html#Hazelcast_Serialization_IObjectDataOutput_WriteSByte_System_SByte_">WriteSByte(sbyte)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>sbyte</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteShort_System_Int16_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteShort(System.Int16)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteShort.html#Hazelcast_Serialization_IObjectDataOutput_WriteShort_System_Int16_">WriteShort(short)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>short</code> value to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteShortArray_System_Int16___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteShortArray(System.Int16[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteShortArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteShortArray_System_Int16___">WriteShortArray(short[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>short[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteString_System_String_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteString(System.String)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteString.html#Hazelcast_Serialization_IObjectDataOutput_WriteString_System_String_">WriteString(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>string</code> value in UTF-8 encoding to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteStringArray_System_String___" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteStringArray(System.String[])">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteStringArray.html#Hazelcast_Serialization_IObjectDataOutput_WriteStringArray_System_String___">WriteStringArray(string[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes the <code>string[]</code> to this serialization output</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataOutput_WriteUShort_System_UInt16_" data-uid="Hazelcast.Serialization.IObjectDataOutput.WriteUShort(System.UInt16)">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.WriteUShort.html#Hazelcast_Serialization_IObjectDataOutput_WriteUShort_System_UInt16_">WriteUShort(ushort)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a <code>ushort</code> value to this serialization output</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2024 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
