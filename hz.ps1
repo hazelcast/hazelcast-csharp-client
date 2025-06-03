@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.5.0"
+$defaultServerVersion="5.5.6"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -365,8 +365,7 @@ $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 
 # determine java code repositories for tests
 $mvnOssPublicRepo = "https://oss.sonatype.org/content/repositories/snapshots"
-$mvnOssSnapshotRepo = "https://hazelcast.jfrog.io/artifactory/snapshot-internal"
-$mvnOssSnapshotRepoBasicAuth = "https://repository.hazelcast.com/snapshot-internal"
+$mvnOssSnapshotRepo = "https://repository.hazelcast.com/snapshot-internal"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
 $mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
@@ -495,7 +494,7 @@ function ensure-snapshot-repo {
             $ossRepoTokenType = "Basic"
             $token = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$( $env:HZ_SNAPSHOT_INTERNAL_USERNAME ):$( $env:HZ_SNAPSHOT_INTERNAL_PASSWORD )"))
             Write-Output "Using credentials for OSS repository from environment variables"
-            $mvnOssRepo = $mvnOssSnapshotRepoBasicAuth
+            $mvnOssRepo = $mvnOssSnapshotRepo
             $strToken = "Basic "+$token
             $script:ossRepoRequestHeader =@{
                 Authorization = $strToken
@@ -850,17 +849,25 @@ function ensure-server-files {
 
     # ensure we have the remote controller + hazelcast test jar
     ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssPublicRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
-    ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
-
+    
     if ($options.enterprise) {
 
         # ensure we have the hazelcast enterprise server
         if (${serverVersion} -lt "5.0") { # FIXME version comparison
             ensure-jar "hazelcast-enterprise-all-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
+        }
+        elseif ($serverVersion -gt "5.5.0") {
+            # after 5.5.0, pathc become ee only.
+            Write-Output "Download from enterprise repo"
+            ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
         else {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
     }
     else {
@@ -868,10 +875,18 @@ function ensure-server-files {
         # ensure we have the hazelcast server jar
         if (${serverVersion} -lt "5.0") { # FIXME version comparison
             ensure-jar "hazelcast-all-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
+        }
+        elseif ($serverVersion -gt "5.5.0") {
+            # after 5.5.0, pathc become ee only.
+            Write-Output "Download from enterprise repo"            
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
         else {
             ensure-jar "hazelcast-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
     }
 
