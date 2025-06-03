@@ -853,12 +853,12 @@ function ensure-server-files {
     if ($options.enterprise) {
 
         # ensure we have the hazelcast enterprise server
-        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+        if (${serverVersion} -lt "5.0") { 
             ensure-jar "hazelcast-enterprise-all-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -gt "5.5.0") {
-            # after 5.5.0, pathc become ee only.
+        elseif ($serverVersion -cge "5.4.0") {
+            # after 5.4.0, patch release become ee only.
             Write-Output "Download from enterprise repo"
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
@@ -873,12 +873,12 @@ function ensure-server-files {
     else {
 
         # ensure we have the hazelcast server jar
-        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+        if (${serverVersion} -lt "5.0") {
             ensure-jar "hazelcast-all-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -gt "5.5.0") {
-            # after 5.5.0, pathc become ee only.
+        elseif ($serverVersion -cge "5.4.0") {
+            # after 5.4.0, patch release become ee only.
             Write-Output "Download from enterprise repo"            
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
