@@ -857,8 +857,8 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-all-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -gt "5.5.0") {
-            # after 5.5.0, pathc become ee only.
+        elseif ($serverVersion -cge "5.4.0") {
+            # after 5.4.0, patch release become ee only.
             Write-Output "Download from enterprise repo"
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
@@ -877,9 +877,10 @@ function ensure-server-files {
             ensure-jar "hazelcast-all-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -gt "5.5.0") {
-            # after 5.5.0, pathc become ee only.
-            Write-Output "Download from enterprise repo"            
+        elseif ($serverVersion -cge "5.4.0") {
+            # after 5.4.0, patch release become ee only.
+            Write-Output "Download from enterprise repo"
+            ensure-jar "hazelcast-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
