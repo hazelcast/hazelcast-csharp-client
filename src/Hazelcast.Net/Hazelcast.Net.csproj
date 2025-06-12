@@ -88,7 +88,16 @@
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj" PrivateAssets="All" />
   </ItemGroup>
-
+  
+<!--
+  Uncomment when have a time to fix warnings.
+  <ItemGroup>
+    <ProjectReference Include="..\Hazelcast.Net.BuildAnalyzers\Hazelcast.Net.BuildAnalyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+-->
   <ItemGroup>
     <!-- note: requires analyzer version 3.3.4+ in order to support merging files -->
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
@@ -109,28 +118,28 @@
       <DependentUpon>SerializationService.cs</DependentUpon>
     </Compile>
     <Compile Update="Core\BytesExtensions.*.cs">
-        <DependentUpon>BytesExtensions.cs</DependentUpon>
+      <DependentUpon>BytesExtensions.cs</DependentUpon>
     </Compile>
     <Compile Update="Clustering\Cluster.*.cs">
-        <DependentUpon>Cluster.cs</DependentUpon>
+      <DependentUpon>Cluster.cs</DependentUpon>
     </Compile>
     <Compile Update="Clustering\Cluster+*.cs">
-        <DependentUpon>Cluster.cs</DependentUpon>
+      <DependentUpon>Cluster.cs</DependentUpon>
     </Compile>
     <Compile Update="DistributedObjects\IHMap.*.cs">
-        <DependentUpon>IHMap.cs</DependentUpon>
+      <DependentUpon>IHMap.cs</DependentUpon>
     </Compile>
     <Compile Update="DistributedObjects\IHReplicatedMap.*.cs">
-        <DependentUpon>IHReplicatedMap.cs</DependentUpon>
+      <DependentUpon>IHReplicatedMap.cs</DependentUpon>
     </Compile>
     <Compile Update="Networking\SocketConnectionBase+*.cs">
-        <DependentUpon>SocketConnectionBase.cs</DependentUpon>
+      <DependentUpon>SocketConnectionBase.cs</DependentUpon>
     </Compile>
     <Compile Update="Serialization\PortableContext+*.cs">
-        <DependentUpon>PortableContext.cs</DependentUpon>
+      <DependentUpon>PortableContext.cs</DependentUpon>
     </Compile>
     <Compile Update="Messaging\ClientMessage+*.cs">
-        <DependentUpon>ClientMessage.cs</DependentUpon>
+      <DependentUpon>ClientMessage.cs</DependentUpon>
     </Compile>
     <Compile Update="HazelcastClient.*.cs">
       <DependentUpon>HazelcastClient.cs</DependentUpon>
