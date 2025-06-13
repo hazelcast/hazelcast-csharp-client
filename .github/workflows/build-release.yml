@@ -179,7 +179,7 @@ jobs:
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./temp/artifacts/test-coverage/cover-net8.0.xml
