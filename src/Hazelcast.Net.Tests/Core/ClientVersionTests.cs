@@ -53,14 +53,14 @@ namespace Hazelcast.Tests.Core
 
 
             Assert.That(Authenticator.ClientVersion, Is.EqualTo(ClientVersion.MajorMinorPatchVersion));
-            var assemblyVersion = typeof(ClientVersion).Assembly.GetName().Version;
-            Assert.That(Authenticator.ClientVersion, Is.EqualTo(assemblyVersion.Major + "." + assemblyVersion.Minor + "." + assemblyVersion.MajorRevision));
             Assert.That(Authenticator.ClientVersion.Split('.').Length, Is.GreaterThanOrEqualTo(3));
         }
 
 
         [TestCase("1.2.3", "1.2.3")]
+        [TestCase("1.2.0", "1.2.0")]
         [TestCase("1.2.3-preview.0", "1.2.3")]
+        [TestCase("1.2.0-preview.0", "1.2.0")]
         [TestCase("1.2.3-SNAPSHOT", "1.2.3")]
         [TestCase("1.2.3+ae12b5d9", "1.2.3")]
         [TestCase("1.2.3-preview.0+ae12b5", "1.2.3")]

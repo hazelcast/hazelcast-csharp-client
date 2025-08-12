@@ -192,7 +192,7 @@ jobs:
             k=${k%.*} # ubuntu-latest[-net00].zip -> ubuntu-latest[-net00]
             k=${k//-latest} # ubuntu-latest[-net00] -> ubuntu[-net00]
             os=${k%-*} # ubuntu[-net00] -> ubuntu
-            unzip $f -d temp/test-coverage/$os # linux cover-net6.0.json goes into temp/test-coverage/ubuntu/cover-net6.0.json
+            unzip $f -d temp/test-coverage/$os # linux cover-net8.0.json goes into temp/test-coverage/ubuntu/cover-net8.0.json
           done
           if [ $found -eq 1 ]; then
             echo "coverage=true" >> $GITHUB_OUTPUT
@@ -239,8 +239,9 @@ jobs:
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
         if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/windows/cover-net6.0.xml
+          files: ./temp/test-coverage/windows/cover-net8.0.xml
           override_commit: ${{ inputs.head_sha }} # required since report runs on 'master'
+          fail_ci_if_error: true
