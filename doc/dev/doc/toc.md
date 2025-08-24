@@ -31,6 +31,7 @@
 ## [FencedLock](distributed-objects/fencedlock.md)
 ## [CPMap](distributed-objects/cpmap.md)
 ## [CountDownLatch](distributed-objects/countdownlatch.md)
+## [VectorCollection](distributed-objects/vectorcollection.md)
 # [Distributed Computing](distributedComputing.md)
 # [Distributed Query](distributedQuery.md)
 # [CP SubSystem](cpsubsystem.md)
