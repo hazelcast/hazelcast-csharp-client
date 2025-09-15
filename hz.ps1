@@ -857,7 +857,7 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-all-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -cge "5.4.0") {            
+        elseif ($serverVersion -cge "5.4.0") {
             # after 5.4.0, patch release become ee only.
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
 
