@@ -58,7 +58,7 @@ runs:
    
     - name: Install .NET on Windows
       if: inputs.dotnet == 'true' && inputs.os == 'windows-latest'
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '6.0.x'
 
