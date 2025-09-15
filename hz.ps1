@@ -862,16 +862,10 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
 
             # but check if it's snapshot, then downloand from os repo
-            if ($isSnapshot)
-            {
-                ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
-                ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
-            }
-            else
-            {
-                ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
-                ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
-            }
+            $repo = if ($isSnapshot) { $mvnOssRepo } else { $mvnEntRepo }
+
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $repo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $repo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
         else {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
