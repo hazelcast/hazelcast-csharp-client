@@ -861,7 +861,7 @@ function ensure-server-files {
             # after 5.4.0, patch release become ee only.
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
 
-            # but check if it's snapshot, then downloand from os repo
+            # but check if it's snapshot, then download from os repo
             $repo = if ($isSnapshot) { $mvnOssRepo } else { $mvnEntRepo }
 
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $repo "com.hazelcast:hazelcast-sql:${serverVersion}"
