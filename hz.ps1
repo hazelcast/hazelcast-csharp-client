@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.5.6"
+$defaultServerVersion="5.6.0-SNAPSHOT"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -859,10 +859,13 @@ function ensure-server-files {
         }
         elseif ($serverVersion -cge "5.4.0") {
             # after 5.4.0, patch release become ee only.
-            Write-Output "Download from enterprise repo"
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
-            ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
-            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
+
+            # but check if it's snapshot, then download from os repo
+            $repo = if ($isSnapshot) { $mvnOssRepo } else { $mvnEntRepo }
+
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $repo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $repo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
         else {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
