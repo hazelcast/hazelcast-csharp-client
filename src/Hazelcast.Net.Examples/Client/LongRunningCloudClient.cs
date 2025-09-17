@@ -30,7 +30,7 @@ namespace Hazelcast.Examples.Client
         
         this is to test that a client simply pinging a cluster can stay connected
         
-        go to https://viridian.hazelcast.com/ and start a (new) cluster, get its name, token and
+        go to https://cloud.hazelcast.com/ and start a (new) cluster, get its name, token and
         ssl certificate from the UI, and update the code accordingly (see commented-out options) 
         or pass these parameters to the example via the command line:
         
@@ -72,9 +72,9 @@ namespace Hazelcast.Examples.Client
                 .With(args)
                 /*.With(config =>
                 {
-                    // Your Viridian cluster name.
+                    // Your Hazelcast Cloud cluster name.
                     config.ClusterName = "YOUR_CLUSTER_NAME";
-                    // Your discovery token and url to connect Viridian cluster.
+                    // Your discovery token and url to connect Hazelcast Cloud cluster.
                     config.Networking.Cloud.DiscoveryToken = "YOUR_CLUSTER_DISCOVERY_TOKEN";    
                     // Enable metrics to see on Management Center.
                     config.Metrics.Enabled = true;
