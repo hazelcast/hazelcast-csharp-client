@@ -366,7 +366,7 @@ $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 # determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://repository.hazelcast.com/snapshot-internal"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
-$mvnOssReleaseRepo = "https://repo.maven.org/maven2"
+$mvnOssReleaseRepo = "https://repo.maven.apache.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
 if ($isSnapshot) {
