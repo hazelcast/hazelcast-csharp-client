@@ -24,13 +24,13 @@ namespace Hazelcast.Tests.Cloud;
 
 // these tests require:
 // that the RC runs with the following environment variables:
-// - BASE_URL for instance https://api.dev.viridian.hazelcast.cloud
+// - BASE_URL for instance https://api.dev.cloud.hazelcast.cloud
 // - HZ_VERSION for instance 5.2.3
 // - API_KEY ...
 // - API_SECRET ...
 
 // NOTE: do NOT rename that class, as the name is explicitly used in workflow
-[Explicit("Requires Hazelcast Viridian Setup.")]
+[Explicit("Requires Hazelcast Cloud Setup.")]
 public class ServerlessCloudTests : CloudTestBase
 {
     private string _hzVersion;

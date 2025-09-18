@@ -27,9 +27,9 @@ namespace Hazelcast.Examples.Client
                 .With(config =>
                 {
                     // Get Started: https://docs.hazelcast.com/cloud/get-started
-                    // Your Viridian cluster name.
+                    // Your Hazelcast Cloud cluster name.
                     config.ClusterName = "YOUR_CLUSTER_NAME";
-                    // Your discovery token and url to connect Viridian cluster.
+                    // Your discovery token and url to connect Hazelcast Cloud cluster.
                     config.Networking.Cloud.DiscoveryToken = "YOUR_CLUSTER_DISCOVERY_TOKEN";
                     // Enable metrics to see on Management Center.
                     config.Metrics.Enabled = true;
