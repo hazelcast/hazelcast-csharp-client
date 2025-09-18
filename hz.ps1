@@ -364,10 +364,9 @@ $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
 # determine java code repositories for tests
-$mvnOssPublicRepo = "https://oss.sonatype.org/content/repositories/snapshots"
 $mvnOssSnapshotRepo = "https://repository.hazelcast.com/snapshot-internal"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
-$mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
+$mvnOssReleaseRepo = "https://repo.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
 if ($isSnapshot) {
@@ -848,7 +847,7 @@ function ensure-server-files {
     if (-not (verify-server-files)) { determine-server-version }
 
     # ensure we have the remote controller + hazelcast test jar
-    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssPublicRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnEntSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
     
     if ($options.enterprise) {
 
