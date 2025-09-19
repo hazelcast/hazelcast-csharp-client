@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ namespace System
             => s.EndsWith(trim) ? s.Substring(0, s.Length - trim.Length) : s;
 #pragma warning restore CA1310 // Specify StringComparison for correctness
 
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if NETSTANDARD2_0
 #pragma warning disable CA1801 // Review unused parameters - we need them
 #pragma warning disable IDE0060 // Remove unused parameter
 
