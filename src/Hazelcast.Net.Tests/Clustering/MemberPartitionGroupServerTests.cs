@@ -138,7 +138,7 @@ namespace Hazelcast.Tests.Clustering
             var keyCount = 3 * 271;
 
             // create a client with the given routing strategy for catching the events.
-            var client1 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client1", routingMode);
+            await using var client1 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client1", routingMode);
             var client1Count = 0;
             var mapName = $"map_{routingMode}";
             var map1 = await client1.GetMapAsync<int, int>(mapName);
@@ -153,7 +153,7 @@ namespace Hazelcast.Tests.Clustering
 
 
             // create a dummy client  for creating events
-            var client2 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client2", RoutingModes.SingleMember);
+            await using var client2 = await CreateClient(RoutingStrategy.PartitionGroups, addresses, "client2", RoutingModes.SingleMember);
 
             var map2 = await client2.GetMapAsync<int, int>(map1.Name);
 
