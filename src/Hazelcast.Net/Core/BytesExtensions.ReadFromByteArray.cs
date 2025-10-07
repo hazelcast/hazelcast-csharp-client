@@ -20,10 +20,10 @@ namespace Hazelcast.Core
     internal static partial class BytesExtensions // Read from byte[]
     {
         /// <summary>
-        /// Verifies that it is possible to read <param name="count"/> at position <param name="position"/>
-        /// of the <param name="bytes"/> array.
+        /// Verifies that it is possible to read <paramref  name="count"/> at position <paramref  name="position"/>
+        /// of the "bytes" array.
         /// </summary>
-        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="bytes">The array of <paramref  name="bytes"/> to read from.</param>
         /// <param name="position">The position.</param>
         /// <param name="count">The number of bytes to read.</param>
         /// <returns>The array of bytes to read from.</returns>

@@ -43,7 +43,7 @@ internal static class CollectionExtensions
     }
 
     /// <summary>
-    /// Creates a HashSet<T> from an IEnumerable<T>.
+    /// Creates a <code>HashSet<T></code> from an <code>IEnumerable<T></code>.
     /// </summary>
     /// <param name="source">An IEnumerable<T> to create a HashSet<T> from.</param>
     /// <typeparam name="TSource">The type of the elements of source.</typeparam>

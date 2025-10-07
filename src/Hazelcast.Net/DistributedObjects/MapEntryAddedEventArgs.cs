@@ -20,6 +20,13 @@ namespace Hazelcast.DistributedObjects
     {
         private readonly Lazy<TValue> _value;
 
+        /// <summary>
+        ///  Initializes a new instance of the <see cref="MapEntryAddedEventArgs{TKey, TValue}" /> class.
+        /// </summary>
+        /// <param name="member">The member that raised the event. </param>
+        /// <param name="key">The key of the added entry.</param>
+        /// <param name="value">The value of the added entry. </param>
+        /// <param name="state"></param>
         public MapEntryAddedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, object state)
             : base(member, key, state)
         {

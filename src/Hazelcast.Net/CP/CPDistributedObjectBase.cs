@@ -35,6 +35,7 @@ namespace Hazelcast.CP
         /// <param name="name">The unique name of the object.</param>
         /// <param name="groupId">The CP group identifier of the object.</param>
         /// <param name="cluster">A cluster.</param>
+        /// <param name="serializationService">The serialization service.</param>
         protected CPDistributedObjectBase(string serviceName, string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
         {
             ServiceName = serviceName;

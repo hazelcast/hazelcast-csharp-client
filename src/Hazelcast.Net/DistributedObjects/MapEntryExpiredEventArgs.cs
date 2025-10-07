@@ -20,6 +20,13 @@ namespace Hazelcast.DistributedObjects
     {
         private readonly Lazy<TValue> _oldValue;
 
+        /// <summary>
+        ///  Initializes a new instance of the <see cref="MapEntryExpiredEventArgs" /> class.
+        /// </summary>
+        /// <param name="member">The member that raised the event. </param>
+        /// <param name="key">The key that expired.</param>
+        /// <param name="oldValue">The value that expired.</param>
+        /// <param name="state"></param>
         public MapEntryExpiredEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue, object state)
             : base(member, key, state)
         {

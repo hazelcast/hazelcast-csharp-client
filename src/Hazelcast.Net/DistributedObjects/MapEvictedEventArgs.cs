@@ -15,8 +15,17 @@ using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
+    /// <summary>
+    /// Represents map evicted event arguments.
+    /// </summary>
     public sealed class MapEvictedEventArgs : MapEventArgsBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MapEvictedEventArgs"/> class.
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="numberOfAffectedEntries"></param>
+        /// <param name="state"></param>
         public MapEvictedEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
             : base(member, numberOfAffectedEntries, state)
         { }

@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.Codecs
     /// <b>Warning:</b>
     /// <p>
     /// Time resolution for TTL is seconds. The given TTL value is rounded to the next closest second value.
+    /// </p>
     ///</summary>
 #if SERVER_CODEC
     internal static class MapSetTtlServerCodec
