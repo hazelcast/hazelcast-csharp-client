@@ -21,6 +21,7 @@ namespace Hazelcast.Core
     /// Represents the exception that is thrown when a service factory fails.
     /// </summary>
 #if !NET8_0_OR_GREATER
+    /// <inheritdoc />
     [Serializable]
 #endif
     public sealed class ServiceFactoryException : HazelcastException

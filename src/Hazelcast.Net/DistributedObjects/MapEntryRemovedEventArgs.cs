@@ -17,7 +17,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    ///  Represents map entry removed event arguments.
+    /// Represents a map entry removed event arguments.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>

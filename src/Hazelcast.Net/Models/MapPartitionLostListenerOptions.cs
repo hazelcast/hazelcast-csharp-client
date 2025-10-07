@@ -15,15 +15,29 @@ using Hazelcast.Configuration;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents the configuration for a map partition lost listener.
+/// </summary>
 public class MapPartitionLostListenerOptions : ListenerOptions
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapPartitionLostListenerOptions"/> class.
+    /// </summary>
     public MapPartitionLostListenerOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapPartitionLostListenerOptions"/> class.
+    /// </summary>
+    /// <param name="className"></param>
     public MapPartitionLostListenerOptions(string className)
         : base(className)
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapPartitionLostListenerOptions"/> class.
+    /// </summary>
+    /// <param name="config"></param>
     public MapPartitionLostListenerOptions(MapPartitionLostListenerOptions config)
         : base(config)
     { }

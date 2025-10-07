@@ -148,8 +148,8 @@ namespace Hazelcast.Messaging
         /// <remarks>
         /// <para>Append the specified frame, and all next frames if any.</para>
         /// <para>Does not clone the frames, so the frames cannot be reused once appended.</para>
-        /// <para>If <paramref name="trustable"/> is true, it is assumed that <see cref="lastFrame"/>
-        /// can be reached from <see cref="firstFrame"/> and is already marked as final.</para>
+        /// <para>If <paramref name="trustable"/> is true, it is assumed that <paramref cref="lastFrame"/>
+        /// can be reached from <paramref cref="firstFrame"/> and is already marked as final.</para>
         /// </remarks>
         public ClientMessage AppendFragment(Frame firstFrame, Frame lastFrame, bool trustable = false)
         {

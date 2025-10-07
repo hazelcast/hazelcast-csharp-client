@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a transactional distributed list
+    /// Represents a transactional list
     /// </summary>
     /// <typeparam name="TItem"></typeparam>
     public interface IHTxList<TItem>

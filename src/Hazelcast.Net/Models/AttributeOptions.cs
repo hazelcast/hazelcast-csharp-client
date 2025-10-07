@@ -20,6 +20,9 @@ using Hazelcast.Configuration;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents options for a map attribute.
+/// </summary>
 public class AttributeOptions : IIdentifiedDataSerializable
 {
     private static readonly Regex NamePattern = new Regex("^[a-zA-Z0-9][a-zA-Z0-9_]*$", RegexOptions.Compiled);

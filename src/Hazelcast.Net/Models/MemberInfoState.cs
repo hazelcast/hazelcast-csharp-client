@@ -43,18 +43,33 @@ namespace Hazelcast.Models
         /// </summary>
         public bool IsConnected { get; }
 
+        ///<inheritdoc />
         public override bool Equals(object? obj)
             => obj is MemberInfoState state && Equals(state);
 
+        ///<inheritdoc />
         public override int GetHashCode()
             => Member.GetHashCode();
 
+        /// <summary>
+        /// Determines whether two <see cref="MemberInfoState"/> instances are equal.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator ==(MemberInfoState left, MemberInfoState right)
             => left.Member.Equals(right.Member); // .Member cannot be null
 
+        /// <summary>
+        /// Determines whether two <see cref="MemberInfoState"/> instances are not equal.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator !=(MemberInfoState left, MemberInfoState right)
             => !(left == right);
 
+        ///<inheritdoc />
         public bool Equals(MemberInfoState other)
             => Member.Equals(other.Member);
     }

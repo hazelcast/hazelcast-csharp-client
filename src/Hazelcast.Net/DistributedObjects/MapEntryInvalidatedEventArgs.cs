@@ -17,17 +17,17 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents map entry invalidated event arguments.
+    /// Represents a map entry invalidated event arguments.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
     public sealed class MapEntryInvalidatedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
         /// <summary>
-        ///  Initializes a new instance of the <see cref="MapEntryInvalidatedEventArgs{TKey, TValue}" /> class.
+        /// Initializes a new instance of the <see cref="MapEntryInvalidatedEventArgs{TKey, TValue}"/> class.
         /// </summary>
-        /// <param name="member">The member raising the event. </param>
-        /// <param name="key">The key of the invalidated entry. </param>
+        /// <param name="member"></param>
+        /// <param name="key"></param>
         /// <param name="state"></param>
         public MapEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key, object state)
             : base(member, key, state)

@@ -34,6 +34,9 @@ namespace Hazelcast.Models
     /// </remarks>
     public class IndexOptions : IIdentifiedDataSerializable
     {
+        /// <summary>
+        /// The default type of the index.
+        /// </summary>
         public static readonly IndexType DefaultType = IndexType.Sorted;
 
         /// <summary>

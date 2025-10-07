@@ -94,12 +94,20 @@ public class ListenerOptions : IIdentifiedDataSerializable
     //    }
     //}
 
+    /// <summary>
+    /// Gets or sets a value indicating whether to include the value of the event.
+    /// </summary>
+    /// <exception cref="NotSupportedException"></exception>
     public virtual bool IncludeValue
     {
         get => true;
         set => throw new NotSupportedException();
     }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the listener is local.
+    /// </summary>
+    /// <exception cref="NotSupportedException"></exception>
     public virtual bool Local
     {
         get => false;

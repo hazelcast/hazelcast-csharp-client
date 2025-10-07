@@ -19,37 +19,47 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of MultiMap</summary>
     public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
-        /// <summary>Returns the collection of values associated with the key.</summary>
-        /// <param name="key">the key whose associated values are to be returned</param>
-        /// <returns>the collection of the values associated with the key.</returns>
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.GetAsync(TKey)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         Task<IReadOnlyCollection<TValue>> GetAsync(TKey key);
 
-        /// <summary>Stores a key-value pair in the multi-map.</summary>
-        /// <param name="key">the key to be stored</param>
-        /// <param name="value">the value to be stored</param>
-        /// <returns>
-        /// <c>true</c> if size of the multi-map is increased, <c>false</c> otherwise.
-        /// </returns>
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.PutAsync(TKey, TValue)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         Task<bool> PutAsync(TKey key, TValue value);
 
-        /// <summary>Removes the given key value pair from the multi-map.</summary>
-        /// <param name="key">the key of the entry to remove</param>
-        /// <param name="value">the value of the entry to remove</param>
-        /// <returns>true if the size of the multi-map changed after the remove operation, false otherwise.</returns>
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.RemoveAsync(TKey, TValue)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         Task<bool> RemoveAsync(TKey key, TValue value);
 
-        /// <summary>Removes all the entries with the given key.</summary>
-        /// <param name="key">the key of the entries to remove</param>
-        /// <returns>the collection of removed values associated with the given key</returns>
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.RemoveAsync(TKey)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key);
 
-        /// <summary>Returns the number of key-value pairs in the multi-map.</summary>
-        /// <returns>the number of key-value pairs in the multi-map.</returns>
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.GetSizeAsync"/>
+        /// </summary>
+        /// <returns></returns>
         Task<int> GetSizeAsync();
 
-        /// <summary>Returns number of values matching to given key in the multi-map.</summary>
-        /// <param name="key">the key whose values count are to be returned</param>
-        /// <returns>number of values matching to given key in the multi-map.</returns>
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.GetValueCountAsync"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         Task<int> GetValueCountAsync(TKey key);
     }
 }

@@ -17,7 +17,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    ///    Represents map entry merged event arguments.
+    /// Represents a map entry merged event arguments.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects
         private readonly Lazy<TValue> _mergeValue;
 
         /// <summary>
-        ///    Initializes a new instance of the <see cref="MapEntryMergedEventArgs{TKey, TValue}" /> class.
+        /// Initializes a new instance of the <see cref="MapEntryMergedEventArgs{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="member"></param>
         /// <param name="key"></param>

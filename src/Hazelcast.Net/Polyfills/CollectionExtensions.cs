@@ -43,11 +43,11 @@ internal static class CollectionExtensions
     }
 
     /// <summary>
-    /// Creates a <code>HashSet<T></code> from an <code>IEnumerable<T></code>.
+    /// Creates a HashSet&lt;TSource&gt; from an IEnumerable&lt;TSource&gt;.
     /// </summary>
-    /// <param name="source">An IEnumerable<T> to create a HashSet<T> from.</param>
+    /// <param name="source">An IEnumerable&lt;Source> to create a HashSet&lt;Source&gt; from.</param>
     /// <typeparam name="TSource">The type of the elements of source.</typeparam>
-    /// <returns>A HashSet<T> that contains values of type TSource selected from the input sequence.</returns>
+    /// <returns>A HashSet&lt;Source&gt; that contains values of type TSource selected from the input sequence.</returns>
     public static System.Collections.Generic.HashSet<TSource> ToHashSet<TSource>(this System.Collections.Generic.IEnumerable<TSource> source)
     {
         var set = new HashSet<TSource>();

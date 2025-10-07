@@ -38,6 +38,7 @@ namespace Hazelcast.Models
         /// <param name="tpcToken">The TPC token, or <c>null</c> if the server does not support TPC.</param>
         /// <param name="memberGroups">The members grouped by partitions.</param>
         /// <param name="clusterVersion"></param>
+        /// <param name="cpGroups"></param>
         public AuthenticationResult(Guid clusterId,
             Guid memberId,
             NetworkAddress memberAddress,

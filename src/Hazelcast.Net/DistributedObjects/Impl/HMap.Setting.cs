@@ -312,7 +312,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">A key.</param>
         /// <param name="valueData">The value.</param>
         /// <param name="timeToLive">A time to live.</param>
-        /// <param name="maxIdle">Maximum time for this entry to stay idle in the map. (0 means infinite, negative means map config default)</param>
+        /// <param name="maxIdle">The max idle duration</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The existing value, if any; otherwise the default value.</returns>
         /// <remarks>
@@ -368,7 +368,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">A key.</param>
         /// <param name="valueData">The value.</param>
         /// <param name="timeToLive">A time to live.</param>
-        /// <param name="maxIdle">Maximum time for this entry to stay idle in the map. (0 means infinite, negative means map config default)</param>
+        /// <param name="maxIdle">The max idle duration.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         protected virtual
 #if !HZ_OPTIMIZE_ASYNC

@@ -16,7 +16,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents map evicted event arguments.
+    /// Represents a map evicted event arguments.
     /// </summary>
     public sealed class MapEvictedEventArgs : MapEventArgsBase
     {

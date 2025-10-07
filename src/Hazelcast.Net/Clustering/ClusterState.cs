@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -459,7 +461,7 @@ namespace Hazelcast.Clustering
         public AddressProvider AddressProvider { get; }
 
         /// <summary>
-        /// Gets <see cref="CurrentClusterOptions"/> of current cluster
+        /// Gets Cluster Options of current cluster
         /// </summary>
         public HazelcastOptions CurrentClusterOptions => _failover.CurrentClusterOptions;
 
@@ -488,8 +490,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <returns>The next correlation identifier.</returns>
         public long GetNextCorrelationId() => CorrelationIdSequence.GetNext();
-
-        /// <summary/>
+        
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {

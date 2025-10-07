@@ -13,6 +13,12 @@
 // limitations under the License.
 namespace Hazelcast.Networking
 {
+    /// <summary>
+    /// <p>Clients can connect to cluster members in one of 3 modes:</p>
+    /// <see cref="RoutingModes.SingleMember"/> Client only connects to a single member.
+    ///  <see cref="RoutingModes.AllMembers"/> Client connects to all cluster members.
+    ///  <see cref="RoutingModes.MultiMember"/> Client only connects to a subset of members based on <see cref="RoutingStrategy"/>.
+    /// </summary>
     public class RoutingMode
     {
         /// <summary>

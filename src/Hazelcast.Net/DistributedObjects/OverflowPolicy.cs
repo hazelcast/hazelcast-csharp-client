@@ -24,8 +24,8 @@ namespace Hazelcast.DistributedObjects
     /// but there is 0 remaining capacity.
     /// Overflowing happens when a time-to-live is set and the oldest item in the ringbuffer (the head) is not old enough to expire.
     /// </remarks>
-    /// <seealso cref="IHRingBuffer{TItem}.AddAsync(T, OverflowPolicy)"/>
-    /// <seealso cref="IHRingBuffer{TItem}.AddAllAsync{TE}(ICollection{TE}, OverflowPolicy)"/>
+    /// <seealso cref="IHRingBuffer{TItem}.AddAsync(TItem, OverflowPolicy)"/>
+    /// <seealso cref="IHRingBuffer{TItem}.AddAllAsync{TItem}(ICollection{TItem}, OverflowPolicy)"/>
     public enum OverflowPolicy
     {
         /// <summary>Using this policy the oldest item is overwritten no matter it is not old enough to retire.</summary>

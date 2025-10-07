@@ -16,16 +16,21 @@ using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
+    /// <summary>
+    /// Represents a map entry expired event arguments.
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TValue"></typeparam>
     public sealed class MapEntryExpiredEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
         private readonly Lazy<TValue> _oldValue;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref="MapEntryExpiredEventArgs" /> class.
+        /// Initializes a new instance of the <see cref="MapEntryExpiredEventArgs{TKey, TValue}"/> class.
         /// </summary>
-        /// <param name="member">The member that raised the event. </param>
-        /// <param name="key">The key that expired.</param>
-        /// <param name="oldValue">The value that expired.</param>
+        /// <param name="member"></param>
+        /// <param name="key"></param>
+        /// <param name="oldValue"></param>
         /// <param name="state"></param>
         public MapEntryExpiredEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue, object state)
             : base(member, key, state)

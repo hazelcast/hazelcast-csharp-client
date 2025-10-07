@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects
     public interface IHTopic<T> : IDistributedObject
     {
         /// <summary>Subscribes to this topic.</summary>
-        /// <param name="events">The events received from the topic</param>
+        /// <param name="events">Handler for events.</param>
         /// <param name="state">A state object.</param>
         Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> events, object state = null);
 
@@ -58,7 +58,7 @@ namespace Hazelcast.DistributedObjects
         ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
-        /// <param name="message"></param>
+        /// <param name="message">The message.</param>
         Task PublishAsync(T message);
     }
 }
