@@ -1064,11 +1064,9 @@ function require-dotnet ( $full ) {
 
     $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
 
-    # note:
-    # - net6.0 end of support is nov 12, 2024    
-    # - net8.0 end of support is nov 10, 2026
-
-    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease    
+    # note:        
+    # - net8.0 end of support is nov 10, 2026    
+    
     require-dotnet-version $result $sdks "8.0" $frameworks "net8.0" "8.0.x" $true $allowPrerelease
 
     # report
