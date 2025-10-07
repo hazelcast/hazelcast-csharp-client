@@ -52,15 +52,16 @@ runs:
         sudo apt update
         sudo add-apt-repository ppa:dotnet/backports
         sudo apt-get update
-        # we need to install dotnet 6.0         
-        sudo apt-get install -y dotnet-sdk-6.0
+        # we need to install dotnet 6.0        
+        
         sudo apt-get install -y dotnet-sdk-8.0
    
-    - name: Install .NET on Windows
-      if: inputs.dotnet == 'true' && inputs.os == 'windows-latest'
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: '6.0.x'
+# disable for now since we don't need until working with out of support version
+#   - name: Install .NET on Windows
+      #     if: inputs.dotnet == 'true' && inputs.os == 'windows-latest'
+      #      uses: actions/setup-dotnet@v5
+      #with:
+      #dotnet-version: '6.0.x'
 
     # Install Java
     - name: Install JDK
