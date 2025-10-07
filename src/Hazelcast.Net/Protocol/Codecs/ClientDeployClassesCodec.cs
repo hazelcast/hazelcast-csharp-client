@@ -40,7 +40,7 @@ namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
     /// Deploys the list of classes to cluster
-    /// Each item is a Map.Entry<String, byte[]> in the list.
+    /// Each item is a Map.Entry&lt;String, byte[]&gt; in the list.
     /// key of entry is full class name, and byte[] is the class definition.
     ///</summary>
 #if SERVER_CODEC

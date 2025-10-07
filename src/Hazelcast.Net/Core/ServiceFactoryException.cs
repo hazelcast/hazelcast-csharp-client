@@ -18,6 +18,7 @@ using Hazelcast.Exceptions;
 namespace Hazelcast.Core
 {
 #if !NET8_0_OR_GREATER
+    /// <inheritdoc />
     [Serializable]
 #endif
     public sealed class ServiceFactoryException : HazelcastException

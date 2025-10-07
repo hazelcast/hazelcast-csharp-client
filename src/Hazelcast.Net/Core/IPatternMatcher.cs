@@ -29,7 +29,7 @@ namespace Hazelcast.Core
         /// <summary>Gets the best match for an item name out of a list of configuration patterns.</summary>
         /// <param name="patterns">A list of configuration patterns.</param>
         /// <param name="name">The item name to match.</param>
-        /// <returns>The element of the <see cref="patterns"/> list that best matches the item <see cref="name"/>, if any; otherwise <c>null</c>.</returns>
+        /// <returns>The element of the <paramref cref="patterns"/> list that best matches the item <paramref cref="name"/>, if any; otherwise <c>null</c>.</returns>
         /// <exception cref="ConfigurationException">Occurs when ambiguous configurations are found.</exception>
         string Matches(IEnumerable<string> patterns, string name);
     }

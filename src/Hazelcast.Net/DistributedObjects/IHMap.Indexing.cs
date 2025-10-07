@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Adds an index to this dictionary for the specified entries so that queries can run faster.
         /// </summary>
-        /// <param name="indexConfig">Index options.</param>
+        /// <param name="indexOptions">Index options.</param>
         /// <returns>A task that will complete when the index added.</returns>
         Task AddIndexAsync(IndexOptions indexOptions);
 

@@ -34,8 +34,8 @@ namespace Hazelcast.DistributedObjects
     /// <para>It is possible to generate identifiers on any member or client as lon as there is at least one member with
     /// join version smaller than 2^16 in the cluster. The remedy is to restart the cluster, and then node identifiers
     /// will be assigned from zero again. Uniqueness after a restart is guaranteed by the timestamp component.</para>
-
-    /// Timestamp component is in milliseconds since 1.1.2018, 0:00 UTC and has 41 bits.
+    /// 
+    /// <para>Timestamp component is in milliseconds since 1.1.2018, 0:00 UTC and has 41 bits.
     /// This caps the useful lifespan of the generator to little less than 70 years (until ~2088).
     /// The sequence component is 6 bits. If more than 64 IDs are requested in single millisecond,
     /// IDs will gracefully overflow to the next millisecond and uniqueness is guaranteed in this case.

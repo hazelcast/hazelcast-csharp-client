@@ -33,7 +33,7 @@ namespace Hazelcast.CP
         /// </summary>
         /// <returns>The current value.</returns>
         /// <remarks>
-        /// If <see cref="T"/> is a struct, method will return <c>default(T)</c> when reference is not set.
+        /// If <typeparamref  name="T"/> is a struct, method will return <c>default(T)</c> when reference is not set.
         /// You can make it return <c>null</c> instead by using <see cref="System.Nullable{T}"/>.
         /// </remarks>
         Task<T> GetAsync();
@@ -50,7 +50,7 @@ namespace Hazelcast.CP
         /// <param name="value">The value to set.</param>
         /// <returns>The original value.</returns>
         /// <remarks>
-        /// If <see cref="T"/> is a struct, method will return <c>default(T)</c> when reference is not set.
+        /// If <typeparamref  name="T"/> is a struct, method will return <c>default(T)</c> when reference is not set.
         /// You can make it return <c>null</c> instead by using <see cref="System.Nullable{T}"/>.
         /// </remarks>
         Task<T> GetAndSetAsync(T value);

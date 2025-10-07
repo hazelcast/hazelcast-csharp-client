@@ -18,7 +18,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="TopicEventTypes.Message"/> event.
+    /// Represents a handler for the <b>TopicEventTypes.Message</b> event.
     /// </summary>
     /// <typeparam name="T">The reliable topic object type.</typeparam>
     internal class ReliableTopicMessageEventHandler<T> : IReliableTopicMessageEventHandler<T>
@@ -58,6 +58,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The reliable topic object carried by the message.</param>
         /// <param name="sequence">The sequence of the message in the ring buffer.</param>
+        /// <param name="state"></param>
         /// <returns>Event arguments.</returns>
         private static ReliableTopicMessageEventArgs<T> CreateEventArgs(MemberInfo member, long publishTime, T payload, long sequence, object state)
             => new ReliableTopicMessageEventArgs<T>(member, publishTime, payload, sequence, state);

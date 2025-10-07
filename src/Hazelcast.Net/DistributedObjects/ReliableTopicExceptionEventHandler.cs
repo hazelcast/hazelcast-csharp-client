@@ -18,7 +18,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="TopicEventTypes.Exception"/> event.
+    /// Represents a handler for the <b>TopicEventTypes.Exception</b> event.
     /// </summary>
     /// <typeparam name="T">The reliable topic object type.</typeparam>
     internal class ReliableTopicExceptionEventHandler<T> : IReliableTopicExceptionEventHandler<T>

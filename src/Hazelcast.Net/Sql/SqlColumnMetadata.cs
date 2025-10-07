@@ -37,6 +37,13 @@ namespace Hazelcast.Sql
         /// </summary>
         public bool IsNullable { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SqlColumnMetadata"/> class.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="isNullable"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         public SqlColumnMetadata(string name, SqlColumnType type, bool isNullable)
         {
             if (string.IsNullOrEmpty(name))
@@ -47,6 +54,7 @@ namespace Hazelcast.Sql
             IsNullable = isNullable;
         }
 
+        /// <inheritdoc />
         public override string ToString() => $"{Name} {Type}";
     }
 }

@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects
         /// If a <c>MapStore</c> on server is defined for this map,
         /// then the entry is not deleted from the underlying <c>MapStore</c>,
         /// evict only removes the entry from the memory.
-        /// Use <see cref="DeleteAsync"/> or <see cref="GetAndRemoveAsync(TKey)"/>
+        /// Use <see cref="DeleteAsync"/> or <b>getAndRemoveAsync(TKey)</b>
         /// if <c>MapStore.delete(object)</c> needs to be called.
         /// </para>
         /// <para>
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>
         /// If a <c>MapStore</c> is defined on server for this map,
         /// then <c>MapStore.deleteAll</c> is not called by this method,
-        /// If you do want <c>MapStore.deleteAll</c> to be called use the <see cref="ClearAsync"/> method.
+        /// If you do want <c>MapStore.deleteAll</c> to be called use the <b>clearAsync</b> method.
         /// </para>
         /// </remarks>
         Task EvictAllAsync();

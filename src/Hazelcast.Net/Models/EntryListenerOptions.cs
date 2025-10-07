@@ -53,12 +53,18 @@ public class EntryListenerOptions : ListenerOptions
         _local = config.Local;
     }
 
+    /// <summary>
+    /// Either register the listener locally to member or not.
+    /// </summary>
     public override bool Local
     {
         get => _local;
         set => _local = value;
     }
 
+    /// <summary>
+    /// Either include the value or not.
+    /// </summary>
     public override bool IncludeValue
     {
         get => _includeValue;

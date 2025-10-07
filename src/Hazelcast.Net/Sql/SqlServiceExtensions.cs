@@ -24,6 +24,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
+    /// <summary>
+    /// Contains extension methods for the <see cref="ISqlService"/> interface.
+    /// </summary>
     public static class SqlServiceExtensions
     {
         // NOTE: these are convenient extension methods, and the C# compiler is clever enough to figure

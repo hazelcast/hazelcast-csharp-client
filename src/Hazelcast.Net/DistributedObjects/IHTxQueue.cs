@@ -19,16 +19,45 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of Queue</summary>
     public interface IHTxQueue<TItem> : ITransactionalObject
     {
+        /// <summary>
+        /// Transactional <see cref="IHQueue{T}.OfferAsync"/>
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         Task<bool> OfferAsync(TItem item);
 
+        /// <summary>
+        /// Transactional <see cref="IHQueue{T}.OfferAsync"/>
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="timeToWait"></param>
+        /// <returns></returns>
         Task<bool> OfferAsync(TItem item, TimeSpan timeToWait);
 
+        /// <summary>
+        /// Transactional <see cref="IHQueue{T}.PeekAsync"/>
+        /// </summary>
+        /// <param name="timeToWait"></param>
+        /// <returns></returns>
         Task<TItem> PeekAsync(TimeSpan timeToWait = default);
 
+        /// <summary>
+        /// Transactional <see cref="IHQueue{T}.PollAsync"/>
+        /// </summary>
+        /// <param name="timeToWait"></param>
+        /// <returns></returns>
         Task<TItem> PollAsync(TimeSpan timeToWait = default);
 
+        /// <summary>
+        /// Transactional <see cref="IHQueue{T}.GetSizeAsync"/>
+        /// </summary>
+        /// <returns></returns>
         Task<int> GetSizeAsync();
 
+        /// <summary>
+        /// Transactional <see cref="IHQueue{T}.TakeAsync"/>
+        /// </summary>
+        /// <returns></returns>
         Task<TItem> TakeAsync();
     }
 }

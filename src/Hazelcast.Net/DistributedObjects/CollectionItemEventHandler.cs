@@ -18,7 +18,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="CollectionItemEventTypes.Message"/> event.
+    /// Represents a handler for the <see cref="CollectionItemEventTypes"/> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     internal class CollectionItemEventHandler<T> : ICollectionItemEventHandler<T>

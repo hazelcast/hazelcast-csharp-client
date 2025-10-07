@@ -16,8 +16,19 @@ using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
+    /// <summary>
+    /// Represents a map entry invalidated event arguments.
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TValue"></typeparam>
     public sealed class MapEntryInvalidatedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MapEntryInvalidatedEventArgs{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="key"></param>
+        /// <param name="state"></param>
         public MapEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key, object state)
             : base(member, key, state)
         { }

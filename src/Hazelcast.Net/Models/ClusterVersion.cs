@@ -17,6 +17,7 @@ namespace Hazelcast.Models
     /// <summary> Represents the version of the cluster. </summary> 
     public sealed class ClusterVersion
     {
+        /// <summary> The unknown cluster version. </summary>
         public const byte Unknown = 0;
         
         /// <summary> Initializes a new instance of the <see cref="ClusterVersion"/> class. </summary>

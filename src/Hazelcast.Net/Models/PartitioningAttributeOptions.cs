@@ -17,18 +17,32 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents options of a partitioning attribute.
+/// </summary>
 public class PartitioningAttributeOptions : IIdentifiedDataSerializable
 {
     private string _attributeName;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PartitioningAttributeOptions"/> class.
+    /// </summary>
     public PartitioningAttributeOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PartitioningAttributeOptions"/> class.
+    /// </summary>
+    /// <param name="config"></param>
     public PartitioningAttributeOptions(PartitioningAttributeOptions config)
     {
         _attributeName = config._attributeName;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PartitioningAttributeOptions"/> class.
+    /// </summary>
+    /// <param name="attributeName"></param>
     public PartitioningAttributeOptions(string attributeName)
     {
         _attributeName = attributeName;

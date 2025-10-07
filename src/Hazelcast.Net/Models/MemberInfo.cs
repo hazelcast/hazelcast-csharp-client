@@ -196,6 +196,11 @@ namespace Hazelcast.Models
             return $"(Member Address = {Address}, PublicAddress = {PublicAddress}, ConnectAddress = {ConnectAddress}, Id = {Id}, IsLite = {IsLiteMember})";
         }
 
+        /// <summary>
+        /// Returns a string that represents the current <see cref="MemberInfo"/> instance.
+        /// </summary>
+        /// <param name="flagConnectAddress"></param>
+        /// <returns></returns>
         public string ToShortString(bool flagConnectAddress)
             => $"Id={Id.ToShortString()} Internal={Address}{(!flagConnectAddress || UsePublicAddress ? "" : "*")} Public={(PublicAddress == null ? "<none>" : PublicAddress.ToString())}{(flagConnectAddress && UsePublicAddress ? "*" : "")}";
     }

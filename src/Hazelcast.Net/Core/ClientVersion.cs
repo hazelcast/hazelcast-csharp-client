@@ -77,7 +77,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// (for tests only)
         /// Gets the major.minor version of a SemVer-compliant version.
-        /// Outside of tests, prefer the <see cref="MajorMinorPatchMajorMinorPatchVersion"/> property.
+        /// Outside of tests, prefer the <see cref="MajorMinorPatchVersion"/> property.
         /// </summary>
         /// <param name="version">The SemVer-compliant version.</param>
         /// <returns>The "pure" version corresponding to the specified <paramref name="version"/>.</returns>

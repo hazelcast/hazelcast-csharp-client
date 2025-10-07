@@ -210,7 +210,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the dictionary has a <c>MapStore</c> attached, the entry is added to the store but not persisted.
         /// Flushing the store is required to make sure that the entry is actually persisted.</para>
         /// <para>
-        /// Time resolution for <param name="timeToLive"></param> is seconds. The given value is rounded to the next closest second value.
+        /// Time resolution for <paramref name="timeToLive"></paramref> is seconds. The given value is rounded to the next closest second value.
         /// </para>
         /// </remarks>
         Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
@@ -226,8 +226,8 @@ namespace Hazelcast.DistributedObjects
         /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
-        /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is <see cref="TimeToLive.Infinite"/>
-        /// i.e. 0ms, the value is retained indefinitely. If it is -1ms,
+        /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is infinite (0ms),
+        /// the value is retained indefinitely. If it is -1ms,
         /// it lives for the duration of the server-configured time-to-live.</para>
         /// <para>The value is considered idle after the <paramref name="maxIdle"/> has elapsed. If it is
         /// 0ms, the value never becomes idle.</para>
@@ -235,7 +235,7 @@ namespace Hazelcast.DistributedObjects
         /// Flushing the store is required to make sure that the entry is actually persisted.</para>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>
-        /// Time resolution for <param name="timeToLive"></param> is seconds. The given value is rounded to the next closest second value.
+        /// Time resolution for <paramref name="timeToLive"></paramref> is seconds. The given value is rounded to the next closest second value.
         /// </para>
         /// </remarks>
         Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
@@ -249,8 +249,8 @@ namespace Hazelcast.DistributedObjects
         /// <returns><c>true</c> if the entry exists and its time-to-live value is changed; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
-        /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is <see cref="TimeToLive.Infinite"/>
-        /// i.e. 0ms, the value is retained indefinitely. If it is -1ms,
+        /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is infinite (0ms),
+        /// the value is retained indefinitely. If it is -1ms,
         /// it lives for the duration of the server-configured time-to-live.</para>
         /// <para>The new time-to-live value is valid starting from the time this operation is invoked,
         /// not since the time the entry was created.</para>
@@ -262,7 +262,7 @@ namespace Hazelcast.DistributedObjects
         /// this call makes no changes to entries stored in this dictionary.
         /// </para>
         /// <para>
-        /// Time resolution for <param name="timeToLive"></param> is seconds. The given value is rounded to the next closest second value.
+        /// Time resolution for <paramref name="timeToLive"></paramref> is seconds. The given value is rounded to the next closest second value.
         /// </para>
         /// </remarks>
         Task<bool> UpdateTimeToLive(TKey key, TimeSpan timeToLive);

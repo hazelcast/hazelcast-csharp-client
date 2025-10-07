@@ -89,6 +89,7 @@ namespace Hazelcast.Models
         /// <returns><c>true</c> if versions are equal, <c>false</c> otherwise.</returns>
         public bool Equals(MemberVersion other) => Equals(other, ignorePatchVersion: false);
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -97,16 +98,29 @@ namespace Hazelcast.Models
             return Equals((MemberVersion)obj);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             return HashCode.Combine(Major, Minor, Patch);
         }
 
+        /// <summary>
+        /// Checks if this member version is equal to <paramref name="right"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator ==(MemberVersion left, MemberVersion right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        /// Checks if this member version is not equal to <paramref name="right"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator !=(MemberVersion left, MemberVersion right)
         {
             return !Equals(left, right);
@@ -116,6 +130,11 @@ namespace Hazelcast.Models
 
         #region Relational members
 
+        /// <summary>
+        /// Compares this member version to <paramref name="other"/>
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public int CompareTo(MemberVersion other)
         {
             if (ReferenceEquals(this, other)) return 0;
@@ -130,21 +149,45 @@ namespace Hazelcast.Models
             return Patch.CompareTo(other.Patch);
         }
 
+        /// <summary>
+        /// Checks if this member version is less than <paramref name="right"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator <(MemberVersion left, MemberVersion right)
         {
             return Comparer<MemberVersion>.Default.Compare(left, right) < 0;
         }
 
+        /// <summary>
+        /// Checks if this member version is greater than <paramref name="right"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator >(MemberVersion left, MemberVersion right)
         {
             return Comparer<MemberVersion>.Default.Compare(left, right) > 0;
         }
 
+        /// <summary>
+        /// Checks if this member version is less than or equal to <paramref name="right"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator <=(MemberVersion left, MemberVersion right)
         {
             return Comparer<MemberVersion>.Default.Compare(left, right) <= 0;
         }
 
+        /// <summary>
+        /// Checks if this member version is greater than or equal to <paramref name="right"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator >=(MemberVersion left, MemberVersion right)
         {
             return Comparer<MemberVersion>.Default.Compare(left, right) >= 0;
