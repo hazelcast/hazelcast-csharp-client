@@ -120,7 +120,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed.</para>
-        /// TODO: document zero &lt;& infinite
+        /// TODO: document zero&infinite
         /// </remarks>
         // TODO: document MapStore behavior
         Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive);

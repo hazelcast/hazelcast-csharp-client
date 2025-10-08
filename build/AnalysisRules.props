@@ -30,6 +30,15 @@
       may happen on some dev machine (localhost source), accept it
 	  -->
     <NoWarn>$(NoWarn);NU1803</NoWarn>
+    
+    <!-- CA1711: Identifiers should not have incorrect suffix, ignore since we use suffixes -->
+    <NoWarn>$(NoWarn);CA1711</NoWarn>
+
+    <!-- CA1028: Enum Storage should be Int32- ignore we use bytes -->
+    <NoWarn>$(NoWarn);CA1028</NoWarn>
+    
+    <!-- CA2227: Collection properties should be read only, not applicable since most of the warnings come from option classes -->
+    <NoWarn>$(NoWarn);CA2227 </NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
