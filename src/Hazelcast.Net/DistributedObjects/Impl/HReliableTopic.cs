@@ -192,7 +192,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         // Can't destroy if disposed.
         if (_disposed > 0) return;
         await DisposeAsync().CfAwait();
-        await base.DestroyAsync();
+        await base.DestroyAsync().CfAwait();
         await _ringBuffer.DestroyAsync().CfAwait();
     }
 }

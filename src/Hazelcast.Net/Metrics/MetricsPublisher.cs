@@ -92,7 +92,7 @@ namespace Hazelcast.Metrics
                 metrics.AddRange(metricSource.PublishMetrics());
 
             foreach (var metricSource in _metricAsyncSources)
-                await foreach (var metric in metricSource.PublishMetrics())
+                await foreach (var metric in metricSource.PublishMetrics().ConfigureAwait(false))
                     metrics.Add(metric);
 
             // TODO add NearCache manager as a metric source! - except, then, the source can be async!

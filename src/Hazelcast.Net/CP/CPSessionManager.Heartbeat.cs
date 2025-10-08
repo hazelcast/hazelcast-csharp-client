@@ -67,7 +67,7 @@ namespace Hazelcast.CP
 
             // capture sessions
             List<KeyValuePair<CPGroupId, CPSession>> sessions;
-            using (var _ = await _lock.ReadLockAsync(/*cancellationToken*/))
+            using (var _ = await _lock.ReadLockAsync(/*cancellationToken*/).CfAwait())
             {
                 sessions = new List<KeyValuePair<CPGroupId, CPSession>>(_groupSessions);
             }
@@ -78,7 +78,7 @@ namespace Hazelcast.CP
                 return session.IsInUse 
                     ? BeatSessionAsync(groupId, session)
                     : default;
-            }, cancellationToken);
+            }, cancellationToken).CfAwait();
         }
 
         /// <summary>

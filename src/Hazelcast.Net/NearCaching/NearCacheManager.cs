@@ -88,13 +88,13 @@ namespace Hazelcast.NearCaching
         {
             var names = new List<string>();
 
-            await foreach (var (_, value) in _caches)
+            await foreach (var (_, value) in _caches.ConfigureAwait(false))
                 names.Add(value.Name);
 
             if (names.Count == 0)
                 return;
 
-            await foreach (var (member, metadata) in FetchMetadataAsync(names))
+            await foreach (var (member, metadata) in FetchMetadataAsync(names).ConfigureAwait(false))
             {
                 try
                 {
@@ -127,7 +127,7 @@ namespace Hazelcast.NearCaching
         // Marks relevant data as stale if missed invalidation event count is above the max tolerated miss count.
         private async ValueTask FixSequenceGaps()
         {
-            await foreach (var (_, cache) in _caches)
+            await foreach (var (_, cache) in _caches.ConfigureAwait(false))
             {
                 cache.RepairingHandler?.FixSequenceGap();
             }
@@ -161,7 +161,7 @@ namespace Hazelcast.NearCaching
             if (repairingHandler == null) return; // though that should never happen
 
             // initialize
-            await foreach (var (member, metadata) in FetchMetadataAsync(new[] { nearCache.Name }))
+            await foreach (var (member, metadata) in FetchMetadataAsync(new[] { nearCache.Name }).ConfigureAwait(false))
             {
                 try
                 {
@@ -215,7 +215,7 @@ namespace Hazelcast.NearCaching
         {
             foreach (var (partitionId, newUuid) in guids)
             {
-                await foreach (var (_, cache) in _caches)
+                await foreach (var (_, cache) in _caches.ConfigureAwait(false))
                 {
                     cache?.RepairingHandler?.UpdateUuid(partitionId, newUuid);
                 }
@@ -255,13 +255,13 @@ namespace Hazelcast.NearCaching
         /// <inheritdoc />
         public async IAsyncEnumerator<NearCache> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
         {
-            await foreach (var entry in _caches) yield return entry.Value;
+            await foreach (var entry in _caches.ConfigureAwait(false)) yield return entry.Value;
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<Metric> PublishMetrics()
         {
-            await foreach (var cache in this)
+            await foreach (var cache in ((IAsyncEnumerable<NearCache>)this).ConfigureAwait(false))
                 foreach (var metric in cache.Statistics.PublishMetrics())
                     yield return metric;
         }
@@ -284,7 +284,7 @@ namespace Hazelcast.NearCaching
                 _repairingCancellation.Dispose();
             }
 
-            await foreach (var (name, cache) in _caches)
+            await foreach (var (name, cache) in _caches.ConfigureAwait(false))
             {
                 _caches.TryRemove(name); // ok with concurrent dictionary
                 await cache.DisposeAsync().CfAwait();

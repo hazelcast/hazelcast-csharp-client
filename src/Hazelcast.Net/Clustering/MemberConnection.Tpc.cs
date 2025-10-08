@@ -77,7 +77,7 @@ namespace Hazelcast.Clustering
                     _logger.IfWarning()?.LogWarning(e, "Exception while establishing TPC connections, falling back to classic.");
 
                     // terminate TPC connections that may have been established - and only TPC
-                    await DisposeTpcConnections(tpcConnections, true);
+                    await DisposeTpcConnections(tpcConnections, true).CfAwait();
                     tpcConnections = null;
                 }
 
