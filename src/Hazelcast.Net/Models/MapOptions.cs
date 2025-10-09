@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -24,6 +25,7 @@ namespace Hazelcast.Models;
 /// <summary>
 /// Represents options for map.
 /// </summary>
+[SuppressMessage("Design", "CA1002:Do not expose generic lists")] // cannot change public APIs
 public class MapOptions : IIdentifiedDataSerializable, INamedOptions
 {
     /// <summary>
