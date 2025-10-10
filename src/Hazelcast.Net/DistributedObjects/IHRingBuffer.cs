@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects
     /// The items in the ringbuffer can be found by a sequence that is in between (inclusive) the head and tail sequence.
     /// If data is read from a ringbuffer with a sequence that is smaller than the headSequence, it means that the data
     /// is not available anymore and a
-    /// <see cref="StaleSequenceException"/>
+    /// <b>StaleSequenceException</b>
     /// is thrown.
     /// A Ringbuffer currently is not a distributed data-structure. So all data is stored in a single partition; comparable to the
     /// IQueue implementation. But we'll provide an option to partition the data in the near future.
@@ -76,7 +76,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// Adds all the items of a collection to the tail of the Ringbuffer.
         /// A addAll is likely to outperform multiple calls to
-        /// <see cref="Add"/>
+        /// <b>add</b>
         /// due to better io utilization and a reduced number
         /// of executed operations.
         /// If the batch is empty, the call is ignored.
@@ -165,7 +165,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="System.ArgumentException">
         /// if startSequence is smaller than 0
         /// or if startSequence larger than
-        /// <see cref="TailSequence()"/>
+        /// <b>tailSequence()</b>
         /// or if minCount smaller than 0
         /// or if minCount larger than maxCount,
         /// or if maxCount larger than the capacity of the ringbuffer
@@ -188,7 +188,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="System.ArgumentException">
         /// if startSequence is smaller than 0
         /// or if startSequence larger than
-        /// <see cref="TailSequence()"/>
+        /// <b>tailSequence()</b>
         /// or if minCount smaller than 0
         /// or if minCount larger than maxCount,
         /// or if maxCount larger than the capacity of the ringbuffer
@@ -262,6 +262,9 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the sequence of the tail.</returns>
         Task<long> GetTailSequenceAsync();
 
+        /// <summary>
+        /// 
+        /// </summary>
         int MaxBatchSize { get; }
     }
 }

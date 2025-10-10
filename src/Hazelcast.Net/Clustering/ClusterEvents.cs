@@ -516,6 +516,7 @@ namespace Hazelcast.Clustering
         /// Assigns a connection to support the cluster view event.
         /// </summary>
         /// <param name="connection">An optional candidate connection.</param>
+        /// <param name="viewProperty">The view property.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when a connection has been assigned to handle the cluster views event.</returns>
         private async Task AssignClusterViewsConnectionAsync(MemberConnection connection, ClusterViewProperties viewProperty, CancellationToken cancellationToken)

@@ -35,9 +35,16 @@ public class MemoryTierOptions : IIdentifiedDataSerializable
     }
 #pragma warning restore CA1034
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemoryTierOptions"/> class.
+    /// </summary>
     public MemoryTierOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemoryTierOptions"/> class.
+    /// </summary>
+    /// <param name="options"></param>
     public MemoryTierOptions(MemoryTierOptions options)
     {
         Capacity = options.Capacity;

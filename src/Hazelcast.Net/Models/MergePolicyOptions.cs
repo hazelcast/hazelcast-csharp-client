@@ -18,6 +18,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents the options for a merge policy.
+/// </summary>
 public class MergePolicyOptions : IIdentifiedDataSerializable
 {
     /// <summary>
@@ -41,15 +44,27 @@ public class MergePolicyOptions : IIdentifiedDataSerializable
     private string _policy = Defaults.MergePolicy;
     private int _batchSize = Defaults.BatchSize;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
+    /// </summary>
     public MergePolicyOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
+    /// </summary>
+    /// <param name="policy"></param>
+    /// <param name="batchSize"></param>
     public MergePolicyOptions(string policy, int batchSize)
     {
         Policy = policy;
         BatchSize = batchSize;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
+    /// </summary>
+    /// <param name="mergePolicyConfig"></param>
     public MergePolicyOptions(MergePolicyOptions mergePolicyConfig)
     {
         _policy = mergePolicyConfig._policy;

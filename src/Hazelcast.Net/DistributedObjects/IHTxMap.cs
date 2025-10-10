@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects
     public interface IHTxMap<TKey, TValue> : ITransactionalObject
     {
         /// <summary>
-        /// Transactional implementation of<see cref="IHMap{TKey,TValue}.ContainsKeyAsync(TKey)"/>.
+        /// Transactional implementation of<see cref="IHMap{TKey,TValue}.ContainsKeyAsync"/>.
         /// </summary>
         Task<bool> ContainsKeyAsync(TKey key);
 
@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects
         Task DeleteAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAsync(TKey)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAsync"/>.
         /// </summary>
         Task<TValue> GetAsync(TKey key);
 
@@ -47,13 +47,13 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetForUpdateAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.IsEmptyAsync()"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.IsEmptyAsync"/>.
         /// </summary>
         /// <returns><c>true</c> if the map does not contain entries; otherwise <c>false</c>.</returns>
         Task<bool> IsEmptyAsync();
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetKeysAsync()"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetKeysAsync"/>.
         /// </summary>
         /// <returns>All keys.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync();
@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.PutIfAbsent(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.PutIfAbsentAsync(TKey, TValue)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>

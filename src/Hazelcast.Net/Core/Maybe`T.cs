@@ -77,7 +77,7 @@ namespace Hazelcast.Core
         #region Conversions
 
         /// <summary>
-        /// Implicitly converts a <typeparamref cref="T"/> value into a corresponding <see cref="Maybe{T}"/>.
+        /// Implicitly converts a {T} value into a corresponding <see cref="Maybe{T}"/>.
         /// </summary>
         /// <param name="value">The value.</param>
         public static implicit operator Maybe<T>(T value)

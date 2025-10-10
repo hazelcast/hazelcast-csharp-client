@@ -76,16 +76,14 @@ namespace Hazelcast
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
-
-        /// <summary>
+        
         /// <summary>
         /// Gets the <see cref="CoreOptions"/>.
         /// </summary>
         /// <returns>The core options.</returns>
         [BinderIgnore(false)]
         internal CoreOptions Core { get; } = new ();
-
-        /// </summary>
+        
         /// <summary>
         /// Gets the <see cref="HazelcastFailoverOptions"/>.
         /// </summary>
@@ -93,13 +91,14 @@ namespace Hazelcast
         [BinderIgnore(false)]
         internal HazelcastFailoverOptions FailoverOptions { get; set; } = new ();
 
+        /// <summary>
         /// Gets the metrics options.
         /// </summary>
         public MetricsOptions Metrics { get; } = new ();
 
         /// <summary>
         /// Gets the <see cref="SqlOptions"/>.
-        /// <summary>
+        /// </summary>
         public SqlOptions Sql { get; } = new ();      
         
         /// <summary>

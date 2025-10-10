@@ -13,9 +13,12 @@
 // limitations under the License.
 namespace Hazelcast.Serialization
 {
+    /// <summary>
+    /// Represents the type of a field.
+    /// </summary>
     public enum FieldType
     {
-#pragma warning disable CA1720 // Identifier contains type name - yes, happy with it
+#pragma warning disable CA1720,CS1591 // Identifier contains type name - yes, happy with it
         Portable = 0,
         Byte = 1,
         Boolean = 2,

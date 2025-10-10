@@ -1,1 +1,3 @@
 ﻿#nullable enable
+Hazelcast.Models.MemberInfoState
+Hazelcast.Models.MemberInfoState.MemberInfoState() -> void

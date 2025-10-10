@@ -461,7 +461,7 @@ namespace Hazelcast.Clustering
         public AddressProvider AddressProvider { get; }
 
         /// <summary>
-        /// Gets <see cref="ClusterOptions"/> of current cluster
+        /// Gets Cluster Options of current cluster
         /// </summary>
         public HazelcastOptions CurrentClusterOptions => _failover.CurrentClusterOptions;
 
@@ -490,8 +490,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <returns>The next correlation identifier.</returns>
         public long GetNextCorrelationId() => CorrelationIdSequence.GetNext();
-
-        /// <summary>
+        
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {

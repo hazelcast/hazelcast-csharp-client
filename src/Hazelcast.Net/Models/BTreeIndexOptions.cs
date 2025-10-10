@@ -19,7 +19,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
-// Configures indexing options for <see cref="IndexType.BTree"/> indexes.
+/// Configures indexing options for <see cref="IndexType.BTree"/> indexes.
 public class BTreeIndexOptions : IIdentifiedDataSerializable
 {
     private Capacity? _pageSize;

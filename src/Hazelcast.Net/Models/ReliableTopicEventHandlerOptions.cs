@@ -16,6 +16,9 @@ using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents options for reliable topic event handler.
+/// </summary>
 public class ReliableTopicEventHandlerOptions
 {
     /// <summary>

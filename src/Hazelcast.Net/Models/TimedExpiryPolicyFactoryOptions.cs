@@ -19,7 +19,7 @@ using System;
 namespace Hazelcast.Models;
 
 /// <summary>
-/// 
+/// Represents configuration for time based "ExpiryPolicyFactory" with duration and time unit.
 /// </summary>
 public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
 {
@@ -27,17 +27,31 @@ public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
     private ExpiryPolicyType _expiryPolicyType;
     private DurationOptions _durationConfig;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimedExpiryPolicyFactoryOptions"/> class.
+    /// </summary>
     public TimedExpiryPolicyFactoryOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimedExpiryPolicyFactoryOptions"/> class.
+    /// </summary>
+    /// <param name="expiryPolicyType"></param>
+    /// <param name="durationConfig"></param>
     public TimedExpiryPolicyFactoryOptions(ExpiryPolicyType expiryPolicyType, DurationOptions durationConfig)
     {
         _expiryPolicyType = expiryPolicyType;
         _durationConfig = durationConfig;
     }
 
+    /// <summary>
+    /// Gets the expiry policy type.
+    /// </summary>
     public ExpiryPolicyType ExpiryPolicyType => _expiryPolicyType;
 
+    /// <summary>
+    /// Gets the duration config.
+    /// </summary>
     public DurationOptions DurationConfig => _durationConfig;
 
     /// <inheritdoc />

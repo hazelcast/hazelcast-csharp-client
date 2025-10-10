@@ -30,12 +30,20 @@ namespace Hazelcast.Net.JetBrainsAnnotations
     /// </summary>
     public static class SourceTemplates
     {
+        /// <summary>
+        /// Throws exception if string is null or empty.
+        /// </summary>
+        /// <param name="s"></param>
         [SourceTemplate]
         public static void argNullOrEmpty(this string s)
         {
             //$if (string.IsNullOrWhiteSpace(s)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(s))
         }
 
+        /// <summary>
+        /// Throws exception if object is null.
+        /// </summary>
+        /// <param name="o"></param>
         [SourceTemplate]
         public static void argNull(this object o)
         {

@@ -19,16 +19,47 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of MultiMap</summary>
     public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.GetAsync(TKey)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         Task<IReadOnlyCollection<TValue>> GetAsync(TKey key);
 
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.PutAsync(TKey, TValue)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         Task<bool> PutAsync(TKey key, TValue value);
 
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.RemoveAsync(TKey, TValue)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         Task<bool> RemoveAsync(TKey key, TValue value);
 
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.RemoveAsync(TKey)"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key);
 
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.GetSizeAsync"/>
+        /// </summary>
+        /// <returns></returns>
         Task<int> GetSizeAsync();
 
+        /// <summary>
+        /// Transactional <see cref="IHMultiMap{TKey, TValue}.GetValueCountAsync"/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         Task<int> GetValueCountAsync(TKey key);
     }
 }

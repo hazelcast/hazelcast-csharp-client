@@ -138,14 +138,25 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     private List<QueryCacheOptions> _queryCacheConfigs;
     private PartitioningStrategyOptions _partitioningStrategyConfig;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapOptions"/> class.
+    /// </summary>
     public MapOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapOptions"/> class.
+    /// </summary>
+    /// <param name="name"></param>
     public MapOptions(string name)
     {
         Name = name;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapOptions"/> class.
+    /// </summary>
+    /// <param name="options"></param>
     public MapOptions(MapOptions options)
     {
         _name = options._name;
@@ -320,18 +331,27 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
         set => _entryListenerConfigs = value;
     }
 
+    /// <summary>
+    /// Gets or sets the partition lost listener configurations.
+    /// </summary>
     public List<MapPartitionLostListenerOptions> PartitionLostListeners
     {
         get => _partitionLostListenerConfigs ??= new();
         set => _partitionLostListenerConfigs = value;
     }
 
+    /// <summary>
+    /// Gets or sets the index configurations.
+    /// </summary>
     public List<IndexOptions> Indexes
     {
         get => _indexConfigs ??= new();
         set => _indexConfigs = value;
     }
 
+    /// <summary>
+    /// Gets or sets the attribute configurations.
+    /// </summary>
     public List<AttributeOptions> Attributes
     {
         get => _attributeConfigs ??= new();

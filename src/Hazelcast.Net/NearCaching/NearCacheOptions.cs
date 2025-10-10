@@ -21,6 +21,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.NearCaching;
 
+/// <summary>
+/// Represents the configuration of a near cache.
+/// </summary>
 public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
 {
     /// <summary>

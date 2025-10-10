@@ -42,6 +42,11 @@
     -->
     <NoWarn>$(NoWarn);CA1303;CA1031;CA1040;CA2225</NoWarn>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <!-- do not treat warning CS1574 (unreachable code) as an error since some refs for java APIs-->
+    <NoWarn>$(NoWarn);CS1574</NoWarn>
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <!-- do NOT treat warning ZB1002 (FIXME! in code) as an error-->
