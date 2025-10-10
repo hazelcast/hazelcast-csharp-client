@@ -17,11 +17,10 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
-
-#if !NET8_0_OR_GREATER
     /// <summary>
     /// Represents the exception that is thrown when a service factory fails.
     /// </summary>
+#if !NET8_0_OR_GREATER
     [Serializable]
 #endif
     public sealed class ServiceFactoryException : HazelcastException

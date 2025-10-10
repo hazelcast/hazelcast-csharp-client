@@ -42,7 +42,8 @@ namespace Hazelcast.DistributedObjects
     /// The implementation does not allow overflowing by more than 15 seconds,
     /// if IDs are requested at higher rate, the call will block.
     /// Note, however, that clients are able to generate even faster because each call goes to a different (random) member,
-    /// and the 64 IDs/ms limit is for single member.</para>
+    /// and the 64 IDs/ms limit is for single member.
+    /// </para>
     /// <para>
     /// It is possible to generate IDs on any member or client as long as there is at least one member with join version smaller than 2^16 in the cluster.
     /// The remedy is to restart the cluster: nodeId will be assigned from zero again.
