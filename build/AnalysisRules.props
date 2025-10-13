@@ -43,6 +43,9 @@
     <!-- CA1510: Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance, 
     we cannot use this method since it doesn't exist in .netstandart2.0 and cannot polly fill for older versions. -->
     <NoWarn>$(NoWarn);CA1510;CA1513;CA2250</NoWarn>
+
+    <!-- RS0037: Symbol 'XXX' is missing nullability annotations in the declared API. We didn't enable the nulalble for whole project. Disabled for now. -->
+    <NoWarn>$(NoWarn);RS0036;RS0037;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
