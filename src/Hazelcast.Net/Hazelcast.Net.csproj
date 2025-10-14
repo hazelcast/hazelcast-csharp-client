@@ -91,8 +91,6 @@
 
   <ItemGroup>
     <!-- note: requires analyzer version 3.3.4+ in order to support merging files -->
-    <AdditionalFiles Include="PublicAPI/net9.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net9.0' " />
-    <AdditionalFiles Include="PublicAPI/net9.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net9.0' " />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.1' " />
