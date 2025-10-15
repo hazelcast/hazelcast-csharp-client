@@ -55,7 +55,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
 
     public async Task AcquireAsync(int permits = 1)
     {
-        await TryAcquireAsync(permits, -1);
+        await TryAcquireAsync(permits, -1).CfAwait();
     }
 
     public async Task<bool> TryAcquireAsync(int permits = 1, long timeoutMs = 0)

@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -22,6 +23,7 @@ namespace Hazelcast.Models;
 /// <summary>
 /// Represents configuration for the query cache.
 /// </summary>
+[SuppressMessage("Design", "CA1002:Do not expose generic lists")] // cannot change public APIs
 public class QueryCacheOptions : IIdentifiedDataSerializable
 {
     /// <summary>

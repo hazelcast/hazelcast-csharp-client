@@ -433,7 +433,7 @@ namespace Hazelcast.Clustering
             if (!connected)
             {
                 // make sure we clean things up
-                await connection.DisposeAsync();
+                await connection.DisposeAsync().CfAwait();
             }
 
             return connected;

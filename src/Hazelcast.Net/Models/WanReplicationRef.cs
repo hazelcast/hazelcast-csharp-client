@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -21,6 +22,7 @@ namespace Hazelcast.Models;
 /// <summary>
 /// Represents the configuration for a WAN target replication reference.
 /// </summary>
+[SuppressMessage("Design", "CA1002:Do not expose generic lists")] // cannot change public API
 public class WanReplicationRef : IIdentifiedDataSerializable
 {
     private const string DEFAULT_MERGE_POLICY_CLASS_NAME = "PassThroughMergePolicy";

@@ -124,7 +124,8 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
                 TopicOverloadPolicy.DiscardNewest => _ringBuffer.AddAsync(rtMessage, OverflowPolicy.Fail),
                 TopicOverloadPolicy.Block => AddAsBlockingAsync(rtMessage, cancellationToken),
                 TopicOverloadPolicy.Error => AddOrFail(rtMessage),
-#pragma warning disable CA2208 Instantiate argument exceptions correctly // The check depends on policy option. 
+// The check depends on policy option.
+#pragma warning disable CA2208 Instantiate argument exceptions correctly  
                 _ => throw new ArgumentOutOfRangeException(nameof(_options.Policy))
 #pragma warning restore CA2208
             };
@@ -175,7 +176,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
             _logger.IfDebug()?.LogDebug("Publishing process is canceled. ");
     }
 
-    public async ValueTask DisposeAsync()
+    public async new ValueTask DisposeAsync()
     {
         if (_disposed.InterlockedZeroToOne())
         {
@@ -186,12 +187,12 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         }
     }
 
-    public async ValueTask DestroyAsync()
+    public async new ValueTask DestroyAsync()
     {
         // Can't destroy if disposed.
         if (_disposed > 0) return;
         await DisposeAsync().CfAwait();
-        await base.DestroyAsync();
+        await base.DestroyAsync().CfAwait();
         await _ringBuffer.DestroyAsync().CfAwait();
     }
 }

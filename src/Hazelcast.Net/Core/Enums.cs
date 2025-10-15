@@ -92,7 +92,7 @@ internal static class Enums
     /// <para>The Java name is used when the enum value is serialized as a string.</para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field)]
-    internal class JavaNameAttribute : Attribute
+    internal sealed class JavaNameAttribute : Attribute
     {
         /// <summary>
         /// Specifies the name that Java uses for this value.

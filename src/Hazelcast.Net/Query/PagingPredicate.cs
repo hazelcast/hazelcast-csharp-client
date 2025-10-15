@@ -127,7 +127,7 @@ namespace Hazelcast.Query
         {
             _anchorList ??= new List<KeyValuePair<int, KeyValuePair<object, object>>>();
             _anchorList.Clear();
-            await foreach (var anchor in anchors) _anchorList.Add(anchor);
+            await foreach (var anchor in anchors.ConfigureAwait(false)) _anchorList.Add(anchor);
         }
 
         /// <inheritdoc />

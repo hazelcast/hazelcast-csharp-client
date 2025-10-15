@@ -127,7 +127,7 @@ namespace Hazelcast.NearCaching
         internal async Task<List<NearCacheEntry>> SnapshotEntriesAsync()
         {
             var list = new List<NearCacheEntry>();
-            await foreach (var e in _entries)
+            await foreach (var e in _entries.ConfigureAwait(false))
                 list.Add(e.Value);
             return list;
         }
@@ -389,7 +389,7 @@ namespace Hazelcast.NearCaching
                 return;
 
             var entries = new SortedSet<NearCacheEntry>(_evictionComparer);
-            await foreach (var (_, value) in _entries)
+            await foreach (var (_, value) in _entries.ConfigureAwait(false))
                 entries.Add(value);
 
             var evictCount = entries.Count * _evictionPercentage / 100;
@@ -450,7 +450,7 @@ namespace Hazelcast.NearCaching
         /// </summary>
         private async ValueTask DoExpireEntries()
         {
-            await foreach (var (key, entry) in _entries)
+            await foreach (var (key, entry) in _entries.ConfigureAwait(false))
             {
                 if (!IsExpired(entry)) continue;
 

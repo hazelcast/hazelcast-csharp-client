@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.CommandLine;
 
@@ -24,6 +25,7 @@ namespace Hazelcast.Configuration
     /// <remarks>
     /// <para>Adds support for hazelcast.x.y arguments that do not respect the standard hazelcast:x:y pattern.</para>
     /// </remarks>
+    [SuppressMessage("Performance", "CA1865:Use char overload")] // requires polly fill for older versions
     internal class HazelcastCommandLineConfigurationProvider : CommandLineConfigurationProvider
     {
         private static readonly string HazelcastAndKeyDelimiter = HazelcastOptions.SectionNameConstant + ConfigurationPath.KeyDelimiter;

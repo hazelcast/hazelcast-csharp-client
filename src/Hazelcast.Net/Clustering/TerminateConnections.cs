@@ -84,7 +84,13 @@ namespace Hazelcast.Clustering
                 return;
 
             _connections.Complete();
-            _cancel.Cancel();
+
+            #if NET8_0_OR_GREATER
+                await _cancel.CancelAsync().CfAwait();
+            #else
+                _cancel.Cancel();
+            #endif
+            
             await _terminating.CfAwaitCanceled();
             _cancel.Dispose();
         }

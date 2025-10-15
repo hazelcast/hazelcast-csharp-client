@@ -67,7 +67,7 @@ namespace Hazelcast.DistributedObjects
 
             // gather locally-known objects
             var objects = new HashSet<DistributedObjectInfo>();
-            await foreach (var (info, _) in _objects) objects.Add(info);
+            await foreach (var (info, _) in _objects.ConfigureAwait(false)) objects.Add(info);
 
             // fetch remotely-known objects
             var requestMessage = ClientGetDistributedObjectsCodec.EncodeRequest();
@@ -173,7 +173,7 @@ namespace Hazelcast.DistributedObjects
         public async ValueTask CreateAllAsync(MemberConnection connection)
         {
             var proxies = new Dictionary<string, string>();
-            await foreach (var (key, _) in _objects)
+            await foreach (var (key, _) in _objects.ConfigureAwait(false))
                 proxies[key.Name] = key.ServiceName;
 
             var requestMessage = ClientCreateProxiesCodec.EncodeRequest(proxies);
@@ -292,7 +292,7 @@ namespace Hazelcast.DistributedObjects
             // there is a potential race-cond here, if an item is added to _objects after
             // we enumerate (capture) values, but it is taken care of in GetOrCreateAsync
 
-            await foreach (var (_, value) in _objects)
+            await foreach (var (_, value) in _objects.ConfigureAwait(false))
             {
                 await TryDispose(value).CfAwait();
             }

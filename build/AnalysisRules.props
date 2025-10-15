@@ -30,6 +30,19 @@
       may happen on some dev machine (localhost source), accept it
 	  -->
     <NoWarn>$(NoWarn);NU1803</NoWarn>
+    
+    <!-- CA1711: Identifiers should not have incorrect suffix, ignore since we use suffixes -->
+    <NoWarn>$(NoWarn);CA1711</NoWarn>
+
+    <!-- CA1028: Enum Storage should be Int32- ignore we use bytes -->
+    <NoWarn>$(NoWarn);CA1028</NoWarn>
+    
+    <!-- CA2227: Collection properties should be read only, not applicable since most of the warnings come from option classes -->
+    <NoWarn>$(NoWarn);CA2227 </NoWarn>
+
+    <!-- CA1510: Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance, 
+    we cannot use this method since it doesn't exist in .netstandart2.0 and cannot polly fill for older versions. -->
+    <NoWarn>$(NoWarn);CA1510;CA1513;CA2250</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
