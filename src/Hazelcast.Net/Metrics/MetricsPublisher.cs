@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -147,7 +148,7 @@ namespace Hazelcast.Metrics
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
             await _publishing.CfAwaitCanceled();
             _cancel.Dispose();
         }

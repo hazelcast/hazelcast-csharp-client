@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Polyfills;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP;
@@ -263,7 +264,7 @@ internal partial class CPSessionManager : IAsyncDisposable
         }).CfAwait();
 
         // stop heartbeat
-        _heartbeatCancel.Cancel();
+        await _heartbeatCancel.TryCancelAsync().CfAwait();
         try
         {
             await _heartbeatTask.CfAwaitCanceled();

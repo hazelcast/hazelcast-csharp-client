@@ -21,6 +21,7 @@ using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Networking;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
@@ -982,7 +983,7 @@ namespace Hazelcast.Clustering
             // be sure to properly terminate _connectMembers, even though, because the
             // MemberConnectionQueue has been disposed already, the task should have
             // ended by now
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
             if (_connectMembers != null)
             {
                 try

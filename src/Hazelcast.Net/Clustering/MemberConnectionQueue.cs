@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Models;
+using Hazelcast.Polyfills;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering;
@@ -307,16 +308,15 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
         }
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         lock (_mutex)
         {
-            if (_disposed) return default;
+            if (_disposed) return;
             _disposed = true;
         }
 
-        _enumeratorCancellation?.Cancel();
-
-        return default;
+        if(_enumeratorCancellation != null)
+            await _enumeratorCancellation.TryCancelAsync().CfAwait();        
     }
 }
