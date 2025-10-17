@@ -81,14 +81,14 @@ public class BitmapIndexOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.BitmapIndexOptions;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_uniqueKey);
         output.WriteInt((int) _transformation);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _uniqueKey = input.ReadString();
         _transformation = ((UniqueKeyTransformation) input.ReadInt()).ThrowIfUndefined();
