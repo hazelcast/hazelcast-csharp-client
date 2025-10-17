@@ -22,6 +22,7 @@ using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -991,7 +992,7 @@ namespace Hazelcast.Clustering
             await _objectLifecycleEventSubscription.DisposeAsync().CfAwait();
             await _partitionLostEventSubscription.DisposeAsync().CfAwait();
 
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
 
             HConsole.WriteLine(this, "Await cluster views task.");
 

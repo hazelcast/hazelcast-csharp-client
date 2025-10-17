@@ -23,6 +23,7 @@ using Hazelcast.Models;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
+using Hazelcast.Polyfills;
 
 namespace Hazelcast.Clustering
 {
@@ -109,7 +110,7 @@ namespace Hazelcast.Clustering
 
             HConsole.WriteLine(this, "Stopping...");
 
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
 
             try
             {
