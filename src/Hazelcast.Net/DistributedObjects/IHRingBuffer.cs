@@ -53,7 +53,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// Adds an item to the tail of the Ringbuffer. If there is no space in the Ringbuffer, the Add will overwrite the oldest
         /// item in the ringbuffer no matter what the ttl is. For more control on this behavior, check the
-        /// <see cref="IHRingBuffer{TItem}.AddAsync(item, overflowPolicy)"/>
+        /// <see cref="IHRingBuffer{TItem}.AddAsync(TItem, OverflowPolicy)"/>
         /// and the
         /// <see cref="OverflowPolicy"/>
         /// .
@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="item">the item to Add.</param>
         /// <returns>the sequence of the added item.</returns>
         /// <exception cref="System.ArgumentNullException">if item is null.</exception>
-        /// <seealso cref="IHRingBuffer{TItem}.AddAsync(item, overflowPolicy)"/>
+        /// <seealso cref="IHRingBuffer{TItem}.AddAsync(TItem, OverflowPolicy)"/>
         Task<long> AddAsync(TItem item);
 
         /// <summary>Adds all the items of a collection to the tail of the Ringbuffer.</summary>

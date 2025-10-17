@@ -75,10 +75,10 @@ namespace Hazelcast.CP
             await sessions.ParallelForEachAsync((entry, token) =>
             {
                 var (groupId, session) = entry;
-                return session.IsInUse 
+                return session.IsInUse
                     ? BeatSessionAsync(groupId, session)
                     : default;
-            }, cancellationToken).CfAwait();
+            }, cancellationToken: cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Hazelcast.CP
             }
             catch (Exception e)
             {
-                if (e is RemoteException { Error: RemoteError.SessionExpiredException } or 
+                if (e is RemoteException { Error: RemoteError.SessionExpiredException } or
                          RemoteException { Error: RemoteError.CpGroupDestroyedException })
                 {
                     InvalidateSession(groupId, session.Id);

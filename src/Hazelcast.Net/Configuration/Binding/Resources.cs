@@ -21,6 +21,7 @@ namespace Hazelcast.Configuration.Binding
 
     internal partial class Resources
     {
+#pragma warning disable CA1863 // Use 'CompositeFormat' Here is not a hot path, so leaving as is.
         internal static string FormatError_CannotActivateAbstractOrInterface(params object[] args)
             => string.Format(CultureInfo.InvariantCulture, Error_CannotActivateAbstractOrInterface, args);
 
@@ -35,5 +36,6 @@ namespace Hazelcast.Configuration.Binding
 
         internal static string FormatError_UnsupportedMultidimensionalArray(params object[] args)
             => string.Format(CultureInfo.InvariantCulture, Error_UnsupportedMultidimensionalArray, args);
+#pragma warning restore CA1863 // Use 'CompositeFormat'
     }
 }
