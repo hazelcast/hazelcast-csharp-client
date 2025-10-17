@@ -125,7 +125,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
                 TopicOverloadPolicy.Block => AddAsBlockingAsync(rtMessage, cancellationToken),
                 TopicOverloadPolicy.Error => AddOrFail(rtMessage),
 // The check depends on policy option.
-#pragma warning disable CA2208 Instantiate argument exceptions correctly  
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly  
                 _ => throw new ArgumentOutOfRangeException(nameof(_options.Policy))
 #pragma warning restore CA2208
             };

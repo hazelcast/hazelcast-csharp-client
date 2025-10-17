@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Hazelcast.Configuration;
@@ -234,7 +235,7 @@ public class RingbufferOptions : IIdentifiedDataSerializable, INamedOptions
     public int ClassId => ConfigurationDataSerializerHook.RingbufferConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_name);
         output.WriteInt(_capacity);
@@ -248,7 +249,7 @@ public class RingbufferOptions : IIdentifiedDataSerializable, INamedOptions
     }
     
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _name = input.ReadString();
         _capacity = input.ReadInt();

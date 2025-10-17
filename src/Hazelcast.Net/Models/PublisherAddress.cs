@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
@@ -37,7 +38,7 @@ public class PublisherAddress : IIdentifiedDataSerializable
     public bool IsIpV6 => _addressType == 6 ? true : false;
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         var port = input.ReadInt();
         _addressType = input.ReadByte();
@@ -46,7 +47,7 @@ public class PublisherAddress : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteInt(IpEndPoint.Port);
         output.WriteByte((byte) (IsIpV4 ? 4 : 6));

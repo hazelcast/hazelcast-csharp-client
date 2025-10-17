@@ -159,8 +159,10 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     /// Initializes a new instance of the <see cref="MapOptions"/> class.
     /// </summary>
     /// <param name="options"></param>
-    public MapOptions(MapOptions options)
+    public MapOptions([NotNull] MapOptions options)
     {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
         _name = options._name;
         _backupCount = options._backupCount;
         _asyncBackupCount = options._asyncBackupCount;
@@ -515,7 +517,7 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     public int ClassId => ConfigurationDataSerializerHook.MapConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_name);
         output.WriteInt(_backupCount);
@@ -551,7 +553,7 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _name = input.ReadString();
         _backupCount = input.ReadInt();

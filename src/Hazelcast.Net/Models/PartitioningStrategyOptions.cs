@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Serialization;
 
@@ -32,8 +34,10 @@ public class PartitioningStrategyOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="PartitioningStrategyOptions"/> class.
     /// </summary>
-    public PartitioningStrategyOptions(PartitioningStrategyOptions config)
+    public PartitioningStrategyOptions([NotNull] PartitioningStrategyOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         PartitioningStrategyClass = config.PartitioningStrategyClass;
     }
 
@@ -67,14 +71,14 @@ public class PartitioningStrategyOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.PartitionStrategyConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(PartitioningStrategyClass);
         output.WriteObject(null/*partitioningStrategy*/);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         PartitioningStrategyClass = input.ReadString();
         _/*partitioningStrategy*/ = input.ReadObject<object>();

@@ -40,9 +40,9 @@
     <!-- CA2227: Collection properties should be read only, not applicable since most of the warnings come from option classes -->
     <NoWarn>$(NoWarn);CA2227 </NoWarn>
 
-    <!-- CA1510: Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance, 
+    <!-- CA1510: Use 'ArgumentNullException.ThrowIfNull' or 'ArgumentOutOfRangeException.ThrowIfNegative' instead of explicitly throwing a new exception instance, 
     we cannot use this method since it doesn't exist in .netstandart2.0 and cannot polly fill for older versions. -->
-    <NoWarn>$(NoWarn);CA1510;CA1513;CA2250</NoWarn>
+    <NoWarn>$(NoWarn);CA1510;CA1513;CA2250;CA1512;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>

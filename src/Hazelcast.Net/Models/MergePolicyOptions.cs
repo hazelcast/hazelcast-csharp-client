@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -65,8 +66,10 @@ public class MergePolicyOptions : IIdentifiedDataSerializable
     /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
     /// </summary>
     /// <param name="mergePolicyConfig"></param>
-    public MergePolicyOptions(MergePolicyOptions mergePolicyConfig)
+    public MergePolicyOptions([NotNull] MergePolicyOptions mergePolicyConfig)
     {
+        if (mergePolicyConfig == null) throw new ArgumentNullException(nameof(mergePolicyConfig));
+
         _policy = mergePolicyConfig._policy;
         _batchSize = mergePolicyConfig._batchSize;
     }
@@ -96,14 +99,14 @@ public class MergePolicyOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.MergePolicyConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_policy);
         output.WriteInt(_batchSize);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _policy = input.ReadString();
         _batchSize = input.ReadInt();

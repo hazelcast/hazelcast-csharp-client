@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.Models
@@ -55,9 +56,9 @@ namespace Hazelcast.Protocol.Models
                 var (keyData, valueData) = dataEntryIterator.Current;
 
                 if (!serializationService.TryToObject<object>(keyData, out var key, out var keyToObjectState))
-                    key = await serializationService.ToObjectAsync<object>(keyData, keyToObjectState);
+                    key = await serializationService.ToObjectAsync<object>(keyData, keyToObjectState).CfAwait();
                 if (!serializationService.TryToObject<object>(valueData, out var value, out var valueToObjectState))
-                    key = await serializationService.ToObjectAsync<object>(valueData, valueToObjectState);
+                    key = await serializationService.ToObjectAsync<object>(valueData, valueToObjectState).CfAwait();
 
                 var entry = new KeyValuePair<object, object>(key, value);
                 yield return new KeyValuePair<int, KeyValuePair<object, object>>(pageNumber, entry);

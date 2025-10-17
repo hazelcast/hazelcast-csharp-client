@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -34,8 +36,10 @@ public class BitmapIndexOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="BitmapIndexOptions"/> class.
     /// </summary>
-    public BitmapIndexOptions(BitmapIndexOptions bitmapIndexOptions)
+    public BitmapIndexOptions([NotNull] BitmapIndexOptions bitmapIndexOptions)
     {
+        if (bitmapIndexOptions == null)
+            throw new ArgumentNullException(nameof(bitmapIndexOptions));
         UniqueKey = bitmapIndexOptions.UniqueKey;
         UniqueKeyTransformation = bitmapIndexOptions.UniqueKeyTransformation;
     }

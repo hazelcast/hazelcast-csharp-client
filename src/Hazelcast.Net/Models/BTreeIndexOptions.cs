@@ -13,6 +13,8 @@
 // limitations under the License.
 #nullable enable
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -38,8 +40,10 @@ public class BTreeIndexOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="BTreeIndexOptions"/> class.
     /// </summary>
-    public BTreeIndexOptions(BTreeIndexOptions indexOptions)
+    public BTreeIndexOptions([NotNull] BTreeIndexOptions indexOptions)
     {
+        if (indexOptions == null) throw new ArgumentNullException(nameof(indexOptions));
+
         PageSize = indexOptions.PageSize;
         MemoryTier = new MemoryTierOptions(indexOptions.MemoryTier);
     }

@@ -136,6 +136,10 @@ namespace Hazelcast.Models
         public TimeSpan ToTimeSpan() => new(0, Hour, Minute, Second, Nanosecond / 1000);
 
 #if NET6_0_OR_GREATER
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalTime"/> to its <see cref="TimeOnly"/> equivalent.
+        /// </summary>
+        // <returns>TimeOnly equivalent of <see cref="HLocalTime"/></returns>
         public TimeOnly ToTimeOnly() => new TimeOnly(Hour, Minute, Second, Nanosecond / 1000);
 #endif
 

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -91,8 +92,10 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="MapStoreOptions"/> class.
     /// </summary>
-    public MapStoreOptions(MapStoreOptions config)
+    public MapStoreOptions([NotNull] MapStoreOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _enabled = config._enabled;
         _className = config._className;
         _factoryClassName = config._factoryClassName;
@@ -231,7 +234,7 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.MapStoreConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteBoolean(_enabled);
         output.WriteBoolean(_writeCoalescing);
@@ -247,7 +250,7 @@ public class MapStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _enabled = input.ReadBoolean();
         _writeCoalescing = input.ReadBoolean();
