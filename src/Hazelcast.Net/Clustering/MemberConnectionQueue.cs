@@ -260,6 +260,8 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
         }
     }
 
+    // Already disposed in DisposeAsync
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
     public IAsyncEnumerator<MemberConnectionRequest> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         lock (_mutex)

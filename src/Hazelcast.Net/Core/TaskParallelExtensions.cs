@@ -32,7 +32,7 @@ namespace Hazelcast.Core
         /// <para>By default, this method runs one task per processor, i.e. <paramref name="parallelTask"/>
         /// defaults to <c>Environment.ProcessorCount</c>.</para>
         /// </remarks>
-        public static async Task ParallelForEachAsync<T>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task> action, CancellationToken cancellationToken = default, int parallelTask = 0)
+        public static async Task ParallelForEachAsync<T>(this IEnumerable<T> enumerable, Func<T, CancellationToken, Task> action, int parallelTask = 0, CancellationToken cancellationToken = default)
         {
             var tasks = new List<Task>();
 
