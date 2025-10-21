@@ -13,6 +13,7 @@
 // limitations under the License.
 using Hazelcast.Core;
 using System;
+using System.Globalization;
 
 namespace Hazelcast.Models;
 
@@ -111,7 +112,7 @@ public class Capacity
                 _ => throw new ArgumentException($"Invalid unit specifier '{unitChar}'.", nameof(value))
             };
 
-        return new Capacity(long.Parse(hasUnit ? value[..^1] : value), unit);
+        return new Capacity(long.Parse(hasUnit ? value[..^1] : value, CultureInfo.InvariantCulture), unit);
     }
 
     /// <summary>

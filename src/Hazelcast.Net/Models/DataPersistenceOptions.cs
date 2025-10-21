@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Serialization;
 
@@ -48,8 +49,10 @@ public class DataPersistenceOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="DataPersistenceOptions"/> class.
     /// </summary>
-    public DataPersistenceOptions(DataPersistenceOptions dataPersistenceConfig)
+    public DataPersistenceOptions([NotNull] DataPersistenceOptions dataPersistenceConfig)
     {
+        if (dataPersistenceConfig == null) throw new System.ArgumentNullException(nameof(dataPersistenceConfig));
+
         Enabled = dataPersistenceConfig.Enabled;
         Fsync = dataPersistenceConfig.Fsync;
     }

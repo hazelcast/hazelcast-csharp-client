@@ -83,7 +83,9 @@ namespace Hazelcast.Core
         {
             lock (_mutex)
             {
+#pragma warning disable CA1849 // Call async methods when in an async method, TODO: Revisit Cancel usage in lock
                 if (!_completed) _cancellation.Cancel();
+#pragma warning restore CA1849 // Call async methods when in an async method
             }
 
             if (observeException)

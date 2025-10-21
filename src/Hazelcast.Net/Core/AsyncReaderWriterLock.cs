@@ -144,7 +144,9 @@ internal sealed class AsyncReaderWriterLock : IAsyncDisposable
 
     /// <summary>
     /// Grants lock(s) to waiting tasks. This method assumes the sync lock is already held.
-    /// </summary>
+    /// </summary>    
+    /// The holders created here are disposed by the caller when they release the lock.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
     private void ReleaseWaiters()
     {
         if (_disposed)

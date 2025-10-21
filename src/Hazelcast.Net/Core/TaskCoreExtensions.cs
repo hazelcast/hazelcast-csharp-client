@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Exceptions;
+using Hazelcast.Polyfills;
 
 namespace Hazelcast.Core
 {
@@ -278,7 +279,9 @@ namespace Hazelcast.Core
             }
             catch (TimeoutException)
             {
-                cancellation?.Cancel(); // signal the task it should cancel
+                if(cancellation != null)
+                    await cancellation.TryCancelAsync().CfAwait(); // signal the task it should cancel
+
                 task.ObserveException(); // ensure we don't leak an unobserved exception
                 throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
             }
@@ -322,7 +325,9 @@ namespace Hazelcast.Core
             }
             catch (TimeoutException)
             {
-                cancellation?.Cancel(); // signal the task it should cancel
+                if(cancellation != null)
+                    await cancellation.TryCancelAsync().CfAwait(); // signal the task it should cancel
+
                 task.ObserveException(); // ensure we don't leak an unobserved exception
                 throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
             }

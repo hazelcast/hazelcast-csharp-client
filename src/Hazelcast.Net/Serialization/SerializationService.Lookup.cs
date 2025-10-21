@@ -154,8 +154,10 @@ namespace Hazelcast.Serialization
         private ISerializerAdapter LookupSerializableSerializer(Type type)
         {
             if (!_enableClrSerialization) return null;
+            
+#if !NET8_0_OR_GREATER // Binary formatter is absolete after .NET 8
             if (!type.IsSerializable) return null;
-
+#endif
             // register so we find it faster next time
             if (TryRegisterConstantSerializer(_serializableSerializerAdapter, type))
             {

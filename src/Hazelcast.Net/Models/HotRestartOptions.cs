@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Serialization;
 
@@ -50,8 +51,10 @@ public class HotRestartOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="HotRestartOptions"/> class.
     /// </summary>
-    public HotRestartOptions(HotRestartOptions hotRestartConfig)
+    public HotRestartOptions([NotNull] HotRestartOptions hotRestartConfig)
     {
+        if (hotRestartConfig == null) throw new ArgumentNullException(nameof(hotRestartConfig));
+
         Enabled = hotRestartConfig.Enabled;
         Fsync = hotRestartConfig.Fsync;
     }

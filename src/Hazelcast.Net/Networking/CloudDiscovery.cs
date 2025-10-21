@@ -16,6 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
@@ -37,6 +38,7 @@ namespace Hazelcast.Networking
         private readonly int _connectionTimeoutMilliseconds;
         private readonly int _defaultPort;
         private static string _response;
+        private readonly JsonSerializerOptions jsonOptions = new System.Text.Json.JsonSerializerOptions { AllowTrailingCommas = true };
 
         internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, int defaultPort, ILoggerFactory loggerFactory)
         {
@@ -126,9 +128,8 @@ namespace Hazelcast.Networking
         }
 
         private CloudInfo ParseResponse(string jsonResult)
-        {
-            var options = new System.Text.Json.JsonSerializerOptions { AllowTrailingCommas = true };
-            var result = System.Text.Json.JsonSerializer.Deserialize<CloudMemberInfo[]>(jsonResult, options);
+        {            
+            var result = System.Text.Json.JsonSerializer.Deserialize<CloudMemberInfo[]>(jsonResult, jsonOptions);
 
             var cloudInfo = new CloudInfo();
 

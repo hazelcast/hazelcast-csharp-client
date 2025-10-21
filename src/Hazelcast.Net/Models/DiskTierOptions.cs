@@ -15,6 +15,7 @@ using Hazelcast.Serialization;
 using System;
 using Hazelcast.Core;
 using Hazelcast.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -52,8 +53,10 @@ public class DiskTierOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="DiskTierOptions"/> class.
     /// </summary>
-    public DiskTierOptions(DiskTierOptions diskTierConfig)
+    public DiskTierOptions([NotNull] DiskTierOptions diskTierConfig)
     {
+        if (diskTierConfig is null) throw new ArgumentNullException(nameof(diskTierConfig));
+
         Enabled = diskTierConfig.Enabled;
         _deviceName = diskTierConfig._deviceName;
     }

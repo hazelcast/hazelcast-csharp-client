@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Serialization;
 
@@ -47,8 +49,10 @@ public class TieredStoreOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="TieredStoreOptions"/> class.
     /// </summary>
-    public TieredStoreOptions(TieredStoreOptions tieredStoreConfig)
+    public TieredStoreOptions([NotNull] TieredStoreOptions tieredStoreConfig)
     {
+        if (tieredStoreConfig == null) throw new ArgumentNullException(nameof(tieredStoreConfig));
+
         _enabled = tieredStoreConfig._enabled;
         _memoryTierConfig = new MemoryTierOptions(tieredStoreConfig._memoryTierConfig);
         _diskTierConfig = new DiskTierOptions(tieredStoreConfig._diskTierConfig);
@@ -92,7 +96,7 @@ public class TieredStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteBoolean(_enabled);
         output.WriteObject(_memoryTierConfig);
@@ -100,7 +104,7 @@ public class TieredStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _enabled = input.ReadBoolean();
         _memoryTierConfig = input.ReadObject<MemoryTierOptions>();

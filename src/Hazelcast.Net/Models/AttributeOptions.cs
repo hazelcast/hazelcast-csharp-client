@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -48,8 +49,10 @@ public class AttributeOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="AttributeOptions"/> class.
     /// </summary>
-    public AttributeOptions(AttributeOptions config)
+    public AttributeOptions([NotNull] AttributeOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _name = config._name;
         _extractorClassName = config._extractorClassName;
     }

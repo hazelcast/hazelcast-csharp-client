@@ -15,6 +15,7 @@ using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -38,7 +39,7 @@ public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
     /// </summary>
     /// <param name="expiryPolicyType"></param>
     /// <param name="durationConfig"></param>
-    public TimedExpiryPolicyFactoryOptions(ExpiryPolicyType expiryPolicyType, DurationOptions durationConfig)
+    public TimedExpiryPolicyFactoryOptions([NotNull] ExpiryPolicyType expiryPolicyType, [NotNull] DurationOptions durationConfig)
     {
         _expiryPolicyType = expiryPolicyType;
         _durationConfig = durationConfig;
@@ -61,14 +62,14 @@ public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.SimpleCacheConfigTimedExpiryPolicyFactoryConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_expiryPolicyType.ToJavaString());
         output.WriteObject(_durationConfig);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _expiryPolicyType = Enums.ParseJava<ExpiryPolicyType>(input.ReadString());
         _durationConfig = input.ReadObject<DurationOptions>();

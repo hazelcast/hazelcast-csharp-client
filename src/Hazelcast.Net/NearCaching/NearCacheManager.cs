@@ -20,6 +20,7 @@ using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Metrics;
 using Hazelcast.Models;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -274,7 +275,7 @@ namespace Hazelcast.NearCaching
 
             if (_repairingCancellation != null)
             {
-                _repairingCancellation.Cancel();
+                await _repairingCancellation.TryCancelAsync().CfAwait();
                 try
                 {
                     await _repairing.CfAwait();

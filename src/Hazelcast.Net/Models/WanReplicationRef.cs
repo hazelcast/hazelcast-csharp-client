@@ -41,7 +41,7 @@ public class WanReplicationRef : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="WanReplicationRef"/> class.
     /// </summary>
-    public WanReplicationRef(WanReplicationRef other)
+    public WanReplicationRef([NotNull] WanReplicationRef other)
         : this(other._name, other._mergePolicyClassName, other._filters, other._republishingEnabled)
     { }
 
@@ -113,7 +113,7 @@ public class WanReplicationRef : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.WanReplicationRef;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_name);
         output.WriteString(_mergePolicyClassName);
@@ -123,7 +123,7 @@ public class WanReplicationRef : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _name = input.ReadString();
         _mergePolicyClassName = input.ReadString();

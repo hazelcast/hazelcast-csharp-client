@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 namespace Hazelcast.Models
 {
     /// <summary> Represents the version of the cluster. </summary> 
@@ -46,8 +47,11 @@ namespace Hazelcast.Models
         /// <summary> Parses a string representation of the cluster version. </summary>
         /// <param name="value">The string representation of the cluster version.</param>
         /// <returns>The parsed cluster version.</returns>
-        public static ClusterVersion Parse(string value)
+        public static ClusterVersion Parse([NotNull] string value)
         {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentNullException(nameof(value), "Cluster version string cannot be null or empty.");
+
             var parts = value.Split('.');
             if (parts.Length > 2)
                 throw new FormatException("Invalid cluster version format.");

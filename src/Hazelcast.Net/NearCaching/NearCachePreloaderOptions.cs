@@ -26,6 +26,7 @@ using Hazelcast.Models;
 using Hazelcast.NearCaching;
 */
 using Hazelcast.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.NearCaching;
 
@@ -67,7 +68,7 @@ public class NearCachePreloaderOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="NearCachePreloaderOptions"/>.
     /// </summary>
-    public NearCachePreloaderOptions(NearCachePreloaderOptions nearCachePreloaderConfig)
+    public NearCachePreloaderOptions([NotNull] NearCachePreloaderOptions nearCachePreloaderConfig)
         : this(nearCachePreloaderConfig._enabled, nearCachePreloaderConfig._directory)
     {
         _storeInitialDelaySeconds = nearCachePreloaderConfig._storeInitialDelaySeconds;
@@ -179,7 +180,7 @@ public class NearCachePreloaderOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.NearCachePreloaderConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteBoolean(_enabled);
         output.WriteString(_directory);
@@ -188,7 +189,7 @@ public class NearCachePreloaderOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _enabled = input.ReadBoolean();
         _directory = input.ReadString();

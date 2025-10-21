@@ -161,18 +161,18 @@ namespace Hazelcast
 
             // when a connection is opened, install event subscriptions + ensure there is a cluster views connection
             Cluster.Connections.ConnectionOpened += Cluster.Events.OnConnectionOpened;
-            
+
             // when a connection is opened, notify the heartbeat service
             Cluster.Connections.ConnectionOpened += (conn, _, _, _, _) => { Cluster.Heartbeat.AddConnection(conn); return default; };
 
             // when the first connection is opened, make sure version is set.
             Cluster.Connections.ConnectionOpened += (_, isFirstEver, _, _, clusterVersion) =>
             {
-                if(isFirstEver)
+                if (isFirstEver)
                     Cluster.State.ChangeClusterVersion(clusterVersion);
                 return default;
             };
-            
+
             // and now, we can change the client state and let user-level invocations go through
 
             // when a connection is opened, notify the members service (may change the client state)
@@ -195,7 +195,7 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public string ClusterName => Cluster.Name;
-        
+
         /// <inheritdoc />
         public ClusterVersion ClusterVersion => Cluster.State.ClusterVersion;
 
@@ -289,6 +289,15 @@ namespace Hazelcast
             catch (Exception e)
             {
                 _logger.LogError(e, "Caught exception while disposing the distributed object factory.");
+            }
+
+            try
+            {
+                if (Sql is SqlService ss) ss.Dispose();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Caught exception while disposing the Sql service.");
             }
 
             try

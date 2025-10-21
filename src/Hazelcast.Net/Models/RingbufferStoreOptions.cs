@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -38,8 +40,10 @@ public class RingbufferStoreOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="RingbufferStoreOptions"/> class.
     /// </summary>
-    public RingbufferStoreOptions(RingbufferStoreOptions options)
+    public RingbufferStoreOptions([NotNull] RingbufferStoreOptions options)
     {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
         _enabled = options._enabled;
         _className = options._className;
         _factoryClassName = options._factoryClassName;
@@ -100,7 +104,7 @@ public class RingbufferStoreOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.RingbufferStoreConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteBoolean(_enabled);
         output.WriteString(_className);
@@ -111,7 +115,7 @@ public class RingbufferStoreOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _enabled = input.ReadBoolean();
         _className = input.ReadString();

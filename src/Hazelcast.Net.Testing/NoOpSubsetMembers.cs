@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Clustering;
 using Hazelcast.Models;
 namespace Hazelcast.Testing
@@ -24,7 +25,7 @@ namespace Hazelcast.Testing
             => throw new NotImplementedException();
         HashSet<Guid> ISubsetClusterMembers.GetSubsetMemberIds()
             => throw new NotImplementedException();
-        public void SetSubsetMembers(MemberGroups newGroup)
+        public void SetSubsetMembers([NotNull] MemberGroups newGroup)
         {
             throw new NotImplementedException();
         }
@@ -32,9 +33,13 @@ namespace Hazelcast.Testing
         {
             get;
         }
-        public void RemoveSubsetMember(Guid memberId)
+        public void RemoveSubsetMember([NotNull] Guid memberId)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
