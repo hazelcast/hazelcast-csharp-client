@@ -47,9 +47,18 @@ namespace Hazelcast.Networking
             // because it is supported with framework 4.7+ but not 4.6.2.
             //
             // https://referencesource.microsoft.com/#System/net/System/Net/SecureProtocols/_SslState.cs,5d0d274f6285d5dd
-
+#if !NET9_0_OR_GREATER
             var p = typeof(ServicePointManager).GetProperty("DisableSystemDefaultTlsVersions", BindingFlags.Static | BindingFlags.NonPublic);
             return p == null || !(bool)p.GetValue(null);
+#else
+            // ServicePointManager became obsoleted in .NET 9. 
+            // And, where >.NET9, SslProtocols.None is default option in the framework. 
+            // By trusting framework implementation, we don't check if SslProtocols.None is supported anymore.
+            // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Security/src/System/Net/Security/SslServerAuthenticationOptions.cs#L14
+            // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Security/src/System/Net/Security/Pal.OSX/SafeDeleteNwContext.cs#L388
+            
+            return true;
+#endif
         }
 
         public SslLayer(SslOptions options, IPAddress ipAddress, ILoggerFactory loggerFactory)
