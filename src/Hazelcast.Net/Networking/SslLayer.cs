@@ -56,7 +56,7 @@ namespace Hazelcast.Networking
             // By trusting framework implementation, we don't check if SslProtocols.None is supported anymore.
             // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Security/src/System/Net/Security/SslServerAuthenticationOptions.cs#L14
             // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Security/src/System/Net/Security/Pal.OSX/SafeDeleteNwContext.cs#L388
-            
+
             return true;
 #endif
         }
@@ -86,7 +86,7 @@ namespace Hazelcast.Networking
 
                 // assume there's only going to be 1 cert with a private key, and pick it
                 // should we work with more than 1 PK certs, we'd need a more complex logic
-                selectCertificate = (_, _, certificates, _, _) 
+                selectCertificate = (_, _, certificates, _, _)
                     => certificates.Cast<X509Certificate2>().FirstOrDefault(x => x.HasPrivateKey);
 
                 // for the whole cert chain to be sent as part of the handshake we need to copy the
@@ -101,8 +101,8 @@ namespace Hazelcast.Networking
                         if (!cert.HasPrivateKey)
                         {
                             _logger.LogInformation($"Adding certificate Subject='{cert.Subject}' Issuer='{cert.Issuer}' to the current user CA"
-                                + " store (at ~/.dotnet/corefx/cryptography/x509stores/ca). This is a mandatory workaround for .NET TLS/SSL to function"
-                                + " on the Linux operating system. Make sure that the store directory is correctly secured.");
+                                                   + " store (at ~/.dotnet/corefx/cryptography/x509stores/ca). This is a mandatory workaround for .NET TLS/SSL to function"
+                                                   + " on the Linux operating system. Make sure that the store directory is correctly secured.");
                             store.Add(cert);
                         }
                     }
@@ -168,13 +168,19 @@ namespace Hazelcast.Networking
         /// </summary>
         internal X509Certificate2Collection GetClientCertificates()
         {
-            var clientCertificates = new X509Certificate2Collection();
+            if (_options.CertificatePath == null) return new X509Certificate2Collection();
 
-            if (_options.CertificatePath == null) return clientCertificates;
+            X509Certificate2Collection clientCertificates;
 
             try
             {
+#if !NET9_0_OR_GREATER                
+                clientCertificates = new X509Certificate2Collection();
                 clientCertificates.Import(_options.CertificatePath, _options.CertificatePassword, _options.KeyStorageFlags);
+#else
+                clientCertificates = X509CertificateLoader
+                    .LoadPkcs12CollectionFromFile(_options.CertificatePath, _options.CertificatePassword, _options.KeyStorageFlags);
+#endif
             }
             catch (Exception e)
             {
@@ -218,7 +224,9 @@ namespace Hazelcast.Networking
                     {
                         name = $" (cert name: '{cert.Subject}')";
                     }
-                    catch { /* bah */ }
+                    catch
+                    { /* bah */
+                    }
                     _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors}{Name}.", policyErrors, name);
                     validation = false;
                 }
