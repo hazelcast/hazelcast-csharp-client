@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1406,6 +1407,43 @@ namespace Hazelcast.Tests.Remote
             var enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
+        }
+
+        [Test]
+        public async Task TestTTLUpdated()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            // in seconds
+            var maxTTL = 100;
+            var minTTL = 3;
+            var key = "key1";
+            var latch = new ManualResetEvent(false);
+            
+            var starTime = Stopwatch.StartNew();
+            await map.SetAsync(key, "value1", TimeSpan.FromSeconds(maxTTL));
+
+            // Notify when key removed
+            var parallelCheck = Task.Run(async () =>
+            {
+                await AssertEx.SucceedsEventually(
+                    async () => Assert.False(await map.ContainsKeyAsync(key)),
+                    maxTTL * 1000,
+                    500);
+                latch.Set();
+            });
+
+            // Reduce the TTL
+            Assert.True(await map.UpdateTimeToLive(key, TimeSpan.FromSeconds(minTTL)));
+
+            await latch.WaitOneAsync();
+            starTime.Stop();
+            var elapsed = starTime.ElapsedMilliseconds;
+
+            // Definitively, less then maxTTL
+            Assert.Less(elapsed, maxTTL * 1000);
+
+            // Close to min TTL
+            Assert.Less(elapsed, minTTL * 1000 * 2);
         }
     }
 }

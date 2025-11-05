@@ -392,9 +392,15 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         }
 
-        public Task<bool> UpdateTimeToLive(TKey key, TimeSpan timeToLive)
+        public async Task<bool> UpdateTimeToLive(TKey key, TimeSpan timeToLive)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+            var seconds = Convert.ToInt64(timeToLive.TotalSeconds);
+            var requestMessage = MapSetTtlCodec.EncodeRequest(Name, keyData, seconds);
+            
+            var result= await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait(); 
+            var decoded = MapSetTtlCodec.DecodeResponse(result);
+            return decoded.Response;
         }
     }
 }
