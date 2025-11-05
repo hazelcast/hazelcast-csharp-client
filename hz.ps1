@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.6.0-SNAPSHOT"
+$defaultServerVersion="5.6.0"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -362,6 +362,7 @@ $isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "mast
 $isBeta = $options.server.Contains("BETA") 
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
+$isServerVersionPatch = $serverVersion -match '^(?:\d+\.\d+|\d+\.\d+\.[1-9]\d*)(?:-[0-9A-Za-z\.\-]+)?$'
 
 # determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://repository.hazelcast.com/snapshot-internal"
@@ -849,6 +850,7 @@ function ensure-server-files {
     # ensure we have the remote controller + hazelcast test jar
     ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnEntSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
     
+    
     if ($options.enterprise) {
 
         # ensure we have the hazelcast enterprise server
@@ -860,8 +862,8 @@ function ensure-server-files {
             # after 5.4.0, patch release become ee only.
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
 
-            # but check if it's snapshot, then download from os repo
-            $repo = if ($isSnapshot) { $mvnOssRepo } else { $mvnEntRepo }
+            # but check if it's snapshot or not patch, then download from os repo
+            $repo = if ($isSnapshot -or (-not $isServerVersionPatch)) { $mvnOssRepo } else { $mvnEntRepo }
 
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $repo "com.hazelcast:hazelcast-sql:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $repo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
@@ -879,7 +881,7 @@ function ensure-server-files {
             ensure-jar "hazelcast-all-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -cge "5.4.0") {
+        elseif ($serverVersion -cge "5.4.0" -and $isServerVersionPatch) {
             # after 5.4.0, patch release become ee only.
             Write-Output "Download from enterprise repo"
             ensure-jar "hazelcast-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}"
