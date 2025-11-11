@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
     <RootNamespace>Hazelcast</RootNamespace>
   </PropertyGroup>
 
@@ -61,16 +61,16 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.10" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="System.IO.Pipelines" Version="9.0.10" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="ZpqrtBnk.CommentsBuildAnalyzer" Version="1.0.9">
       <PrivateAssets>all</PrivateAssets>
@@ -91,6 +91,8 @@
 
   <ItemGroup>
     <!-- note: requires analyzer version 3.3.4+ in order to support merging files -->
+    <AdditionalFiles Include="PublicAPI/net10.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net10.0' " />
+    <AdditionalFiles Include="PublicAPI/net10.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net10.0' " />
     <AdditionalFiles Include="PublicAPI/net9.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net9.0' " />
     <AdditionalFiles Include="PublicAPI/net9.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net9.0' " />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net8.0' " />

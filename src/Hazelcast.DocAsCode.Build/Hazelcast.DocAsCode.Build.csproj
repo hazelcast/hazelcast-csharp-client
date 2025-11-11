@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="DocFx.Build" Version="2.77.0" />
     <PackageReference Include="DocFx.Build.ManagedReference" Version="2.77.0" />
-    <PackageReference Include="System.Composition" Version="8.0.0" />
+    <PackageReference Include="System.Composition" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

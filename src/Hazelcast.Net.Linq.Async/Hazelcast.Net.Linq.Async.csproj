@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
         <RootNamespace>Hazelcast.Linq</RootNamespace>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -52,7 +52,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+        <PackageReference Include="System.Linq.Async" Version="6.0.3" />
         <PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
     </ItemGroup>
 
