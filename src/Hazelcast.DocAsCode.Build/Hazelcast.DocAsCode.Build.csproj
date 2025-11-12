@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="DocFx.Build" Version="2.77.0" />
     <PackageReference Include="DocFx.Build.ManagedReference" Version="2.77.0" />
-    <PackageReference Include="System.Composition" Version="9.0.0" />
+    <PackageReference Include="System.Composition" Version="10.0.0" />
   </ItemGroup>
 
 </Project>
