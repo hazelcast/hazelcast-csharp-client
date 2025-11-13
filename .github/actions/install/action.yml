@@ -51,11 +51,11 @@ runs:
         sudo rm /etc/apt/sources.list.d/microsoft-prod.list        
         sudo apt update
         sudo add-apt-repository ppa:dotnet/backports
-        sudo apt-get update
-        # we need to install dotnet 6.0        
+        sudo apt-get update        
         
         sudo apt-get install -y dotnet-sdk-8.0
         sudo apt-get install -y dotnet-sdk-9.0
+        sudo apt-get install -y dotnet-sdk-10.0
    
 
     - name: Install .NET on Windows
@@ -65,6 +65,7 @@ runs:
           dotnet-version: |
             8.0.x
             9.0.x
+            10.0.x
 
     # Install Java
     - name: Install JDK
