@@ -1,5 +1,9 @@
 ﻿# LINQ Provider 
 
+> __Note:__ If you are running `Hazelcast.Net.Linq.Async` on .NET10, then you should put aliases 
+> to your project file to avoid reference ambiguity between `System.Linq, V=6.0.0` and `System.Linq, V=10.0.0`.
+> For more details, please visit [this issue](https://github.com/hazelcast/hazelcast-csharp-client/pull/999).
+
 Hazelcast .Net Client provides a LINQ provider over `IHMap`. Provider is currently in BETA version.
 You can use programmatic LINQ functions instead string SQL statements to query over your distributed map.
 To benefit from LINQ support, `Hazelcast.Net.Linq.Async` package should be added your dependency. The package is an

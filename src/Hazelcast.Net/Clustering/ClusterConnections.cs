@@ -523,7 +523,7 @@ namespace Hazelcast.Clustering
 
             static IEnumerable<NetworkAddress> Distinct(IEnumerable<NetworkAddress> aa, ISet<NetworkAddress> d, bool s)
             {
-                if (s) aa = aa.Shuffle();
+                if (s) aa = Hazelcast.Core.EnumerableExtensions.Shuffle(aa);
 
                 foreach (var a in aa)
                 {
