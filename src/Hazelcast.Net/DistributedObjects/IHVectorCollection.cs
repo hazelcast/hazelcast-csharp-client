@@ -18,6 +18,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
+    /// **BETA**
     /// Represents a distributed collection of vector documents.
     /// </summary>
     /// <typeparam name="TKey">The type of the key associated with the collection.</typeparam>

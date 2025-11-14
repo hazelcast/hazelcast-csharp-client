@@ -291,6 +291,7 @@ namespace Hazelcast
         Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name);
         
         /// <summary>
+        /// **BETA**
         /// Gets an <see cref="IHVectorCollection{TKey,TVal}"/> distributed vector collection with the specified name.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys in the vector collection.</typeparam>
