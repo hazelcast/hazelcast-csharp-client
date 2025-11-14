@@ -12,6 +12,14 @@ The .NET client itself is distributed via NuGet as a package named [Hazelcast.NE
 
 The Hazelcast .NET solution is Open Source, released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and welcomes contributions. The project lives here on [GitHub](https://github.com/hazelcast/hazelcast-csharp-client), where you can obtain the source code, report issues, and interract with the community. Contributions are welcome!
 
+
+## Extension Packages
+In addition to the core `Hazelcast.Net` client package, there are several extension packages that provide additional functionality. These include:
+
+- `Hazelcast.Net.DependencyInjection`: Provides integration with Microsoft's Dependency Injection framework which is also used with ASP.NET.
+- `Hazelcast.Net.Caching`: Adds caching capabilities to the Hazelcast .NET client by implementing `IDistributedCache`.
+- `Hazelcast.Net.Linq.Async`: Enables LINQ support for asynchronous map querying with Hazelcast.
+
 ## Versions
 
 Browse to [this page](http://hazelcast.github.io/hazelcast-csharp-client/versions.html) for details about versions.
@@ -21,6 +29,23 @@ See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12
 ## Code Samples
 
 Check the [Hazelcast.Net.Examples](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples) project.
+
+Here is a simple example that connects to a Hazelcast server running on localhost, puts and gets a value from a distributed map.
+```csharp 
+var options = new HazelcastOptionsBuilder()
+    .With(o=> o.Networking.Addresses.Add("127.0.0.1:5701")) 
+    .Build();
+
+// create an Hazelcast client and connect to a server running on localhost
+await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+
+// get the distributed map from the cluster
+await using var map = await client.GetMapAsync<string, string>("simple-example");
+
+await map.PutAsync("my-key", "my-value");
+
+var value =  await map.GetAsync("my-key");
+```
 
 ## Contributing
 
