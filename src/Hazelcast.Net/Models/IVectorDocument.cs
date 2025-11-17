@@ -15,6 +15,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Hazelcast.Models
 {
     /// <summary>
+    /// ** BETA **
     /// Represents a document containing a value and associated vector values.
     /// </summary>
     /// <typeparam name="TVal">The type of the value contained in the document.</typeparam>
