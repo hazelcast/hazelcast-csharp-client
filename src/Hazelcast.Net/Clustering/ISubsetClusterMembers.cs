@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using Hazelcast.Models;
 namespace Hazelcast.Clustering
 {
-    internal interface ISubsetClusterMembers
+    internal interface ISubsetClusterMembers : IDisposable
     {
         HashSet<Guid> GetSubsetMemberIds();
 

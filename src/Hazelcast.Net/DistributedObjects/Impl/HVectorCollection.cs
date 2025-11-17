@@ -128,8 +128,8 @@ namespace Hazelcast.DistributedObjects.Impl
             var entries = new List<VectorSearchResultEntry<TKey, TVal>>();
             foreach (var rawEntry in rawResponse)
             {
-                var key = await ToObjectAsync<TKey>(rawEntry.Key);
-                var value = await ToObjectAsync<TVal>(rawEntry.Value);
+                var key = await ToObjectAsync<TKey>(rawEntry.Key).CfAwait();
+                var value = await ToObjectAsync<TVal>(rawEntry.Value).CfAwait();
                 var entry = new VectorSearchResultEntry<TKey, TVal>(key, value, rawEntry.Vectors, rawEntry.Score);
                 entries.Add(entry);
             }

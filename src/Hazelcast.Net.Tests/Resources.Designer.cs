@@ -294,7 +294,7 @@ namespace Hazelcast.Tests {
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
         ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
         ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
-        ///           http://www.hazelcast.com/schema/config/hazelcast-config-6.0.xsd&quot;&gt;
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-5.6.xsd&quot;&gt;
         ///
         ///  &lt;properties&gt;
         ///    &lt;property name=&quot;hazelcast.map.invalidation.batch.enabled&quot;&gt;false&lt;/property&gt;

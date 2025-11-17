@@ -107,9 +107,8 @@ namespace Hazelcast.Serialization.Collections
                 EnsureKey(entry);
                 EnsureValue(entry);
 
-                // while we're at it, ensure it's in the key entries too
-                if (!_keyEntries.ContainsKey(entry.Key))
-                    _keyEntries.Add(entry.Key, entry);
+                // while we're at it, ensure it's in the key entries too                
+                _keyEntries.TryAdd(entry.Key, entry);
 
                 yield return new KeyValuePair<TKey, TValue>(entry.Key, entry.Value);
             }
@@ -190,9 +189,8 @@ namespace Hazelcast.Serialization.Collections
             {
                 foreach (var entry in _entries.Values)
                 {
-                    EnsureKey(entry);
-                    if (!_keyEntries.ContainsKey(entry.Key))
-                        _keyEntries.Add(entry.Key, entry);
+                    EnsureKey(entry);                    
+                    _keyEntries.TryAdd(entry.Key, entry);
                     yield return entry.Key;
                 }
             }

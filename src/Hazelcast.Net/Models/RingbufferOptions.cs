@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Hazelcast.Configuration;
@@ -124,15 +125,13 @@ public class RingbufferOptions : IIdentifiedDataSerializable, INamedOptions
         set => _name = value.ThrowIfNullNorWhiteSpace();
     }
 
-    /*
-     * Gets the capacity of the ringbuffer.
-     * <p>
-     * The capacity is the total number of items in the ringbuffer. The items
-     * will remain in the ringbuffer, but the oldest items will eventually be
-     * overwritten by the newest items.
-     *
-     * @return the capacity
-     */
+    /// <summary>
+    /// Gets the capacity of the ringbuffer.
+    /// <p>
+    /// The capacity is the total number of items in the ringbuffer. The items
+    /// will remain in the ringbuffer, but the oldest items will eventually be
+    /// overwritten by the newest items.</p>
+    /// </summary>
     public int Capacity
     {
         get => _capacity;
@@ -185,12 +184,10 @@ public class RingbufferOptions : IIdentifiedDataSerializable, INamedOptions
         }
     }
 
-    /*
-     * Get the RingbufferStore (load and store ringbuffer items from/to a database)
-     * configuration.
-     *
-     * @return the ringbuffer store configuration
-     */
+
+    /// <summary>
+    /// Get the RingbufferStore (load and store ringbuffer items from/to a database)configuration.
+    /// </summary>
     public RingbufferStoreOptions RingbufferStore
     {
         get => _ringbufferStoreOptions;
@@ -238,7 +235,7 @@ public class RingbufferOptions : IIdentifiedDataSerializable, INamedOptions
     public int ClassId => ConfigurationDataSerializerHook.RingbufferConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_name);
         output.WriteInt(_capacity);
@@ -252,7 +249,7 @@ public class RingbufferOptions : IIdentifiedDataSerializable, INamedOptions
     }
     
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _name = input.ReadString();
         _capacity = input.ReadInt();

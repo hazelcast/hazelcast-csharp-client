@@ -58,7 +58,7 @@ public class CloudTestBase : RemoteTestBase
         if (string.IsNullOrWhiteSpace(_baseUrl = Environment.GetEnvironmentVariable("BASE_URL")))
         {
             Console.WriteLine("The cloud BASE_URL environment variable is not set, using default.");
-            _baseUrl = "https://api.dev.viridian.hazelcast.cloud";
+            _baseUrl = "https://api.dev.hazelcast.cloud";
         }
 
         // create a client to the local remote controller

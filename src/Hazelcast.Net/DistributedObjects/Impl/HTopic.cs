@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects.Impl
         private IData _keyData;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Topic{T}"/> class.
+        /// Initializes a new instance of the <b>Topic{T}</b> class.
         /// </summary>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="factory">The factory that owns this object.</param>

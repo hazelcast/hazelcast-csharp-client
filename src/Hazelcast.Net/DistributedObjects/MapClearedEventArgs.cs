@@ -15,8 +15,17 @@ using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
+    /// <summary>
+    /// Specifies the event arguments for a map cleared event.
+    /// </summary>
     public sealed class MapClearedEventArgs : MapEventArgsBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MapClearedEventArgs"/> class.
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="numberOfAffectedEntries"></param>
+        /// <param name="state"></param>
         public MapClearedEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
             : base(member, numberOfAffectedEntries, state)
         { }

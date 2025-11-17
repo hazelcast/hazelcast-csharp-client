@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -92,7 +93,7 @@ namespace Hazelcast.Metrics
                 metrics.AddRange(metricSource.PublishMetrics());
 
             foreach (var metricSource in _metricAsyncSources)
-                await foreach (var metric in metricSource.PublishMetrics())
+                await foreach (var metric in metricSource.PublishMetrics().ConfigureAwait(false))
                     metrics.Add(metric);
 
             // TODO add NearCache manager as a metric source! - except, then, the source can be async!
@@ -147,7 +148,7 @@ namespace Hazelcast.Metrics
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
             await _publishing.CfAwaitCanceled();
             _cancel.Dispose();
         }

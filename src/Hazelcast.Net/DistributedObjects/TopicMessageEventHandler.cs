@@ -18,7 +18,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="TopicEventTypes.Message"/> event.
+    /// Represents a handler for the <b>TopicEventTypes.Message</b> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     internal class TopicMessageEventHandler<T> : ITopicEventHandler<T>
@@ -57,6 +57,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="member">The member.</param>
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The topic object carried by the message.</param>
+        /// <param name="state"></param>
         /// <returns>Event arguments.</returns>
         private static TopicMessageEventArgs<T> CreateEventArgs(MemberInfo member, long publishTime, T payload, object state)
             => new TopicMessageEventArgs<T>(member, publishTime, payload, state);

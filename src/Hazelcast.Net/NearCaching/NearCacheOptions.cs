@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -21,6 +22,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.NearCaching;
 
+/// <summary>
+/// Represents the configuration of a near cache.
+/// </summary>
 public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
 {
     /// <summary>
@@ -94,8 +98,10 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     /// <summary>
     /// Initializes a new instance of the <see cref="NearCacheOptions"/> class.
     /// </summary>
-    public NearCacheOptions(NearCacheOptions config)
+    public NearCacheOptions([NotNull] NearCacheOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _name = config._name;
         _cacheLocalEntries = config._cacheLocalEntries;
         _serializeKeys = config._serializeKeys;
@@ -241,7 +247,7 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     public int ClassId => ConfigurationDataSerializerHook.NearCacheConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_name);
         output.WriteInt(_timeToLiveSeconds);
@@ -255,7 +261,7 @@ public class NearCacheOptions : IIdentifiedDataSerializable, INamedOptions
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _name = input.ReadString();
         _timeToLiveSeconds = input.ReadInt();

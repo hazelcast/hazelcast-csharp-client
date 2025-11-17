@@ -23,6 +23,7 @@ using Hazelcast.Models;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
+using Hazelcast.Polyfills;
 
 namespace Hazelcast.Clustering
 {
@@ -109,7 +110,7 @@ namespace Hazelcast.Clustering
 
             HConsole.WriteLine(this, "Stopping...");
 
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
 
             try
             {
@@ -166,7 +167,7 @@ namespace Hazelcast.Clustering
                 .TakeWhile(_ => !cancellationToken.IsCancellationRequested)
                 .Select(x => PingAsync(x.MemberConnection, x.MessageConnection, cancellationToken));
 
-            await ParallelRunner.Run(tasks, new ParallelRunner.Options { Count = _parallelCount });
+            await ParallelRunner.Run(tasks, new ParallelRunner.Options { Count = _parallelCount }).CfAwait();
         }
 
         private List<(MemberConnection MemberConnection, ClientMessageConnection MessageConnection)> GetColdConnections(IEnumerable<MemberConnection> memberConnections, DateTime now)

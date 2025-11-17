@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Exceptions;
@@ -94,10 +95,12 @@ namespace Hazelcast
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <returns>This options builder.</returns>
-        public TBuilder WithDefault(string key, object value)
+        public TBuilder WithDefault(string key, [NotNull] object value)
         {
             if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
             // assuming value can be null or empty
+
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             _defaults ??= new Dictionary<string, string>();
             _defaults[key] = value.ToString();
@@ -126,10 +129,12 @@ namespace Hazelcast
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <returns>This options builder.</returns>
-        public TBuilder With(string key, object value)
+        public TBuilder With(string key, [NotNull] object value)
         {
             if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
             // assuming value can be null or empty
+
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             _keyValues ??= new Dictionary<string, string>();
             _keyValues[key] = value.ToString();

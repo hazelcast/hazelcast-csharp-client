@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
     <RootNamespace>Hazelcast</RootNamespace>
   </PropertyGroup>
 
@@ -91,14 +91,13 @@
 
   <ItemGroup>
     <!-- note: requires analyzer version 3.3.4+ in order to support merging files -->
-    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
-    <AdditionalFiles Include="PublicAPI/net6.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net6.0' " />
+    <AdditionalFiles Include="PublicAPI/net10.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net10.0' " />
+    <AdditionalFiles Include="PublicAPI/net10.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net10.0' " />
+    <AdditionalFiles Include="PublicAPI/net9.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net9.0' " />
+    <AdditionalFiles Include="PublicAPI/net9.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net9.0' " />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.1' " />
-
-    <AdditionalFiles Include="PublicAPI/net6.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net6.0' " />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.1' " />

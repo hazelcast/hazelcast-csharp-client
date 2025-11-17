@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Models;
+using Hazelcast.Polyfills;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering;
@@ -259,6 +260,8 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
         }
     }
 
+    // Already disposed in DisposeAsync
+    [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
     public IAsyncEnumerator<MemberConnectionRequest> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         lock (_mutex)
@@ -307,16 +310,15 @@ internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>
         }
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         lock (_mutex)
         {
-            if (_disposed) return default;
+            if (_disposed) return;
             _disposed = true;
         }
 
-        _enumeratorCancellation?.Cancel();
-
-        return default;
+        if(_enumeratorCancellation != null)
+            await _enumeratorCancellation.TryCancelAsync().CfAwait();        
     }
 }

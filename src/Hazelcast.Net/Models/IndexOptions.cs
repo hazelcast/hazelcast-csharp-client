@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -34,6 +35,9 @@ namespace Hazelcast.Models
     /// </remarks>
     public class IndexOptions : IIdentifiedDataSerializable
     {
+        /// <summary>
+        /// The default type of the index.
+        /// </summary>
         public static readonly IndexType DefaultType = IndexType.Sorted;
 
         /// <summary>
@@ -53,8 +57,10 @@ namespace Hazelcast.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="IndexOptions"/> class.
         /// </summary>
-        public IndexOptions(IndexOptions indexOptions)
+        public IndexOptions([NotNull] IndexOptions indexOptions)
         {
+            if (indexOptions == null) throw new ArgumentNullException(nameof(indexOptions));
+
             Name = indexOptions.Name;
             Type = indexOptions.Type;
             Attributes = new List<string>(indexOptions.Attributes);

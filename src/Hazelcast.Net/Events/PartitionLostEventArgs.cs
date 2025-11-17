@@ -15,8 +15,18 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Events
 {
+    /// <summary>
+    /// Represents event data for the partition lost event.
+    /// </summary>
     public class PartitionLostEventArgs
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PartitionLostEventArgs"/> class.
+        /// </summary>
+        /// <param name="partitionId"></param>
+        /// <param name="lostBackupCount"></param>
+        /// <param name="isAllReplicasInPartitionLost"></param>
+        /// <param name="member"></param>
         public PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
         {
             PartitionId = partitionId;
@@ -25,12 +35,24 @@ namespace Hazelcast.Events
             Member = member;
         }
 
+        /// <summary>
+        /// The partition id.
+        /// </summary>
         public int PartitionId { get; }
 
+        /// <summary>
+        /// The lost backup count.
+        /// </summary>
         public int LostBackupCount { get; }
 
+        /// <summary>
+        /// Indicates whether all replicas of the partition are lost.
+        /// </summary>
         public bool IsAllReplicasInPartitionLost { get; }
 
+        /// <summary>
+        /// The member raised the event.
+        /// </summary>
         public MemberInfo Member { get; }
     }
 }

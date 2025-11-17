@@ -16,6 +16,11 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
+    
+    /// <summary>
+    /// Locking functionality for distributed map
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
     public interface IKeyLockable<TKey>
     {
         /// <summary>

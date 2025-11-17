@@ -35,6 +35,7 @@ namespace Hazelcast.Models
         /// </summary>
         public IDictionary<string, float[]> IndexNameToVector { get; }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var val = IndexNameToVector == null

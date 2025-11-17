@@ -128,7 +128,7 @@ namespace Hazelcast.Clustering
         // (background task loop) raises events
         private async Task RaiseEvents()
         {
-            await foreach (var state in _states)
+            await foreach (var state in _states.ConfigureAwait(false))
             {
                 var marker = (int)state;
                 if (marker < 0)

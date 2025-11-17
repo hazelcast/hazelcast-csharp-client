@@ -23,12 +23,12 @@ namespace Hazelcast.DistributedObjects
     public interface IHTxSet<in TItem> : ITransactionalObject
     {
         /// <summary>Add new item to transactional set</summary>
-        /// <param name="e">item</param>
+        /// <param name="item">item</param>
         /// <returns>true if item is added successfully</returns>
         Task<bool> AddAsync(TItem item);
 
         /// <summary>Add item from transactional set</summary>
-        /// <param name="e">item</param>
+        /// <param name="item">item</param>
         /// <returns>true if item is remove successfully</returns>
         Task<bool> RemoveAsync(TItem item);
 

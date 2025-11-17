@@ -26,6 +26,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Core;
 
 namespace Hazelcast.Models;
@@ -36,6 +37,7 @@ namespace Hazelcast.Models;
 /// <remarks>
 /// <para>Maps to <c>java.util.concurrent.TimeUnit</c>, we are using the same values.</para>
 /// </remarks>
+[SuppressMessage("Design", "CA1008:Enums should have zero value")] // doesn't compatible with Java
 public enum TimeUnit : long
 {
     /// <summary>

@@ -18,7 +18,7 @@ using Hazelcast.Models;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="TopicEventTypes.Terminated"/> event.
+    /// Represents a handler for the <b>TopicEventTypes.Terminated</b> event.
     /// </summary>
     /// <typeparam name="T">The reliable topic object type.</typeparam>
     internal class ReliableTopicTerminatedEventHandler<T> : IReliableTopicTerminatedEventHandler<T>
@@ -55,6 +55,7 @@ namespace Hazelcast.DistributedObjects
         /// Creates event arguments.
         /// </summary>
         /// <param name="sequence">The last known sequence in the ring buffer.</param>
+        /// <param name="state"></param>
         /// <returns>Event arguments.</returns>
         private static ReliableTopicTerminatedEventArgs CreateEventArgs(long sequence, object state)
             => new ReliableTopicTerminatedEventArgs(sequence, state);

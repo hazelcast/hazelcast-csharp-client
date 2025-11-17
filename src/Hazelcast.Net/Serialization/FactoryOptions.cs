@@ -15,6 +15,10 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
+    /// <summary>
+    /// Represents the configuration of a factory.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class FactoryOptions<T> : SingletonServiceFactory<T>
         where T : class
     {

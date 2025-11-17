@@ -53,7 +53,8 @@ namespace Hazelcast.Query
         // in Java they are typed ie KeyValuePair<TKey, TValue>, here it is <object, object>
         // is this working as expected? is it OK not to be typed?
 
-        /// <summary>
+        /*
+         /// <summary>
         /// Gets the comparer that is used to sort the results on the client.
         /// </summary>
         /// <remarks>
@@ -66,5 +67,6 @@ namespace Hazelcast.Query
         /// Gets the anchor entry, i.e. the last entry on the previous page.
         /// </summary>
         //KeyValuePair<object, object> Anchor { get; }
+        */
     }
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -46,19 +47,27 @@ public class EntryListenerOptions : ListenerOptions
     /// <summary>
     /// Initializes a new instance of the <see cref="EntryListenerOptions"/> class.
     /// </summary>
-    public EntryListenerOptions(EntryListenerOptions config)
+    public EntryListenerOptions([NotNull] EntryListenerOptions config)
         : base(config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _includeValue = config.IncludeValue;
         _local = config.Local;
     }
 
+    /// <summary>
+    /// Either register the listener locally to member or not.
+    /// </summary>
     public override bool Local
     {
         get => _local;
         set => _local = value;
     }
 
+    /// <summary>
+    /// Either include the value or not.
+    /// </summary>
     public override bool IncludeValue
     {
         get => _includeValue;

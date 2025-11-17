@@ -126,6 +126,8 @@ namespace Hazelcast.Models
         /// </summary>
         public int Nanosecond => Time.Nanosecond;
 
+        private static readonly char[] separator = new[] { 'T', 't' };
+
         /// <summary>
         /// Offsets the value of this <see cref="HLocalDateTime"/> as an <see cref="HOffsetDateTime"/>.
         /// </summary>
@@ -189,7 +191,7 @@ namespace Hazelcast.Models
             if (s == null)
                 return false;
 
-            var parts = s.Split(new[] { 'T', 't' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = s.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 2)
                 return false;
 

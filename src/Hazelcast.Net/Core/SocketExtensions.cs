@@ -17,6 +17,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Polyfills;
 
 namespace Hazelcast.Core
 {
@@ -90,7 +91,7 @@ namespace Hazelcast.Core
 
             if (!timeoutTask.IsCompletedSuccessfully())
             {
-                timeoutCancel.Cancel(); // don't leave the timeoutTask running
+                await timeoutCancel.TryCancelAsync().CfAwait(); // don't leave the timeoutTask running
                 await timeoutTask.CfAwaitNoThrow(); // and make sure it does not leak unobserved exception
             }
 

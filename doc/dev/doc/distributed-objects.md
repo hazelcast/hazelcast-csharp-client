@@ -10,6 +10,7 @@ Distributed objects are managed by an Hazelcast cluster, and accessed via the Ha
 * [HRingBuffer](distributed-objects/hringbuffer.md) - a distributed ring-buffer corresponding to a cluster-side [Map](https://docs.hazelcast.com/hazelcast/latest/data-structures/ringbuffer)
 * [HSet](distributed-objects/hset.md) - a distributed set store corresponding to a cluster-side [Set](https://docs.hazelcast.com/hazelcast/latest/data-structures/set)
 * [HTopic](distributed-objects/htopic.md) - a distributed message-publishing store corresponding to a cluster-side [Topic](https://docs.hazelcast.com/hazelcast/latest/data-structures/topic)
+* [HVectorCollection](distributed-objects/vectorcollection.md) - a distributed vector collection store corresponding to a cluster-side [Vector Collection](https://docs.hazelcast.com/hazelcast/latest/data-structures/vector-collections)
 
 Distributed objects are obtained from the Hazelcast .NET Client and are fully identified by their unique name. If an object of the specified type and with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:
 

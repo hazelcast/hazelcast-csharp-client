@@ -20,25 +20,35 @@ namespace Hazelcast.Serialization
     /// </summary>
     public class JavaClass
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JavaClass" /> class.
+        /// </summary>
+        /// <param name="name"></param>
         public JavaClass(string name)
         {
             Name = name;
         }
 
+        /// <summary>
+        /// The name of the class
+        /// </summary>
         public string Name { get; }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
             return obj is JavaClass thing && EqualsN(this, thing);
         }
 
+        /// <inheritdoc />
         protected bool Equals(JavaClass other)
         {
             if (other is null) return false;
             return ReferenceEquals(this, other) || EqualsN(this, other);
         }
 
+        /// <inheritdoc />
         public static bool Equals(JavaClass left, JavaClass right)
         {
             if (ReferenceEquals(left, right)) return true;
@@ -49,11 +59,13 @@ namespace Hazelcast.Serialization
         private static bool EqualsN(JavaClass left, JavaClass right)
             => string.Equals(left.Name, right.Name, StringComparison.Ordinal);
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             return Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"Name: {Name}";

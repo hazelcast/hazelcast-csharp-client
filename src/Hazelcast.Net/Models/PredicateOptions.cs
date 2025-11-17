@@ -14,6 +14,8 @@
 using Hazelcast.Serialization;
 using Hazelcast.Core;
 using Hazelcast.Configuration;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -42,8 +44,10 @@ public class PredicateOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="PredicateOptions"/> class.
     /// </summary>
-    public PredicateOptions(PredicateOptions config)
+    public PredicateOptions([NotNull] PredicateOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _className = config._className;
         _sql = config._sql;
     }
@@ -90,7 +94,7 @@ public class PredicateOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.PredicateConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_className);
         output.WriteString(_sql);
@@ -98,7 +102,7 @@ public class PredicateOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _className = input.ReadString();
         _sql = input.ReadString();

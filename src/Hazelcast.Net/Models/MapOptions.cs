@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -24,6 +25,7 @@ namespace Hazelcast.Models;
 /// <summary>
 /// Represents options for map.
 /// </summary>
+[SuppressMessage("Design", "CA1002:Do not expose generic lists")] // cannot change public APIs
 public class MapOptions : IIdentifiedDataSerializable, INamedOptions
 {
     /// <summary>
@@ -138,16 +140,29 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     private List<QueryCacheOptions> _queryCacheConfigs;
     private PartitioningStrategyOptions _partitioningStrategyConfig;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapOptions"/> class.
+    /// </summary>
     public MapOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapOptions"/> class.
+    /// </summary>
+    /// <param name="name"></param>
     public MapOptions(string name)
     {
         Name = name;
     }
 
-    public MapOptions(MapOptions options)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapOptions"/> class.
+    /// </summary>
+    /// <param name="options"></param>
+    public MapOptions([NotNull] MapOptions options)
     {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
         _name = options._name;
         _backupCount = options._backupCount;
         _asyncBackupCount = options._asyncBackupCount;
@@ -320,18 +335,27 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
         set => _entryListenerConfigs = value;
     }
 
+    /// <summary>
+    /// Gets or sets the partition lost listener configurations.
+    /// </summary>
     public List<MapPartitionLostListenerOptions> PartitionLostListeners
     {
         get => _partitionLostListenerConfigs ??= new();
         set => _partitionLostListenerConfigs = value;
     }
 
+    /// <summary>
+    /// Gets or sets the index configurations.
+    /// </summary>
     public List<IndexOptions> Indexes
     {
         get => _indexConfigs ??= new();
         set => _indexConfigs = value;
     }
 
+    /// <summary>
+    /// Gets or sets the attribute configurations.
+    /// </summary>
     public List<AttributeOptions> Attributes
     {
         get => _attributeConfigs ??= new();
@@ -493,7 +517,7 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     public int ClassId => ConfigurationDataSerializerHook.MapConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_name);
         output.WriteInt(_backupCount);
@@ -529,7 +553,7 @@ public class MapOptions : IIdentifiedDataSerializable, INamedOptions
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _name = input.ReadString();
         _backupCount = input.ReadInt();

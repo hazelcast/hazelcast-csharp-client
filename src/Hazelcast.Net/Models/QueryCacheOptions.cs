@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -22,6 +23,7 @@ namespace Hazelcast.Models;
 /// <summary>
 /// Represents configuration for the query cache.
 /// </summary>
+[SuppressMessage("Design", "CA1002:Do not expose generic lists")] // cannot change public APIs
 public class QueryCacheOptions : IIdentifiedDataSerializable
 {
     /// <summary>
@@ -104,8 +106,10 @@ public class QueryCacheOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="QueryCacheOptions"/> class.
     /// </summary>
-    public QueryCacheOptions(QueryCacheOptions other)
+    public QueryCacheOptions([NotNull] QueryCacheOptions other)
     {
+        if (other == null) throw new ArgumentNullException(nameof(other));
+
         _batchSize = other._batchSize;
         _bufferSize = other._bufferSize;
         _delaySeconds = other._delaySeconds;
@@ -272,7 +276,7 @@ public class QueryCacheOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.QueryCacheConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteInt(_batchSize);
         output.WriteInt(_bufferSize);
@@ -290,7 +294,7 @@ public class QueryCacheOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _batchSize = input.ReadInt();
         _bufferSize = input.ReadInt();

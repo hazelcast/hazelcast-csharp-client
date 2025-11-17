@@ -24,6 +24,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
+    /// <summary>
+    /// Contains extension methods for the <see cref="ISqlService"/> interface.
+    /// </summary>
     public static class SqlServiceExtensions
     {
         // NOTE: these are convenient extension methods, and the C# compiler is clever enough to figure
@@ -238,7 +241,7 @@ namespace Hazelcast.Sql
             var queryResult = await sql.ExecuteQueryAsync("SHOW MAPPINGS").CfAwait();
 
             var mappings = new List<string>();
-            await foreach (var row in queryResult)
+            await foreach (var row in ((IAsyncEnumerable<SqlRow>)queryResult).ConfigureAwait(false))
                 mappings.Add(row.GetColumn<string>(0));
             return mappings;
         }

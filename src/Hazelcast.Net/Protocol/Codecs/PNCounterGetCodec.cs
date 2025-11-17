@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.Codecs
     /// guarantees.
     /// The target replica is determined by the {@code targetReplica} parameter.
     /// If smart routing is disabled, the actual member processing the client
-    /// message may act as a proxy.
+    /// message may act as a proxy.</p>
     ///</summary>
 #if SERVER_CODEC
     internal static class PNCounterGetServerCodec
