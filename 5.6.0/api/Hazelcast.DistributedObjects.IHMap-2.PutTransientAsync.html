@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>PutTransientAsync Method
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="PutTransientAsync Method
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.6.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync*">
+
+
+
+<h1 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync*">PutTransientAsync Method
+</h1>
+<div class="markdown level0 summary"></div>
+<div class="markdown level0 conceptual"></div>
+
+<a id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync(`0,`1,System.TimeSpan)">PutTransientAsync(TKey, TValue, TimeSpan)</h4>
+<div class="markdown level1 summary"><p>Sets (adds or updates) an entry without calling the <code>MapStore</code> on the server side, if defined.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang- hljs">Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
+      <td><span class="parametername">key</span></td>
+      <td><p>A key.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><span class="xref">TValue</span></td>
+      <td><span class="parametername">value</span></td>
+      <td><p>A value.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
+      <td><span class="parametername">timeToLive</span></td>
+      <td><p>A time to live (0ms to live forever; -1ms to use the server-configured value).</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The value is automatically expired, evicted and removed after the
+<code class="paramref">timeToLive</code> has elapsed. If <code class="paramref">timeToLive</code> is 0ms, the value
+is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</p>
+<p>The value becomes idle after the server-configured idle time.</p>
+<p>If the dictionary has a <code>MapStore</code> attached, the entry is added to the store but not persisted.
+Flushing the store is required to make sure that the entry is actually persisted.</p>
+<p>
+Time resolution for <code class="paramref">timeToLive</code> is seconds. The given value is rounded to the next closest second value.
+</p>
+</div>
+<a id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync(`0,`1,System.TimeSpan,System.TimeSpan)">PutTransientAsync(TKey, TValue, TimeSpan, TimeSpan)</h4>
+<div class="markdown level1 summary"><p>Sets (adds or updates) an entry without calling the <code>MapStore</code> on the server side, if defined.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang- hljs">Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
+      <td><span class="parametername">key</span></td>
+      <td><p>A key.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><span class="xref">TValue</span></td>
+      <td><span class="parametername">value</span></td>
+      <td><p>A value.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
+      <td><span class="parametername">timeToLive</span></td>
+      <td><p>A time to live (0ms to live forever; -1ms to use the server-configured value).</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
+      <td><span class="parametername">maxIdle</span></td>
+      <td><p>A max-idle time (0ms to never become idle).</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
+      <td><p>The value for the key. This will be either the existing value for the key if the entry
+already exists, or the new value if the no entry with the key already existed.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_System_TimeSpan__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The value is automatically expired, evicted and removed after the
+<code class="paramref">timeToLive</code> has elapsed. If <code class="paramref">timeToLive</code> is infinite (0ms),
+the value is retained indefinitely. If it is -1ms,
+it lives for the duration of the server-configured time-to-live.</p>
+<p>The value is considered idle after the <code class="paramref">maxIdle</code> has elapsed. If it is
+0ms, the value never becomes idle.</p>
+<p>If the dictionary has a <code>MapStore</code> attached, the entry is added to the store but not persisted.
+Flushing the store is required to make sure that the entry is actually persisted.</p>
+<p>The value is automatically expired, evicted and removed after the <code class="paramref">timeToLive</code> has elapsed.</p>
+<p>
+Time resolution for <code class="paramref">timeToLive</code> is seconds. The given value is rounded to the next closest second value.
+</p>
+</div>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2024 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

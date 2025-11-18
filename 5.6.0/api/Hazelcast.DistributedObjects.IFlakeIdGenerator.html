@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>IFlakeIdGenerator Interface
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="IFlakeIdGenerator Interface
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.6.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IFlakeIdGenerator">
+
+
+
+  <h1 id="Hazelcast_DistributedObjects_IFlakeIdGenerator" data-uid="Hazelcast.DistributedObjects.IFlakeIdGenerator" class="text-break">IFlakeIdGenerator Interface
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.DistributedObjects.html">DistributedObjects</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents a cluster-wide unique identifier generator. The identifiers are <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a> primitive values
+in the range from <code>0</code> to <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64.maxvalue">MaxValue</a>, and are k-ordered (roughly ordered).</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public interface IFlakeIdGenerator : IDistributedObject, IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_DistributedObjects_IFlakeIdGenerator_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>The identifiers contain a timestamp component, and a member identifier component which is assigned
+when the member joins the cluster. This allows identifiers to be ordered and unique without any coordination
+between members, thus making the generator safe even in split-brain scenario.</p>
+<p>The timestamp component is composed of 41 bits representing milliseconds since Jan. 1st, 2018 00:00UTC.
+This caps the useful lifespan of the generator to little less that 70 years, i.e. until ~2088.</p>
+<p>The sequence component is composed of 6 bits. If more than 64 identifiers are requested in a single
+milliseconds, identifiers will gracefully overflow to the next milliseconds while still guaranteeing uniqueness.</p>
+<p>The member-side implementation does not allow overflowing by more than 15 seconds, and if identifiers are
+requested at a higher rate, calls will block. Note that however clients are able to generate identifiers faster,
+because each call goes to a different (random) member and the 64 identifiers/ms limit is for one single member.</p>
+<p>It is possible to generate identifiers on any member or client as lon as there is at least one member with
+join version smaller than 2^16 in the cluster. The remedy is to restart the cluster, and then node identifiers
+will be assigned from zero again. Uniqueness after a restart is guaranteed by the timestamp component.</p>
+<p>Timestamp component is in milliseconds since 1.1.2018, 0:00 UTC and has 41 bits.
+This caps the useful lifespan of the generator to little less than 70 years (until ~2088).
+The sequence component is 6 bits. If more than 64 IDs are requested in single millisecond,
+IDs will gracefully overflow to the next millisecond and uniqueness is guaranteed in this case.
+The implementation does not allow overflowing by more than 15 seconds,
+if IDs are requested at higher rate, the call will block.
+Note, however, that clients are able to generate even faster because each call goes to a different (random) member,
+and the 64 IDs/ms limit is for single member.
+</p>
+<p>
+It is possible to generate IDs on any member or client as long as there is at least one member with join version smaller than 2^16 in the cluster.
+The remedy is to restart the cluster: nodeId will be assigned from zero again.
+Uniqueness after the restart will be preserved thanks to the timestamp component.
+</p>
+</div>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IFlakeIdGenerator_GetNewIdAsync" data-uid="Hazelcast.DistributedObjects.IFlakeIdGenerator.GetNewIdAsync">
+          <a class="xref" href="Hazelcast.DistributedObjects.IFlakeIdGenerator.GetNewIdAsync.html#Hazelcast_DistributedObjects_IFlakeIdGenerator_GetNewIdAsync">GetNewIdAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets a new cluster-wide unique identifier.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2024 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

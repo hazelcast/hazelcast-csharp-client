@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>IHVectorCollection&lt;TKey, TValue&gt; Interface
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="IHVectorCollection&lt;TKey, TValue&gt; Interface
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.6.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2">
+
+
+
+  <h1 id="Hazelcast_DistributedObjects_IHVectorCollection_2" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2" class="text-break">IHVectorCollection&lt;TKey, TValue&gt; Interface
+</h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a>.<a class="xref" href="Hazelcast.DistributedObjects.html">DistributedObjects</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p><strong>BETA</strong>
+Represents a distributed collection of vector documents.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang- hljs">public interface IHVectorCollection&lt;TKey, TValue&gt; : IDistributedObject, IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TKey</span></td>
+        <td><p>The type of the key associated with the collection.</p>
+</td>
+      </tr>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TValue</span></td>
+        <td><p>The type of the value contained in the vector documents.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+</h3>
+  <table class="table table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_ClearAsync" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.ClearAsync">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.ClearAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_ClearAsync">ClearAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Asynchronously clears all entries in the collection.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_GetAsync__0_" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.GetAsync(`0)">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.GetAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_GetAsync__0_">GetAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the vector document associated with the specified key.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_GetSizeAsync" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.GetSizeAsync">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.GetSizeAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_GetSizeAsync">GetSizeAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the number of entries in the vector collection.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_OptimizeAsync" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.OptimizeAsync">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.OptimizeAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_OptimizeAsync">OptimizeAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Optimizes the only index by fully removing nodes marked for deletion,
+trimming neighbor sets to the advertised degree, and updating the entry node as necessary.</p>
+<p>
+Backups of this operation are always executed as async backups.
+</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_OptimizeAsync_System_String_" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.OptimizeAsync(System.String)">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.OptimizeAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_OptimizeAsync_System_String_">OptimizeAsync(string)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Optimizes the specified index by fully removing nodes marked for deletion,
+trimming neighbor sets to the advertised degree, and updating the entry node as necessary.</p>
+<p>
+Backups of this operation are always executed as async backups.
+</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_PutAllAsync_System_Collections_Generic_IDictionary__0_Hazelcast_Models_IVectorDocument__1___" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.PutAllAsync(System.Collections.Generic.IDictionary{`0,Hazelcast.Models.IVectorDocument{`1}})">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.PutAllAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_PutAllAsync_System_Collections_Generic_IDictionary__0_Hazelcast_Models_IVectorDocument__1___">PutAllAsync(IDictionary&lt;TKey, IVectorDocument&lt;TValue&gt;&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Puts all the specified vector documents into the collection.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_PutAsync__0_Hazelcast_Models_IVectorDocument__1__" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.PutAsync(`0,Hazelcast.Models.IVectorDocument{`1})">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.PutAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_PutAsync__0_Hazelcast_Models_IVectorDocument__1__">PutAsync(TKey, IVectorDocument&lt;TValue&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Puts the specified vector document into the collection with the specified key.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_PutIfAbsentAsync__0_Hazelcast_Models_IVectorDocument__1__" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.PutIfAbsentAsync(`0,Hazelcast.Models.IVectorDocument{`1})">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.PutIfAbsentAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_PutIfAbsentAsync__0_Hazelcast_Models_IVectorDocument__1__">PutIfAbsentAsync(TKey, IVectorDocument&lt;TValue&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Puts the specified vector document into the collection with the specified key if the key is not already associated
+with a vector document.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_RemoveAsync__0_" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.RemoveAsync(`0)">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_RemoveAsync__0_">RemoveAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes the vector document associated with the specified key from the collection.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_SearchAsync_Hazelcast_Models_VectorValues_Hazelcast_Models_VectorSearchOptions_" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.SearchAsync(Hazelcast.Models.VectorValues,Hazelcast.Models.VectorSearchOptions)">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.SearchAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_SearchAsync_Hazelcast_Models_VectorValues_Hazelcast_Models_VectorSearchOptions_">SearchAsync(VectorValues, VectorSearchOptions)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Performs asynchronously a similarity search according to the options in the given <code class="paramref">searchOptions</code>.</p>
+<p>
+If there are many concurrent modifications during the search, it is possible but extremely unlikely
+to receive fewer results than requested, even when the collection contains enough items.
+</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHVectorCollection_2_SetAsync__0_Hazelcast_Models_IVectorDocument__1__" data-uid="Hazelcast.DistributedObjects.IHVectorCollection`2.SetAsync(`0,Hazelcast.Models.IVectorDocument{`1})">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHVectorCollection-2.SetAsync.html#Hazelcast_DistributedObjects_IHVectorCollection_2_SetAsync__0_Hazelcast_Models_IVectorDocument__1__">SetAsync(TKey, IVectorDocument&lt;TValue&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets the specified vector document into the collection with the specified key.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2024 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
