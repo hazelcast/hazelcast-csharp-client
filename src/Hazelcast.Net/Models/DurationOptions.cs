@@ -25,17 +25,31 @@ public class DurationOptions : IIdentifiedDataSerializable
     private long _durationAmount;
     private TimeUnit _timeUnit;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DurationOptions"/> class.
+    /// </summary>
     public DurationOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DurationOptions"/> class.
+    /// </summary>
+    /// <param name="durationAmount"></param>
+    /// <param name="timeUnit"></param>
     public DurationOptions(long durationAmount, TimeUnit timeUnit)
     {
         _durationAmount = durationAmount;
         _timeUnit = timeUnit;
     }
 
+    /// <summary>
+    /// Gets the duration amount.
+    /// </summary>
     public long DurationAmount => _durationAmount;
 
+    /// <summary>
+    /// Gets the time unit.
+    /// </summary>
     public TimeUnit TimeUnit => _timeUnit;
 
     /// <inheritdoc />

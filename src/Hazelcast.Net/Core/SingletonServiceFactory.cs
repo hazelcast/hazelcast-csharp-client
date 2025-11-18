@@ -156,7 +156,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Frees, releases or resets managed resources.
         /// </summary>
-        /// <param name="disposing"><c>true</c> when invoked from <see cref="Dispose"/>; otherwise <c>false</c>.</param>
+        /// <param name="disposing"><c>true</c> when invoked from <see cref="Dispose()"/> otherwise <c>false</c>.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;

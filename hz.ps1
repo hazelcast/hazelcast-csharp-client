@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.5.6"
+$defaultServerVersion="5.6.0"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -362,12 +362,12 @@ $isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "mast
 $isBeta = $options.server.Contains("BETA") 
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
+$isServerVersionPatch = $serverVersion -match '^(?:\d+\.\d+|\d+\.\d+\.[1-9]\d*)(?:-[0-9A-Za-z\.\-]+)?$'
 
 # determine java code repositories for tests
-$mvnOssPublicRepo = "https://oss.sonatype.org/content/repositories/snapshots"
 $mvnOssSnapshotRepo = "https://repository.hazelcast.com/snapshot-internal"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
-$mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
+$mvnOssReleaseRepo = "https://repo.maven.apache.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
 if ($isSnapshot) {
@@ -848,7 +848,8 @@ function ensure-server-files {
     if (-not (verify-server-files)) { determine-server-version }
 
     # ensure we have the remote controller + hazelcast test jar
-    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssPublicRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnEntSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    
     
     if ($options.enterprise) {
 
@@ -857,12 +858,15 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-all-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -gt "5.5.0") {
-            # after 5.5.0, pathc become ee only.
-            Write-Output "Download from enterprise repo"
+        elseif ($serverVersion -cge "5.4.0") {
+            # after 5.4.0, patch release become ee only.
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
-            ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
-            ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
+
+            # but check if it's snapshot or not patch, then download from os repo
+            $repo = if ($isSnapshot -or (-not $isServerVersionPatch)) { $mvnOssRepo } else { $mvnEntRepo }
+
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $repo "com.hazelcast:hazelcast-sql:${serverVersion}"
+            ensure-jar "hazelcast-${serverVersion}-tests.jar" $repo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
         else {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
@@ -877,9 +881,10 @@ function ensure-server-files {
             ensure-jar "hazelcast-all-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
-        elseif ($serverVersion -gt "5.5.0") {
-            # after 5.5.0, pathc become ee only.
-            Write-Output "Download from enterprise repo"            
+        elseif ($serverVersion -cge "5.4.0" -and $isServerVersionPatch) {
+            # after 5.4.0, patch release become ee only.
+            Write-Output "Download from enterprise repo"
+            ensure-jar "hazelcast-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
             ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
         }
@@ -1061,11 +1066,13 @@ function require-dotnet ( $full ) {
 
     $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
 
-    # note:
-    # - net6.0 end of support is nov 12, 2024    
-    # - net8.0 end of support is nov 10, 2026
+    # note:        
+    # - net8.0 end of support is nov 10, 2026    
+    # - net9.0 end of support is oct 10, 2026 
+    # - net10.0 end of support is nov 14, 2028
 
-    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease    
+    require-dotnet-version $result $sdks "10.0" $frameworks "net10.0" "10.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "9.0" $frameworks "net9.0" "9.0.x" $true $allowPrerelease
     require-dotnet-version $result $sdks "8.0" $frameworks "net8.0" "8.0.x" $true $allowPrerelease
 
     # report

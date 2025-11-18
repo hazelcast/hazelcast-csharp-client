@@ -14,6 +14,8 @@
 using Hazelcast.Serialization;
 using Hazelcast.Core;
 using Hazelcast.Configuration;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -57,8 +59,10 @@ public class MerkleTreeOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
     /// </summary>
-    public MerkleTreeOptions(MerkleTreeOptions config)
+    public MerkleTreeOptions([NotNull] MerkleTreeOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _enabled = config._enabled;
         _depth = config._depth;
     }
@@ -94,14 +98,14 @@ public class MerkleTreeOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.MerkleTreeConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
-    {
+    public void WriteData([NotNull] IObjectDataOutput output)
+    {   
         output.WriteNullableBoolean(_enabled);
         output.WriteInt(_depth);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _enabled = input.ReadNullableBoolean();
         _depth = input.ReadInt();

@@ -150,6 +150,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceuuids"></param>
         /// <param name="partitionuuids"></param>
         /// <param name="sequences"></param>
+        /// <param name="state"></param>
         private ValueTask HandleCodecBatchEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences, object state)
         {
             RepairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
@@ -163,6 +164,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceUuid"></param>
         /// <param name="partitionUuid"></param>
         /// <param name="sequence"></param>
+        /// <param name="state"></param>
         private ValueTask HandleCodecSingleEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence, object state)
         {
             RepairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);

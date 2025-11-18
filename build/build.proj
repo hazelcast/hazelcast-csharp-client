@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;net48;net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;net48;net8.0;net9.0;net10.0</TargetFrameworks>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
     
@@ -20,7 +20,7 @@
 
         For .NET Framework (net462, net48) we use the dotCover.exe which comes with the CommandLineTools package, we
         cannot use the .NET Core approach because 'dotnet' does not support .NET Framework.
-        For .NET Core+ (netcoreapp3.1, net5.0, net6.0, net7.0) we use 'dotnet dotcover' which relies on the DotNetCliTool, and that
+        For .NET Core+ (netcoreapp3.1, net7.0) we use 'dotnet dotcover' which relies on the DotNetCliTool, and that
         works cross-platform, both on Windows and Linux.
 
         Therefore, we need to restore both.

@@ -15,6 +15,9 @@ using System;
 
 namespace Hazelcast.Sql
 {
+    /// <summary>
+    /// Options for a SQL statement.
+    /// </summary>
     public class SqlStatementOptions
     {
         /// <summary>

@@ -102,7 +102,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// <summary>
-            /// true if the session is found & closed,
+            /// true if the session is found&closed,
             /// false otherwise.
             ///</summary>
             public bool Response { get; set; }

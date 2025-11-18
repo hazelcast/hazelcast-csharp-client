@@ -34,11 +34,13 @@ namespace Hazelcast.DistributedObjects.Impl
         /// Initializes a new version of the <see cref="HMapWithCache{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the object.</param>
+        /// <param name="factory"></param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
+        /// <param name="sqlService"></param>
         public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory,ISqlService sqlService)
             : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory,sqlService)
         {

@@ -15,11 +15,12 @@ using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
 /// <summary>
-/// 
+/// Represents configuration for time based "ExpiryPolicyFactory" with duration and time unit.
 /// </summary>
 public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
 {
@@ -27,17 +28,31 @@ public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
     private ExpiryPolicyType _expiryPolicyType;
     private DurationOptions _durationConfig;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimedExpiryPolicyFactoryOptions"/> class.
+    /// </summary>
     public TimedExpiryPolicyFactoryOptions()
     { }
 
-    public TimedExpiryPolicyFactoryOptions(ExpiryPolicyType expiryPolicyType, DurationOptions durationConfig)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimedExpiryPolicyFactoryOptions"/> class.
+    /// </summary>
+    /// <param name="expiryPolicyType"></param>
+    /// <param name="durationConfig"></param>
+    public TimedExpiryPolicyFactoryOptions([NotNull] ExpiryPolicyType expiryPolicyType, [NotNull] DurationOptions durationConfig)
     {
         _expiryPolicyType = expiryPolicyType;
         _durationConfig = durationConfig;
     }
 
+    /// <summary>
+    /// Gets the expiry policy type.
+    /// </summary>
     public ExpiryPolicyType ExpiryPolicyType => _expiryPolicyType;
 
+    /// <summary>
+    /// Gets the duration config.
+    /// </summary>
     public DurationOptions DurationConfig => _durationConfig;
 
     /// <inheritdoc />
@@ -47,14 +62,14 @@ public class TimedExpiryPolicyFactoryOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.SimpleCacheConfigTimedExpiryPolicyFactoryConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_expiryPolicyType.ToJavaString());
         output.WriteObject(_durationConfig);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _expiryPolicyType = Enums.ParseJava<ExpiryPolicyType>(input.ReadString());
         _durationConfig = input.ReadObject<DurationOptions>();

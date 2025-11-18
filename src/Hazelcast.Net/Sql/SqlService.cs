@@ -26,7 +26,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Sql
 {
-    internal class SqlService : ISqlService
+    internal class SqlService : ISqlService, IDisposable
     {
         private readonly Cluster _cluster;
 
@@ -239,6 +239,11 @@ namespace Hazelcast.Sql
             var requestMessage = SqlCloseCodec.EncodeRequest(queryId);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             _ = SqlCloseCodec.DecodeResponse(responseMessage);
+        }
+
+        public void Dispose()
+        {
+            _queryPartitionArgumentCache?.Dispose();
         }
     }
 }

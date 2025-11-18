@@ -16,10 +16,22 @@ using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
+    /// <summary>
+    /// Represents a map entry added event arguments.
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TValue"></typeparam>
     public sealed class MapEntryAddedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
         private readonly Lazy<TValue> _value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MapEntryAddedEventArgs{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="state"></param>
         public MapEntryAddedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, object state)
             : base(member, key, state)
         {

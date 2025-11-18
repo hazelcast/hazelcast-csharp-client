@@ -11,24 +11,41 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents options of a partitioning attribute.
+/// </summary>
 public class PartitioningAttributeOptions : IIdentifiedDataSerializable
 {
     private string _attributeName;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PartitioningAttributeOptions"/> class.
+    /// </summary>
     public PartitioningAttributeOptions()
     { }
 
-    public PartitioningAttributeOptions(PartitioningAttributeOptions config)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PartitioningAttributeOptions"/> class.
+    /// </summary>
+    /// <param name="config"></param>
+    public PartitioningAttributeOptions([NotNull] PartitioningAttributeOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
         _attributeName = config._attributeName;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PartitioningAttributeOptions"/> class.
+    /// </summary>
+    /// <param name="attributeName"></param>
     public PartitioningAttributeOptions(string attributeName)
     {
         _attributeName = attributeName;
@@ -44,13 +61,13 @@ public class PartitioningAttributeOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_attributeName);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _attributeName = input.ReadString();
     }

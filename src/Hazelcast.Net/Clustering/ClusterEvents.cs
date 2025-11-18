@@ -22,6 +22,7 @@ using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -516,6 +517,7 @@ namespace Hazelcast.Clustering
         /// Assigns a connection to support the cluster view event.
         /// </summary>
         /// <param name="connection">An optional candidate connection.</param>
+        /// <param name="viewProperty">The view property.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when a connection has been assigned to handle the cluster views event.</returns>
         private async Task AssignClusterViewsConnectionAsync(MemberConnection connection, ClusterViewProperties viewProperty, CancellationToken cancellationToken)
@@ -990,7 +992,7 @@ namespace Hazelcast.Clustering
             await _objectLifecycleEventSubscription.DisposeAsync().CfAwait();
             await _partitionLostEventSubscription.DisposeAsync().CfAwait();
 
-            _cancel.Cancel();
+            await _cancel.TryCancelAsync().CfAwait();
 
             HConsole.WriteLine(this, "Await cluster views task.");
 

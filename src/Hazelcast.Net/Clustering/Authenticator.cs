@@ -63,7 +63,9 @@ internal class Authenticator
     /// <param name="clusterClientId">The cluster unique identifier, as assigned by the client.</param>
     /// <param name="clusterClientName">The cluster client name, as assigned by the client.</param>
     /// <param name="labels">The client labels.</param>
+    /// <param name="cpDirectEnabled">Redirect CP requests to CP leader.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="routingMode">The routing mode.</param>
     /// <returns>A task that will complete when the client is authenticated.</returns>
     public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, byte routingMode, bool cpDirectEnabled, CancellationToken cancellationToken)
     {
@@ -201,7 +203,6 @@ internal class Authenticator
     /// <summary>
     /// Parse the cluster version. Returns null if the version is invalid. Doesn't throw.
     /// </summary>
-    /// <param name="version">string cluster version</param>
     /// <returns>ClusterVersion</returns>
     private ClusterVersion ParseClusterVersion(ClientAuthenticationCodec.ResponseParameters response)
     {

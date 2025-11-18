@@ -23,6 +23,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Networking;
+using Hazelcast.Polyfills;
 using Hazelcast.Protocol;
 using Microsoft.Extensions.Logging;
 
@@ -621,7 +622,7 @@ namespace Hazelcast.Clustering
         {
             if (_tpcConnections == null) return;
 
-            _connectingTpcCancellation.Cancel();
+            await _connectingTpcCancellation.TryCancelAsync().CfAwait();
             await _connectingTpc.CfAwaitNoThrow();
             await DisposeTpcConnections(_tpcConnections).CfAwait();
             _connectingTpcCancellation.Dispose();

@@ -6,7 +6,7 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 
 ### Current Version
 
-* <curdoc>5.4.0 [general documentation](xref:doc-index-5-4-0) and [API reference](xref:api-index-5-4-0)</curdoc>
+* <curdoc>5.5.0 [general documentation](xref:doc-index-5-4-0) and [API reference](xref:api-index-5-4-0)</curdoc>
 
 ### Preview
 
@@ -15,6 +15,8 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 ### Previous Versions
 
 <prevdoc></prevdoc>
+* 5.5.0 [general documentation](xref:doc-index-5-5-0) and [API reference](xref:api-index-5-5-0)
+* 5.4.0 [general documentation](xref:doc-index-5-4-0) and [API reference](xref:api-index-5-4-0)
 * 5.3.0 [general documentation](xref:doc-index-5-3-0) and [API reference](xref:api-index-5-3-0)
 * *5.2.2* [general documentation](xref:doc-index-5-2-2) and [API reference](xref:api-index-5-2-2)
 * 5.2.1 [general documentation](xref:doc-index-5-2-1) and [API reference](xref:api-index-5-2-1)
@@ -38,16 +40,17 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 
 The following table defines the .NET versions that were active and supported by each version of the Hazelcast .NET Client, at the time it was released. The Hazelcast .NET Client remains supported on these .NET versions for as long as they have not reached their end of support from Microsoft.
 
-| Version |.NET Framework<br/>4.5-4.6.1|.NET Framework<br/>4.6.2-4.8|.NET Core<br/>2.1|.NET Core<br/>3.1 (LTS)|.NET<br/>5.0|.NET<br/>6.0 (LTS)| .NET<br/>7.0 | .NET<br/>8.0 (LTS) |
-|---------|:-:|:-:|:-:|:-:|:-:|:-:|:------------:|:------------------:|
-| 5.5     |No|Yes|No|**No** (note)|**No** (note)|Yes|    **No**    |        Yes         |
-| 5.4     |No|Yes|No|**No** (note)|**No** (note)|Yes|   **Yes**    |        Yes         |
-| 5.3     |No|Yes|No|**No** (note)|**No** (note)|Yes|   **Yes**    |         No         |
-| 5.2     |No|Yes|No|**No** (note)|**No** (note)|Yes|   **Yes**    |         No         |
-| 5.1     |No|Yes|No|Yes|Yes|**Yes**|      No      |         No         |
-| 5.0     |No|Yes|**No** (note)|Yes|**Yes**|No|      No      |         No         |
-| 4.x     |**No** (note)|Yes|Yes|Yes|No|No|      No      |         No         |
-| 3.x     |Yes|Yes|No|No|No|No|      No      |         No         |
+| Version | .NET Framework<br/>4.5-4.6.1 | .NET Framework<br/>4.6.2-4.8 | .NET Core<br/>2.1 | .NET Core<br/>3.1 (LTS) | .NET<br/>5.0  | .NET<br/>6.0 (LTS) | .NET<br/>7.0 | .NET<br/>8.0 (LTS) | .NET<br/>9.0 | .NET<br/>10.0 (LTS) |
+|---------|:----------------------------:|:----------------------------:|:-----------------:|:-----------------------:|:-------------:|:------------------:|:------------:|:------------------:|:------------:|:------------------:|
+| 5.6     |              No              |             Yes              |        No         |      **No** (note)      | **No** (note) |         No         |    **No**    |        Yes         |     Yes      |         Yes        |
+| 5.5     |              No              |             Yes              |        No         |      **No** (note)      | **No** (note) |        Yes         |    **No**    |        Yes         |      No      |         No         |
+| 5.4     |              No              |             Yes              |        No         |      **No** (note)      | **No** (note) |        Yes         |   **Yes**    |        Yes         |      No      |         No         |
+| 5.3     |              No              |             Yes              |        No         |      **No** (note)      | **No** (note) |        Yes         |   **Yes**    |         No         |      No      |         No         |
+| 5.2     |              No              |             Yes              |        No         |      **No** (note)      | **No** (note) |        Yes         |   **Yes**    |         No         |      No      |         No         |
+| 5.1     |              No              |             Yes              |        No         |           Yes           |      Yes      |      **Yes**       |      No      |         No         |      No      |         No         |
+| 5.0     |              No              |             Yes              |  **No** (note)    |          Yes            |    **Yes**    |         No         |      No      |         No         |      No      |         No         |
+| 4.x     |        **No** (note)         |             Yes              |        Yes        |           Yes           |      No       |         No         |      No      |         No         |      No      |         No         |
+| 3.x     |             Yes              |             Yes              |        No         |           No            |      No       |         No         |      No      |         No         |      No      |         No         |
 
 Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET 5.0+ run on Windows, Linux and MacOS.
 

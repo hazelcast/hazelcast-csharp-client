@@ -200,5 +200,10 @@ namespace Hazelcast.Clustering
                 _mutex.ExitWriteLock();
             }
         }
+
+        public void Dispose()
+        {
+            _mutex.Dispose();
+        }
     }
 }

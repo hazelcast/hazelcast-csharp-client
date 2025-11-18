@@ -57,8 +57,7 @@ namespace Hazelcast.Clustering
 
         // member id -> connection
         // not concurrent, always managed through the mutex
-        private readonly Dictionary<Guid, MemberConnection> _connections = new();
-        private readonly ConcurrentDictionary<CPGroupId, CPGroupInfo> _cpMembers = new();
+        private readonly Dictionary<Guid, MemberConnection> _connections = new();        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMembers"/> class.
@@ -967,6 +966,10 @@ namespace Hazelcast.Clustering
             // no connection queue is assigned in unisocket mode
             if (_memberConnectionQueue != null)
                 await _memberConnectionQueue.DisposeAsync().CfAwait();
+
+            if (_subsetClusterMembers != null)
+                _subsetClusterMembers.Dispose();
+
         }
     }
 }

@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents the options for a merge policy.
+/// </summary>
 public class MergePolicyOptions : IIdentifiedDataSerializable
 {
     /// <summary>
@@ -41,17 +45,31 @@ public class MergePolicyOptions : IIdentifiedDataSerializable
     private string _policy = Defaults.MergePolicy;
     private int _batchSize = Defaults.BatchSize;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
+    /// </summary>
     public MergePolicyOptions()
     { }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
+    /// </summary>
+    /// <param name="policy"></param>
+    /// <param name="batchSize"></param>
     public MergePolicyOptions(string policy, int batchSize)
     {
         Policy = policy;
         BatchSize = batchSize;
     }
 
-    public MergePolicyOptions(MergePolicyOptions mergePolicyConfig)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MergePolicyOptions"/> class.
+    /// </summary>
+    /// <param name="mergePolicyConfig"></param>
+    public MergePolicyOptions([NotNull] MergePolicyOptions mergePolicyConfig)
     {
+        if (mergePolicyConfig == null) throw new ArgumentNullException(nameof(mergePolicyConfig));
+
         _policy = mergePolicyConfig._policy;
         _batchSize = mergePolicyConfig._batchSize;
     }
@@ -81,14 +99,14 @@ public class MergePolicyOptions : IIdentifiedDataSerializable
     public int ClassId => ConfigurationDataSerializerHook.MergePolicyConfig;
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteString(_policy);
         output.WriteInt(_batchSize);
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         _policy = input.ReadString();
         _batchSize = input.ReadInt();

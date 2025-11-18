@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Polyfills;
 
 namespace Hazelcast.Networking
 {
@@ -271,7 +272,7 @@ namespace Hazelcast.Networking
             Interlocked.Exchange(ref _isActive, 0);
 
             // ensure the pipe writing task aborts
-            _streamReadCancellationTokenSource.Cancel();
+            await _streamReadCancellationTokenSource.TryCancelAsync().CfAwait();
 
             // ensure everything is down by awaiting the other task
             var otherTask = task == _pipeReading ? _pipeWriting : _pipeReading;
@@ -318,7 +319,7 @@ namespace Hazelcast.Networking
                 // on error, shutdown and report
                 HConsole.WriteLine(this, "SendAsync:ERROR");
                 HConsole.WriteLine(this, e);
-                try { _streamReadCancellationTokenSource.Cancel(); } catch { /* nothing */ } // can be disposed already
+                try { await _streamReadCancellationTokenSource.TryCancelAsync().CfAwait(); } catch { /* nothing */ } // can be disposed already
                 return false;
             }
 
@@ -537,7 +538,7 @@ namespace Hazelcast.Networking
             // requests that the pipe stops processing - which will trigger
             // ShutdownInternal which will close the socket etc
             HConsole.WriteLine(this, "Cancel pipe");
-            _streamReadCancellationTokenSource.Cancel();
+            await _streamReadCancellationTokenSource.TryCancelAsync().CfAwait();
 
             // wait for everything to be down
             await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown).CfAwait();

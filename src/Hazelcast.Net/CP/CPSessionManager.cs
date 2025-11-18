@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Polyfills;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP;
@@ -178,14 +179,14 @@ internal partial class CPSessionManager : IAsyncDisposable
     /// </remarks>
     public async Task ShutdownAsync()
     {
-        using var _ = await _lock.WriteLockAsync();
+        using var _ = await _lock.WriteLockAsync().CfAwait();
 
         _running = false;
         await _groupSessions.ParallelForEachAsync((entry, _) =>
         {
             var (groupId, sessionId) = entry;
             return CloseSessionAsync(groupId, sessionId.Id);
-        });
+        }).CfAwait();
 
         _groupSessions.Clear();
     }
@@ -197,7 +198,7 @@ internal partial class CPSessionManager : IAsyncDisposable
     /// <returns>The <see cref="CPSession"/> for the CP group.</returns>
     private async Task<CPSession> GetOrCreateSessionAsync(CPGroupId groupId)
     {
-        using var _ = await _lock.ReadLockAsync();
+        using var _ = await _lock.ReadLockAsync().CfAwait();
 
         ThrowIfDisposed();
         ThrowIfNotRunning();
@@ -249,7 +250,7 @@ internal partial class CPSessionManager : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        using var _ = await _lock.WriteLockAsync();
+        using var _ = await _lock.WriteLockAsync().CfAwait();
         if (!_disposed.InterlockedZeroToOne()) return;
 
         // shutdown - but don't invoke ShutdownAsync as CloseSessionAsync would throw,
@@ -260,10 +261,10 @@ internal partial class CPSessionManager : IAsyncDisposable
             var (groupId, session) = entry;
             InvalidateSession(groupId, session.Id);
             return RequestCloseSessionAsync(groupId, session.Id);
-        });
+        }).CfAwait();
 
         // stop heartbeat
-        _heartbeatCancel.Cancel();
+        await _heartbeatCancel.TryCancelAsync().CfAwait();
         try
         {
             await _heartbeatTask.CfAwaitCanceled();
@@ -283,7 +284,7 @@ internal partial class CPSessionManager : IAsyncDisposable
         _groupSemaphores.Clear();
         _uniqueThreadIds.Clear();
 
-        await _lock.DisposeAsync();
+        await _lock.DisposeAsync().CfAwait();
     }
 
     /// <summary>

@@ -14,6 +14,8 @@
 using Hazelcast.Serialization;
 using Hazelcast.Core;
 using Hazelcast.Configuration;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Models;
 
@@ -58,8 +60,10 @@ public class EventJournalOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="EventJournalOptions"/> class.
     /// </summary>
-    public EventJournalOptions(EventJournalOptions options)
+    public EventJournalOptions([NotNull] EventJournalOptions options)
     {
+        if (options is null) throw new ArgumentNullException(nameof(options));
+
         _enabled = options._enabled;
         _capacity = options._capacity;
         _timeToLiveSeconds = options._timeToLiveSeconds;

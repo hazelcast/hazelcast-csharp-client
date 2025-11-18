@@ -64,7 +64,9 @@ namespace Hazelcast.Serialization
         private readonly ISerializerAdapter _portableSerializerAdapter; // portable serialization
         private readonly ISerializerAdapter _compactSerializerAdapter; // compact serialization
         private readonly ISerializerAdapter _compactSerializerWithSchemasAdapter; // compact serialization (with schemas)
+#pragma warning disable CS0649 //It's only created when framework legacy.
         private readonly ISerializerAdapter _serializableSerializerAdapter; // CLR serialization
+#pragma warning restore CS0649
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
         // some serializers and stuff that we need to have here

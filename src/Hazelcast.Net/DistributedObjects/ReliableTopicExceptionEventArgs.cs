@@ -24,6 +24,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="ReliableTopicExceptionEventArgs"/> class.
         /// </summary>
+        /// <param name="exception">The exception that triggers the event.</param>
         /// <param name="sequence">The sequence of the message in the ring buffer.</param>
         /// <param name="state">A state object</param>
         public ReliableTopicExceptionEventArgs(Exception exception, long sequence, object state)

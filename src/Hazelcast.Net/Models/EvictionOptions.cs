@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.NearCaching;
@@ -64,8 +66,10 @@ public class EvictionOptions : IIdentifiedDataSerializable
     /// <summary>
     /// Initializes a new instance of the <see cref="EvictionOptions"/> class.
     /// </summary>
-    public EvictionOptions(EvictionOptions config)
+    public EvictionOptions([NotNull] EvictionOptions config)
     {
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
         _size = config._size;
         MaxSizePolicy = config.MaxSizePolicy;
         _evictionPolicy = config._evictionPolicy;

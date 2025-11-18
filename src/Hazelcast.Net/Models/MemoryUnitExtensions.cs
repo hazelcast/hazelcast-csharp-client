@@ -15,8 +15,17 @@ using System;
 
 namespace Hazelcast.Models;
 
+/// <summary>
+/// Represents a unit of memory.
+/// </summary>
 public static class MemoryUnitExtensions
 {
+    /// <summary>
+    /// Returns the abbreviation of the memory unit.
+    /// </summary>
+    /// <param name="memoryUnit"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static string Abbrev(this MemoryUnit memoryUnit)
         => memoryUnit switch
         {
@@ -27,6 +36,14 @@ public static class MemoryUnitExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(memoryUnit))
         };
 
+    /// <summary>
+    /// Converts a memory value from one unit to another.
+    /// </summary>
+    /// <param name="toUnit"></param>
+    /// <param name="fromUnit"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static long Convert(MemoryUnit toUnit, MemoryUnit fromUnit, long value)
     {
         if (toUnit == fromUnit) return value;

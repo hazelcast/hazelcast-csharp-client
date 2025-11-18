@@ -76,7 +76,7 @@ namespace Hazelcast.CP
             var (groupName, objectName, fullName) = ParseName(name);
             var groupId = await GetGroupIdAsync(fullName).CfAwait();
             var requestMessage = SemaphoreGetSemaphoreTypeCodec.EncodeRequest(objectName);
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var noSession = SemaphoreGetSemaphoreTypeCodec.DecodeResponse(responseMessage).Response;
 
             return noSession

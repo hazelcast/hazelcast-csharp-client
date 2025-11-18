@@ -29,6 +29,6 @@ public interface IReliableTopicTerminatedEventHandler<T> : IReliableTopicEventHa
     /// <param name="sender">The <see cref="IHReliableTopic{T}"/> that triggered the event.</param>
     /// <param name="sequence">The sequence of the message in the ring buffer.</param>
     /// <param name="state">A state object.</param>
-    /// <param name="e">Exception occured while processing the event.</param>
+    /// <exception name="e">Exception occured while processing the event.</exception>
     ValueTask HandleAsync(IHReliableTopic<T> sender, long sequence, object state);
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Models;
@@ -37,8 +38,10 @@ public class DynamicOptions
     /// Dynamically configures a map.
     /// </summary>
     /// <param name="mapOptions">The map configuration.</param>
-    public async Task ConfigureMapAsync(MapOptions mapOptions)
+    public async Task ConfigureMapAsync([NotNull] MapOptions mapOptions)
     {
+        if (mapOptions == null) throw new ArgumentNullException(nameof(mapOptions));
+
         var requestMessage = DynamicConfigAddMapConfigCodec.EncodeRequest(
             mapOptions.Name,
             mapOptions.BackupCount, mapOptions.AsyncBackupCount,
@@ -65,7 +68,7 @@ public class DynamicOptions
             mapOptions.DataPersistence, mapOptions.TieredStore, mapOptions.PartitioningAttributes,
             null /*namespace*/);
 
-        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage);
+        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 
@@ -74,8 +77,10 @@ public class DynamicOptions
     /// </summary>
     /// <param name="name">The name of the map.</param>
     /// <param name="configure">A function that configures the map.</param>
-    public Task ConfigureMapAsync(string name, Action<MapOptions> configure)
+    public Task ConfigureMapAsync(string name, [NotNull] Action<MapOptions> configure)
     {
+        if(configure == null) throw new ArgumentNullException(nameof(name));
+
         var mapConfig = new MapOptions(name);
         configure(mapConfig);
         return ConfigureMapAsync(mapConfig);
@@ -85,8 +90,10 @@ public class DynamicOptions
     /// Dynamically configures a map.
     /// </summary>
     /// <param name="ringbufferOptions">The ring buffer configuration.</param>
-    public async Task ConfigureRingbufferAsync(RingbufferOptions ringbufferOptions)
+    public async Task ConfigureRingbufferAsync([NotNull] RingbufferOptions ringbufferOptions)
     {
+        if (ringbufferOptions == null) throw new ArgumentNullException(nameof(ringbufferOptions));
+
         RingbufferStoreConfigHolder ringbufferStoreConfig = null;
         if (ringbufferOptions.RingbufferStore is {Enabled: true})
         {
@@ -100,7 +107,7 @@ public class DynamicOptions
             ringbufferOptions.MergePolicy.BatchSize,
             null /*namespace*/);
 
-        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage);
+        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 
@@ -109,8 +116,10 @@ public class DynamicOptions
     /// </summary>
     /// <param name="name">The name of the ring buffer.</param>
     /// <param name="configure">A function that configures the ring buffer.</param>
-    public Task ConfigureRingbufferAsync(string name, Action<RingbufferOptions> configure)
+    public Task ConfigureRingbufferAsync(string name, [NotNull]  Action<RingbufferOptions> configure)
     {
+        if (configure == null) throw new ArgumentNullException(nameof(configure));
+
         var ringBufferOptions = new RingbufferOptions(name);
         configure(ringBufferOptions);
         return ConfigureRingbufferAsync(ringBufferOptions);

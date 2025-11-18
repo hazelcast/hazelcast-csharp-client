@@ -58,7 +58,7 @@ namespace Hazelcast.Protocol.Codecs
     ///   - string:                 discriminatorValue
     ///   - enum:                   unit [BYTES,MS,PERCENT,COUNT,BOOLEAN,ENUM]
     ///   - set of enum:            excluded targets [MANAGEMENT_CENTER,JMX,DIAGNOSTICS]
-    ///   - set of <string,string>: tags associated with the metric
+    ///   - set of &lt;string,string&gt;: tags associated with the metric
     ///
     /// The used compression algorithm is the same that is used inside the IMDG clients and members for storing the metrics blob
     /// in-memory. The algorithm uses a dictionary based delta compression further deflated by using ZLIB compression.
@@ -108,8 +108,8 @@ namespace Hazelcast.Protocol.Codecs
     /// +------------------------------------------------+--------------------+
     ///
     /// Let's say we have the following dictionary:
-    ///   - <42,"gc.minorCount">
-    ///   - <43,"gc.minorTime">
+    ///   - &lt;42,"gc.minorCount"&gt;
+    ///   - &lt;43,"gc.minorTime"&gt;
     ///
     /// It is then serialized as follows:
     /// +------------------------------------------------+--------------------+

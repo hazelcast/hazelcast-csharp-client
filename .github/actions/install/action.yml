@@ -20,42 +20,52 @@ runs:
   using: "composite"
   steps:
 
-    # Install Linux utilities
-    - name: Install utilities
-      if: inputs.os == 'ubuntu-latest'
-      shell: bash
-      run: |        
-        sudo apt-get update
-        # ubuntu-latest does not have proper git installed so we have to install it
-        sudo apt-get install --yes --no-install-recommends \
-          git
-        # we need various misc stuff
-        sudo apt-get install --yes --no-install-recommends \
-          wget \
-          curl \
-          apt-transport-https \
-          software-properties-common
-        # we need pwsh
-        wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
-        sudo dpkg -i packages-microsoft-prod.deb
-        rm packages-microsoft-prod.deb
-        sudo apt-get update
-        sudo add-apt-repository universe
-        sudo apt-get install -y powershell    
-        # we need to install dotnet here since actions/setup-dotnet@v4 does not install required dependencies 
-        # for dependencies we need to install over apt-get    
-        sudo snap remove dotnet-sdk
-        sudo apt remove 'dotnet*'
-        sudo apt remove 'aspnetcore*'
-        sudo apt remove 'netstandard*'
-        sudo rm /etc/apt/sources.list.d/microsoft-prod.list        
-        sudo apt update
-        sudo add-apt-repository ppa:dotnet/backports
-        sudo apt-get update
-        # we need to install dotnet 6.0         
-        sudo apt-get install -y dotnet-sdk-6.0
-        sudo apt-get install -y dotnet-sdk-8.0
+    # Install Linux utilities use this when .net version support is dropped on ubuntu-latest
+#    - name: Install utilities
+#      if: inputs.os == 'ubuntu-latest'
+#      shell: bash
+#      run: |        
+#        sudo apt-get update
+#        # ubuntu-latest does not have proper git installed so we have to install it
+#        sudo apt-get install --yes --no-install-recommends \
+#          git
+#        # we need various misc stuff
+#        sudo apt-get install --yes --no-install-recommends \
+#          wget \
+#          curl \
+#          apt-transport-https \
+#          software-properties-common
+#        # we need pwsh
+#        wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
+#        sudo dpkg -i packages-microsoft-prod.deb
+#        rm packages-microsoft-prod.deb
+#        sudo apt-get update
+#        sudo add-apt-repository universe
+#        sudo apt-get install -y powershell    
+#        # we need to install dotnet here since actions/setup-dotnet@v4 does not install required dependencies 
+#        # for dependencies we need to install over apt-get    
+#        sudo snap remove dotnet-sdk
+#        sudo apt remove 'dotnet*'
+#        sudo apt remove 'aspnetcore*'
+#        sudo apt remove 'netstandard*'
+#        sudo rm /etc/apt/sources.list.d/microsoft-prod.list        
+#        sudo apt update
+#        sudo add-apt-repository ppa:dotnet/backports
+#        sudo apt-get update        
+#        
+#        sudo apt-get install -y dotnet-sdk-8.0
+#        sudo apt-get install -y dotnet-sdk-9.0
+#        sudo apt-get install -y dotnet-sdk-10.0
    
+
+    - name: Install .NET #on Windows
+      #if: inputs.dotnet == 'true' && inputs.os == 'windows-latest'
+      uses: actions/setup-dotnet@v5
+      with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
     # Install Java
     - name: Install JDK

@@ -32,17 +32,11 @@ namespace Hazelcast.CP
     {
         private long _version = InitialVersion;
         private readonly object _mutex = new();
-        private readonly object _listenerMutex = new();
         private readonly ConcurrentDictionary<CPGroupId, Guid> _groups = new();
         private readonly ILogger _logger;
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
-        private int _disposed;
-        private MemberConnection _listenerConnection;
-        private Task _listenerRegisterTask;
-        private long _correlationId;
-
-        private CancellationTokenSource _cts;
+        
 
         public const string CPGroupsJsonField = "cp.leaders";
         public const long InitialVersion = -1;

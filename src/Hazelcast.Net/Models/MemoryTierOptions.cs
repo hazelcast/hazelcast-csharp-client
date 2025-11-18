@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -35,11 +37,20 @@ public class MemoryTierOptions : IIdentifiedDataSerializable
     }
 #pragma warning restore CA1034
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemoryTierOptions"/> class.
+    /// </summary>
     public MemoryTierOptions()
     { }
 
-    public MemoryTierOptions(MemoryTierOptions options)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemoryTierOptions"/> class.
+    /// </summary>
+    /// <param name="options"></param>
+    public MemoryTierOptions([NotNull] MemoryTierOptions options)
     {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
         Capacity = options.Capacity;
     }
 
@@ -57,14 +68,14 @@ public class MemoryTierOptions : IIdentifiedDataSerializable
     }
 
     /// <inheritdoc />
-    public void WriteData(IObjectDataOutput output)
+    public void WriteData([NotNull] IObjectDataOutput output)
     {
         output.WriteLong(Capacity.Value);
         output.WriteString(Capacity.Unit.ToJavaString());
     }
 
     /// <inheritdoc />
-    public void ReadData(IObjectDataInput input)
+    public void ReadData([NotNull] IObjectDataInput input)
     {
         Capacity = Capacity.Of(input.ReadLong(), Enums.ParseJava<MemoryUnit>(input.ReadString()));
     }

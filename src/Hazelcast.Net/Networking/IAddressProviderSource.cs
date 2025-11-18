@@ -20,11 +20,11 @@ namespace Hazelcast.Networking
     /// </summary>
     internal interface IAddressProviderSource
     {
-        /// <summary>
+      /*  /// <summary>
         /// Provides an internal-to-public addresses map.
         /// </summary>
         /// <returns>An internal-to-public addresses map.</returns>
-        //IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap();
+        //IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap();*/
 
         /// <summary>
         /// Determines whether this source maps addresses.
