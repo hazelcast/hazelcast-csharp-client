@@ -27,7 +27,25 @@ namespace Hazelcast.Examples.DistributedObjects
                 .WithConsoleLogger()
                 .Build();
 
-            // create an Hazelcast client and connect to a server running on localhost
+            /*
+             * The example assumes that the vector collection configuration is already set on the server side.
+             *
+             * The expected configuration is as follows:
+             *             
+              <hazelcast>
+                  <vector-collection name="vector*">
+                      <indexes>
+                          <index name="my-index">
+                              <dimension>3</dimension>
+                              <metric>DOT</metric>
+                          </index>         
+                      </indexes>
+                  </vector-collection>
+                  ....
+              </hazelcast>
+             */
+            
+            // create a Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get distributed vector collection from cluster
@@ -59,7 +77,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // Part 2: Query the collection
             //Arrange the vector values
-            var queryVector = VectorValues.Of(new float[] { 0.1f, 0.2f, 0.3f });
+            var queryVector = VectorValues.Of(new float[] { 0.1f, 0.2f, 0.2f });
 
             var result = await vectorCollection.SearchAsync(queryVector,
                 new VectorSearchOptions(includeVectors: true,
