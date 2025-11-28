@@ -19,6 +19,8 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Benchmarks
 {
     /*
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.26100.7171)
+Intel Core i9-10885H CPU 2.40GHz, 1 CPU, 16 logical and 8 physical cores
 .NET SDK 10.0.100
   [Host] : .NET 10.0.0 (10.0.25.52411), X64 RyuJIT AVX2
 
@@ -32,10 +34,13 @@ Job=InProcess  Toolchain=InProcessEmitToolchain
 | SizedListUsage    | 10000      | 128      | 187.54 ns | 3.697 ns |  6.177 ns | 0.0572 |     480 B |
 | NotSizedListUsage | 1000000    | 128      | 146.65 ns | 5.371 ns | 15.836 ns | 0.0401 |     336 B |
 | SizedListUsage    | 1000000    | 128      | 190.83 ns | 6.574 ns | 19.281 ns | 0.0572 |     480 B |
-
      */
 
 
+    /// <summary>
+    /// This benchmark compares the usage of sized lists versus non-sized lists
+    /// which might be used in grouping operations such as PutAll.
+    /// </summary>
     public class SizedListUsageVsNotSized
     {
         public int PartitionCount { get; } = 271;
@@ -54,9 +59,9 @@ Job=InProcess  Toolchain=InProcessEmitToolchain
         {
             for (int i = 0; i < EntryCount; i++)
             {
-                var partitionId = (i + 1) % PartitionCount;
-                var data = new HeapData(GetData(DataSize, partitionId)); // 1 KB
-                var key = new HeapData(GetData(16, partitionId)); // 16 bytes
+                var partitionId = i % PartitionCount;
+                var data = new HeapData(GetData(DataSize, partitionId));
+                var key = new HeapData(GetData(16, partitionId)); 
                 RawEntries[key] = data;
             }
         }
