@@ -19,24 +19,23 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Benchmarks
 {
     /*
-BenchmarkDotNet v0.13.12, Windows 11 (10.0.26100.7171)
-Intel Core i9-10885H CPU 2.40GHz, 1 CPU, 16 logical and 8 physical cores
 .NET SDK 10.0.100
   [Host] : .NET 10.0.0 (10.0.25.52411), X64 RyuJIT AVX2
 
-Job=InProcess  Toolchain=InProcessNoEmitToolchain
+Job=InProcess  Toolchain=InProcessEmitToolchain
 
-| Method            | EntryCount | DataSize | Mean      | Error    | StdDev    | Median    | Gen0   | Allocated |
-|------------------ |----------- |--------- |----------:|---------:|----------:|----------:|-------:|----------:|
-| NotSizedListUsage | 100        | 128      |  96.68 ns | 2.293 ns |  6.615 ns |  96.55 ns | 0.0401 |     336 B |
-| SizedListUsage    | 100        | 128      | 133.54 ns | 3.828 ns | 11.287 ns | 132.74 ns | 0.0572 |     480 B |
-| NotSizedListUsage | 10000      | 128      |  93.20 ns | 3.860 ns | 11.382 ns |  88.88 ns | 0.0401 |     336 B |
-| SizedListUsage    | 10000      | 128      | 139.72 ns | 3.347 ns |  9.711 ns | 138.98 ns | 0.0572 |     480 B |
-| NotSizedListUsage | 1000000    | 128      |  89.39 ns | 2.517 ns |  7.341 ns |  87.52 ns | 0.0401 |     336 B |
-| SizedListUsage    | 1000000    | 128      | 134.41 ns | 3.477 ns | 10.198 ns | 132.89 ns | 0.0572 |     480 B |
+| Method            | EntryCount | DataSize | Mean      | Error    | StdDev    | Gen0   | Allocated |
+|------------------ |----------- |--------- |----------:|---------:|----------:|-------:|----------:|
+| NotSizedListUsage | 100        | 128      |  93.57 ns | 2.281 ns |  6.724 ns | 0.0401 |     336 B |
+| SizedListUsage    | 100        | 128      | 134.60 ns | 3.728 ns | 10.992 ns | 0.0572 |     480 B |
+| NotSizedListUsage | 10000      | 128      |  90.58 ns | 2.145 ns |  5.945 ns | 0.0401 |     336 B |
+| SizedListUsage    | 10000      | 128      | 187.54 ns | 3.697 ns |  6.177 ns | 0.0572 |     480 B |
+| NotSizedListUsage | 1000000    | 128      | 146.65 ns | 5.371 ns | 15.836 ns | 0.0401 |     336 B |
+| SizedListUsage    | 1000000    | 128      | 190.83 ns | 6.574 ns | 19.281 ns | 0.0572 |     480 B |
+
      */
-    
-    
+
+
     public class SizedListUsageVsNotSized
     {
         public int PartitionCount { get; } = 271;
@@ -55,8 +54,9 @@ Job=InProcess  Toolchain=InProcessNoEmitToolchain
         {
             for (int i = 0; i < EntryCount; i++)
             {
-                var data = new HeapData(GetData(DataSize, i + 1)); // 1 KB
-                var key = new HeapData(GetData(16, i + 1)); // 16 bytes
+                var partitionId = (i + 1) % PartitionCount;
+                var data = new HeapData(GetData(DataSize, partitionId)); // 1 KB
+                var key = new HeapData(GetData(16, partitionId)); // 16 bytes
                 RawEntries[key] = data;
             }
         }
@@ -93,11 +93,11 @@ Job=InProcess  Toolchain=InProcessNoEmitToolchain
         [Benchmark]
         public void SizedListUsage()
         {
-            var groupSizes = new Dictionary<int,int>();
+            var groupSizes = new Dictionary<int, int>();
 
             foreach (var entry in RawEntries)
             {
-                groupSizes[entry.Key.PartitionHash] = groupSizes.GetValueOrDefault(entry.Key.PartitionHash,0) + 1;
+                groupSizes[entry.Key.PartitionHash] = groupSizes.GetValueOrDefault(entry.Key.PartitionHash, 0) + 1;
             }
 
             var groupedEntries = new Dictionary<int, List<KeyValuePair<IData, IData>>>();
