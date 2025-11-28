@@ -147,7 +147,7 @@ namespace Hazelcast.Tests.Remote
         }
         
         [Test]
-        [ServerCondition("[5.5.0,)")]
+        [ServerCondition("[5.5,)")]
         public async Task TestRoutingModesInOrderWithServerWithPreviousPackage()
         {
             var script = @"result = com.hazelcast.client.impl.connection.tcp.RoutingMode.SINGLE_MEMBER.getId() +
