@@ -248,7 +248,9 @@ namespace Hazelcast.Tests.Clustering
 
             // each member retried twice = twice the 1s delay = 2s
             // we should not have completed faster than that, even so the code runs fully in-memory
-            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2)));
+            // There is some leeway though, so we accept 10ms less since new runtimes are faster. Also, request time calculation
+            // in the queue depend on epoch calculation which may have some small overhead.
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2) - TimeSpan.FromMilliseconds(10)));
             HConsole.WriteLine(this, $"Elapsed: {elapsed}");
 
             Assert.That(queue.Count, Is.EqualTo(0));
