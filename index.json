@@ -6074,6 +6074,11 @@
     "title": "RingbufferStoreOptions Class | Hazelcast .NET Documentation",
     "summary": "RingbufferStoreOptions Class Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll Represents the configuration of a ringbuffer store. public class RingbufferStoreOptions : IIdentifiedDataSerializable Inheritance object RingbufferStoreOptions Implements IIdentifiedDataSerializable Inherited Members object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) Constructors Name Description RingbufferStoreOptions() Initializes a new instance of the RingbufferStoreOptions class. RingbufferStoreOptions(RingbufferStoreOptions) Initializes a new instance of the RingbufferStoreOptions class. Properties Name Description ClassId Gets the identifier of the class. ClassName Gets or sets the store class name. Enabled Whether the store is enabled. FactoryClassName Gets or sets the factory class name. FactoryId Gets the identifier of the IDataSerializableFactory that can create instances of the class. Properties Gets or sets the properties. Methods Name Description ReadData(IObjectDataInput) Deserializes the object by reading from an IObjectDataInput. ToString() Returns a string that represents the current object. WriteData(IObjectDataOutput) Serializes the object by writing to an IObjectDataOutput."
   },
+  "5.6.0/api/Hazelcast.Models.SingleVectorValues.Equals.html": {
+    "href": "5.6.0/api/Hazelcast.Models.SingleVectorValues.Equals.html",
+    "title": "Equals Method | Hazelcast .NET Documentation",
+    "summary": "Equals Method Equals(object) Determines whether the specified object is equal to the current object. Declaration public override bool Equals(object obj) Parameters object obj The object to compare with the current object. Returns bool true if the specified object is equal to the current object; otherwise, false. Overrides object.Equals(object)"
+  },
   "5.6.0/api/Hazelcast.Models.SingleVectorValues.ToString.html": {
     "href": "5.6.0/api/Hazelcast.Models.SingleVectorValues.ToString.html",
     "title": "ToString Method | Hazelcast .NET Documentation",
@@ -6087,7 +6092,7 @@
   "5.6.0/api/Hazelcast.Models.SingleVectorValues.html": {
     "href": "5.6.0/api/Hazelcast.Models.SingleVectorValues.html",
     "title": "SingleVectorValues Class | Hazelcast .NET Documentation",
-    "summary": "SingleVectorValues Class Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll public class SingleVectorValues : VectorValues Inheritance object VectorValues SingleVectorValues Inherited Members VectorValues.Of(float[]) VectorValues.Of(params (string indexName, float[] vector)[]) VectorValues.Of(IDictionary<string, float[]>) object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) Properties Name Description Vector Methods Name Description ToString() Returns a string that represents the current object."
+    "summary": "SingleVectorValues Class Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll public class SingleVectorValues : VectorValues Inheritance object VectorValues SingleVectorValues Inherited Members VectorValues.Of(float[]) VectorValues.Of(params (string indexName, float[] vector)[]) VectorValues.Of(IDictionary<string, float[]>) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) Properties Name Description Vector Methods Name Description Equals(object) Determines whether the specified object is equal to the current object. ToString() Returns a string that represents the current object."
   },
   "5.6.0/api/Hazelcast.Models.TieredStoreOptions.-ctor.html": {
     "href": "5.6.0/api/Hazelcast.Models.TieredStoreOptions.-ctor.html",

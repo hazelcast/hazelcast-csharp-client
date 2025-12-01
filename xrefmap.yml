@@ -17436,6 +17436,21 @@ references:
   commentId: T:Hazelcast.Models.SingleVectorValues
   fullName: Hazelcast.Models.SingleVectorValues
   nameWithType: SingleVectorValues
+- uid: Hazelcast.Models.SingleVectorValues.Equals(System.Object)
+  name: Equals(object)
+  href: 5.6.0/api/Hazelcast.Models.SingleVectorValues.Equals.html#Hazelcast_Models_SingleVectorValues_Equals_System_Object_
+  commentId: M:Hazelcast.Models.SingleVectorValues.Equals(System.Object)
+  name.vb: Equals(Object)
+  fullName: Hazelcast.Models.SingleVectorValues.Equals(object)
+  fullName.vb: Hazelcast.Models.SingleVectorValues.Equals(Object)
+  nameWithType: SingleVectorValues.Equals(object)
+  nameWithType.vb: SingleVectorValues.Equals(Object)
+- uid: Hazelcast.Models.SingleVectorValues.Equals*
+  name: Equals
+  href: 5.6.0/api/Hazelcast.Models.SingleVectorValues.Equals.html
+  commentId: Overload:Hazelcast.Models.SingleVectorValues.Equals
+  fullName: Hazelcast.Models.SingleVectorValues.Equals
+  nameWithType: SingleVectorValues.Equals
 - uid: Hazelcast.Models.SingleVectorValues.ToString
   name: ToString()
   href: 5.6.0/api/Hazelcast.Models.SingleVectorValues.ToString.html#Hazelcast_Models_SingleVectorValues_ToString
