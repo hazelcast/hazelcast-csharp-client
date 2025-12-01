@@ -26,7 +26,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.CP
 {
     [Category("enterprise")]
-    [ServerCondition("[5.5,)")]
+    [ServerCondition("[5.5)")]
     [Timeout(30_000)]
     public class CPRoutingTests : MultiMembersRemoteTestBase
     {

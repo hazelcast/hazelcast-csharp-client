@@ -17,7 +17,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -68,39 +67,22 @@ namespace Hazelcast.DistributedObjects.Impl
             var rawResponse = VectorCollectionPutIfAbsentCodec.DecodeResponse(response).Value;
             return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
-        public async Task PutAllAsync([NotNull] IDictionary<TKey, IVectorDocument<TVal>> vectorDocumentMap)
+        public Task PutAllAsync([NotNull] IDictionary<TKey, IVectorDocument<TVal>> vectorDocumentMap)
         {
             vectorDocumentMap.ThrowIfNull();
-            var entriesByPartition = new Dictionary<int, List<KeyValuePair<IData, IVectorDocument<IData>>>>();
 
+            var rawEntries = new List<KeyValuePair<IData, IVectorDocument<IData>>>();
             foreach (var kvp in vectorDocumentMap)
             {
                 var key = kvp.Key ?? throw new ArgumentException($"Key cannot be null in {nameof(vectorDocumentMap)}.");
                 var val = kvp.Value ?? throw new ArgumentException($"Value cannot be null in {nameof(vectorDocumentMap)}.");
-                var(dataKey, rawDocument) = PrepareForPut(key, val);
-                var partitionId = Cluster.Partitioner.GetPartitionId(dataKey.PartitionHash);
-
-                if (entriesByPartition.TryGetValue(partitionId, out var list))
-                {
-                    list.Add(new KeyValuePair<IData, IVectorDocument<IData>>(dataKey, rawDocument));
-                }
-                else
-                {
-                    entriesByPartition[partitionId] = new List<KeyValuePair<IData, IVectorDocument<IData>>>()
-                    {
-                        new KeyValuePair<IData, IVectorDocument<IData>>(dataKey, rawDocument)
-                    };
-                }
+                var dataKey = ToSafeData(key);
+                var dataValue = ToSafeData(val);
+                var rawDocument = new VectorDocument<IData>(dataValue, kvp.Value.Vectors);
+                rawEntries.Add(new KeyValuePair<IData, IVectorDocument<IData>>(dataKey, rawDocument));
             }
-
-            var tasks = new List<Task<ClientMessage>>();
-            foreach (var entry in entriesByPartition)
-            {
-                var message = VectorCollectionPutAllCodec.EncodeRequest(Name, entry.Value);
-                tasks.Add(Cluster.Messaging.SendToPartitionOwnerAsync(message, entry.Key));
-            }
-
-            await Task.WhenAll(tasks).CfAwait();
+            var message = VectorCollectionPutAllCodec.EncodeRequest(Name, rawEntries);
+            return Cluster.Messaging.SendAsync(message);
         }
         public async Task<IVectorDocument<TVal>> RemoveAsync(TKey key)
         {
@@ -161,7 +143,7 @@ namespace Hazelcast.DistributedObjects.Impl
             {
                 return null;
             }
-
+            
             var userObject = await ToObjectAsync<TVal>(rawResponse.Value).CfAwait();
             return new VectorDocument<TVal>(userObject, rawResponse.Vectors);
         }

@@ -49,9 +49,21 @@
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />    
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net48'">
-    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.0" Aliases="MicrosoftBclMemory" />
+  <!-- START - This section is required to resolve reference ambigutity raised in NET10
+  https://github.com/dotnet/docs/issues/44886
+  -->  
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0' and '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">    
+    <PackageReference Include="System.Linq.AsyncEnumerable" Version="10.0.0" Aliases="SystemLinqAsyncEnumerable" />
   </ItemGroup>
+  
+  <Target Name="_SetAliasOnBuiltInSystemLinqAsyncEnumerable" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+      <Reference Condition="'%(Reference.AssemblyName)' == 'System.Linq.AsyncEnumerable'">
+        <Aliases>SystemLinqAsyncEnumerable</Aliases>
+      </Reference>
+    </ItemGroup>
+  </Target>
+  <!-- END - This section is required to resolve refence ambigutity raised in NET10 -->
 
   <Choose>
     <When Condition="'$(TargetFramework)' != 'net462' or '$(TargetFramework)' != 'net48'">

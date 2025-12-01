@@ -2654,4 +2654,3 @@ override Hazelcast.Models.ClusterVersion.GetHashCode() -> int
 ~override Hazelcast.Models.ClusterVersion.Equals(object obj) -> bool
 ~override Hazelcast.Models.ClusterVersion.ToString() -> string
 ~static Hazelcast.Models.ClusterVersion.Parse(string value) -> Hazelcast.Models.ClusterVersion
-~override Hazelcast.Models.SingleVectorValues.Equals(object obj) -> bool

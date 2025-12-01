@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-using System.Linq;
+using Hazelcast.Serialization;
 namespace Hazelcast.Models
 {
     public class SingleVectorValues : VectorValues
@@ -22,22 +22,12 @@ namespace Hazelcast.Models
             Vector = vector;
         }
         public float[] Vector { get; }
-        
-        
-        /// <inheritdoc />
+
         public override string ToString()
         {
             var val = Vector == null ? "null" : $"[{string.Join(", ", Vector)}]";
             return $"SingleVectorValues{{vector={val}}}";
         }
 
-        /// <inheritdoc />
-        public override bool Equals(object obj)
-        {
-            if (this == obj) return true;
-            if (obj == null || GetType() != obj.GetType()) return false;
-            var that = (SingleVectorValues)obj;
-            return Vector.SequenceEqual(that.Vector);
-        }
     }
 }
