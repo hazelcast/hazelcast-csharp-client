@@ -51,13 +51,10 @@
         </None>            
     </ItemGroup>
 
-  <!-- Note: async linq interfaces are moved to NET after net10.0. So, users must arrange references accordingly.       
-       https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/10.0/asyncenumerable   -->
-  <ItemGroup>
-    <PackageReference Include="System.Linq.Async" Version="6.0.3">      
+  <ItemGroup >
+    <PackageReference Include="System.Linq.Async" Version="7.0.0">
     </PackageReference>
-    <PackageReference Include="System.Linq.Async.Queryable" Version="6.0.3">
+    <PackageReference Include="System.Linq.Async.Queryable" Version="7.0.0">
     </PackageReference>
-  </ItemGroup>   
-  
+  </ItemGroup>
 </Project>

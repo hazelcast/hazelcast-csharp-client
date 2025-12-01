@@ -2711,3 +2711,4 @@ virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get ->
 ~virtual Hazelcast.Query.PredicateBuilder.IsLike(string pattern) -> Hazelcast.Query.IPredicate
 ~virtual Hazelcast.Query.PredicateBuilder.IsNotEqualTo(object value) -> Hazelcast.Query.IPredicate
 ~virtual Hazelcast.Query.PredicateBuilder.Matches(string regex) -> Hazelcast.Query.IPredicate
+~override Hazelcast.Models.SingleVectorValues.Equals(object obj) -> bool
