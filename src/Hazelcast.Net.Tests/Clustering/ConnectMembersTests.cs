@@ -217,7 +217,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
                 {
-                    dequeuedRequests++;
+                    Interlocked.Increment(ref dequeuedRequests);
                     if (!memberCount.TryGetValue(request.Member.Id, out var count)) count = 0;
                     memberCount[request.Member.Id] = ++count;
                     logger.LogDebug($"Connect request={dequeuedRequests} member={request.Member.Id.ToShortString()} count={count} result={(count == successCount ? "success" : "failed")}");
