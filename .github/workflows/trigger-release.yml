@@ -56,11 +56,6 @@ jobs:
     # finalize + trigger the release
     - name: Trigger Release
       if: ${{ github.event.inputs.dryrun == 'false' }}
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GH_OWNER: hazelcast
-        GH_REPO: hazelcast-csharp-client
-        GH_BRANCH: release/${{ github.ref_name }}
       shell: pwsh
       run: |
         ./hz.ps1 -noRestore -localRestore update-doc-version

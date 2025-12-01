@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,20 +33,9 @@
     </PackageReference>
     <PackageReference Include="NuGet.Versioning" Version="6.14.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />        
+    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+    <PackageReference Include="System.Linq.Async.Queryable" Version="6.0.3" />
   </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.0" Aliases="MicrosoftBclMemory" />
-  </ItemGroup>
-  
-  <Target Name="_SetAliasOnBuiltInSystemMemory" BeforeTargets="ResolveAssemblyReferences">
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-      <Reference Condition="'%(Reference.AssemblyName)' == 'Microsoft.Bcl.Memory'" Version="10.0.0">
-        <Aliases>MicrosoftBclMemory</Aliases>
-      </Reference>
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj" />

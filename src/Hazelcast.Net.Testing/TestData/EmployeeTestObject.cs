@@ -33,18 +33,5 @@ namespace Hazelcast.Tests.TestObjects
         }
         public long StartedAtTimeStamp { get; set; }
         public char Type { get; set; }
-
-        public override bool Equals(object obj)
-        {
-            if (this == obj) return true;
-            if (obj == null || GetType() != obj.GetType()) return false;
-            var that = (EmployeeTestObject)obj;
-            return Id == that.Id &&
-                   Name == that.Name &&
-                   Salary.Equals(that.Salary) &&
-                   StartedAtTimeStamp == that.StartedAtTimeStamp &&
-                   Type == that.Type;
-        }
-            
     }
 }
