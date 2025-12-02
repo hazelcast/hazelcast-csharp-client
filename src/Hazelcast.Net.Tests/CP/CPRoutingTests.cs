@@ -22,6 +22,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Hazelcast.Testing.Logging;
 using NUnit.Framework;
 namespace Hazelcast.Tests.CP
 {
@@ -42,6 +43,8 @@ namespace Hazelcast.Tests.CP
         [Test]
         public async Task TestCPRequestRoutingToLeader()
         {
+            HConsole.Configure(x => x.ConfigureDefaults(this)); 
+            
             const string groupName = "myGroup";
             const string cpObjectName = "myAtomicLong";
             var options = new HazelcastOptionsBuilder()
@@ -53,7 +56,9 @@ namespace Hazelcast.Tests.CP
                     config.Networking.Addresses.Add($"{lastMember.Host}:{lastMember.Port}");
                     config.ClusterName = RcCluster.Id;
                     config.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
-                })).Build();
+                }))
+                .WithHConsoleLogger()
+                .Build();
 
 
             // Assert multiple that the addAndGet operation is sent to the leader

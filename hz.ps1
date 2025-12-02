@@ -2075,19 +2075,16 @@ function run-tests ( $f ) {
     #
 
     #
-    $loggerLevel = If ($options.'verbose-tests') {5} Else {0}
-    $logLevelDotNet = If ($options.'verbose-tests') {"detailed"} Else {"normal"}
-    
     $dotnetArgs = @(
         "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj",
         "-c", $options.configuration,
         "--no-restore", "--no-build",
         "-f", "$f",
-        "-v", "$logLevelDotNet", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
+        "-v", "normal",
         "--logger", "trx;LogFileName=results-$f.trx", # log to file
-        "--logger", "console;verbosity=$loggerLevel" , 
+        "--logger", "console;verbosity=minimal", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
         "--results-directory", "$tmpDir/tests/results"
-    )    
+    )
 
     # see https://docs.nunit.org/articles/vs-test-adapter/Tips-And-Tricks.html
     # for available options and names here

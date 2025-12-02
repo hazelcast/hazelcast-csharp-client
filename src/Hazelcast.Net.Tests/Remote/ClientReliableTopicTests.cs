@@ -21,6 +21,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -757,6 +758,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     [Timeout(120_000)]
     public async Task TestReliableTopicUnderStress()
     {
+        HConsole.Configure(x => x.ConfigureDefaults(this)); 
         var topicName = "rtTestTopicStress";
 
         var options = new HazelcastOptionsBuilder()
@@ -772,6 +774,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                 {
                     builder.AddConfiguration(conf.GetSection("logging"));
                     builder.AddConsole();
+                    builder.AddHConsole();
                 });
             })
             .Build();

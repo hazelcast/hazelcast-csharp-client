@@ -196,7 +196,7 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task TestDelayedQueue()
         {
-            HConsole.Configure(x => x.ConfigureDefaults(this));
+            HConsole.Configure(x => x.ConfigureDefaults(this).Configure(typeof(object)).SetLevel(100));
 
             static MemberInfo MemberInfo(NetworkAddress address)
             {
