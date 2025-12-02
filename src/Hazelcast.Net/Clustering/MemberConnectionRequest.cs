@@ -25,7 +25,7 @@ namespace Hazelcast.Clustering
         public MemberConnectionRequest(MemberInfo member)
         {
             Member = member;
-            _requestDate = Clock.Now;
+            _requestDate = DateTime.UtcNow;
         }
 
         public MemberInfo Member { get; }
