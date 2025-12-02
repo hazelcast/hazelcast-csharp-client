@@ -760,7 +760,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var topicName = "rtTestTopicStress";
 
         var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Information)
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
             .With((conf, opt) =>
             {
                 opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 100);
