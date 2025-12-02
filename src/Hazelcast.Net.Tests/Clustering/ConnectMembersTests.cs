@@ -248,7 +248,9 @@ namespace Hazelcast.Tests.Clustering
 
             // each member retried twice = twice the 1s delay = 2s
             // we should not have completed faster than that, even so the code runs fully in-memory
-            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2)));
+            // allow a small margin of error since catching the delayed item with 0 delay is not exact, and implementation has already
+            // 10ms margin.
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2) - TimeSpan.FromMilliseconds(15)));
             HConsole.WriteLine(this, $"Elapsed: {elapsed}");
 
             Assert.That(queue.Count, Is.EqualTo(0));
