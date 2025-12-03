@@ -343,7 +343,7 @@ namespace Hazelcast.Clustering
             }
 
             // we are done now
-            lock (_subscribeTasksMutex) _subscribeTasks.Remove(connection);
+            lock (_subscribeTasksMutex) _subscribeTasks?.Remove(connection);
         }
 
         /// <summary>
