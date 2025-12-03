@@ -594,6 +594,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     [Timeout(80_000)]
     public async Task TestClusterRestartWhenSubscribed()
     {
+        HConsole.Configure(x => x.ConfigureDefaults(this).Configure<HReliableTopic<object>>().SetMinLevel()); 
         var topicName = "rtTestTopic2";
 
         var options = new HazelcastOptionsBuilder()
@@ -812,7 +813,11 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         {
             var send = 0;
             while (!cancelToken.IsCancellationRequested)
-                await rt.PublishAsync(send++, cancelToken.Token);
+            {
+                await rt.PublishAsync(send, cancelToken.Token);
+                send++;
+                if(send % 10000 == 0) HConsole.WriteLine(this, $@"Producer -> Total sent: {send}");
+            }
 
             return send;
         }, cancelToken.Token);
@@ -825,7 +830,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         {
             Assert.AreEqual(totalSend, c1Received);
             Assert.AreEqual(totalSend, c2Received);
-        }, 60_000, 200);
+        }, 30_000, 200);
 
         HConsole.WriteLine(this,"c1 recevied: " + c1Received);
         HConsole.WriteLine(this,"c2 recevied: " + c2Received);
