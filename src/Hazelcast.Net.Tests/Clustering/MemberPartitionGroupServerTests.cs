@@ -19,6 +19,7 @@ using Hazelcast.Core;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -45,6 +46,7 @@ namespace Hazelcast.Tests.Clustering
         [TestCase(RoutingStrategy.PartitionGroups)]
         public async Task TestMultiMemberRoutingWorks(RoutingStrategy routingStrategy)
         {
+            HConsole.Configure(x => x.ConfigureDefaults(this)); 
             await AssertEx.SucceedsEventually(() => Assert.That(RcMembers.Count, Is.EqualTo(3)), 30_000, 500);
             HConsole.Configure(c => c.ConfigureDefaults(this));
 
@@ -206,7 +208,12 @@ namespace Hazelcast.Tests.Clustering
                     }));
 
                     args.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(
-                        conf => conf.AddConsole().SetMinimumLevel(LogLevel.Debug));
+                        conf =>
+                        {
+                            conf.AddConsole().SetMinimumLevel(LogLevel.Debug);
+                            conf.AddHConsole();
+                        });
+                    
 
                 })
                 .Build();

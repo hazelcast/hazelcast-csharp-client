@@ -758,7 +758,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     [Timeout(120_000)]
     public async Task TestReliableTopicUnderStress()
     {
-        HConsole.Configure(x => x.ConfigureDefaults(this)); 
+        HConsole.Configure(x => x.ConfigureDefaults(this).Configure<HReliableTopic<object>>().SetMinLevel()); 
         var topicName = "rtTestTopicStress";
 
         var options = new HazelcastOptionsBuilder()
