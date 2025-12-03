@@ -774,7 +774,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                 {
                     builder.AddConfiguration(conf.GetSection("logging"));
                     builder.AddConsole();
-                    builder.AddHConsole();
+                    //builder.AddHConsole();
                 });
             })
             .Build();
@@ -804,8 +804,10 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var cancelToken = new CancellationTokenSource();
         cancelToken.CancelAfter(30_000);
 
-        await Task.Delay(1_000);
+        //await Task.Delay(1_000);
 
+        HConsole.WriteLine(this, "Starting producer...");
+        
         var producer = Task.Run(async () =>
         {
             var send = 0;
@@ -817,12 +819,17 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         var totalSend = await producer;
 
+        HConsole.WriteLine(this, $@"Total sent: {totalSend}");
+        
         await AssertEx.SucceedsEventually(() =>
         {
             Assert.AreEqual(totalSend, c1Received);
             Assert.AreEqual(totalSend, c2Received);
         }, 60_000, 200);
 
+        HConsole.WriteLine(this,"c1 recevied: " + c1Received);
+        HConsole.WriteLine(this,"c2 recevied: " + c2Received);
+        
 
         Assert.True(await rt.UnsubscribeAsync(c1));
         Assert.True(await rt.UnsubscribeAsync(c2));
