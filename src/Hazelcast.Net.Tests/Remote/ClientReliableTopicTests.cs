@@ -783,15 +783,17 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
 
-        int c1Received = 0, c2Received = 0;
+        // Due to next value is calculated when message is received, we start from -1.
+        int c1Received = -1, c2Received = -1;
 
         var c1 = await rt.SubscribeAsync(events =>
             events.Message((sender, args) =>
             {
                 Console.WriteLine($"Consumer1 got: {args.Payload}");
-                
-                Assert.AreEqual(c1Received, args.Payload);
-                Interlocked.Increment(ref c1Received);
+
+                // Assert that payload as expected
+                Assert.AreEqual((c1Received + 1), args.Payload);
+                Interlocked.Exchange(ref c1Received, args.Payload);
                 if (c1Received % 10000 == 0) Console.WriteLine($"C1 Received: {c1Received}");
             }));
 
@@ -799,9 +801,9 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             events.Message((sender, args) =>
             {
                 Console.WriteLine($"Consumer2 got: {args.Payload}");
-                
-                Assert.AreEqual(c2Received, args.Payload);
-                Interlocked.Increment(ref c2Received);
+
+                Assert.AreEqual((c2Received + 1), args.Payload);
+                Interlocked.Exchange(ref c2Received, args.Payload);
                 if (c2Received % 10000 == 0) Console.WriteLine($"C2 Received: {c2Received}");
             }));
 
@@ -812,25 +814,28 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         //await Task.Delay(1_000);
 
         HConsole.WriteLine(this, "Starting producer...");
-        
+
         var producer = Task.Run(async () =>
         {
             var send = 0;
+            var latestSend = 0;
             while (!cancelToken.IsCancellationRequested)
             {
                 await rt.PublishAsync(send, cancelToken.Token);
-                Console.WriteLine("Producer sent: " + send);
+                latestSend = send;
+                // This is increased here but not send yet. In case of cansel, the last send should be lasteSend.
                 send++;
-                
+
+                Console.WriteLine("Producer sent: " + send);
             }
 
-            return send;
+            return latestSend;
         }, cancelToken.Token);
 
         var totalSend = await producer;
 
         Console.WriteLine($@"Total sent: {totalSend}");
-        
+
         await AssertEx.SucceedsEventually(() =>
         {
             Assert.AreEqual(totalSend, c1Received);
@@ -839,7 +844,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         Console.WriteLine("c1 recevied: " + c1Received);
         Console.WriteLine("c2 recevied: " + c2Received);
-        
+
 
         Assert.True(await rt.UnsubscribeAsync(c1));
         Assert.True(await rt.UnsubscribeAsync(c2));
