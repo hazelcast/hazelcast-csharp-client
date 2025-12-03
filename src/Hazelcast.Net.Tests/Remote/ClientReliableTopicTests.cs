@@ -759,7 +759,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     [Timeout(120_000)]
     public async Task TestReliableTopicUnderStress()
     {
-        HConsole.Configure(x => x.ConfigureDefaults(this).Configure<HReliableTopic<object>>().SetMinLevel()); 
+        //HConsole.Configure(x => x.ClearAll().ConfigureDefaults(this)); 
         var topicName = "rtTestTopicStress";
 
         var options = new HazelcastOptionsBuilder()
@@ -788,6 +788,8 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var c1 = await rt.SubscribeAsync(events =>
             events.Message((sender, args) =>
             {
+                Console.WriteLine($"Consumer1 got: {args.Payload}");
+                
                 Assert.AreEqual(c1Received, args.Payload);
                 Interlocked.Increment(ref c1Received);
                 if (c1Received % 10000 == 0) Console.WriteLine($"C1 Received: {c1Received}");
@@ -796,6 +798,8 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var c2 = await rt.SubscribeAsync(events =>
             events.Message((sender, args) =>
             {
+                Console.WriteLine($"Consumer2 got: {args.Payload}");
+                
                 Assert.AreEqual(c2Received, args.Payload);
                 Interlocked.Increment(ref c2Received);
                 if (c2Received % 10000 == 0) Console.WriteLine($"C2 Received: {c2Received}");
@@ -815,8 +819,9 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             while (!cancelToken.IsCancellationRequested)
             {
                 await rt.PublishAsync(send, cancelToken.Token);
+                Console.WriteLine("Producer sent: " + send);
                 send++;
-                if(send % 10000 == 0) HConsole.WriteLine(this, $@"Producer -> Total sent: {send}");
+                
             }
 
             return send;
@@ -824,16 +829,16 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         var totalSend = await producer;
 
-        HConsole.WriteLine(this, $@"Total sent: {totalSend}");
+        Console.WriteLine($@"Total sent: {totalSend}");
         
         await AssertEx.SucceedsEventually(() =>
         {
             Assert.AreEqual(totalSend, c1Received);
             Assert.AreEqual(totalSend, c2Received);
-        }, 30_000, 200);
+        }, 10_000, 200);
 
-        HConsole.WriteLine(this,"c1 recevied: " + c1Received);
-        HConsole.WriteLine(this,"c2 recevied: " + c2Received);
+        Console.WriteLine("c1 recevied: " + c1Received);
+        Console.WriteLine("c2 recevied: " + c2Received);
         
 
         Assert.True(await rt.UnsubscribeAsync(c1));
