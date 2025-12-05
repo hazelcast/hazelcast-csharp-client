@@ -59,7 +59,7 @@ runs:
    
 
     - name: Install .NET #on Windows
-      #if: inputs.dotnet == 'true' && inputs.os == 'windows-latest'
+      if: inputs.dotnet == 'true' # && inputs.os == 'windows-latest'
       uses: actions/setup-dotnet@v5
       with:
           dotnet-version: |

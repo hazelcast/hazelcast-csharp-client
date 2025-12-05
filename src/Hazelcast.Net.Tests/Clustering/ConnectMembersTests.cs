@@ -217,7 +217,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
                 {
-                    dequeuedRequests++;
+                    Interlocked.Increment(ref dequeuedRequests);
                     if (!memberCount.TryGetValue(request.Member.Id, out var count)) count = 0;
                     memberCount[request.Member.Id] = ++count;
                     logger.LogDebug($"Connect request={dequeuedRequests} member={request.Member.Id.ToShortString()} count={count} result={(count == successCount ? "success" : "failed")}");
@@ -246,9 +246,12 @@ namespace Hazelcast.Tests.Clustering
             cancellation.Cancel();
             await connecting.CfAwaitCanceled();
 
-            // each member retried twice = twice the 1s delay = 2s
+            // each member retried twice = twice the ~1s delay ~ 2s
             // we should not have completed faster than that, even so the code runs fully in-memory
-            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2)));
+            // Note: The queue has 10ms error margin per wait, so we take 20ms total margin for two unsuccessful tries
+            var failedCount = successCount - 1;
+            var expectedMinTotalDelay = TimeSpan.FromMilliseconds(failedCount * 990); // 990ms per failed try including 10ms margin
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(expectedMinTotalDelay));
             HConsole.WriteLine(this, $"Elapsed: {elapsed}");
 
             Assert.That(queue.Count, Is.EqualTo(0));
