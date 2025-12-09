@@ -162,7 +162,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         {
             var result = await _ringBuffer.AddAsync(rtMessage, OverflowPolicy.Fail).CfAwait();
 
-            if (result != -1) break;
+            if (result != -1) return;
 
             _logger.IfDebug()?.LogDebug("Waiting to publish message with {Duration}ms back off", wait);
             await Task.Delay(wait, cancellationToken).CfAwait();
@@ -173,7 +173,10 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         }
 
         if (cancellationToken.IsCancellationRequested)
+        {
             _logger.IfDebug()?.LogDebug("Publishing process is canceled. ");
+            throw new OperationCanceledException("Publishing process is canceled.", cancellationToken);
+        }
     }
 
     public async new ValueTask DisposeAsync()
