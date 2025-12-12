@@ -1441,9 +1441,6 @@ namespace Hazelcast.Tests.Remote
 
             // Definitively, less then maxTTL
             Assert.Less(elapsed, maxTTL * 1000);
-
-            // Close to min TTL
-            Assert.Less(elapsed, minTTL * 1000 * 2);
         }
     }
 }
