@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -147,33 +147,6 @@ namespace Hazelcast.Tests.DotNet
 
             return value;
         }
-
-#if NETCOREAPP3_1 // SequenceReader is n/a in 2.1
-        private int ReadInt32C(ref ReadOnlySequence<byte> bytes)
-        {
-            if (bytes.Length < 4)
-                throw new ArgumentException("Not enough bytes.", nameof(bytes));
-
-            var slice = bytes.Slice(bytes.Start, 4); // slice the required bytes
-            int value;
-            if (slice.IsSingleSegment)
-            {
-                var span = slice.FirstSpan();
-                value = span.ReadInt32();
-            }
-            else
-            {
-                // use a reader
-                var reader = new SequenceReader<byte>(bytes);
-                reader.TryReadLittleEndian(out value);
-            }
-
-            // consume the slice
-            bytes = bytes.Slice(slice.End);
-
-            return value;
-        }
-#endif
     }
 
     public static class Extensions

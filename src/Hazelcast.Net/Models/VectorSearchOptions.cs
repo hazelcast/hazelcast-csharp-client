@@ -34,7 +34,7 @@ namespace Hazelcast.Models
             IncludeValue = includeValue;
             IncludeVectors = includeVectors;
             Limit = limit;
-            Hints = hints;
+            Hints = hints ?? new Dictionary<string, string>();
         }
 
         /// <summary>

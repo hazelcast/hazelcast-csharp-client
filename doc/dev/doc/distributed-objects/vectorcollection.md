@@ -1,5 +1,7 @@
 # Vector Collection
 
+![Note] This feature is a BETA feature.
+
 ![Note] This feature is available in Hazelcast Enterprise.
 
 A `VectorCollection` is a collection of `VectorDocument` objects. For more information see
