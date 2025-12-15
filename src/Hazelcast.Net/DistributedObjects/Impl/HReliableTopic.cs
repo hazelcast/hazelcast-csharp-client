@@ -172,6 +172,8 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
             if (wait > _backOffMax) wait = _backOffMax;
         }
 
+
+        _logger.IfDebug()?.LogDebug("Publishing process is canceled. ");
         throw new OperationCanceledException("Publishing process is canceled.", cancellationToken);
 
     }
