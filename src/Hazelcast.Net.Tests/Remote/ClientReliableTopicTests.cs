@@ -52,23 +52,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopic";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(policy, 3);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
-
+        var options = GetClientOption(topicName, policy, 3);
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -94,7 +78,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                         mneDisposed.Set();
                     }
                 ).Exception((sender, args) => { args.Cancel = false; }),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false});
+            new ReliableTopicEventHandlerOptions() { IsLossTolerant = false });
 
         // 0 is not a message.
         for (var i = 1; i <= msgCount; i++)
@@ -120,22 +104,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopicBlocking";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 5);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 5);
 
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
@@ -152,7 +121,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                         Console.WriteLine($"SEQ: {args.Sequence} Received:{args.Payload}");
                     })
                     .Terminated((sender, args) => mneDisposed.Set()),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = -1, StoreSequence = false});
+            new ReliableTopicEventHandlerOptions() { IsLossTolerant = false, InitialSequence = -1, StoreSequence = false });
 
         // Let listener be ready.
         await Task.Delay(1_000);
@@ -176,22 +145,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopicArgs";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 3);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 3);
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -227,22 +181,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopicException";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 1);
 
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
@@ -287,7 +226,6 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             .With((conf, opt) =>
             {
                 opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
                 opt.Networking.Addresses.Add("127.0.0.1:5704");
 
                 opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
@@ -306,7 +244,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await rt.PublishAsync(2);
         await rt.PublishAsync(3);
 
-        var expected = new int[] {4, 5, 6};
+        var expected = new int[] { 4, 5, 6 };
         var received = new List<int>();
         var mneDone = new ManualResetEvent(false);
 
@@ -336,22 +274,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtNoSpaceError";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Error, 1);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Error, 1);
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -379,22 +302,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtNoSpaceDiscardOldest";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.DiscardOldest, 1);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.DiscardOldest, 1);
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -415,28 +323,14 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await rt.DestroyAsync();
     }
 
+
     [Test]
     [Timeout(30_000)]
     public async Task TestReliableTopicWhenNoSpaceOnDiscardNewest()
     {
         var topicName = "rtNoSpaceDiscardNewest";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.DiscardNewest, 1);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.DiscardNewest, 1);
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -464,22 +358,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtNoSpaceBlock";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 1);
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -510,22 +389,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopicNull";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 3);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 3);
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<string>(topicName);
@@ -553,7 +417,6 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             .With((conf, opt) =>
             {
                 opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
                 opt.Networking.Addresses.Add("127.0.0.1:5704");
 
                 opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
@@ -595,22 +458,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopic2";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 1);
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         await using var client2 = await HazelcastClientFactory.StartNewClientAsync(options);
@@ -625,7 +473,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                     Console.WriteLine("Message:" + args.Payload);
                     mne.Set();
                 }),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = true});
+            new ReliableTopicEventHandlerOptions() { IsLossTolerant = true });
 
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
@@ -643,23 +491,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var topicName = "rtTestTopic3";
         var timeOut = 2_000;
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-                opt.Messaging.RetryTimeoutSeconds = timeOut;
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 1);
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 1, timeOut);
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         await using var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -672,7 +504,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
                     Console.WriteLine("Message:" + args.Payload);
                     Interlocked.Increment(ref receivedCount);
                 }),
-            new ReliableTopicEventHandlerOptions() {IsLossTolerant = true});
+            new ReliableTopicEventHandlerOptions() { IsLossTolerant = true });
 
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
@@ -695,22 +527,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtNotTolerant";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
-            .With((conf, opt) =>
-            {
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.DiscardOldest, 1);
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.DiscardOldest, 1);
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         await using var rt = await client.GetReliableTopicAsync<int>(topicName);
@@ -721,7 +538,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 
         var msgReceivedCount = 0;
 
-        var rtEventOpt = new ReliableTopicEventHandlerOptions() {IsLossTolerant = false, InitialSequence = 0, StoreSequence = true};
+        var rtEventOpt = new ReliableTopicEventHandlerOptions() { IsLossTolerant = false, InitialSequence = 0, StoreSequence = true };
 
         var sId = await rt.SubscribeAsync(events =>
             events.Message(async (sender, args) =>
@@ -759,32 +576,19 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     {
         var topicName = "rtTestTopicStress";
 
-        var options = new HazelcastOptionsBuilder()
-            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Information)
-            .With((conf, opt) =>
-            {
-                opt.ReliableTopics[topicName] = new ReliableTopicOptions(TopicOverloadPolicy.Block, 100);
-                opt.ClusterName = RcCluster.Id;
-                opt.Networking.Reconnect = true;
-                opt.Networking.Addresses.Add("127.0.0.1:5704");
-
-                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                {
-                    builder.AddConfiguration(conf.GetSection("logging"));
-                    builder.AddConsole();
-                });
-            })
-            .Build();
+        var options = GetClientOption(topicName, TopicOverloadPolicy.Block, 100);
 
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         var rt = await client.GetReliableTopicAsync<int>(topicName);
 
-        int c1Received = 0, c2Received = 0;
+        int c1Received = -1, c2Received = -1;
 
         var c1 = await rt.SubscribeAsync(events =>
             events.Message((sender, args) =>
             {
-                Assert.AreEqual(c1Received, args.Payload);
+                // To count received messages, first increment then compare. Otherwise, we can count more than we receive.
+                // Always, compare with expected message.
+                Assert.AreEqual((c1Received + 1), args.Payload);
                 Interlocked.Increment(ref c1Received);
                 if (c1Received % 10000 == 0) Console.WriteLine($"C1 Received: {c1Received}");
             }));
@@ -792,7 +596,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var c2 = await rt.SubscribeAsync(events =>
             events.Message((sender, args) =>
             {
-                Assert.AreEqual(c2Received, args.Payload);
+                Assert.AreEqual((c2Received + 1), args.Payload);
                 Interlocked.Increment(ref c2Received);
                 if (c2Received % 10000 == 0) Console.WriteLine($"C2 Received: {c2Received}");
             }));
@@ -801,15 +605,27 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         var cancelToken = new CancellationTokenSource();
         cancelToken.CancelAfter(30_000);
 
-        await Task.Delay(1_000);
-
         var producer = Task.Run(async () =>
         {
-            var send = 0;
-            while (!cancelToken.IsCancellationRequested)
-                await rt.PublishAsync(send++, cancelToken.Token);
+            var candidateMsg = 0;
+            var deliveredMsg = 0;
+            try
+            {
+                while (!cancelToken.IsCancellationRequested)
+                {
+                    await rt.PublishAsync(candidateMsg, cancelToken.Token);
+                    deliveredMsg = candidateMsg;
+                    candidateMsg++;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"Publishing cancelled. Delivered: {deliveredMsg} Candidate: {candidateMsg}");
+                // The operation cancelled exception is expected when the token is timed out.
+                // It means latest publish could not be completed before timeout which is fine.
+            }
 
-            return send;
+            return deliveredMsg;
         }, cancelToken.Token);
 
         var totalSend = await producer;
@@ -818,7 +634,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         {
             Assert.AreEqual(totalSend, c1Received);
             Assert.AreEqual(totalSend, c2Received);
-        }, 60_000, 200);
+        }, 10_000, 200);
 
 
         Assert.True(await rt.UnsubscribeAsync(c1));
@@ -827,5 +643,25 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         Assert.False(rt.IsSubscription(c1));
         Assert.False(rt.IsSubscription(c2));
         await rt.DestroyAsync();
+    }
+
+    private HazelcastOptions GetClientOption(string topicName, TopicOverloadPolicy policy, int batchSize, int timeOut = 120)
+    {
+        var options = new HazelcastOptionsBuilder()
+            .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Debug)
+            .With((conf, opt) =>
+            {
+                opt.ReliableTopics[topicName] = new ReliableTopicOptions(policy, batchSize);
+                opt.ClusterName = RcCluster.Id;
+                opt.Networking.Addresses.Add("127.0.0.1:5704");
+                opt.Messaging.RetryTimeoutSeconds = timeOut;
+                opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+                {
+                    builder.AddConfiguration(conf.GetSection("logging"));
+                    builder.AddConsole();
+                });
+            })
+            .Build();
+        return options;
     }
 }

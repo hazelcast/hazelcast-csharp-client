@@ -178,6 +178,16 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 
                 _sequence = result.NextSequence;
             }
+            catch (OperationCanceledException ex) 
+            {
+                // The cancelled exception is expected when cancellation or dispose is requested on subscription.
+                _logger
+                    .IfDebug()?
+                    .LogDebug("Reliable topic subscription [{Id}] is canceled during reading from ring buffer {RingBuffer}." +
+                              " Terminating the subscription... {Exception}", _id, _ringBuffer.Name, ex);
+                await DisposeAsync().CfAwait();
+                return;
+            }
             catch (Exception ex)
             {
                 // Can't throw at the background.
