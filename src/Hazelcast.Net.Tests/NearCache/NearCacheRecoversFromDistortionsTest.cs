@@ -21,7 +21,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.NearCache
 {
     [TestFixture]
-    [KnownIssue(305, "fails on Linux")]
+    //[KnownIssue(305, "fails on Linux")]
     public class NearCacheRecoversFromDistortionsTest : NearCacheTestBase
     {
         private IHazelcastClient _client;

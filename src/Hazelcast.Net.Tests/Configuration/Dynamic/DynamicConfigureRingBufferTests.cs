@@ -49,7 +49,7 @@ public class DynamicConfigureRingBufferTests : DynamicConfigureTestBase
     }
 
     [Test]
-    [ServerCondition("[5.4]")]
+    [ServerCondition("5.4")]
     public async Task DefaultOptionsEncodeToSameMessageAsJava()
     {
         // CI error: trying to invoke this:
