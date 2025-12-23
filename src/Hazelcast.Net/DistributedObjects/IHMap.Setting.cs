@@ -250,8 +250,8 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is infinite (0ms),
-        /// the value is retained indefinitely. If it is -1ms,
-        /// it lives for the duration of the server-configured time-to-live.</para>
+        /// the value is retained indefinitely. If it is negative,
+        /// it lives for the duration of the server-configured (default: forever) time-to-live.</para>
         /// <para>The new time-to-live value is valid starting from the time this operation is invoked,
         /// not since the time the entry was created.</para>
         /// <para>
