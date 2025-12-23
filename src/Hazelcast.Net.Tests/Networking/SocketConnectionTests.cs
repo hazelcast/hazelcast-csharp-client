@@ -346,7 +346,6 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        //[KnownIssue(0, "Breaks on GitHub Actions")]
         public async Task ReadPipeLoop_3()
         {
             //using var _ = EnableHConsoleForTest();
