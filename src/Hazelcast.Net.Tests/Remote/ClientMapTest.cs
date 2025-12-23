@@ -1433,7 +1433,7 @@ namespace Hazelcast.Tests.Remote
             });
 
             // Reduce the TTL
-            Assert.True(await map.UpdateTimeToLive(key, TimeSpan.FromSeconds(minTTL)));
+            Assert.True(await map.SetTTL(key, TimeSpan.FromSeconds(minTTL)));
 
             await latch.WaitOneAsync();
             starTime.Stop();
@@ -1441,6 +1441,24 @@ namespace Hazelcast.Tests.Remote
 
             // Definitively, less then maxTTL
             Assert.Less(elapsed, maxTTL * 1000);
+        }
+
+        [Test]
+        public async Task TestTTLReturnsFalseWhenKeyDoesNotExist()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            Assert.False(await map.SetTTL("non-existing-key", TimeSpan.FromSeconds(10)));
+        }
+        
+        
+        [Test]
+        public async Task TestTTLReturnsFalseWhenKeyAlreadyExpired()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            var key = "non-existing-key";
+            await map.SetAsync(key, "value1", TimeSpan.FromMilliseconds(10));
+            await Task.Delay(100);
+            Assert.False(await map.SetTTL("non-existing-key", TimeSpan.FromMilliseconds(10)));
         }
     }
 }

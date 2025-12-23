@@ -265,6 +265,6 @@ namespace Hazelcast.DistributedObjects
         /// Time resolution for <paramref name="timeToLive"></paramref> is seconds. The given value is rounded to the next closest second value.
         /// </para>
         /// </remarks>
-        Task<bool> UpdateTimeToLive(TKey key, TimeSpan timeToLive);
+        Task<bool> SetTTL(TKey key, TimeSpan timeToLive);
     }
 }
