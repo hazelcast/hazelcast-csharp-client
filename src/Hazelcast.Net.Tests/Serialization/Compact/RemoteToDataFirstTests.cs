@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -80,6 +81,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddNothing()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             // writing a totally unregistered type works
