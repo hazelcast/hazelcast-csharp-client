@@ -71,7 +71,6 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
-        [Ignore("Our binder throws on purpose.")]
         public void GetListInvalidValues()
         {
             var input = new Dictionary<string, string>
@@ -84,11 +83,8 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(input);
             var config = configurationBuilder.Build();
             var list = new List<bool>();
-            config.GetSection("InvalidList").HzBind(list);
 
-            //Assert.Single(list);
-            Assert.AreEqual(list.Count, 1);
-            Assert.True(list[0]);
+            Assert.Throws<InvalidOperationException>(()=>config.GetSection("InvalidList").HzBind(list));
         }
 
         [Test]

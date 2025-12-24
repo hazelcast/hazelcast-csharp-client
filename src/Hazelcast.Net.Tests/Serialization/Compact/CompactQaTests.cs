@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
@@ -35,7 +36,7 @@ namespace Hazelcast.Tests.Serialization.Compact;
 public class CompactQaTests : ClusterRemoteTestBase
 {
     [Test]
-    [Explicit("See comment in test.")]
+    // [Explicit("See comment in test.")]
     public async Task MemberAddressMatch()
     {
         HConsole.Configure(options => options.ConfigureDefaults(this));
@@ -56,10 +57,8 @@ public class CompactQaTests : ClusterRemoteTestBase
         await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
     }
 
-    [TestCase(true)]
-    [TestCase(false)]
-    [Explicit]
-    public async Task ExceptionPreventsClientFromReconnecting(bool recover)
+    [Test]
+    public async Task ExceptionPreventsClientFromReconnecting()
     {
         HConsole.Configure(options => options.ConfigureDefaults(this));
 
@@ -67,10 +66,10 @@ public class CompactQaTests : ClusterRemoteTestBase
         // details - in fact, it does not even say that the test timed out - so by wrapping
         // the actual test method this way, we make sure that the test "fails" instead of
         // timing out, and we get proper output (eg HConsole output)
-        await ExceptionPreventsClientFromReconnectingTask(recover).CfAwait(TimeSpan.FromSeconds(60));
+        await ExceptionPreventsClientFromReconnectingTask().CfAwait(TimeSpan.FromSeconds(60));
     }
 
-    private async Task ExceptionPreventsClientFromReconnectingTask(bool recover)
+    private async Task ExceptionPreventsClientFromReconnectingTask()
     {
         var throwException = false;
 
@@ -81,13 +80,8 @@ public class CompactQaTests : ClusterRemoteTestBase
         // use a clean client + hook into cluster messaging to capture messages (before client starts)
         var options = CreateHazelcastOptions();
         options.Messaging.RetryTimeoutSeconds = 20;
-        await using var client = HazelcastClientFactory.CreateClient(options);
-        // use an internal-level handler, exceptions in user-level handlers are caught
-        client.Cluster.Connections.ConnectionOpened += (_, _, _, _, _) =>
-        {
-            if (throwException) throw new Exception("bang!");
-            return default;
-        };
+        await using HazelcastClient client = HazelcastClientFactory.CreateClient(options);
+        var conQueue = (MemberConnectionQueue) client.Cluster.Members.MemberConnectionRequests;
         await client.StartAsync(CancellationToken.None);
 
         var map = await client.GetMapAsync<int, IGenericRecord>("bar");
@@ -99,17 +93,19 @@ public class CompactQaTests : ClusterRemoteTestBase
         await RcClient.StopMemberWaitRemovedAsync(client, RcCluster, member).CfAwait();
 
         // trigger exceptions
-        throwException = true;
-        if (recover)
-        {
-            async Task RecoverAfter(int delayMilliseconds)
-            {
-                await Task.Delay(delayMilliseconds);
-                throwException = false;
-            }
+        Volatile.Write(ref throwException, true);
+        await conQueue.SuspendAsync();
 
-            var recoverTask = RecoverAfter(5000); // fire-and-forget
+
+        async Task RecoverAfter(int delayMilliseconds)
+        {
+            await Task.Delay(delayMilliseconds);
+            Volatile.Write(ref throwException, false);
+            conQueue.Resume();
         }
+
+        var recoverTask = RecoverAfter(5000); // fire-and-forget
+
 
         HConsole.WriteLine(this, "-------- START MEMBER --------");
 
@@ -118,27 +114,10 @@ public class CompactQaTests : ClusterRemoteTestBase
 
         HConsole.WriteLine(this, "-------- PUT ASYNC --------");
 
-        if (recover)
-        {
-            // this will eventually complete once we're able to reconnect
-            await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait();
-        }
-        else
-        {
-            // this will never complete because we'll never be able to reconnect
-            //
-            // Java: ReconnectMode can be OFF, ON (blocking invocations) or ASYNC (not blocking, triggers HazelcastClientOfflineException)
-            // .NET: ReconnectMode can be DoNotReconnect = OFF, ReconnectSync or ReconnectAsync - but these two have the same effect
-            //
-            // In Java, ASYNC causes any invocation to *immediately* fail with HazelcastClientOfflineException if the client is
-            // reconnecting, whereas ON causes the invocation to be retried, and it may eventually fail with OperationTimeoutException.
-            //
-            // In .NET, invocations are tried (and retried) while the client is reconnecting, until either the client reconnects and
-            // the invocation succeeds, or it times out. So, essentially, .NET is ON and it makes sense that we get a TaskTimeoutException
-            // below.
 
-            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () => await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait());
-        }
+        // this will eventually complete once we're able to reconnect
+        await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait();
+
 
         HConsole.WriteLine(this, "-------- STOP MEMBER --------");
 
