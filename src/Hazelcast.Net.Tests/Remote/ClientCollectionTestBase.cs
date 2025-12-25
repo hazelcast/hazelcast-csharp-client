@@ -265,6 +265,8 @@ namespace Hazelcast.Tests.Remote
             await Task.Delay(4_000);
             Assert.That(eventsCount, Is.Zero);
         }
+        
+
 
         [Test]
         public async Task TestCollectionGetAsyncEnumerator()

@@ -27,7 +27,6 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Clustering
 {
     [TestFixture]
-    [Explicit("Stress tests, take time.")]
     public class MembersLifecycleTests : MultiMembersRemoteTestBase
     {
         private const int RunCount = 16;
