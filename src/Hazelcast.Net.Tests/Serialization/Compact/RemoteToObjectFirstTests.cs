@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -115,6 +116,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddTypeName_FetchSchema_MatchingName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.String)
@@ -134,6 +137,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task SetSchema_InvalidTypeName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.String)
@@ -200,6 +205,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddSerializer_InvalidTypeName()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.String)

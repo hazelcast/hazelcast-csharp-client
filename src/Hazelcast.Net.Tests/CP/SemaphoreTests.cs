@@ -283,6 +283,8 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
     [Test]
     public async Task CanAcquireAtParallel([Values] bool sessionLess)
     {
+        HConsole.Configure(c=>c.ConfigureDefaults(this));
+        
         await using var semaphore = await GetSemaphore(sessionLess);
 
         Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(0));
@@ -325,6 +327,8 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
     [Test]
     public async Task CanAcquireAtParallelOnSameSemaphoreObject([Values] bool sessionLess)
     {
+        HConsole.Configure(c=> c.ConfigureDefaults(this));
+        
         await using var semaphore = await GetSemaphore(sessionLess);
 
         Assert.That(await semaphore.GetAvailablePermitsAsync(), Is.EqualTo(0));
