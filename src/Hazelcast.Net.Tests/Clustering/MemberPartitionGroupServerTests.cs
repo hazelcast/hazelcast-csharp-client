@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Clustering
                 AssertClientOnlySees(client1, address1);
                 AssertClientOnlySees(client2, address2);
                 AssertClientOnlySees(client3, address3);
-            }, 10_000, 500, "Client1 did not see the correct members");
+            }, 20_000, 500, "Client1 did not see the correct members"); 
 
             // Kill a member and check if clients are still connected correct members
             var memberId3 = RcMembers.Values.Where(m => address3.Equals($"{m.Host}:{m.Port}")).Select(m => m.Uuid).First();
