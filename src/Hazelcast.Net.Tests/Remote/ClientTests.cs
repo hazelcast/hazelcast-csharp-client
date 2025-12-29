@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 
@@ -40,16 +43,16 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task ClientStartingClientWithConfig()
         {
-            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
+            var clientStarting = HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
             await clientStarting.Task;
             await clientStarting.Client.DisposeAsync();
         }
-        
+
         [Test]
         public async Task ClientStatringClientWithConfig2()
         {
             var o = CreateHazelcastOptions();
-            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(options=>
+            var clientStarting = HazelcastClientFactory.GetNewStartingClient(options =>
             {
                 options.Networking.Addresses.Clear();
                 options.Networking.Addresses.Add("127.0.0.1:5701");
@@ -66,8 +69,8 @@ namespace Hazelcast.Tests.Remote
 
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
-            
-            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingClient((HazelcastOptions)null));
+
+            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingClient((HazelcastOptions) null));
 
             var clientStart = HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
             var client = clientStart.Client;
@@ -99,7 +102,7 @@ namespace Hazelcast.Tests.Remote
             await startingClient.Task;
             await startingClient.Client.DisposeAsync();
         }
-        
+
         [Test]
         [Category("enterprise")] // Failover is an Enterprise feature
         public async Task StartingFailoverClientCanConnect2()
@@ -113,7 +116,7 @@ namespace Hazelcast.Tests.Remote
             await startingClient.Task;
             await startingClient.Client.DisposeAsync();
         }
-        
+
         [Test]
         [Category("enterprise")] // Failover is an Enterprise feature
         public async Task FailoverClientCanConnect2()
@@ -126,7 +129,7 @@ namespace Hazelcast.Tests.Remote
             var client = await HazelcastClientFactory.StartNewFailoverClientAsync(opt =>
             {
                 opt.Clients.Add(CreateHazelcastOptions());
-                opt.TryCount=1;
+                opt.TryCount = 1;
             });
 
             await client.DisposeAsync();
@@ -141,7 +144,7 @@ namespace Hazelcast.Tests.Remote
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
 
-            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingFailoverClient((HazelcastFailoverOptions)null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingFailoverClient((HazelcastFailoverOptions) null));
 
             var clientStart = HazelcastClientFactory.GetNewStartingFailoverClient(CreateHazelcastFailoverOptions());
             var client = clientStart.Client;
@@ -163,6 +166,37 @@ namespace Hazelcast.Tests.Remote
             failoverOptions.Clients.Add(CreateHazelcastOptions());
 
             return failoverOptions;
+        }
+
+        [Test]
+        [Ignore("DisposeAsync should unsubscribe events")]
+        public async Task TestSubscriptionsRemovedDuringDispose()
+        {
+            var client = await HazelcastClientFactory.StartNewClientAsync(CreateHazelcastOptions());
+
+            var mapName = "map-test-subscriptions-removed-during-dispose";
+            var map = await client.GetMapAsync<int, int>(mapName);
+            var eventsCount = 0;
+            var sid = await map.SubscribeAsync(events => events
+                .EntryAdded((sender, args) => { Interlocked.Increment(ref eventsCount); }));
+
+            Assert.AreEqual(0, await map.GetSizeAsync());
+            await map.PutAsync(1, 1);
+            await AssertEx.SucceedsEventually(() => Assert.NotZero(eventsCount), 5000, 200);
+            
+            await map.DisposeAsync();
+            
+            var script = @"
+
+var nodeEngineImpl = com.hazelcast.instance.impl.TestUtil.getNode(instance_0).nodeEngine;
+var es = nodeEngineImpl.getEventService();
+var hasIt = es.hasEventRegistration(""hz:impl:mapService"",""" + mapName + "\");" +
+                         @" result = hasIt ? ""True"":""False"";  ";
+
+            
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT, CancellationToken.None);
+            
+            Assert.False(Convert.ToBoolean(Encoding.UTF8.GetString(response.Result)));
         }
     }
 }
