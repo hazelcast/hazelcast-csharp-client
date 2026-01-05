@@ -19,7 +19,9 @@ using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
@@ -73,6 +75,8 @@ namespace Hazelcast.Tests.Serialization.Compact
                 {
                     options.ClusterName = RcCluster?.Id ?? options.ClusterName;
                     options.Networking.Addresses.Add("127.0.0.1:5701");
+                    options.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory
+                        .Create(conf => conf.AddConsole().SetMinimumLevel(LogLevel.Debug));
                 })
                 .Build();
 
