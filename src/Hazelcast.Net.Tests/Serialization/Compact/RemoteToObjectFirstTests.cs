@@ -52,6 +52,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         private async Task<string> SetUpCluster(Schema schema)
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             // note: do *not* provide the ThingCompactSerializer<Thing> so that we force-use the
@@ -83,6 +84,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddNothing_FetchSchema_ValidTypeName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
             var mapName = await SetUpCluster(SchemaBuilder
                 .For(CompactOptions.GetDefaultTypeName<Thing>())
                 .WithField("name", FieldKind.String)
@@ -101,6 +103,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddNothing_FetchSchema_InvalidTypeName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.String)
