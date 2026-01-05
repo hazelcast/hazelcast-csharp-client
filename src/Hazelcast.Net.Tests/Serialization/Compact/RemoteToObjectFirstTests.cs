@@ -186,6 +186,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task SetSchemaAndTypeName()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.String)
