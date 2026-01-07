@@ -24,6 +24,7 @@ using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -66,7 +67,11 @@ namespace Hazelcast.Tests.Serialization.Compact
                 {
                     options.ClusterName = RcCluster?.Id ?? options.ClusterName;
                     options.Networking.Addresses.Add("127.0.0.1:5701");
+                    
+                    options.LoggerFactory.Creator = ()=> 
+                        Microsoft.Extensions.Logging.LoggerFactory.Create((conf)=>conf.AddConsole());
                 })
+                .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
                 .Build();
 
         // the constant values, ie values that the user specifies
@@ -94,6 +99,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddSerializer()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             // add a serializer - which provides the type name - the schema will derive from the serializer
@@ -107,6 +113,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddSerializerAndSchema()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             var schema = SchemaBuilder
@@ -128,6 +135,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task SetTypeName()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             // set the type name - will use the reflection serializer, but with that type name
@@ -142,6 +150,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task SetSchema()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             var schema = SchemaBuilder
@@ -280,6 +289,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [TestCase(2)]
         public async Task TypeHierarchySupport(int serializersMode)
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             // ThingWrapper has a property which is an IThing
