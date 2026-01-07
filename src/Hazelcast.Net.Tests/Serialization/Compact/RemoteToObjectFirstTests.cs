@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
@@ -35,6 +36,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [SetUp]
         public async Task SetUp()
         {
+            Trace.Listeners.Add(new ConsoleTraceListener());
             _rcMember = await RcClient.StartMemberAsync(RcCluster);
         }
 
@@ -46,6 +48,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 await RcClient.StopMemberAsync(RcCluster, _rcMember);
                 _rcMember = null;
             }
+            Trace.Flush();
         }
 
         private static string GetRandomName(string prefix) => $"{prefix}-{Guid.NewGuid().ToString("N")[..7]}";
