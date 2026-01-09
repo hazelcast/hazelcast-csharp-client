@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Models;
@@ -29,7 +30,7 @@ namespace Hazelcast.Serialization
         internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness)
         {
             _initialBufferSize = initialBufferSize;
-            _buffer = new byte[_initialBufferSize];
+            _buffer = AllocateBuffer(_initialBufferSize);
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
         }
@@ -93,7 +94,13 @@ namespace Hazelcast.Serialization
         public void Dispose()
         {
             Position = 0;
+#if NETSTANDARD2_0            
             _buffer = null;
+#elif  NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+            if(_buffer != null)
+                ArrayPool<byte>.Shared.Return(_buffer);
+            _buffer = null;
+#endif
         }
 
         public void MoveTo(int position, int count = 0)
@@ -111,14 +118,31 @@ namespace Hazelcast.Serialization
             {
                 if (_buffer.Length - Position >= count) return;
                 var newCap = Math.Max(_buffer.Length << 1, _buffer.Length + count);
-                var newBuffer = new byte[newCap];
-                System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, _buffer.Length);
+#if NETSTANDARD2_0                
+                Array.Resize(ref _buffer, newCap);
+#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+                var newBuffer = AllocateBuffer(newCap);
+                
+                if(_position > 0)
+                    _buffer.AsSpan(0, _position).CopyTo(newBuffer);
+                
+                ArrayPool<byte>.Shared.Return(_buffer);
                 _buffer = newBuffer;
+#endif
             }
             else
             {
-                _buffer = new byte[count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize];
+                _buffer = AllocateBuffer(count);
             }
+        }
+        private byte[] AllocateBuffer(int size)
+        {
+#if NETSTANDARD2_0            
+            return new byte[size];
+#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+            return ArrayPool<byte>.Shared.Rent(size);
+#endif
         }
     }
 }
+
