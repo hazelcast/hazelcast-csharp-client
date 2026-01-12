@@ -39,7 +39,12 @@ namespace Hazelcast.Tests.Serialization
         public virtual void TestAvailable()
         {
             var available = _output.Buffer.Length;
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             Assert.AreEqual(16, available);
+#else
+            Assert.AreEqual(10, available);
+#endif
+            
         }
 
         [Test]
@@ -47,7 +52,11 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Clear();
             Assert.AreEqual(0, _output.Position);
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             Assert.AreEqual(16, _output.Buffer.Length);
+#else
+            Assert.AreEqual(10, _output.Buffer.Length);
+#endif
         }
 
         [Test]
@@ -55,7 +64,12 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.EnsureAvailable(10*10);
             _output.Clear();
-            Assert.AreEqual(10*8, _output.Buffer.Length);
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+            // buffer length is calculated as next power of 2
+            Assert.AreEqual(1<<7, _output.Buffer.Length);
+#else
+            Assert.AreEqual(80, _output.Buffer.Length);
+#endif
         }
 
         [Test]
@@ -77,7 +91,11 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Buffer = null;
             _output.EnsureAvailable(5);
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             Assert.AreEqual(16, _output.Buffer.Length);
+#else
+            Assert.AreEqual(10, _output.Buffer.Length);
+#endif
         }
 
         [Test]
@@ -85,7 +103,11 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Buffer = null;
             _output.EnsureAvailable(1);
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             Assert.AreEqual(16, _output.Buffer.Length);
+#else
+            Assert.AreEqual(10, _output.Buffer.Length);
+#endif
         }
 
         [Test]
