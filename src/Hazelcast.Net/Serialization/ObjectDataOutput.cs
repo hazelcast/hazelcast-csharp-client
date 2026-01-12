@@ -38,7 +38,6 @@ namespace Hazelcast.Serialization
         public byte[] Buffer
         {
             get => _buffer;
-            set => _buffer = value;
         }
 
         internal int Position
@@ -87,7 +86,8 @@ namespace Hazelcast.Serialization
             Position = 0;
             if (_buffer != null && _buffer.Length > _initialBufferSize * 8)
             {
-                _buffer = new byte[_initialBufferSize * 8];
+                Dispose();
+                _buffer = AllocateBuffer(_initialBufferSize * 8);
             }
         }
 
@@ -132,7 +132,7 @@ namespace Hazelcast.Serialization
             }
             else
             {
-                _buffer = AllocateBuffer(count);
+                _buffer = AllocateBuffer(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
             }
         }
         private byte[] AllocateBuffer(int size)

@@ -89,7 +89,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestEnsureAvailable()
         {
-            _output.Buffer = null;
+            _output.Clear();
             _output.EnsureAvailable(5);
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             Assert.AreEqual(16, _output.Buffer.Length);
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestEnsureAvailable_smallLen()
         {
-            _output.Buffer = null;
+            _output.Clear();
             _output.EnsureAvailable(1);
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             Assert.AreEqual(16, _output.Buffer.Length);
