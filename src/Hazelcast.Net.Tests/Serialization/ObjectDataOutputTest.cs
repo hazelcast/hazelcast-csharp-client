@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Serialization
         public virtual void TestAvailable()
         {
             var available = _output.Buffer.Length;
-            Assert.AreEqual(10, available);
+            Assert.AreEqual(16, available);
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Clear();
             Assert.AreEqual(0, _output.Position);
-            Assert.AreEqual(10, _output.Buffer.Length);
+            Assert.AreEqual(16, _output.Buffer.Length);
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Buffer = null;
             _output.EnsureAvailable(5);
-            Assert.AreEqual(10, _output.Buffer.Length);
+            Assert.AreEqual(16, _output.Buffer.Length);
         }
 
         [Test]
@@ -85,7 +85,7 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Buffer = null;
             _output.EnsureAvailable(1);
-            Assert.AreEqual(10, _output.Buffer.Length);
+            Assert.AreEqual(16, _output.Buffer.Length);
         }
 
         [Test]
