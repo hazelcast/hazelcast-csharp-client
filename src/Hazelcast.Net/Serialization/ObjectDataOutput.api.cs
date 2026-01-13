@@ -303,7 +303,7 @@ namespace Hazelcast.Serialization
             if (_buffer == null || _position == 0)
                 return Array.Empty<byte>();
 
-            return _buffer.AsSpan().ToArray();
+            return _buffer.AsSpan(0, _position).ToArray();
         }
     }
 }

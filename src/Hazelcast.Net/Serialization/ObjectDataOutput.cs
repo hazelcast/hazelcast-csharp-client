@@ -132,7 +132,7 @@ namespace Hazelcast.Serialization
 #elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
             var newBuffer = AllocateBuffer(newCap);
             
-            _buffer.AsSpan().CopyTo(newBuffer);
+            _buffer.AsSpan(0, _buffer.Length).CopyTo(newBuffer);
                 
             ArrayPool<byte>.Shared.Return(_buffer);
             _buffer = newBuffer;
