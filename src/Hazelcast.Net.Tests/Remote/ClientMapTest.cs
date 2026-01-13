@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -562,7 +563,7 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(0, await dictionary.GetSizeAsync());
 
             IDictionary<string, string> mm = new Dictionary<string, string>();
-            const int keycount = 1000;
+            const int keycount = 5000;
 
             //insert dummy keys and values
             foreach (var itemIndex in Enumerable.Range(0, keycount))
@@ -1102,10 +1103,8 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            const int dataSize = 128000;
-            var largeString = string.Join(",", Enumerable.Range(0, dataSize));
-
-            await dictionary.SetAsync("large_value", largeString);
+            const int dataSize = 512000;
+            await dictionary.SetAsync("large_value", new string('A', dataSize));
             Assert.AreEqual(await dictionary.GetSizeAsync(), 1);
         }
 

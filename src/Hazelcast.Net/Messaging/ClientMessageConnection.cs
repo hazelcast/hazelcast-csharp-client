@@ -343,7 +343,7 @@ namespace Hazelcast.Messaging
                     // flush buffer
                     if (length > 0)
                     {
-                        var sent = await _connection.SendAsync(frame.Bytes, length).CfAwait();
+                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
                         if (!sent) break;
                         length = 0;
                     }
@@ -361,7 +361,7 @@ namespace Hazelcast.Messaging
                     // if it won't fit in the buffer, flush the buffer
                     if (length + frame.Length > buffer.Length)
                     {
-                        var sent = await _connection.SendAsync(frame.Bytes, length).CfAwait();
+                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
                         if (!sent) break;
                         length = 0;
                     }
