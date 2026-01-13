@@ -118,22 +118,25 @@ namespace Hazelcast.Serialization
             {
                 if (_buffer.Length - Position >= count) return;
                 var newCap = Math.Max(_buffer.Length << 1, _buffer.Length + count);
-#if NETSTANDARD2_0                
-                Array.Resize(ref _buffer, newCap);
-#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-                var newBuffer = AllocateBuffer(newCap);
-                
-                if(_position > 0)
-                    _buffer.AsSpan(0, _position).CopyTo(newBuffer);
-                
-                ArrayPool<byte>.Shared.Return(_buffer);
-                _buffer = newBuffer;
-#endif
+                ResizeBuffer(newCap);
             }
             else
             {
                 _buffer = AllocateBuffer(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
             }
+        }
+        private void ResizeBuffer(int newCap)
+        {
+#if NETSTANDARD2_0                
+                Array.Resize(ref _buffer, newCap);
+#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+            var newBuffer = AllocateBuffer(newCap);
+            
+            _buffer.AsSpan().CopyTo(newBuffer);
+                
+            ArrayPool<byte>.Shared.Return(_buffer);
+            _buffer = newBuffer;
+#endif
         }
         private byte[] AllocateBuffer(int size)
         {
