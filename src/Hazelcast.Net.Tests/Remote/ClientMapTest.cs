@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -1405,6 +1406,58 @@ namespace Hazelcast.Tests.Remote
             var enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
+        }
+
+        [Test]
+        public async Task TestTTLUpdated()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            // in seconds
+            var maxTTL = 100;
+            var minTTL = 3;
+            var key = "key1";
+            var latch = new ManualResetEvent(false);
+            
+            var starTime = Stopwatch.StartNew();
+            await map.SetAsync(key, "value1", TimeSpan.FromSeconds(maxTTL));
+
+            // Notify when key removed
+            var parallelCheck = Task.Run(async () =>
+            {
+                await AssertEx.SucceedsEventually(
+                    async () => Assert.False(await map.ContainsKeyAsync(key)),
+                    maxTTL * 1000,
+                    500);
+                latch.Set();
+            });
+
+            // Reduce the TTL
+            Assert.True(await map.SetTTL(key, TimeSpan.FromSeconds(minTTL)));
+
+            await latch.WaitOneAsync();
+            starTime.Stop();
+            var elapsed = starTime.ElapsedMilliseconds;
+
+            // Definitively, less then maxTTL
+            Assert.Less(elapsed, maxTTL * 1000);
+        }
+
+        [Test]
+        public async Task TestTTLReturnsFalseWhenKeyDoesNotExist()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            Assert.False(await map.SetTTL("non-existing-key", TimeSpan.FromSeconds(10)));
+        }
+        
+        
+        [Test]
+        public async Task TestTTLReturnsFalseWhenKeyAlreadyExpired()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            var key = "non-existing-key";
+            await map.SetAsync(key, "value1", TimeSpan.FromMilliseconds(10));
+            await Task.Delay(100);
+            Assert.False(await map.SetTTL("non-existing-key", TimeSpan.FromMilliseconds(10)));
         }
     }
 }

@@ -26,7 +26,6 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    [Explicit("Takes time")]
     public class HeartbeatTests : SingleMemberRemoteTestBase
     {
         protected override HazelcastOptions CreateHazelcastOptions()
