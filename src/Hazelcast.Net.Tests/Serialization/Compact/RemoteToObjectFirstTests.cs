@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
@@ -32,6 +36,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [SetUp]
         public async Task SetUp()
         {
+            Trace.Listeners.Add(new ConsoleTraceListener());
             _rcMember = await RcClient.StartMemberAsync(RcCluster);
         }
 
@@ -43,12 +48,14 @@ namespace Hazelcast.Tests.Serialization.Compact
                 await RcClient.StopMemberAsync(RcCluster, _rcMember);
                 _rcMember = null;
             }
+            Trace.Flush();
         }
 
         private static string GetRandomName(string prefix) => $"{prefix}-{Guid.NewGuid().ToString("N")[..7]}";
 
         private async Task<string> SetUpCluster(Schema schema)
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
             var options = GetHazelcastOptions();
 
             // note: do *not* provide the ThingCompactSerializer<Thing> so that we force-use the
@@ -72,12 +79,15 @@ namespace Hazelcast.Tests.Serialization.Compact
                 {
                     options.ClusterName = RcCluster?.Id ?? options.ClusterName;
                     options.Networking.Addresses.Add("127.0.0.1:5701");
+                    options.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory
+                        .Create(conf => conf.AddConsole().SetMinimumLevel(LogLevel.Debug));
                 })
                 .Build();
 
         [Test]
         public async Task AddNothing_FetchSchema_ValidTypeName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
             var mapName = await SetUpCluster(SchemaBuilder
                 .For(CompactOptions.GetDefaultTypeName<Thing>())
                 .WithField("name", FieldKind.String)
@@ -96,6 +106,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddNothing_FetchSchema_InvalidTypeName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.String)
@@ -115,6 +127,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddTypeName_FetchSchema_MatchingName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.String)
@@ -134,6 +148,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task SetSchema_InvalidTypeName()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.String)
@@ -181,6 +197,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task SetSchemaAndTypeName()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.String)
@@ -200,6 +217,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [Test]
         public async Task AddSerializer_InvalidTypeName()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
+            
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.String)

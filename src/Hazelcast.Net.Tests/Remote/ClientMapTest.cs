@@ -1205,6 +1205,8 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutTransient()
         {
+            HConsole.Configure(c=>c.ConfigureDefaults(this));
+            
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
