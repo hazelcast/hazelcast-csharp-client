@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Models;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Hazelcast.Serialization
 {
-    internal partial class ObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable
+    internal partial class ObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable, IResettable
     {
         private readonly int _initialBufferSize;
         private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
         private byte[] _buffer;
         private int _position;
         private HashSet<long> _schemaIds;
+        private IBufferPool _bufferPool;
 
-        internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness)
+        internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness, IBufferPool bufferPool)
         {
             _initialBufferSize = initialBufferSize;
-            _buffer = AllocateBuffer(_initialBufferSize);
+            _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
         }
@@ -84,23 +85,20 @@ namespace Hazelcast.Serialization
         public void Clear()
         {
             Position = 0;
+            _schemaIds?.Clear();
+
             if (_buffer != null && _buffer.Length > _initialBufferSize * 8)
             {
-                Dispose();
-                _buffer = AllocateBuffer(_initialBufferSize * 8);
+                _bufferPool.Return(_buffer);
+                _buffer = _bufferPool.Rent(_initialBufferSize * 8);
             }
         }
 
         public void Dispose()
         {
             Position = 0;
-#if NETSTANDARD2_0            
+            _bufferPool.Return(_buffer);
             _buffer = null;
-#elif  NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-            if(_buffer != null)
-                ArrayPool<byte>.Shared.Return(_buffer);
-            _buffer = null;
-#endif
         }
 
         public void MoveTo(int position, int count = 0)
@@ -122,30 +120,20 @@ namespace Hazelcast.Serialization
             }
             else
             {
-                _buffer = AllocateBuffer(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
+                _buffer = _bufferPool.Rent(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
             }
         }
         private void ResizeBuffer(int newCap)
         {
-#if NETSTANDARD2_0                
-                Array.Resize(ref _buffer, newCap);
-#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-            var newBuffer = AllocateBuffer(newCap);
-            
+            var newBuffer = _bufferPool.Rent(newCap);
             _buffer.AsSpan(0, _buffer.Length).CopyTo(newBuffer);
-                
-            ArrayPool<byte>.Shared.Return(_buffer);
+            _bufferPool.Return(_buffer);
             _buffer = newBuffer;
-#endif
         }
-        private byte[] AllocateBuffer(int size)
+        public bool TryReset()
         {
-#if NETSTANDARD2_0            
-            return new byte[size];
-#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-            return ArrayPool<byte>.Shared.Rent(size);
-#endif
+            Clear();
+            return true;
         }
     }
 }
-

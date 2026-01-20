@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.Int8).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteInt8("field", 42);
             writer.Complete();
@@ -48,7 +48,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.Boolean).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteBoolean("field", true);
             writer.Complete();
@@ -68,7 +68,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableInt8).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteNullableInt8("field", 42);
             writer.Complete();
@@ -88,7 +88,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableBoolean).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteNullableBoolean("field", true);
             writer.Complete();
@@ -108,7 +108,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableInt8).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteNullableInt8("field", null);
             writer.Complete();
@@ -128,7 +128,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.NullableBoolean).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteNullableBoolean("field", null);
             writer.Complete();
@@ -148,7 +148,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfBoolean).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfBoolean("field", new bool[] { true, false, true, false });
             writer.Complete();
@@ -173,7 +173,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableBoolean).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableBoolean("field", new bool?[] { true, false, true, false });
             writer.Complete();
@@ -198,7 +198,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableBoolean).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableBoolean("field", new bool?[] { true, false, null, true });
             writer.Complete();
@@ -218,7 +218,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt8).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfInt8("field", new sbyte[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -243,7 +243,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt8).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt8("field", new sbyte?[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -268,7 +268,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt8).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt8("field", new sbyte?[] { 1, 2, null, 4 });
             writer.Complete();
@@ -288,7 +288,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt16).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfInt16("field", new short[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -313,7 +313,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt16).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt16("field", new short?[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -338,7 +338,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt16).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt16("field", new short?[] { 1, 2, null, 4 });
             writer.Complete();
@@ -358,7 +358,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt32).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfInt32("field", new[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -383,7 +383,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt32).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt32("field", new int?[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -408,7 +408,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt32).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt32("field", new int?[] { 1, 2, null, 4 });
             writer.Complete();
@@ -428,7 +428,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfInt64).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfInt64("field", new long[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -453,7 +453,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt64).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt64("field", new long?[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -478,7 +478,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableInt64).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableInt64("field", new long?[] { 1, 2, null, 4 });
             writer.Complete();
@@ -498,7 +498,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfFloat32).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfFloat32("field", new float[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -523,7 +523,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat32).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableFloat32("field", new float?[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -548,7 +548,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat32).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableFloat32("field", new float?[] { 1, 2, null, 4 });
             writer.Complete();
@@ -568,7 +568,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfFloat64).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfFloat64("field", new double[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -593,7 +593,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat64).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableFloat64("field", new double?[] { 1, 2, 3, 4 });
             writer.Complete();
@@ -618,7 +618,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.ArrayOfNullableFloat64).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfNullableFloat64("field", new double?[] { 1, 2, null, 4 });
             writer.Complete();
@@ -643,7 +643,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .WithField("field2", FieldKind.ArrayOfInt8)
                 .WithField("field3", FieldKind.ArrayOfNullableInt8)
                 .Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteArrayOfBoolean("field0", null);
             writer.WriteArrayOfNullableBoolean("field1", null);
@@ -673,7 +673,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.String).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             writer.WriteString("field", "value");
             writer.Complete();
@@ -700,7 +700,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
 
             var schema = SchemaBuilder.For("type").WithField("field", FieldKind.String).Build();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
 
             Assert.That(writer.ValidateFieldNameInvariant("field", out var validated), Is.True);

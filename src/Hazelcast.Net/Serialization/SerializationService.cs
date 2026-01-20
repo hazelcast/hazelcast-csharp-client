@@ -23,6 +23,7 @@ using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Hazelcast.Serialization
 {
@@ -40,6 +41,9 @@ namespace Hazelcast.Serialization
         private readonly IPartitioningStrategy _globalPartitioningStrategy;
         private readonly int _initialOutputBufferSize;
         private readonly bool _enableClrSerialization;
+        private readonly IBufferPool _bufferPool = new DefaultBufferPool();
+        private readonly ObjectPool<ObjectDataOutput> _objectDataOutputPool;
+
 
         // We have two groups of serializers:
         //   'constant' are built-in immutable serializers
@@ -94,6 +98,9 @@ namespace Hazelcast.Serialization
             _globalPartitioningStrategy = partitioningStrategy;
             _enableClrSerialization = options.EnableClrSerialization;
             _initialOutputBufferSize = initialOutputBufferSize;
+
+            _objectDataOutputPool = new DefaultObjectPool<ObjectDataOutput>(new ObjectDataOutputPooledObjectPolicy(CreateObjectDataOutput),
+                Environment.ProcessorCount * 2);
 
             _logger = loggerFactory.CreateLogger<SerializationService>();
 

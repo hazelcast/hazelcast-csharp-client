@@ -97,7 +97,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schemas = new Schemas(messaging, options);
             const Endianness endianness = Endianness.LittleEndian;
             var ss = new CompactSerializationSerializer(options, schemas, endianness);
-            var output = new ObjectDataOutput(1024, ss, endianness);
+            var output = new ObjectDataOutput(1024, ss, endianness, new DefaultBufferPool());
 
             ss.Write(output, obj);
 
@@ -111,7 +111,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schemas.IsPublished(schemaId), Is.False);
 
             // serialize again = output still references the schema
-            output = new ObjectDataOutput(1024, ss, endianness);
+            output = new ObjectDataOutput(1024, ss, endianness, new DefaultBufferPool());
             ss.Write(output, obj);
             Assert.That(output.HasSchemas);
             Assert.That(output.SchemaIds.Count, Is.EqualTo(1));
@@ -122,7 +122,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schemas.IsPublished(schemaId));
 
             // serialize again = output does not reference the schema anymore
-            output = new ObjectDataOutput(1024, ss, endianness);
+            output = new ObjectDataOutput(1024, ss, endianness, new DefaultBufferPool());
             ss.Write(output, obj);
             Assert.That(output.HasSchemas, Is.False);
         }
@@ -137,7 +137,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schemas = new Schemas(messaging, options);
             const Endianness endianness = Endianness.LittleEndian;
             var ss = new CompactSerializationSerializer(options, schemas, endianness);
-            var output = new ObjectDataOutput(1024, ss, endianness);
+            var output = new ObjectDataOutput(1024, ss, endianness, new DefaultBufferPool());
 
             ss.Write(output, obj);
 

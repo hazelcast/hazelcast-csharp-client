@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             const int initialBufferSize = 1024;
 
-            var output = new ObjectDataOutput(initialBufferSize, objectsReaderWriter, endianness);
+            var output = new ObjectDataOutput(initialBufferSize, objectsReaderWriter, endianness, new DefaultBufferPool());
             var writer = new CompactWriter(objectsReaderWriter, output, schema);
             write(writer);
             return output.ToByteArray();

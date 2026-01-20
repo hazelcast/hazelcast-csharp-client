@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void CannotWriteOnceCompleted()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = new Schema();
             var writer = new CompactWriter(orw, output, schema);
 
@@ -40,7 +40,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void OkToCompleteMultipleTimes()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = new Schema();
             var writer = new CompactWriter(orw, output, schema);
 
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void TimeStampWithTimeZonePrecision()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = SchemaBuilder.For("type").WithField("name", FieldKind.TimeStampWithTimeZone).Build();
             var writer = new CompactWriter(orw, output, schema);
 
@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void Exceptions()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = SchemaBuilder.For("type").WithField("name", FieldKind.String).Build();
             var writer = new CompactWriter(orw, output, schema);
 
@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void CanWriteArrayOfCompactOfSameType()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
             var writer = new CompactWriter(orw, output, schema);
 
@@ -91,7 +91,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void CannotWriteArrayOfCompactOfDifferentTypes()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
             var writer = new CompactWriter(orw, output, schema);
 
@@ -104,7 +104,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void CannotWriteArrayOfCompactOfDerivedTypes()
         {
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian, new DefaultBufferPool());
             var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
             var writer = new CompactWriter(orw, output, schema);
 

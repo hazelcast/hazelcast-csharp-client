@@ -156,7 +156,7 @@ namespace Hazelcast.Tests.Query
             Assert.That(partition.FactoryId, Is.EqualTo(FactoryIds.PredicateFactoryId));
             Assert.That(partition.ClassId, Is.EqualTo(PredicateDataSerializerHook.PartitionPredicate));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             partition.WriteData(output);
             using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
             var p = new PartitionPredicate();
@@ -174,7 +174,7 @@ namespace Hazelcast.Tests.Query
             Assert.Throws<ArgumentNullException>(() => comparer.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => comparer.ReadData(null));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             comparer.WriteData(output);
             var c = new PredicateComparer();
             using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
@@ -288,7 +288,7 @@ namespace Hazelcast.Tests.Query
             // Assert.Throws<ArgumentNullException>(() => predicate.WriteData(null));
             // Assert.Throws<ArgumentNullException>(() => predicate.ReadData(null));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             predicate.WriteData(output);
 
             T p = default;

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
@@ -21,10 +22,10 @@ namespace Hazelcast.Serialization
         // TODO: implement some pooling of some sort
 
         private ObjectDataOutput GetDataOutput()
-            => CreateObjectDataOutput();
+            => _objectDataOutputPool.Get();
 
-        private static void ReturnDataOutput(ObjectDataOutput output)
-            => output.Dispose();
+        private void ReturnDataOutput(ObjectDataOutput output)
+            => _objectDataOutputPool.Return(output);
 
         private ObjectDataInput GetDataInput(IData data)
             => new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
@@ -47,13 +48,14 @@ namespace Hazelcast.Serialization
 
         // for tests
         public ObjectDataOutput CreateObjectDataOutput()
-            => CreateObjectDataOutput(Endianness);
+            => GetDataOutput();
 
         // for tests
         public ObjectDataOutput CreateObjectDataOutput(int bufferSize)
-            => new ObjectDataOutput(bufferSize, this, Endianness);
-
-        private ObjectDataOutput CreateObjectDataOutput(Endianness endianness)
-            => new ObjectDataOutput(_initialOutputBufferSize, this, endianness);
+        {
+            var output = _objectDataOutputPool.Get();
+            output.EnsureAvailable(bufferSize);
+            return output;
+        }
     }
 }

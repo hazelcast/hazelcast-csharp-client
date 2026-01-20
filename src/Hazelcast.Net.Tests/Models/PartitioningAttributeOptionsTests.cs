@@ -37,7 +37,7 @@ namespace Hazelcast.Tests.Models
             var attributeName = "TestAttribute";
             var partitioningAttributeOptions = new PartitioningAttributeOptions(attributeName);
 
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
             partitioningAttributeOptions.WriteData(output);
 
             var input = new ObjectDataInput(output.Buffer, null, Endianness.LittleEndian);

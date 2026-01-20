@@ -41,7 +41,7 @@ namespace Hazelcast.Tests.Models
             var batchSize = 200;
             var mergePolicyOptions = new MergePolicyOptions(policy, batchSize);
 
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
             mergePolicyOptions.WriteData(output);
 
             var input = new ObjectDataInput(output.Buffer, null, Endianness.LittleEndian);

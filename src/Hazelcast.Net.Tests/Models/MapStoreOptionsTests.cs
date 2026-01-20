@@ -93,7 +93,7 @@ namespace Hazelcast.Tests.Models
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             mapStoreOptions.WriteData(output);
 
             var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);

@@ -130,7 +130,7 @@ namespace Hazelcast.Tests.Models
             orw.Read<DataPersistenceOptions>(Arg.Any<IObjectDataInput>()).Returns(new DataPersistenceOptions());
             orw.Read<TieredStoreOptions>(Arg.Any<IObjectDataInput>()).Returns(new TieredStoreOptions());
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             mapOptions.WriteData(output);
 
             var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);

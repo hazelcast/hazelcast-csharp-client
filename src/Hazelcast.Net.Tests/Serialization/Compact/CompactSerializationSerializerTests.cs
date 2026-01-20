@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian, new DefaultBufferPool());
             output.WriteLong(schema.Id);
 
             // will fail to fetch the schema
@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian, new DefaultBufferPool());
             output.WriteLong(schema.Id);
 
             // will fetch the schema, which has no ref fields = no nested schemas
@@ -117,7 +117,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian, new DefaultBufferPool());
 
             output.WriteLong(schema.Id);
             output.WriteInt(2 * BytesExtensions.SizeOfLong + 2 * BytesExtensions.SizeOfInt + 2 * BytesExtensions.SizeOfByte); // data length
@@ -170,7 +170,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian, new DefaultBufferPool());
 
             output.WriteLong(schema.Id);
             output.WriteInt(datalength); // data length
@@ -199,7 +199,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian, new DefaultBufferPool());
 
             output.WriteLong(666L);
 
@@ -231,7 +231,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var serializer = new CompactSerializationSerializer(new CompactOptions(), schemas, Endianness.BigEndian);
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian, new DefaultBufferPool());
 
             output.WriteLong(schema.Id);
             output.WriteInt(BytesExtensions.SizeOfInt); // data length

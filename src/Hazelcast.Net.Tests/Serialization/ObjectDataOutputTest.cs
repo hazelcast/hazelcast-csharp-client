@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Serialization
         [SetUp]
         public virtual void Before()
         {
-            _output = new ObjectDataOutput(10, null, Endianness.BigEndian);
+            _output = new ObjectDataOutput(10, null, Endianness.BigEndian, new DefaultBufferPool());
         }
 
         [Test]
