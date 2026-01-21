@@ -41,7 +41,7 @@ namespace Hazelcast.Serialization
         private readonly IPartitioningStrategy _globalPartitioningStrategy;
         private readonly int _initialOutputBufferSize;
         private readonly bool _enableClrSerialization;
-        private readonly IBufferPool _bufferPool = new DefaultBufferPool();
+        private readonly IBufferPool _bufferPool;
         private readonly ObjectPool<ObjectDataOutput> _objectDataOutputPool;
 
 
@@ -91,6 +91,8 @@ namespace Hazelcast.Serialization
             bool validatePortableClassDefinitions, IPartitioningStrategy partitioningStrategy,
             int initialOutputBufferSize,
             ISchemas schemas,
+            IBufferPool bufferPool,
+            ObjectPool<ObjectDataOutput> objectDataOutputPool,
             ILoggerFactory loggerFactory)
         {
             _options = options;
@@ -98,9 +100,12 @@ namespace Hazelcast.Serialization
             _globalPartitioningStrategy = partitioningStrategy;
             _enableClrSerialization = options.EnableClrSerialization;
             _initialOutputBufferSize = initialOutputBufferSize;
+            _bufferPool = bufferPool;
 
-            _objectDataOutputPool = new DefaultObjectPool<ObjectDataOutput>(new ObjectDataOutputPooledObjectPolicy(CreateObjectDataOutput),
-                Environment.ProcessorCount * 2);
+            _objectDataOutputPool = objectDataOutputPool ??
+                new DefaultObjectPool<ObjectDataOutput>(
+                    new ObjectDataOutputPooledObjectPolicy(CreateNewObjectDataOutput),
+                    Environment.ProcessorCount * 2);
 
             _logger = loggerFactory.CreateLogger<SerializationService>();
 

@@ -19,7 +19,10 @@ namespace Hazelcast.Serialization
     internal partial class SerializationService
     {
         // TODO: ObjectDataInput/Output still using copied buffers, not adjacent arrays
-        // TODO: implement some pooling of some sort
+
+        // Factory method for creating new ObjectDataOutput instances - used by the pool
+        private ObjectDataOutput CreateNewObjectDataOutput()
+            => new ObjectDataOutput(_initialOutputBufferSize, this, Endianness, _bufferPool);
 
         private ObjectDataOutput GetDataOutput()
             => _objectDataOutputPool.Get();

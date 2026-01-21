@@ -50,6 +50,8 @@ namespace Hazelcast.Tests.Serialization
                     new NullPartitioningStrategy(),
                     1024,
                     Substitute.For<ISchemas>(),
+                    new DefaultBufferPool(),
+                    null,
                     new NullLoggerFactory()
                 )
             );

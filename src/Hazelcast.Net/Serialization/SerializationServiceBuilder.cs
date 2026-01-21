@@ -19,6 +19,7 @@ using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Hazelcast.Serialization
 {
@@ -30,7 +31,7 @@ namespace Hazelcast.Serialization
         private readonly SerializerHooks _hooks = new SerializerHooks();
         private readonly List<ISerializerDefinitions> _definitions = new List<ISerializerDefinitions>();
         private readonly ILoggerFactory _loggerFactory;
-
+        
         private int _initialOutputBufferSize = DefaultOutBufferSize;
         private Endianness _endianness;
         private bool _validatePortableClassDefinitions;
@@ -42,6 +43,8 @@ namespace Hazelcast.Serialization
 
         private IPartitioningStrategy _partitioningStrategy;
         private ISchemas _compactSchemas;
+        private IBufferPool _bufferPool;
+        private ObjectPool<ObjectDataOutput> _objectDataOutputPool;
 
         public SerializationServiceBuilder(ILoggerFactory loggerFactory)
             : this(new SerializationOptions(), loggerFactory)
@@ -133,6 +136,18 @@ namespace Hazelcast.Serialization
             _compactSchemas = schemas;
             return this;
         }
+        
+        public SerializationServiceBuilder SetBufferPool(IBufferPool bufferPool)
+        {
+            _bufferPool = bufferPool;
+            return this;
+        }
+
+        public SerializationServiceBuilder SetObjectDataOutputPool(ObjectPool<ObjectDataOutput> pool)
+        {
+            _objectDataOutputPool = pool;
+            return this;
+        }
 
         public SerializationService Build()
         {
@@ -154,6 +169,8 @@ namespace Hazelcast.Serialization
                 _partitioningStrategy,
                 _initialOutputBufferSize,
                 _compactSchemas,
+                _bufferPool ?? new DefaultBufferPool(),
+                _objectDataOutputPool,
                 _loggerFactory);
 
             return service;
