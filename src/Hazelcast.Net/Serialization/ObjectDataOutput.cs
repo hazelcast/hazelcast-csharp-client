@@ -34,6 +34,7 @@ namespace Hazelcast.Serialization
             _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
+            _buffer = _bufferPool.Rent(_initialBufferSize);
         }
 
         public byte[] Buffer
@@ -92,6 +93,11 @@ namespace Hazelcast.Serialization
                 _bufferPool.Return(_buffer);
                 _buffer = _bufferPool.Rent(_initialBufferSize * 8);
             }
+            else if (_buffer != null)
+            {
+                Array.Clear(_buffer, 0, _buffer.Length);
+            }
+
         }
 
         public void Dispose()

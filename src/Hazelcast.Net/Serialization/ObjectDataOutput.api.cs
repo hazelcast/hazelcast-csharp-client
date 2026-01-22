@@ -300,10 +300,10 @@ namespace Hazelcast.Serialization
         /// <exception cref="InvalidOperationException">If method is called already</exception>
         public byte[] ToByteArray(int padding = 0)
         {
-            if (_buffer == null || _position == 0)
+            if (_buffer == null)
                 return Array.Empty<byte>();
 
-            return _buffer.AsSpan(0, _position).ToArray();
+            return _buffer.AsSpan(0, Position).ToArray();
         }
     }
 }
