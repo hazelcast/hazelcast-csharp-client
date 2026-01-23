@@ -97,7 +97,6 @@ namespace Hazelcast.Serialization
             {
                 Array.Clear(_buffer, 0, _buffer.Length);
             }
-
         }
 
         public void Dispose()

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Linq;
 using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -19,6 +20,7 @@ using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
+using NSubstitute;
 using NUnit.Framework;
 namespace Hazelcast.Tests.Serialization
 {
@@ -153,11 +155,26 @@ namespace Hazelcast.Tests.Serialization
         public void TestObjectDataOutputRentsFromPool()
         {
             var maxPoolSize = 10;
+            var mockBufferPool = Substitute.For<IBufferPool>();
             var myBufferPool = new MyBufferPool();
+
+            mockBufferPool.Rent(Arg.Any<int>())
+                .Returns(callInfo =>
+                {
+                    var minSize = callInfo.Arg<int>();
+                    return myBufferPool.Rent(minSize);
+                });
+
+            mockBufferPool.When(x => x.Return(Arg.Any<byte[]>()))
+                .Do(callInfo =>
+                {
+                    var buffer = callInfo.Arg<byte[]>();
+                    myBufferPool.Return(buffer);
+                });
 
             // Create a counting policy that creates ObjectDataOutput instances directly
             var countingPolicy = new CountingPooledObjectPolicy(()
-                => new ObjectDataOutput(1024, null, Endianness.BigEndian, myBufferPool));
+                => new ObjectDataOutput(1024, null, Endianness.BigEndian, mockBufferPool));
             var objectDataPool = new DefaultObjectPool<ObjectDataOutput>(countingPolicy, maxPoolSize);
 
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
@@ -180,10 +197,18 @@ namespace Hazelcast.Tests.Serialization
             // First one is while writing data to buffer (data bigger than buffer so resizing),
             // Second one is on TryReset during returning to pool. It resizes the buffer to default size.
 
-            /* +1 because at the very first write, ObjectDataOutput has no buffer,
-            and EnsureAvailable rents one during partitionHash write*/
-            Assert.AreEqual(maxPoolSize * 2 + 1, myBufferPool.RentCount, "Unexpected number of buffer rents");
-            Assert.AreEqual(maxPoolSize * 2, myBufferPool.ReturnCount, "Unexpected number of buffer returns");
+            //Legacy .net and .net core versions have different internals for ArrayPool.Shared
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+            // +CreateCount because at the beginning, ObjectDataOutput has no buffer, and it rents on constructor
+            mockBufferPool.Received(maxPoolSize * 2 + countingPolicy.CreateCount).Rent(Arg.Any<int>());
+            mockBufferPool.Received(maxPoolSize * 2).Return(Arg.Any<byte[]>());
+#else
+            // Rented and returned buffers at least maxPoolSize
+            Assert.That(mockBufferPool.ReceivedCalls()
+                .Count(c => c.GetMethodInfo().Name == "Return"), Is.GreaterThanOrEqualTo(maxPoolSize));
+            Assert.That(mockBufferPool.ReceivedCalls()
+                .Count(c => c.GetMethodInfo().Name == "Rent"), Is.GreaterThanOrEqualTo(maxPoolSize));
+#endif
         }
 
         private class CountingPooledObjectPolicy : IPooledObjectPolicy<ObjectDataOutput>
@@ -207,20 +232,19 @@ namespace Hazelcast.Tests.Serialization
         private class MyBufferPool : IBufferPool
         {
             private readonly DefaultBufferPool _inner = new DefaultBufferPool();
-            public int RentCount { get; private set; }
-            public int ReturnCount { get; private set; }
+            public int RentCount;
+            public int ReturnCount;
 
-            public ManualResetEvent HoldReturnEvent { get; } = new ManualResetEvent(false);
             public byte[] Rent(int minSize)
             {
-                RentCount++;
+                Interlocked.Increment(ref RentCount);
                 TestContext.Progress.WriteLine($"[DataInputOutputTest] MyBufferPool.Rent called. minSize={minSize}, RentCount={RentCount}");
                 return _inner.Rent(minSize);
             }
 
             public void Return(byte[] buffer)
             {
-                ReturnCount++;
+                Interlocked.Increment(ref ReturnCount);
                 TestContext.Progress.WriteLine($"[DataInputOutputTest] MyBufferPool.Return called. buffer.length={buffer.Length}, ReturnCount={ReturnCount}");
                 _inner.Return(buffer);
             }
