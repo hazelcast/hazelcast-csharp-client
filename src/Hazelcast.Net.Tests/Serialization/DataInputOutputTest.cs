@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
@@ -22,7 +20,6 @@ using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
 using NUnit.Framework;
-
 namespace Hazelcast.Tests.Serialization
 {
     internal class DataInputOutputTest
@@ -159,7 +156,7 @@ namespace Hazelcast.Tests.Serialization
             var myBufferPool = new MyBufferPool();
 
             // Create a counting policy that creates ObjectDataOutput instances directly
-            var countingPolicy = new CountingPooledObjectPolicy(() 
+            var countingPolicy = new CountingPooledObjectPolicy(()
                 => new ObjectDataOutput(1024, null, Endianness.BigEndian, myBufferPool));
             var objectDataPool = new DefaultObjectPool<ObjectDataOutput>(countingPolicy, maxPoolSize);
 
@@ -168,7 +165,7 @@ namespace Hazelcast.Tests.Serialization
                 .SetObjectDataOutputPool(objectDataPool)
                 .AddDefinitions(new ConstantSerializerDefinitions())
                 .Build();
-      
+
             for (var i = 0; i < maxPoolSize; i++)
             {
                 var tempData = new byte[10 * 1024]; // 10 KB data to trigger buffer resize for renting
@@ -177,16 +174,16 @@ namespace Hazelcast.Tests.Serialization
             }
 
             // since serialization is done sequentially, we expect less than maxPoolSize creations
-            Assert.LessOrEqual(countingPolicy.CreateCount, maxPoolSize);
-            
+            Assert.LessOrEqual(countingPolicy.CreateCount, maxPoolSize, "Too many ObjectDataOutput instances created");
+
             // We expect maxPool*2 since there are two buffer rents when object is already in the pool.
             // First one is while writing data to buffer (data bigger than buffer so resizing),
             // Second one is on TryReset during returning to pool. It resizes the buffer to default size.
-            
+
             /* +1 because at the very first write, ObjectDataOutput has no buffer,
             and EnsureAvailable rents one during partitionHash write*/
-            Assert.AreEqual(maxPoolSize*2 +1, myBufferPool.RentCount);
-            Assert.AreEqual(maxPoolSize*2, myBufferPool.ReturnCount);
+            Assert.AreEqual(maxPoolSize * 2 + 1, myBufferPool.RentCount, "Unexpected number of buffer rents");
+            Assert.AreEqual(maxPoolSize * 2, myBufferPool.ReturnCount, "Unexpected number of buffer returns");
         }
 
         private class CountingPooledObjectPolicy : IPooledObjectPolicy<ObjectDataOutput>
@@ -217,12 +214,14 @@ namespace Hazelcast.Tests.Serialization
             public byte[] Rent(int minSize)
             {
                 RentCount++;
+                TestContext.Progress.WriteLine($"[DataInputOutputTest] MyBufferPool.Rent called. minSize={minSize}, RentCount={RentCount}");
                 return _inner.Rent(minSize);
             }
 
             public void Return(byte[] buffer)
             {
                 ReturnCount++;
+                TestContext.Progress.WriteLine($"[DataInputOutputTest] MyBufferPool.Return called. buffer.length={buffer.Length}, ReturnCount={ReturnCount}");
                 _inner.Return(buffer);
             }
         }
