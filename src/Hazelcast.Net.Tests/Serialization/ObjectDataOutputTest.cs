@@ -55,8 +55,8 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.EnsureAvailable(10*10);
             _output.Clear();
-            // buffer length is calculated as next power of 2
-            Assert.AreEqual(1<<7, _output.Buffer.Length);
+            // buffer set to default after clear
+            Assert.AreEqual(1<<4, _output.Buffer.Length);
 
         }
 
