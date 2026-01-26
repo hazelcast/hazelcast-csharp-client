@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Buffers;
+using System.Runtime.InteropServices.JavaScript;
 
 namespace Hazelcast.Core
 {
@@ -20,7 +22,12 @@ namespace Hazelcast.Core
     {
         private readonly ArrayPool<byte> _pool = ArrayPool<byte>.Shared;
 
-        public byte[] Rent(int minimumLength) => _pool.Rent(minimumLength);
+        public byte[] Rent(int minimumLength)
+        {
+            var buffer=   _pool.Rent(minimumLength);
+            Array.Clear(buffer);
+            return buffer;
+        } 
 
         public void Return(byte[] array)
         {
