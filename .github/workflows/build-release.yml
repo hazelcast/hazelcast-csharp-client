@@ -158,6 +158,8 @@ jobs:
 
     name: Upload to Codecov
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     needs: [ analyze, build-release ]
 
     steps:
@@ -181,7 +183,7 @@ jobs:
       - name: Publish to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           files: ./temp/artifacts/test-coverage/cover-net8.0.xml
           fail_ci_if_error: true
 
