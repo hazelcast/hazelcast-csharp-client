@@ -370,7 +370,7 @@ namespace Hazelcast.Messaging
                     HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
                     frame.WriteLengthAndFlags(buffer, length);
                     if (frame.Length > sizeofHeader)
-                        frame.Bytes.CopyTo(buffer, length + sizeofHeader);
+                        frame.Bytes.AsSpan().CopyTo(buffer.AsSpan(length+ sizeofHeader));
                     length += frame.Length;
                 }
 

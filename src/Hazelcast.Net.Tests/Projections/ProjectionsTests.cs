@@ -38,7 +38,7 @@ namespace Hazelcast.Tests.Projections
             Assert.Throws<ArgumentNullException>(() => p.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => p.ReadData(null));
 
-            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian);
+            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian, new DefaultBufferPool());
             p.WriteData(output);
 
             using var input = new ObjectDataInput(output.Buffer, null, Endianness.BigEndian);
@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Projections
             Assert.Throws<ArgumentNullException>(() => p.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => p.ReadData(null));
 
-            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian);
+            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian, new DefaultBufferPool());
             p.WriteData(output);
 
             using var input = new ObjectDataInput(output.Buffer, null, Endianness.BigEndian);

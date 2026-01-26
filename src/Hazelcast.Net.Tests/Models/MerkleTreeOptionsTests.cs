@@ -50,7 +50,7 @@ namespace Hazelcast.Tests.Models
                 Enabled = enabled
             };
 
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
             merkleTreeOptions.WriteData(output);
 
             var input = new ObjectDataInput(output.Buffer, null, Endianness.LittleEndian);

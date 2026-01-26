@@ -15,29 +15,31 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Models;
+using Microsoft.Extensions.ObjectPool;
 
 namespace Hazelcast.Serialization
 {
-    internal partial class ObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable
+    internal partial class ObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable, IResettable
     {
         private readonly int _initialBufferSize;
         private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
         private byte[] _buffer;
         private int _position;
         private HashSet<long> _schemaIds;
+        private IBufferPool _bufferPool;
 
-        internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness)
+        internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness, IBufferPool bufferPool)
         {
             _initialBufferSize = initialBufferSize;
-            _buffer = new byte[_initialBufferSize];
+            _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
+            _buffer = _bufferPool.Rent(_initialBufferSize);
         }
 
         public byte[] Buffer
         {
             get => _buffer;
-            set => _buffer = value;
         }
 
         internal int Position
@@ -84,15 +86,23 @@ namespace Hazelcast.Serialization
         public void Clear()
         {
             Position = 0;
-            if (_buffer != null && _buffer.Length > _initialBufferSize * 8)
+            _schemaIds?.Clear();
+
+            if (_buffer != null && _buffer.Length > _initialBufferSize)
             {
-                _buffer = new byte[_initialBufferSize * 8];
+                _bufferPool.Return(_buffer);
+                _buffer = _bufferPool.Rent(_initialBufferSize);
+            }
+            else if (_buffer != null)
+            {
+                Array.Clear(_buffer, 0, _buffer.Length);
             }
         }
 
         public void Dispose()
         {
             Position = 0;
+            _bufferPool.Return(_buffer);
             _buffer = null;
         }
 
@@ -111,14 +121,24 @@ namespace Hazelcast.Serialization
             {
                 if (_buffer.Length - Position >= count) return;
                 var newCap = Math.Max(_buffer.Length << 1, _buffer.Length + count);
-                var newBuffer = new byte[newCap];
-                System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, _buffer.Length);
-                _buffer = newBuffer;
+                ResizeBuffer(newCap);
             }
             else
             {
-                _buffer = new byte[count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize];
+                _buffer = _bufferPool.Rent(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
             }
+        }
+        private void ResizeBuffer(int newCap)
+        {
+            var newBuffer = _bufferPool.Rent(newCap);
+            _buffer.AsSpan(0, _buffer.Length).CopyTo(newBuffer);
+            _bufferPool.Return(_buffer);
+            _buffer = newBuffer;
+        }
+        public bool TryReset()
+        {
+            Clear();
+            return true;
         }
     }
 }

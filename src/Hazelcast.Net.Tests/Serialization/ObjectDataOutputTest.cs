@@ -32,14 +32,14 @@ namespace Hazelcast.Tests.Serialization
         [SetUp]
         public virtual void Before()
         {
-            _output = new ObjectDataOutput(10, null, Endianness.BigEndian);
+            _output = new ObjectDataOutput(10, null, Endianness.BigEndian, new DefaultBufferPool());
         }
 
         [Test]
         public virtual void TestAvailable()
         {
             var available = _output.Buffer.Length;
-            Assert.AreEqual(10, available);
+            Assert.AreEqual(16, available);
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.Clear();
             Assert.AreEqual(0, _output.Position);
-            Assert.AreEqual(10, _output.Buffer.Length);
+            Assert.AreEqual(16, _output.Buffer.Length);
         }
 
         [Test]
@@ -55,7 +55,9 @@ namespace Hazelcast.Tests.Serialization
         {
             _output.EnsureAvailable(10*10);
             _output.Clear();
-            Assert.AreEqual(10*8, _output.Buffer.Length);
+            // buffer set to default after clear
+            Assert.AreEqual(1<<4, _output.Buffer.Length);
+
         }
 
         [Test]
@@ -75,17 +77,17 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestEnsureAvailable()
         {
-            _output.Buffer = null;
+            _output.Clear();
             _output.EnsureAvailable(5);
-            Assert.AreEqual(10, _output.Buffer.Length);
+            Assert.AreEqual(16, _output.Buffer.Length);
         }
 
         [Test]
         public virtual void TestEnsureAvailable_smallLen()
         {
-            _output.Buffer = null;
+            _output.Clear();
             _output.EnsureAvailable(1);
-            Assert.AreEqual(10, _output.Buffer.Length);
+            Assert.AreEqual(16, _output.Buffer.Length);
         }
 
         [Test]

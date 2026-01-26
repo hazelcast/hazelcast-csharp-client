@@ -38,7 +38,7 @@ public class CompactReaderWriterExtensionsTests
         var schema = schemaBuilder.Build();
 
         var orw = new ReflectionSerializerTests.ObjectReaderWriter(new ReflectionSerializer());
-        var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+        var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
         var writer = new CompactWriter(orw, output, schema);
 
         for (var i = 1; i < kinds.Length; i++)

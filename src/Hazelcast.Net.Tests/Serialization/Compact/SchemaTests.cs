@@ -85,7 +85,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             // service
 
             var schema0 = GetSchema();
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
 
             Assert.That(schema0.FactoryId, Is.EqualTo(CompactSerializationHook.Constants.FactoryId));
             Assert.That(schema0.ClassId, Is.EqualTo(CompactSerializationHook.Constants.ClassIds.Schema));

@@ -292,15 +292,18 @@ namespace Hazelcast.Serialization
             _position += count;
         }
 
+        
+        /// <summary>
+        /// Returns the written data as a byte array. It should be called only once and as FINAL operation.
+        /// </summary>
+        /// <param name="padding">Padding to position</param>
+        /// <exception cref="InvalidOperationException">If method is called already</exception>
         public byte[] ToByteArray(int padding = 0)
         {
-            if (_buffer == null || _position == 0)
+            if (_buffer == null || Position == 0)
                 return Array.Empty<byte>();
 
-            // TODO: inefficient
-            var newData = new byte[_position];
-            System.Buffer.BlockCopy(_buffer, 0, newData, 0, _position);
-            return newData;
+            return _buffer.AsSpan(0, Position).ToArray();
         }
     }
 }

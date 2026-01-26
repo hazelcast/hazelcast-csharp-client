@@ -40,7 +40,7 @@ namespace Hazelcast.Tests.Models
             var deviceName = "TestDevice";
             var diskTierOptions = new DiskTierOptions { Enabled = enabled, DeviceName = deviceName };
 
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
             diskTierOptions.WriteData(output);
 
             var input = new ObjectDataInput(output.Buffer, null, Endianness.LittleEndian);

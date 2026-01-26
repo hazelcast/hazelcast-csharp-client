@@ -264,10 +264,6 @@ namespace Hazelcast.Clustering
         /// <returns>The response message.</returns>
         private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
         {
-            // yield now, so the caller gets a task that can bubble up to user's code
-            // immediately without waiting for more synchronous operations to take place
-            await Task.Yield();
-
             // NOTE: *every* invocation sent to the cluster goes through the code below
 
             while (true)

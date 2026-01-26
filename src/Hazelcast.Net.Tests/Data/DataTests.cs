@@ -252,7 +252,7 @@ namespace Hazelcast.Tests.Data
             Assert.Throws<ArgumentNullException>(() => q.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => q.ReadData(null));
 
-            var output = new ObjectDataOutput(1024, null, Endianness.BigEndian);
+            var output = new ObjectDataOutput(1024, null, Endianness.BigEndian, new DefaultBufferPool());
             q.WriteData(output);
             var input = new ObjectDataInput(output.ToByteArray(), null, Endianness.BigEndian);
             var r = new EndpointQualifier(ProtocolType.Wan, "meh");

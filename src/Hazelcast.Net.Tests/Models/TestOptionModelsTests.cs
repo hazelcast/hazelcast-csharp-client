@@ -189,7 +189,7 @@ namespace Hazelcast.Tests.Models
             orw.Read<EvictionOptions>(Arg.Any<IObjectDataInput>()).Returns(eviction);
             orw.Read<NearCachePreloaderOptions>(Arg.Any<IObjectDataInput>()).Returns(preloader);
 
-            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
 
             // Act
@@ -225,7 +225,7 @@ namespace Hazelcast.Tests.Models
             };
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian);
+            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
 
             // Act
