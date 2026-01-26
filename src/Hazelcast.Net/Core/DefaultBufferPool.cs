@@ -14,8 +14,6 @@
 
 using System;
 using System.Buffers;
-using System.Runtime.InteropServices.JavaScript;
-
 namespace Hazelcast.Core
 {
     internal class DefaultBufferPool : IBufferPool
