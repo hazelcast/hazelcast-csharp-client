@@ -23,7 +23,7 @@ namespace Hazelcast.Core
         public byte[] Rent(int minimumLength)
         {
             var buffer = _pool.Rent(minimumLength);
-            Array.Clear(buffer);
+            Array.Clear(buffer, 0, minimumLength);
             return buffer;
         }
 
