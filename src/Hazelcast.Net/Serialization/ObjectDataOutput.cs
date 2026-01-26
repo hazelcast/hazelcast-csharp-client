@@ -88,10 +88,10 @@ namespace Hazelcast.Serialization
             Position = 0;
             _schemaIds?.Clear();
 
-            if (_buffer != null && _buffer.Length > _initialBufferSize * 8)
+            if (_buffer != null && _buffer.Length > _initialBufferSize)
             {
                 _bufferPool.Return(_buffer);
-                _buffer = _bufferPool.Rent(_initialBufferSize * 8);
+                _buffer = _bufferPool.Rent(_initialBufferSize);
             }
             else if (_buffer != null)
             {
