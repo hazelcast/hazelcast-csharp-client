@@ -38,6 +38,10 @@ jobs:
   create-checks:
     name: Create Checks
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      checks: write
+      pull-requests: write
 
     steps:
 
@@ -241,7 +245,7 @@ jobs:
         if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           files: ./temp/test-coverage/windows/cover-net8.0.xml
           override_commit: ${{ inputs.head_sha }} # required since report runs on 'master'
           fail_ci_if_error: true
