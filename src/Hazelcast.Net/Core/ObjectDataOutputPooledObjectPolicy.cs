@@ -16,6 +16,9 @@ using Hazelcast.Serialization;
 using Microsoft.Extensions.ObjectPool;
 namespace Hazelcast.Core
 {
+    /// <summary>
+    /// Defines a pooled object policy for <see cref="ObjectDataOutput"/> to define how to create and reset instances.
+    /// </summary>
     internal class ObjectDataOutputPooledObjectPolicy : PooledObjectPolicy<ObjectDataOutput>
     {
         private Func<ObjectDataOutput> _create;
