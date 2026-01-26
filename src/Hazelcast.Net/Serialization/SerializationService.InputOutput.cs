@@ -50,10 +50,6 @@ namespace Hazelcast.Serialization
             => new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
 
         // for tests
-        public ObjectDataOutput CreateObjectDataOutput()
-            => GetDataOutput();
-
-        // for tests
         public ObjectDataOutput CreateObjectDataOutput(int bufferSize)
         {
             var output = _objectDataOutputPool.Get();
