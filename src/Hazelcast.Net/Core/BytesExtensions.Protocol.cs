@@ -24,30 +24,54 @@ namespace Hazelcast.Core
         public static void WriteLongL(this byte[] bytes, int position, long value)
             => bytes.WriteLong(position, value, Endianness.LittleEndian);
 
+        public static void WriteLongL(this Span<byte> bytes, int position, long value)
+            => bytes.WriteLong(position, value, Endianness.LittleEndian);
+
         public static void WriteIntL(this byte[] bytes, int position, int value)
+            => bytes.WriteInt(position, value, Endianness.LittleEndian);
+
+        public static void WriteIntL(this Span<byte> bytes, int position, int value)
             => bytes.WriteInt(position, value, Endianness.LittleEndian);
 
         public static void WriteIntL(this byte[] bytes, int position, Enum value)
             => bytes.WriteInt(position, (int) (object) value, Endianness.LittleEndian);
 
+        public static void WriteIntL(this Span<byte> bytes, int position, Enum value)
+            => bytes.WriteInt(position, (int) (object) value, Endianness.LittleEndian);
+
         public static void WriteShortL(this byte[] bytes, int position, short value)
+            => bytes.WriteShort(position, value, Endianness.LittleEndian);
+
+        public static void WriteShortL(this Span<byte> bytes, int position, short value)
             => bytes.WriteShort(position, value, Endianness.LittleEndian);
 
         public static void WriteBoolL(this byte[] bytes, int position, bool value)
             => bytes.WriteBool(position, value);
+        
+        public static void WriteBoolL(this Span<byte> bytes, int position, bool value)
+            => bytes.WriteBool(position, value);        
 
         public static void WriteGuidL(this byte[] bytes, int position, Guid value, bool withEmptyFlag = true)
             => bytes.WriteGuid(position, value, Endianness.LittleEndian, withEmptyFlag);
+        
+        public static void WriteGuidL(this Span<byte> bytes, int position, Guid value, bool withEmptyFlag = true)
+            => bytes.WriteGuid(position, value, Endianness.LittleEndian, withEmptyFlag);        
 
         public static void WriteByteL(this byte[] bytes, int position, byte value)
             => bytes.WriteByte(position, value);
         
+        public static void WriteByteL(this Span<byte> bytes, int position, byte value)
+            => bytes.WriteByte(position, value);        
+
         public static void WriteFloatL(this byte[] bytes, int position, float value)
             => bytes.WriteFloat(position, value, Endianness.LittleEndian);
+        
+         public static void WriteFloatL(this Span<byte> bytes, int position, float value)
+             => bytes.WriteFloat(position, value, Endianness.LittleEndian);       
 
         public static short ReadShortL(this byte[] bytes, int position)
             => bytes.ReadShort(position, Endianness.LittleEndian);
-
+        
         public static long ReadLongL(this byte[] bytes, int position)
             => bytes.ReadLong(position, Endianness.LittleEndian);
 
@@ -88,6 +112,26 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
+            // must at least be able to write a bool
+            if (position < 0 || bytes.Length < position + SizeOfBool)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            // write the 'empty' bool
+            if (withEmptyFlag)
+            {
+                bytes.WriteBool(position++, value == Guid.Empty);
+                if (value == Guid.Empty) return;
+            }
+
+            // if not empty, must be able to write the full guid
+            if (bytes.Length < position + SizeOfGuid)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            new JavaUuidOrder { Value = value }.WriteBytes(bytes, position, endianness);
+        }
+        
+        public static void WriteGuid(this Span<byte> bytes, int position, Guid value, Endianness endianness, bool withEmptyFlag = true)
+        {
             // must at least be able to write a bool
             if (position < 0 || bytes.Length < position + SizeOfBool)
                 throw new ArgumentOutOfRangeException(nameof(position));
