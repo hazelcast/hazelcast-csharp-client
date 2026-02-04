@@ -18,16 +18,20 @@ using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Models;
 using Microsoft.Extensions.ObjectPool;
+using Hazelcast.Polyfills;
 namespace Hazelcast.Serialization
 {
     /// <summary>
     /// A Zero-Copy, segmented buffer writer that manages a linked list of arrays
     /// rented from the ArrayPool. It eliminates large object allocations and buffer resizing.
     /// </summary>
-    internal sealed partial class SegmentedObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable, IResettable, IBufferWriter<byte> 
+    internal sealed partial class SegmentedObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable, IResettable, IBufferWriter<byte>
     {
         // Track all rented arrays so we can return them to the pool
         private readonly List<byte[]> _rentedArrays = new List<byte[]>();
+
+        // Track committed length for each chunk (except current chunk which uses _positionInChunk)
+        private readonly List<int> _committedLengths = new List<int>();
 
         private byte[] _currentChunk;
         private int _positionInChunk;
@@ -53,6 +57,7 @@ namespace Hazelcast.Serialization
 
         /// <summary>
         /// Writes a block of memory using efficient Span slicing (Fill & Spill).
+        /// Note: This method advances the position.
         /// </summary>
         public void Write(ReadOnlySpan<byte> source)
         {
@@ -124,14 +129,15 @@ namespace Hazelcast.Serialization
                 return new ReadOnlySequence<byte>(_rentedArrays[0], 0, _positionInChunk);
             }
 
-            // Multi-segment
-            var firstSegment = new Segment(_rentedArrays[0], 0, _rentedArrays[0].Length);
+            // Multi-segment: use committed lengths for completed chunks
+            var firstLength = _committedLengths[0];
+            var firstSegment = new Segment(_rentedArrays[0], 0, firstLength);
             var lastSegment = firstSegment;
 
             for (int i = 1; i < _rentedArrays.Count; i++)
             {
                 var isLast = i == _rentedArrays.Count - 1;
-                var length = isLast ? _positionInChunk : _rentedArrays[i].Length;
+                var length = isLast ? _positionInChunk : _committedLengths[i];
 
                 // Don't append empty last segments (if we just filled the previous one exactly)
                 if (length == 0 && isLast) break;
@@ -145,6 +151,7 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Ensures we have a contiguous block of memory for a primitive write.
         /// If the current chunk doesn't have space, we move to a new one immediately.
+        /// Note: This method advances the position.
         /// </summary>
         public Span<byte> GetSpanForPrimitive(int count)
         {
@@ -188,6 +195,10 @@ namespace Hazelcast.Serialization
             return _currentChunk.AsMemory(_positionInChunk);
         }
 
+        /// <summary>
+        /// Gets a span of bytes from the current position, ensuring capacity.
+        /// Note: This does not advance the position; call <see cref="Advance"/> after writing.
+        /// </summary>
         public Span<byte> GetSpan(int sizeHint = 0)
         {
             EnsureCapacity(sizeHint);
@@ -201,6 +212,9 @@ namespace Hazelcast.Serialization
         /// <param name="sizeHint">Calculate the size before calling it.</param>
         private void AppendNewChunk(int sizeHint)
         {
+            // Commit the current chunk's used length before moving to a new one
+            _committedLengths.Add(_positionInChunk);
+
             _currentChunk = _bufferPool.Rent(sizeHint);
             _rentedArrays.Add(_currentChunk);
             _positionInChunk = 0;
@@ -233,6 +247,7 @@ namespace Hazelcast.Serialization
                 _bufferPool.Return(buffer);
             }
             _rentedArrays.Clear();
+            _committedLengths.Clear();
             _currentChunk = null;
             _totalLength = 0;
         }
@@ -245,9 +260,18 @@ namespace Hazelcast.Serialization
             Dispose();
             _currentChunk = _bufferPool.Rent(_minChunkSize);
             _rentedArrays.Add(_currentChunk);
+            // No committed length for the first chunk - it uses _positionInChunk
             _positionInChunk = 0;
             _totalLength = 0;
             return true;
+        }
+        
+        private static void CastAndCopyCharsToBytes(ReadOnlySpan<char> source, Span<byte> destination)
+        {
+            for (int i = 0; i < source.Length; i++)
+            {
+                destination[i] = (byte)source[i];
+            }
         }
 
         /// <summary>

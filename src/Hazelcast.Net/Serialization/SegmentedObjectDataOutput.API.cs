@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Polyfills;
@@ -28,7 +30,7 @@ namespace Hazelcast.Serialization
         public void WriteByte(byte value)
         {
             var span = GetSpanForPrimitive(BytesExtensions.SizeOfByte);
-            span.WriteByte(value, 0);
+            span.WriteByte(0, value);
         }
         public void WriteSByte(sbyte value)
         {
@@ -61,13 +63,23 @@ namespace Hazelcast.Serialization
             //requirement: position is absolute position from the beginning of the output
         }
         public void WriteIntBigEndian(int value)
-        { }
+        {
+            var span = GetSpanForPrimitive(BytesExtensions.SizeOfInt);
+            span.WriteInt(0, value, Endianness.BigEndian);
+        }
 
         public void WriteBits(byte bits, byte mask)
-        { }
+        {
+            var span = GetSpanForPrimitive(BytesExtensions.SizeOfByte);
+            span.WriteBits(0, bits, mask);
+        }
 
         public void WriteZeroBytes(int count)
-        { }
+        {
+            var span = GetSpan(BytesExtensions.SizeOfByte * count);
+            span.Slice(0, count).Clear();
+            Advance(count * BytesExtensions.SizeOfByte);
+        }
 
         public void WriteLong(long value)
         {
@@ -92,12 +104,13 @@ namespace Hazelcast.Serialization
             if (byteCount > 0)
             {
                 // We want to write big strings into multiple segments if needed
-                
+
                 if (byteCount <= SizeLeftInCurrentChunk)
                 {
                     // Fits in current chunk
                     var span = GetSpan(byteCount);
-                    Encoding.UTF8.GetBytes(value.AsSpan(),  span);
+                    Encoding.UTF8.GetBytes(value.AsSpan(), span);
+                    Advance(byteCount);
                 }
                 else
                 {
@@ -118,69 +131,231 @@ namespace Hazelcast.Serialization
         }
         public void WriteBytes(string value)
         {
-            var span = GetSpan(value.Length);
-            for (var i = 0; i < value.Length; i++)
+            if (string.IsNullOrEmpty(value)) return;
+
+            var source = value.AsSpan();
+
+            while (!source.IsEmpty)
             {
-                span.WriteByte(i, (byte) value[i]);
+                var destination = GetSpan();
+
+                if (destination.Length == 0)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfChar); // size of char
+                }
+
+                var count = Math.Min(source.Length, destination.Length);
+                CastAndCopyCharsToBytes(source.Slice(0, count), destination.Slice(0, count));
+                Advance(count);
+                source = source.Slice(count);
             }
         }
         public void WriteBooleanArray(bool[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            // Boolean is already one byte in .NET, so we can write directly
+            ReadOnlySpan<bool> boolSpan = values.AsSpan();
+            ReadOnlySpan<byte> byteSpan = MemoryMarshal.AsBytes(boolSpan);
+            Write(byteSpan);
         }
-        public void WriteByteArray(byte[] values)
+        public void WriteByteArray(byte[] bytes)
         {
-            throw new System.NotImplementedException();
+            var length = bytes?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (bytes == null || length <= 0) return;
+
+            Write(bytes.AsSpan());
         }
         public void WriteCharArray(char[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            var spanValues = values.AsSpan();
+
+            while (!spanValues.IsEmpty)
+            {
+                var destination = GetSpan();
+
+                if (destination.Length == 0 || destination.Length < BytesExtensions.SizeOfChar)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfChar);
+                }
+
+                var count = Math.Min(spanValues.Length, destination.Length / BytesExtensions.SizeOfChar);
+                for (var i = 0; i < count; i++)
+                {
+                    destination.WriteChar(i * BytesExtensions.SizeOfChar, spanValues[i], Endianness);
+                }
+                Advance(count * BytesExtensions.SizeOfChar);
+                spanValues = spanValues.Slice(count);
+            }
         }
         public void WriteShortArray(short[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            var spanValues = values.AsSpan();
+
+            while (!spanValues.IsEmpty)
+            {
+                var destination = GetSpan();
+
+                if (destination.Length == 0 || destination.Length < BytesExtensions.SizeOfShort)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfShort);
+                }
+
+                var count = Math.Min(spanValues.Length, destination.Length / BytesExtensions.SizeOfShort);
+                for (var i = 0; i < count; i++)
+                {
+                    destination.WriteShort(i * BytesExtensions.SizeOfShort, spanValues[i], Endianness);
+                }
+                Advance(count * BytesExtensions.SizeOfShort);
+                spanValues = spanValues.Slice(count);
+            }
         }
         public void WriteIntArray(int[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            var spanValues = values.AsSpan();
+
+            while (!spanValues.IsEmpty)
+            {
+                var destination = GetSpan();
+
+                if (destination.Length == 0 || destination.Length < BytesExtensions.SizeOfInt)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfInt);
+                }
+
+                var count = Math.Min(spanValues.Length, destination.Length / BytesExtensions.SizeOfInt);
+                for (var i = 0; i < count; i++)
+                {
+                    destination.WriteInt(i * BytesExtensions.SizeOfInt, spanValues[i], Endianness);
+                }
+                Advance(count * BytesExtensions.SizeOfInt);
+                spanValues = spanValues.Slice(count);
+            }
         }
         public void WriteLongArray(long[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            var spanValues = values.AsSpan();
+
+            while (!spanValues.IsEmpty)
+            {
+                var destination = GetSpan();
+
+                if (destination.Length == 0 || destination.Length < BytesExtensions.SizeOfLong)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfLong);
+                }
+
+                var count = Math.Min(spanValues.Length, destination.Length / BytesExtensions.SizeOfLong);
+                for (var i = 0; i < count; i++)
+                {
+                    destination.WriteLong(i * BytesExtensions.SizeOfLong, spanValues[i], Endianness);
+                }
+                Advance(count * BytesExtensions.SizeOfLong);
+                spanValues = spanValues.Slice(count);
+            }
         }
         public void WriteFloatArray(float[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            var spanValues = values.AsSpan();
+
+            while (!spanValues.IsEmpty)
+            {
+                var destination = GetSpan();
+
+                if (destination.Length == 0 || destination.Length < BytesExtensions.SizeOfFloat)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfFloat);
+                }
+
+                var count = Math.Min(spanValues.Length, destination.Length / BytesExtensions.SizeOfFloat);
+                for (var i = 0; i < count; i++)
+                {
+                    destination.WriteFloat(i * BytesExtensions.SizeOfFloat, spanValues[i], Endianness);
+                }
+                Advance(count * BytesExtensions.SizeOfFloat);
+                spanValues = spanValues.Slice(count);
+            }
         }
         public void WriteDoubleArray(double[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            var spanValues = values.AsSpan();
+
+            while (!spanValues.IsEmpty)
+            {
+                var destination = GetSpan();
+
+                if (destination.Length == 0 || destination.Length < BytesExtensions.SizeOfDouble)
+                {
+                    destination = GetSpan(BytesExtensions.SizeOfDouble);
+                }
+
+                var count = Math.Min(spanValues.Length, destination.Length / BytesExtensions.SizeOfDouble);
+                for (var i = 0; i < count; i++)
+                {
+                    destination.WriteDouble(i * BytesExtensions.SizeOfDouble, spanValues[i], Endianness);
+                }
+                Advance(count * BytesExtensions.SizeOfDouble);
+                spanValues = spanValues.Slice(count);
+            }
         }
         public void WriteStringArray(string[] values)
         {
-            throw new System.NotImplementedException();
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length <= 0) return;
+
+            foreach (var str in values!)
+            {
+                WriteString(str);
+            }
         }
         public void WriteObject(object value)
         {
-            throw new System.NotImplementedException();
+            _objectsWriter.Write(this, value);
         }
         public void Write(byte[] bytes)
         {
-            throw new System.NotImplementedException();
+            Write(bytes.AsSpan());
         }
         public void Write(byte[] bytes, int offset, int count)
         {
-            throw new System.NotImplementedException();
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (offset < 0 || offset > bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count < 0 || offset + count > bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
+
+            if (count <= 0) return;
+
+            Write(bytes.AsSpan(offset, count));
         }
-        public byte[] ToByteArray(int padding = 0)
-            => throw new System.NotImplementedException();
-        public bool HasSchemas
-        {
-            get;
-        }
-        public HashSet<long> SchemaIds
-        {
-            get;
-        }
+        public byte[] ToByteArray(int padding = 0) => GetSequence().ToArray();
+        public bool HasSchemas => _schemaIds != null;
+        public HashSet<long> SchemaIds => _schemaIds ??= new HashSet<long>();
     }
 }
