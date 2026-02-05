@@ -34,6 +34,7 @@ namespace Hazelcast.Serialization
         private readonly List<int> _committedLengths = new List<int>();
 
         private byte[] _currentChunk;
+        private int _currentChunkIndex;
         private int _positionInChunk;
         private long _totalLength;
         private readonly int _minChunkSize;
@@ -123,24 +124,26 @@ namespace Hazelcast.Serialization
             if (_rentedArrays.Count == 0)
                 return ReadOnlySequence<byte>.Empty;
 
+            // Ensure current chunk's committed length is up to date
+            UpdateCurrentChunkCommittedLength();
+
             if (_rentedArrays.Count == 1)
             {
-                // single segment
-                return new ReadOnlySequence<byte>(_rentedArrays[0], 0, _positionInChunk);
+                // single segment - use committed length (high water mark)
+                return new ReadOnlySequence<byte>(_rentedArrays[0], 0, _committedLengths[0]);
             }
 
-            // Multi-segment: use committed lengths for completed chunks
+            // Multi-segment: use committed lengths for all chunks
             var firstLength = _committedLengths[0];
             var firstSegment = new Segment(_rentedArrays[0], 0, firstLength);
             var lastSegment = firstSegment;
 
             for (int i = 1; i < _rentedArrays.Count; i++)
             {
-                var isLast = i == _rentedArrays.Count - 1;
-                var length = isLast ? _positionInChunk : _committedLengths[i];
+                var length = _committedLengths[i];
 
-                // Don't append empty last segments (if we just filled the previous one exactly)
-                if (length == 0 && isLast) break;
+                // Don't append empty segments
+                if (length == 0) break;
 
                 lastSegment = lastSegment.Append(_rentedArrays[i], length);
             }
@@ -160,7 +163,10 @@ namespace Hazelcast.Serialization
             {
                 var span = _currentChunk.AsSpan(_positionInChunk, count);
                 _positionInChunk += count;
-                _totalLength += count;
+                // Only update total length if we're extending beyond previous total
+                var absolutePosition = GetAbsolutePosition();
+                if (absolutePosition > _totalLength)
+                    _totalLength = absolutePosition;
                 return span;
             }
 
@@ -171,7 +177,10 @@ namespace Hazelcast.Serialization
             // 3. Return the start of the new chunk
             var newSpan = _currentChunk.AsSpan(0, count);
             _positionInChunk += count;
-            _totalLength += count;
+            // Only update total length if we're extending beyond previous total
+            var absPos = GetAbsolutePosition();
+            if (absPos > _totalLength)
+                _totalLength = absPos;
             return newSpan;
         }
   
@@ -185,7 +194,11 @@ namespace Hazelcast.Serialization
                 throw new InvalidOperationException("Cannot advance past the end of the current buffer.");
 
             _positionInChunk += count;
-            _totalLength += count;
+
+            // Only update total length if we're extending beyond previous total
+            var absolutePosition = GetAbsolutePosition();
+            if (absolutePosition > _totalLength)
+                _totalLength = absolutePosition;
         }
 
         public Memory<byte> GetMemory(int sizeHint = 0)
@@ -212,11 +225,12 @@ namespace Hazelcast.Serialization
         /// <param name="sizeHint">Calculate the size before calling it.</param>
         private void AppendNewChunk(int sizeHint)
         {
-            // Commit the current chunk's used length before moving to a new one
-            _committedLengths.Add(_positionInChunk);
+            // Update the committed length for the current chunk before moving to a new one
+            UpdateCurrentChunkCommittedLength();
 
             _currentChunk = _bufferPool.Rent(sizeHint);
             _rentedArrays.Add(_currentChunk);
+            _currentChunkIndex = _rentedArrays.Count - 1;
             _positionInChunk = 0;
         }
         
@@ -233,6 +247,91 @@ namespace Hazelcast.Serialization
             // We do not copy old data; we just move to the new buffer.
             var nextSize = Math.Max(sizeHint, _minChunkSize);
             AppendNewChunk(nextSize);
+        }
+
+        #endregion
+
+        #region Random Access Support
+
+        /// <summary>
+        /// Seeks to an absolute position within the written data.
+        /// </summary>
+        private void SeekToPosition(int absolutePosition)
+        {
+            if (absolutePosition < 0 || absolutePosition > _totalLength)
+                throw new ArgumentOutOfRangeException(nameof(absolutePosition));
+
+            // Before seeking, update the committed length for the current chunk if needed
+            // This ensures we track the "high water mark" for each chunk
+            UpdateCurrentChunkCommittedLength();
+
+            int runningPosition = 0;
+            for (int i = 0; i < _rentedArrays.Count; i++)
+            {
+                var chunkLength = _committedLengths[i];
+
+                if (runningPosition + chunkLength > absolutePosition || i == _rentedArrays.Count - 1)
+                {
+                    _currentChunkIndex = i;
+                    _currentChunk = _rentedArrays[i];
+                    _positionInChunk = absolutePosition - runningPosition;
+                    return;
+                }
+                runningPosition += chunkLength;
+            }
+        }
+
+        /// <summary>
+        /// Updates the committed length for the current chunk to track the high watermark.
+        /// </summary>
+        private void UpdateCurrentChunkCommittedLength()
+        {
+            // Ensure _committedLengths has an entry for all chunks including current
+            while (_committedLengths.Count <= _currentChunkIndex)
+            {
+                _committedLengths.Add(0);
+            }
+
+            // Update to high watermark
+            if (_positionInChunk > _committedLengths[_currentChunkIndex])
+            {
+                _committedLengths[_currentChunkIndex] = _positionInChunk;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current absolute position within the written data.
+        /// </summary>
+        private int GetAbsolutePosition()
+        {
+            int position = 0;
+            for (int i = 0; i < _currentChunkIndex; i++)
+            {
+                position += _committedLengths[i];
+            }
+            return position + _positionInChunk;
+        }
+
+        /// <summary>
+        /// Moves to the specified absolute position, optionally ensuring capacity for additional bytes.
+        /// Matches ObjectDataOutput.MoveTo(int, int) signature.
+        /// </summary>
+        public void MoveTo(int position, int count = 0)
+        {
+            if (position < 0) throw new ArgumentOutOfRangeException(nameof(position));
+
+            if (position <= _totalLength)
+            {
+                // Backward or within-bounds seek
+                SeekToPosition(position);
+                if (count > 0) EnsureCapacity(count);
+                return;
+            }
+
+            // Forward seek beyond current position - fill gap with zeros
+            var gap = position - (int)_totalLength;
+            WriteZeroBytes(gap);
+            if (count > 0) EnsureCapacity(count);
         }
 
         #endregion
@@ -261,6 +360,7 @@ namespace Hazelcast.Serialization
             _currentChunk = _bufferPool.Rent(_minChunkSize);
             _rentedArrays.Add(_currentChunk);
             // No committed length for the first chunk - it uses _positionInChunk
+            _currentChunkIndex = 0;
             _positionInChunk = 0;
             _totalLength = 0;
             return true;

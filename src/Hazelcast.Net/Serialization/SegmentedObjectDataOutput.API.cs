@@ -60,7 +60,21 @@ namespace Hazelcast.Serialization
 
         public void WriteInt(int position, int value)
         {
-            //requirement: position is absolute position from the beginning of the output
+            // Save current state
+            var savedChunkIndex = _currentChunkIndex;
+            var savedPositionInChunk = _positionInChunk;
+            var savedTotalLength = _totalLength;
+
+            // Seek to position and write
+            SeekToPosition(position);
+            var span = _currentChunk.AsSpan(_positionInChunk, BytesExtensions.SizeOfInt);
+            span.WriteInt(0, value, Endianness);
+
+            // Restore state (don't advance total length for overwrites)
+            _currentChunkIndex = savedChunkIndex;
+            _currentChunk = _rentedArrays[savedChunkIndex];
+            _positionInChunk = savedPositionInChunk;
+            _totalLength = savedTotalLength;
         }
         public void WriteIntBigEndian(int value)
         {
