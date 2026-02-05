@@ -1124,5 +1124,207 @@ namespace Hazelcast.Tests.Serialization
         }
 
         #endregion
+
+        #region 9. Random Access (MoveTo & WriteInt)
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void MoveTo_BackwardSeek_WithinSingleChunk(Endianness endianness)
+        {
+            using var output = CreateOutput(64, endianness);
+
+            // Write some data
+            output.WriteInt(0x11111111);
+            output.WriteInt(0x22222222);
+            output.WriteInt(0x33333333);
+
+            // Seek back to position 4 (start of second int)
+            output.MoveTo(4);
+            output.WriteInt(unchecked((int)0xAAAAAAAA));
+
+            // Move to end and verify
+            output.MoveTo(12);
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, endianness);
+
+            Assert.That(input.ReadInt(), Is.EqualTo(0x11111111));
+            Assert.That(input.ReadInt(), Is.EqualTo(unchecked((int)0xAAAAAAAA))); // Overwritten
+            Assert.That(input.ReadInt(), Is.EqualTo(0x33333333));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void MoveTo_BackwardSeek_AcrossChunks(Endianness endianness)
+        {
+            // Small chunks to force multiple chunks
+            using var output = CreateOutput(8, endianness);
+
+            // Write across multiple chunks
+            output.WriteLong(0x1111111111111111L); // Chunk 0
+            output.WriteLong(0x2222222222222222L); // Chunk 1
+            output.WriteLong(0x3333333333333333L); // Chunk 2
+
+            // Seek back to chunk 0
+            output.MoveTo(0);
+            output.WriteLong(unchecked((long)0xAAAAAAAAAAAAAAAAL));
+
+            // Move to end
+            output.MoveTo(24);
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, endianness);
+
+            Assert.That(input.ReadLong(), Is.EqualTo(unchecked((long)0xAAAAAAAAAAAAAAAAL))); // Overwritten
+            Assert.That(input.ReadLong(), Is.EqualTo(0x2222222222222222L));
+            Assert.That(input.ReadLong(), Is.EqualTo(0x3333333333333333L));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void MoveTo_ForwardSeek_FillsWithZeros(Endianness endianness)
+        {
+            using var output = CreateOutput(64, endianness);
+
+            output.WriteInt(0x11111111);
+
+            // Forward seek with gap
+            output.MoveTo(12); // Skip 8 bytes
+            output.WriteInt(0x22222222);
+
+            var bytes = output.GetSequence().ToArray();
+            Assert.That(bytes.Length, Is.EqualTo(16));
+
+            using var input = CreateInput(bytes, endianness);
+            Assert.That(input.ReadInt(), Is.EqualTo(0x11111111));
+            Assert.That(input.ReadInt(), Is.EqualTo(0)); // Zero-filled gap
+            Assert.That(input.ReadInt(), Is.EqualTo(0)); // Zero-filled gap
+            Assert.That(input.ReadInt(), Is.EqualTo(0x22222222));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void MoveTo_WithCount_EnsuresCapacity(Endianness endianness)
+        {
+            using var output = CreateOutput(8, endianness);
+
+            output.WriteInt(42);
+            output.MoveTo(0, 8); // Seek to start, ensure 8 bytes available
+
+            // Should be able to write 8 bytes without issue
+            output.WriteLong(0x123456789ABCDEF0L);
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, endianness);
+            Assert.That(input.ReadLong(), Is.EqualTo(0x123456789ABCDEF0L));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void WriteInt_AtPosition_DoesNotChangeCurrentPosition(Endianness endianness)
+        {
+            using var output = CreateOutput(64, endianness);
+
+            output.WriteInt(0); // Placeholder at position 0
+            output.WriteInt(0x22222222);
+            output.WriteInt(0x33333333);
+
+            var positionBefore = output.TotalLength;
+
+            // Write at position 0 without changing cursor
+            output.WriteInt(0, 0x11111111);
+
+            Assert.That(output.TotalLength, Is.EqualTo(positionBefore)); // Unchanged
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, endianness);
+
+            Assert.That(input.ReadInt(), Is.EqualTo(0x11111111)); // Updated
+            Assert.That(input.ReadInt(), Is.EqualTo(0x22222222));
+            Assert.That(input.ReadInt(), Is.EqualTo(0x33333333));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void WriteInt_AtPosition_AcrossChunks(Endianness endianness)
+        {
+            using var output = CreateOutput(8, endianness);
+
+            // Write placeholder and data across chunks
+            output.WriteInt(0); // Position 0, Chunk 0
+            output.WriteInt(0); // Position 4, Chunk 0
+            output.WriteLong(0x1111111111111111L); // Chunk 1
+
+            // Update placeholder at position 0 while in chunk 1
+            output.WriteInt(0, unchecked((int)0xAAAAAAAA));
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, endianness);
+
+            Assert.That(input.ReadInt(), Is.EqualTo(unchecked((int)0xAAAAAAAA))); // Updated
+            Assert.That(input.ReadInt(), Is.EqualTo(0));
+            Assert.That(input.ReadLong(), Is.EqualTo(0x1111111111111111L));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void CompactWriterPattern_WriteLengthPrefix(Endianness endianness)
+        {
+            // Simulates the pattern: write placeholder, write data, seek back, update length
+            using var output = CreateOutput(16, endianness);
+
+            var startPosition = (int)output.TotalLength;
+            output.WriteInt(0); // Placeholder for data length
+
+            var dataStartPosition = (int)output.TotalLength;
+            output.WriteString("Hello");
+            output.WriteInt(42);
+            var dataEndPosition = (int)output.TotalLength;
+
+            var dataLength = dataEndPosition - dataStartPosition;
+
+            // Seek back and write the length
+            output.WriteInt(startPosition, dataLength);
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, endianness);
+
+            var length = input.ReadInt();
+            Assert.That(length, Is.EqualTo(dataLength));
+            Assert.That(input.ReadString(), Is.EqualTo("Hello"));
+            Assert.That(input.ReadInt(), Is.EqualTo(42));
+        }
+
+        [Test]
+        public void MoveTo_NegativePosition_Throws()
+        {
+            using var output = CreateOutput(64, Endianness.BigEndian);
+            Assert.Throws<ArgumentOutOfRangeException>(() => output.MoveTo(-1));
+        }
+
+        [Test]
+        public void GetAbsolutePosition_ReturnsCorrectPosition()
+        {
+            using var output = CreateOutput(8, Endianness.BigEndian);
+
+            output.WriteLong(1L); // Position 0-7, Chunk 0
+            output.WriteLong(2L); // Position 8-15, Chunk 1
+
+            Assert.That(output.TotalLength, Is.EqualTo(16));
+
+            output.MoveTo(4);
+            // Verify we're at position 4 by writing and checking
+            output.WriteInt(unchecked((int)0xDEADBEEF));
+
+            var bytes = output.GetSequence().ToArray();
+            using var input = CreateInput(bytes, Endianness.BigEndian);
+
+            // First 4 bytes of long 1
+            Assert.That(input.ReadInt(), Is.EqualTo(0)); // Upper 4 bytes of 1L in big-endian
+            Assert.That(input.ReadInt(), Is.EqualTo(unchecked((int)0xDEADBEEF))); // Overwritten
+            Assert.That(input.ReadLong(), Is.EqualTo(2L));
+        }
+
+        #endregion
     }
 }
