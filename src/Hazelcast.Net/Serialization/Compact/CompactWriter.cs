@@ -28,13 +28,13 @@ namespace Hazelcast.Serialization.Compact
     internal class CompactWriter : CompactReaderWriterBase, ICompactWriter
     {
         private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
-        private readonly ObjectDataOutput _output;
+        private readonly SegmentedObjectDataOutput _output;
         private readonly int[]? _offsets;
 
         private int _dataPosition;
         private bool _completed;
 
-        public CompactWriter(IWriteObjectsToObjectDataOutput objectsWriter, ObjectDataOutput output, Schema schema)
+        public CompactWriter(IWriteObjectsToObjectDataOutput objectsWriter, SegmentedObjectDataOutput output, Schema schema)
             : base(schema, output.Position)
         {
             _objectsWriter = objectsWriter ?? throw new ArgumentNullException(nameof(objectsWriter));
@@ -52,7 +52,7 @@ namespace Hazelcast.Serialization.Compact
             return base.GetValidField(name);
         }
 
-        private static Action<ObjectDataOutput, int> GetOffsetWriter(int dataLength)
+        private static Action<SegmentedObjectDataOutput, int> GetOffsetWriter(int dataLength)
         {
             if (dataLength < byte.MaxValue) return (output, offset) => output.WriteByte(offset < 0 ? byte.MaxValue : (byte)offset);
             if (dataLength < ushort.MaxValue) return (output, offset) => output.WriteUShort(offset < 0 ? ushort.MaxValue : (ushort)offset);
@@ -92,7 +92,7 @@ namespace Hazelcast.Serialization.Compact
         // *no* generic constraint, but then when T is a value type (struct) the 'value == null' comparison
         // will still always have to box the value beforehand, and we should benchmark to see what makes sense.
 
-        private void WriteNullable<T>(string name, FieldKind kind, T? value, Action<ObjectDataOutput, T> write)
+        private void WriteNullable<T>(string name, FieldKind kind, T? value, Action<SegmentedObjectDataOutput, T> write)
             where T : struct
         {
             var field = GetValidField(name, kind);
@@ -109,7 +109,7 @@ namespace Hazelcast.Serialization.Compact
             _dataPosition = _output.Position;
         }
 
-        private void WriteReference<T>(string name, FieldKind kind, T? value, Action<ObjectDataOutput, T> write)
+        private void WriteReference<T>(string name, FieldKind kind, T? value, Action<SegmentedObjectDataOutput, T> write)
         {
             var field = GetValidField(name, kind);
 
@@ -131,9 +131,9 @@ namespace Hazelcast.Serialization.Compact
         // <item_count>     ::= i32 ; number of items
         // <val_value>      ::= byte* ; serialized value-type item
         //
-        // and ObjectDataOutput already has supports for these arrays, so we don't need the method below
+        // and SegmentedObjectDataOutput already has supports for these arrays, so we don't need the method below
         //
-        //private void WriteArrayOfValues<T>(string name, FieldKind kind, T[] value, Action<ObjectDataOutput, T> write)
+        //private void WriteArrayOfValues<T>(string name, FieldKind kind, T[] value, Action<SegmentedObjectDataOutput, T> write)
         //    where T : struct
         //{ }
         //
@@ -143,7 +143,7 @@ namespace Hazelcast.Serialization.Compact
         // *no* generic constraint, but then when T is a value type (struct) the 'value == null' comparison
         // will still always have to box the value beforehand, and we should benchmark to see what makes sense.
 
-        private void WriteArrayOfNullable<T>(string name, FieldKind kind, T?[]? value, Action<ObjectDataOutput, T> write)
+        private void WriteArrayOfNullable<T>(string name, FieldKind kind, T?[]? value, Action<SegmentedObjectDataOutput, T> write)
             where T : struct
         {
             var field = GetValidField(name, kind);
@@ -188,7 +188,7 @@ namespace Hazelcast.Serialization.Compact
             _output.WriteInt(arrayDataLength);
         }
 
-        public void WriteArrayOfReference<T>(string name, FieldKind kind, ICollection<T?>? value, Action<ObjectDataOutput, T> write)
+        public void WriteArrayOfReference<T>(string name, FieldKind kind, ICollection<T?>? value, Action<SegmentedObjectDataOutput, T> write)
         {
             var field = GetValidField(name, kind);
 
@@ -379,7 +379,7 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfString(string name, string?[]? value)
             => WriteArrayOfReference(name, FieldKind.ArrayOfString, value, (output, v) => output.WriteString(v));
 
-        private static void WriteBigInteger(ObjectDataOutput output, BigInteger value)
+        private static void WriteBigInteger(SegmentedObjectDataOutput output, BigInteger value)
         {
             // <bigint> := <length:i32> <byte:u8>*
             // where
@@ -391,7 +391,7 @@ namespace Hazelcast.Serialization.Compact
             output.WriteByteArray(bytes);
         }
         
-        private static void WriteBigDecimal(ObjectDataOutput output, HBigDecimal value)
+        private static void WriteBigDecimal(SegmentedObjectDataOutput output, HBigDecimal value)
         {
             WriteBigInteger(output, value.UnscaledValue);
             output.WriteInt(value.Scale);
@@ -403,7 +403,7 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfDecimal(string name, HBigDecimal?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfDecimal, value, WriteBigDecimal);
 
-        private static void WriteTime(ObjectDataOutput output, HLocalTime value)
+        private static void WriteTime(SegmentedObjectDataOutput output, HLocalTime value)
         {
             // time is hour:i8 minute:i8 second:i8 nanosecond:i32
             output.WriteByte(value.Hour);
@@ -418,7 +418,7 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfTime(string name, HLocalTime?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfTime, value, WriteTime);
 
-        private static void WriteDate(ObjectDataOutput output, HLocalDate value)
+        private static void WriteDate(SegmentedObjectDataOutput output, HLocalDate value)
         {
             // date is year:i32 month:i8 day:i8
             output.WriteInt(value.Year);
@@ -432,7 +432,7 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfDate(string name, HLocalDate?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfDate, value, WriteDate);
 
-        private static void WriteTimeStamp(ObjectDataOutput output, HLocalDateTime value)
+        private static void WriteTimeStamp(SegmentedObjectDataOutput output, HLocalDateTime value)
         {
             WriteDate(output, value.Date);
             WriteTime(output, value.Time);
@@ -444,7 +444,7 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfTimeStamp(string name, HLocalDateTime?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfTimeStamp, value, WriteTimeStamp);
 
-        private static void WriteTimeStampWithTimeZone(ObjectDataOutput output, HOffsetDateTime value)
+        private static void WriteTimeStampWithTimeZone(SegmentedObjectDataOutput output, HOffsetDateTime value)
         {
             if (value.Offset.Ticks % TimeSpan.FromSeconds(1).Ticks != 0)
                 throw new SerializationException("Cannot compact-serialize HOffsetDateTime value with greater-than-second offset precision.");

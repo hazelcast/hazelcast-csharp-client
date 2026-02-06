@@ -21,13 +21,16 @@ namespace Hazelcast.Serialization
         // TODO: ObjectDataInput/Output still using copied buffers, not adjacent arrays
 
         // Factory method for creating new ObjectDataOutput instances - used by the pool
-        private ObjectDataOutput CreateNewObjectDataOutput()
-            => new ObjectDataOutput(_initialOutputBufferSize, this, Endianness, _bufferPool);
-
-        private ObjectDataOutput GetDataOutput()
+        private SegmentedObjectDataOutput CreateNewObjectDataOutput()
+            => new SegmentedObjectDataOutput(_initialOutputBufferSize, this, Endianness, _bufferPool);
+        private SegmentedObjectDataOutput CreateNewSegmentedObjectDataOutput()
+            => new SegmentedObjectDataOutput(_initialOutputBufferSize, this, Endianness, _bufferPool);
+        
+        private SegmentedObjectDataOutput GetDataOutput()
             => _objectDataOutputPool.Get();
 
-        private void ReturnDataOutput(ObjectDataOutput output)
+
+        public void ReturnDataOutput(SegmentedObjectDataOutput output)
             => _objectDataOutputPool.Return(output);
 
         private ObjectDataInput GetDataInput(IData data)
@@ -50,10 +53,10 @@ namespace Hazelcast.Serialization
             => new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
 
         // for tests
-        public ObjectDataOutput CreateObjectDataOutput(int bufferSize)
+        public SegmentedObjectDataOutput CreateObjectDataOutput(int bufferSize)
         {
             var output = _objectDataOutputPool.Get();
-            output.EnsureAvailable(bufferSize);
+            //output.EnsureCapacity(bufferSize);
             return output;
         }
     }

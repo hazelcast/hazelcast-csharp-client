@@ -44,7 +44,7 @@ namespace Hazelcast.Serialization
         private IPartitioningStrategy _partitioningStrategy;
         private ISchemas _compactSchemas;
         private IBufferPool _bufferPool;
-        private ObjectPool<ObjectDataOutput> _objectDataOutputPool;
+        private ObjectPool<SegmentedObjectDataOutput> _objectDataOutputPool;
 
         public SerializationServiceBuilder(ILoggerFactory loggerFactory)
             : this(new SerializationOptions(), loggerFactory)
@@ -143,7 +143,7 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public SerializationServiceBuilder SetObjectDataOutputPool(ObjectPool<ObjectDataOutput> pool)
+        public SerializationServiceBuilder SetObjectDataOutputPool(ObjectPool<SegmentedObjectDataOutput> pool)
         {
             _objectDataOutputPool = pool;
             return this;

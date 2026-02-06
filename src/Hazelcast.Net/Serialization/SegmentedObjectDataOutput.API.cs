@@ -136,12 +136,14 @@ namespace Hazelcast.Serialization
         }
         public void WriteChars(string value)
         {
-            var span = GetSpan(value.Length * BytesExtensions.SizeOfChar);
+            var byteCount = value.Length * BytesExtensions.SizeOfChar;
+            var span = GetSpan(byteCount);
             for (var i = 0; i < value.Length; i++)
             {
                 // TODO: possible optimization  with BinaryPrimitives.ReverseEndianness and MemoryMarshal.Cast
                 span.WriteChar(i * BytesExtensions.SizeOfChar, value[i], Endianness);
             }
+            Advance(byteCount);
         }
         public void WriteBytes(string value)
         {
@@ -371,5 +373,15 @@ namespace Hazelcast.Serialization
         public byte[] ToByteArray(int padding = 0) => GetSequence().ToArray();
         public bool HasSchemas => _schemaIds != null;
         public HashSet<long> SchemaIds => _schemaIds ??= new HashSet<long>();
+        public void WriteSByteArray(sbyte[] sbytes)
+        {
+            var length = sbytes?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (sbytes == null || length <= 0) return;
+
+            ReadOnlySpan<sbyte> sbyteSpan = sbytes.AsSpan();
+            ReadOnlySpan<byte> byteSpan = MemoryMarshal.AsBytes(sbyteSpan);
+            Write(byteSpan);
+        }
     }
 }

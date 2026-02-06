@@ -42,7 +42,7 @@ namespace Hazelcast.Serialization
         private readonly int _initialOutputBufferSize;
         private readonly bool _enableClrSerialization;
         private readonly IBufferPool _bufferPool;
-        private readonly ObjectPool<ObjectDataOutput> _objectDataOutputPool;
+        private readonly ObjectPool<SegmentedObjectDataOutput> _objectDataOutputPool;
 
 
         // We have two groups of serializers:
@@ -92,7 +92,7 @@ namespace Hazelcast.Serialization
             int initialOutputBufferSize,
             ISchemas schemas,
             IBufferPool bufferPool,
-            ObjectPool<ObjectDataOutput> objectDataOutputPool,
+            ObjectPool<SegmentedObjectDataOutput> objectDataOutputPool,
             ILoggerFactory loggerFactory)
         {
             _options = options;
@@ -103,7 +103,7 @@ namespace Hazelcast.Serialization
             _bufferPool = bufferPool;
 
             _objectDataOutputPool = objectDataOutputPool ??
-                new DefaultObjectPool<ObjectDataOutput>(
+                new DefaultObjectPool<SegmentedObjectDataOutput>(
                     new ObjectDataOutputPooledObjectPolicy(CreateNewObjectDataOutput),
                     Environment.ProcessorCount * 2);
 

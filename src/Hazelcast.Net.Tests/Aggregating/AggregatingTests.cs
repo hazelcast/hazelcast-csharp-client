@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using Hazelcast.Aggregation;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -86,10 +87,10 @@ namespace Hazelcast.Tests.Aggregating
             Assert.Throws<ArgumentNullException>(() => aggregator.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => aggregator.ReadData(null));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             aggregator.WriteData(output);
 
-            using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
+            using var input = new ObjectDataInput(output.GetSequence().ToArray(), _serializationService, Endianness.BigEndian);
             var a = (AggregatorBase<TResult>) Activator.CreateInstance(aggregatorType);
             a.ReadData(input);
 

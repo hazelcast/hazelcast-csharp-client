@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Buffers;
 using Hazelcast.Core;
 using NUnit.Framework;
 using Hazelcast.Models;
@@ -40,10 +41,10 @@ namespace Hazelcast.Tests.Models
             var deviceName = "TestDevice";
             var diskTierOptions = new DiskTierOptions { Enabled = enabled, DeviceName = deviceName };
 
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
             diskTierOptions.WriteData(output);
 
-            var input = new ObjectDataInput(output.Buffer, null, Endianness.LittleEndian);
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), null, Endianness.LittleEndian);
             var readDiskTierOptions = new DiskTierOptions();
             readDiskTierOptions.ReadData(input);
 

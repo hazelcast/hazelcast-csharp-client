@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using NUnit.Framework;
 using Hazelcast.Models;
 using Hazelcast.Serialization;
@@ -130,10 +131,10 @@ namespace Hazelcast.Tests.Models
             orw.Read<DataPersistenceOptions>(Arg.Any<IObjectDataInput>()).Returns(new DataPersistenceOptions());
             orw.Read<TieredStoreOptions>(Arg.Any<IObjectDataInput>()).Returns(new TieredStoreOptions());
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             mapOptions.WriteData(output);
 
-            var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
             var readMapOptions = new MapOptions();
             readMapOptions.ReadData(input);
 

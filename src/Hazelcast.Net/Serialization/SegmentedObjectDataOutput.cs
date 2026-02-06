@@ -53,7 +53,13 @@ namespace Hazelcast.Serialization
         }
         public Endianness Endianness { get; }
         public long TotalLength => _totalLength;
-        
+
+        public int Position
+        {
+            get => GetAbsolutePosition();
+
+        }
+
         public int SizeLeftInCurrentChunk => _currentChunk.Length - _positionInChunk;
 
         /// <summary>
@@ -84,34 +90,30 @@ namespace Hazelcast.Serialization
                 source = source.Slice(writeCount);
             }
         }
-        
+
         private void WriteFragmentedString(ReadOnlySpan<char> source)
         {
             var encoder = Encoding.UTF8.GetEncoder();
-            var destination = GetSpan(2); // start with at least 2 bytes for single UTF-8 character
+            var destination = GetSpan(4); // at least 4 bytes for max UTF-8 bytes per char
             var charSource = source;
-            
+
             while (!charSource.IsEmpty)
             {
-                // Write as much as possible into the current destination
                 encoder.Convert(
-                    charSource, 
-                    destination, 
-                    true, 
-                    out var charsUsed, 
-                    out var bytesUsed, 
+                    charSource,
+                    destination,
+                    charSource.Length <= destination.Length, // flush only on potential last iteration
+                    out var charsUsed,
+                    out var bytesUsed,
                     out var completed
                 );
-                
+
                 Advance(bytesUsed);
-                
                 charSource = charSource.Slice(charsUsed);
 
                 if (charSource.IsEmpty) break;
 
-                // We filled the current chunk. Request a new one.
-                // We ask for at least 1 byte, which triggers the SegmentedWriter to rent a NEW chunk.
-                destination = GetSpan(1); 
+                destination = GetSpan(4);
             }
         }
 
@@ -150,7 +152,7 @@ namespace Hazelcast.Serialization
 
             return new ReadOnlySequence<byte>(firstSegment, 0, lastSegment, lastSegment.Memory.Length);
         }
-        
+
         /// <summary>
         /// Ensures we have a contiguous block of memory for a primitive write.
         /// If the current chunk doesn't have space, we move to a new one immediately.
@@ -183,7 +185,7 @@ namespace Hazelcast.Serialization
                 _totalLength = absPos;
             return newSpan;
         }
-  
+
 
         #region IBufferWriter<byte> Implementation
 
@@ -233,7 +235,7 @@ namespace Hazelcast.Serialization
             _currentChunkIndex = _rentedArrays.Count - 1;
             _positionInChunk = 0;
         }
-        
+
         private void EnsureCapacity(int sizeHint)
         {
             if (sizeHint < 0) throw new ArgumentOutOfRangeException(nameof(sizeHint));
@@ -329,7 +331,7 @@ namespace Hazelcast.Serialization
             }
 
             // Forward seek beyond current position - fill gap with zeros
-            var gap = position - (int)_totalLength;
+            var gap = position - (int) _totalLength;
             WriteZeroBytes(gap);
             if (count > 0) EnsureCapacity(count);
         }
@@ -365,12 +367,12 @@ namespace Hazelcast.Serialization
             _totalLength = 0;
             return true;
         }
-        
+
         private static void CastAndCopyCharsToBytes(ReadOnlySpan<char> source, Span<byte> destination)
         {
             for (int i = 0; i < source.Length; i++)
             {
-                destination[i] = (byte)source[i];
+                destination[i] = (byte) source[i];
             }
         }
 

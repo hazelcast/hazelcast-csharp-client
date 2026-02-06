@@ -149,7 +149,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
             
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -260,7 +260,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -387,7 +387,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -437,7 +437,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            using var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -539,7 +539,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -569,7 +569,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -658,7 +658,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
@@ -725,7 +725,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, rec);
             writer.Complete();
@@ -762,7 +762,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var orw = new ObjectReaderWriter(serializer);
 
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             var writer = new CompactWriter(orw, output, schema);
             serializer.Write(writer, rec);
             writer.Complete();
@@ -837,7 +837,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                     ReflectionDataSource.SomeStruct2N => _someStruct2NSchema,
                     _ => throw new NotSupportedException($"Don't know how to write {obj.GetType()}.")
                 };
-                var w = new CompactWriter(this, (ObjectDataOutput) output, schema);
+                var w = new CompactWriter(this, (SegmentedObjectDataOutput) output, schema);
                 _serializer.Write(w, obj);
                 w.Complete();
             }

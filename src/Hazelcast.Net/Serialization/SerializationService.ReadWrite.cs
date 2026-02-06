@@ -250,7 +250,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Writes an object to an <see cref="ObjectDataOutput"/>.
+        /// Writes an object to an <see cref="SegmentedObjectDataOutput"/>.
         /// </summary>
         /// <param name="output">The output.</param>
         /// <param name="obj">The object.</param>
@@ -263,7 +263,7 @@ namespace Hazelcast.Serialization
         /// Root object type-id is always written out as big-endian, whereas inner object type-ids are
         /// written out using the configured endianness.</para>
         /// </remarks>
-        public void WriteObject(ObjectDataOutput output, object obj, bool isRootObject, bool withSchemas)
+        public void WriteObject(SegmentedObjectDataOutput output, object obj, bool isRootObject, bool withSchemas)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
             if (obj is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
@@ -339,7 +339,7 @@ namespace Hazelcast.Serialization
 
         /// <inheritdoc />
         void IWriteObjectsToObjectDataOutput.Write(IObjectDataOutput output, object obj)
-            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, false, false);
+            => WriteObject(output.MustBe<SegmentedObjectDataOutput>(nameof(output)), obj, false, false);
 
         /// <inheritdoc />
         T IReadObjectsFromObjectDataInput.Read<T>(IObjectDataInput input)

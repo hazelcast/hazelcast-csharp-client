@@ -34,9 +34,9 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, IPortable p)
         {
-            if (!(output is ObjectDataOutput))
+            if (!(output is SegmentedObjectDataOutput))
             {
-                throw new ArgumentException("ObjectDataOutput must be instance of BufferObjectDataOutput!");
+                throw new ArgumentException("SegmentedObjectDataOutput must be instance of BufferObjectDataOutput!");
             }
             if (p.ClassId == 0)
             {
@@ -44,7 +44,7 @@ namespace Hazelcast.Serialization
             }
             output.WriteInt(p.FactoryId);
             output.WriteInt(p.ClassId);
-            WriteInternal((ObjectDataOutput) output, p);
+            WriteInternal((SegmentedObjectDataOutput) output, p);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -86,7 +86,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        internal void WriteInternal(ObjectDataOutput output, IPortable p)
+        internal void WriteInternal(SegmentedObjectDataOutput output, IPortable p)
         {
             var cd = _context.LookupOrRegisterClassDefinition(p);
             output.WriteInt(cd.Version);

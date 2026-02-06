@@ -19,18 +19,18 @@ namespace Hazelcast.Core
     /// <summary>
     /// Defines a pooled object policy for <see cref="ObjectDataOutput"/> to define how to create and reset instances.
     /// </summary>
-    internal class ObjectDataOutputPooledObjectPolicy : PooledObjectPolicy<ObjectDataOutput>
+    internal class ObjectDataOutputPooledObjectPolicy : PooledObjectPolicy<SegmentedObjectDataOutput>
     {
-        private Func<ObjectDataOutput> _create;
+        private Func<SegmentedObjectDataOutput> _create;
 
-        public ObjectDataOutputPooledObjectPolicy(Func<ObjectDataOutput> create)
+        public ObjectDataOutputPooledObjectPolicy(Func<SegmentedObjectDataOutput> create)
         {
             _create = create ?? throw new ArgumentNullException(nameof(create));
         }
 
-        public override ObjectDataOutput Create()
+        public override SegmentedObjectDataOutput Create()
             => _create();
-        public override bool Return(ObjectDataOutput obj)
+        public override bool Return(SegmentedObjectDataOutput obj)
             => obj.TryReset();
     }
 }

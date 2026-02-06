@@ -35,15 +35,15 @@ namespace Hazelcast.Serialization.ConstantSerializers
 
         public override void Write(IObjectDataOutput output, Guid obj)
         {
-            if (output is ObjectDataOutput concrete)
+            if (output is SegmentedObjectDataOutput concrete)
             {
-                concrete.Buffer.WriteGuid(concrete.Position, obj, concrete.Endianness, false);
-                concrete.Position += BytesExtensions.SizeOfGuid;
+                var span = concrete.GetSpanForPrimitive(BytesExtensions.SizeOfGuid);
+                span.WriteGuid(0, obj, concrete.Endianness, false);
                 return;
             }
 
             // that should never happens, and if it happens one day, we'll deal with it
-            throw new NotSupportedException("Output is not ObjectDataOutput.");
+            throw new NotSupportedException("Output is not SegmentedObjectDataOutput.");
         }
     }
 }

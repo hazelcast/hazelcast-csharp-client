@@ -21,13 +21,13 @@ namespace Hazelcast.Serialization
         private readonly int _begin;
         private readonly IClassDefinition _cd;
         private readonly int _offset;
-        private readonly ObjectDataOutput _out;
+        private readonly SegmentedObjectDataOutput _out;
         private readonly PortableSerializer _serializer;
         private readonly ISet<string> _writtenFields;
         private bool _raw;
 
         /// <exception cref="System.IO.IOException" />
-        public DefaultPortableWriter(PortableSerializer serializer, ObjectDataOutput @out, IClassDefinition cd)
+        public DefaultPortableWriter(PortableSerializer serializer, SegmentedObjectDataOutput @out, IClassDefinition cd)
         {
             _serializer = serializer;
             _out = @out;

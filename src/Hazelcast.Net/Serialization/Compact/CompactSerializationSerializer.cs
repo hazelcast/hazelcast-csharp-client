@@ -104,7 +104,7 @@ namespace Hazelcast.Serialization.Compact
             => Write(output, obj, false);
 
         public void Write(IObjectDataOutput output, object obj, bool withSchemas)
-            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, withSchemas);
+            => WriteObject(output.MustBe<SegmentedObjectDataOutput>(nameof(output)), obj, withSchemas);
 
         // invoked when writing out an object and we need its registration, ie its serializer
         // either a serializer has been registered already for the type, or we need to fall back
@@ -193,7 +193,7 @@ namespace Hazelcast.Serialization.Compact
                 : CompactOptions.GetDefaultTypeName(type);
         }
 
-        public void WriteObject(ObjectDataOutput output, object obj, bool withSchemas)
+        public void WriteObject(SegmentedObjectDataOutput output, object obj, bool withSchemas)
         {
             Schema? schema;
             CompactSerializerAdapter serializer;
@@ -232,7 +232,7 @@ namespace Hazelcast.Serialization.Compact
             writer.Complete();
         }
 
-        private static void WriteSchema(ObjectDataOutput output, Schema schema, bool withSchemas)
+        private static void WriteSchema(SegmentedObjectDataOutput output, Schema schema, bool withSchemas)
         {
             output.WriteLong(schema.Id);
 
