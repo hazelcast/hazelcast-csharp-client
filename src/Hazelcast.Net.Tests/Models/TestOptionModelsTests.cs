@@ -191,10 +191,9 @@ namespace Hazelcast.Tests.Models
             orw.Read<NearCachePreloaderOptions>(Arg.Any<IObjectDataInput>()).Returns(preloader);
 
             using var output = new SegmentedObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
-            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
-
-            // Act
             originalOptions.WriteData(output);
+
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
             var newOptions = new NearCacheOptions();
             newOptions.ReadData(input);
 
@@ -227,10 +226,11 @@ namespace Hazelcast.Tests.Models
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
             using var output = new SegmentedObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
-            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
-
-            // Act
+            
+            // First WriteData to populate the output buffer
             originalOptions.WriteData(output);
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
+            
             var newOptions = new NearCachePreloaderOptions();
             newOptions.ReadData(input);
 
