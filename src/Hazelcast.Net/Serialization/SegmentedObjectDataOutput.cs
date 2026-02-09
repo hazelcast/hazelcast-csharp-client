@@ -37,6 +37,7 @@ namespace Hazelcast.Serialization
         private int _currentChunkIndex;
         private int _positionInChunk;
         private long _totalLength;
+        private int _basePosition; // sum of committed lengths for chunks 0.._currentChunkIndex-1
         private readonly int _minChunkSize;
         private HashSet<long> _schemaIds;
         private IBufferPool _bufferPool;
@@ -229,6 +230,7 @@ namespace Hazelcast.Serialization
         {
             // Update the committed length for the current chunk before moving to a new one
             UpdateCurrentChunkCommittedLength();
+            _basePosition += _committedLengths[_currentChunkIndex]; // accumulate before switching
 
             _currentChunk = _bufferPool.Rent(sizeHint);
             _rentedArrays.Add(_currentChunk);
@@ -277,6 +279,7 @@ namespace Hazelcast.Serialization
                     _currentChunkIndex = i;
                     _currentChunk = _rentedArrays[i];
                     _positionInChunk = absolutePosition - runningPosition;
+                    _basePosition = runningPosition; // cache the running total
                     return;
                 }
                 runningPosition += chunkLength;
@@ -304,15 +307,7 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Gets the current absolute position within the written data.
         /// </summary>
-        private int GetAbsolutePosition()
-        {
-            int position = 0;
-            for (int i = 0; i < _currentChunkIndex; i++)
-            {
-                position += _committedLengths[i];
-            }
-            return position + _positionInChunk;
-        }
+        private int GetAbsolutePosition() => _basePosition + _positionInChunk;
 
         /// <summary>
         /// Moves to the specified absolute position, optionally ensuring capacity for additional bytes.
@@ -351,6 +346,7 @@ namespace Hazelcast.Serialization
             _committedLengths.Clear();
             _currentChunk = null;
             _totalLength = 0;
+            _basePosition = 0;
         }
 
         /// <summary>
@@ -365,6 +361,7 @@ namespace Hazelcast.Serialization
             _currentChunkIndex = 0;
             _positionInChunk = 0;
             _totalLength = 0;
+            _basePosition = 0;
             return true;
         }
 
