@@ -17,7 +17,7 @@ using Microsoft.Extensions.ObjectPool;
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Defines a pooled object policy for <see cref="ObjectDataOutput"/> to define how to create and reset instances.
+    /// Defines a pooled object policy for <see cref="SegmentedObjectDataOutput"/> to define how to create and reset instances.
     /// </summary>
     internal class ObjectDataOutputPooledObjectPolicy : PooledObjectPolicy<SegmentedObjectDataOutput>
     {

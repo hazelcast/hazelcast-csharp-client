@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using Hazelcast.Core;
 using Hazelcast.Projection;
 using Hazelcast.Serialization;
@@ -38,10 +39,10 @@ namespace Hazelcast.Tests.Projections
             Assert.Throws<ArgumentNullException>(() => p.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => p.ReadData(null));
 
-            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(256, null, Endianness.BigEndian, new DefaultBufferPool());
             p.WriteData(output);
 
-            using var input = new ObjectDataInput(output.Buffer, null, Endianness.BigEndian);
+            using var input = new ObjectDataInput(output.GetSequence().ToArray(), null, Endianness.BigEndian);
 
             p = new SingleAttributeProjection();
             p.ReadData(input);
@@ -65,10 +66,10 @@ namespace Hazelcast.Tests.Projections
             Assert.Throws<ArgumentNullException>(() => p.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => p.ReadData(null));
 
-            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(256, null, Endianness.BigEndian, new DefaultBufferPool());
             p.WriteData(output);
 
-            using var input = new ObjectDataInput(output.Buffer, null, Endianness.BigEndian);
+            using var input = new ObjectDataInput(output.GetSequence().ToArray(), null, Endianness.BigEndian);
 
             p = new MultiAttributeProjection();
             p.ReadData(input);

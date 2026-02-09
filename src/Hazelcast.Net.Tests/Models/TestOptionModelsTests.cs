@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.NearCaching;
@@ -189,8 +190,8 @@ namespace Hazelcast.Tests.Models
             orw.Read<EvictionOptions>(Arg.Any<IObjectDataInput>()).Returns(eviction);
             orw.Read<NearCachePreloaderOptions>(Arg.Any<IObjectDataInput>()).Returns(preloader);
 
-            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
-            var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
+            using var output = new SegmentedObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
 
             // Act
             originalOptions.WriteData(output);
@@ -225,8 +226,8 @@ namespace Hazelcast.Tests.Models
             };
 
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
-            var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
+            using var output = new SegmentedObjectDataOutput(1000, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
 
             // Act
             originalOptions.WriteData(output);

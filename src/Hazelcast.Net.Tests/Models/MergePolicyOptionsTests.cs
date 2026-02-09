@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+using System.Buffers;
 using Hazelcast.Core;
 using NUnit.Framework;
 using Hazelcast.Models;
@@ -41,10 +43,10 @@ namespace Hazelcast.Tests.Models
             var batchSize = 200;
             var mergePolicyOptions = new MergePolicyOptions(policy, batchSize);
 
-            var output = new ObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, null, Endianness.LittleEndian, new DefaultBufferPool());
             mergePolicyOptions.WriteData(output);
 
-            var input = new ObjectDataInput(output.Buffer, null, Endianness.LittleEndian);
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), null, Endianness.LittleEndian);
             var readMergePolicyOptions = new MergePolicyOptions();
             readMergePolicyOptions.ReadData(input);
 

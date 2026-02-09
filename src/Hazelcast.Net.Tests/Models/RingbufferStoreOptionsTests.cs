@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Buffers;
 using NUnit.Framework;
 using Hazelcast.Models;
 using Hazelcast.Serialization;
@@ -63,10 +64,10 @@ namespace Hazelcast.Tests.Models
             };
             
             var orw = Substitute.For<IReadWriteObjectsFromIObjectDataInputOutput>();
-            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, orw, Endianness.LittleEndian, new DefaultBufferPool());
             ringbufferStoreOptions.WriteData(output);
 
-            var input = new ObjectDataInput(output.Buffer, orw, Endianness.LittleEndian);
+            var input = new ObjectDataInput(output.GetSequence().ToArray(), orw, Endianness.LittleEndian);
             var readRingbufferStoreOptions = new RingbufferStoreOptions();
             readRingbufferStoreOptions.ReadData(input);
 

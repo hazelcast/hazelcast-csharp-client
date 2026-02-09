@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -156,9 +157,9 @@ namespace Hazelcast.Tests.Query
             Assert.That(partition.FactoryId, Is.EqualTo(FactoryIds.PredicateFactoryId));
             Assert.That(partition.ClassId, Is.EqualTo(PredicateDataSerializerHook.PartitionPredicate));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             partition.WriteData(output);
-            using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
+            using var input = new ObjectDataInput(output.GetSequence().ToArray(), _serializationService, Endianness.BigEndian);
             var p = new PartitionPredicate();
             p.ReadData(input);
 
@@ -174,10 +175,10 @@ namespace Hazelcast.Tests.Query
             Assert.Throws<ArgumentNullException>(() => comparer.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => comparer.ReadData(null));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             comparer.WriteData(output);
             var c = new PredicateComparer();
-            using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
+            using var input = new ObjectDataInput(output.GetSequence().ToArray(), _serializationService, Endianness.BigEndian);
             c.ReadData(input);
 
             Assert.That(c.Type, Is.EqualTo(comparer.Type));
@@ -288,13 +289,13 @@ namespace Hazelcast.Tests.Query
             // Assert.Throws<ArgumentNullException>(() => predicate.WriteData(null));
             // Assert.Throws<ArgumentNullException>(() => predicate.ReadData(null));
 
-            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
+            using var output = new SegmentedObjectDataOutput(1024, _serializationService, Endianness.BigEndian, new DefaultBufferPool());
             predicate.WriteData(output);
 
             T p = default;
             if (typeof (T) != typeof (PagingPredicate) && typeof (T) != typeof (PartitionPredicate))
             {
-                using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
+                using var input = new ObjectDataInput(output.GetSequence().ToArray(), _serializationService, Endianness.BigEndian);
                 p = (T)Activator.CreateInstance(typeof(T));
                 p.ReadData(input);
 
