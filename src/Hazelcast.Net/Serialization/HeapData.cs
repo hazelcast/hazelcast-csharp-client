@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
@@ -35,8 +36,12 @@ namespace Hazelcast.Serialization
 
         private const int ArrayHeaderSizeInBytes = 16;
 
-        private readonly byte[] _bytes;
+        //private readonly byte[] _bytes;
         private HashSet<long> _schemaIds;
+
+        private byte[] _bytes;
+        private bool _detached;
+        private readonly IBufferPool _bufferPool;
 
         /// <summary>
         /// Initializes a new empty instance of the <see cref="HeapData"/> class.
@@ -48,8 +53,9 @@ namespace Hazelcast.Serialization
         /// Initializes a new instance of the <see cref="HeapData"/> class.
         /// </summary>
         /// <param name="bytes">The data bytes.</param>
+        /// <param name="bufferPool">The buffer pool</param>
         /// <param name="schemaIds">Schema identifiers.</param>
-        public HeapData(byte[] bytes, HashSet<long> schemaIds = null)
+        public HeapData(byte[] bytes, HashSet<long> schemaIds = null, IBufferPool bufferPool = null)
         {
             //??
             // will use a byte to store partition_hash bit
@@ -60,11 +66,14 @@ namespace Hazelcast.Serialization
             if (bytes != null && bytes.Length > 0 && bytes.Length < HeapDataOverHead)
                 throw new ArgumentException($"Data should either be empty or contain at least {HeapDataOverHead} bytes.");
 
-            // TODO: HeapData bytes should in fact never be null, we can simplify all this
+            _bufferPool = bufferPool; // null allowed, it means that the data is not pooled and will not be returned to any pool when disposed
 
             _bytes = bytes;
+            MemoryBytes = new ReadOnlyMemory<byte>(_bytes);
             _schemaIds = schemaIds;
         }
+
+        public ReadOnlyMemory<byte> MemoryBytes { get; private set; }
 
         /// <inheritdoc />
         public bool HasSchemas => _schemaIds != null;
@@ -76,7 +85,7 @@ namespace Hazelcast.Serialization
         public int DataSize => Math.Max(TotalSize - HeapDataOverHead, 0);
 
         /// <inheritdoc />
-        public int TotalSize => _bytes?.Length ?? 0;
+        public int TotalSize => MemoryBytes.Length;
 
         /// <inheritdoc />
         public int PartitionHash
@@ -84,30 +93,29 @@ namespace Hazelcast.Serialization
             get
             {
                 int hash;
-                return _bytes != null &&
-                       _bytes.Length >= HeapDataOverHead &&
-                       (hash = _bytes.ReadInt(PartitionHashOffset, Endianness.BigEndian)) != 0
-                    ? hash
-                    : GetHashCode();
+                return
+                    MemoryBytes.Length >= HeapDataOverHead &&
+                    (hash = MemoryBytes.ReadInt(PartitionHashOffset, Endianness.BigEndian)) != 0
+                        ? hash
+                        : GetHashCode();
             }
         }
 
         public bool HasPartitionHash
-            => _bytes != null &&
-               _bytes.Length >= HeapDataOverHead &&
-               _bytes.ReadInt(PartitionHashOffset, Endianness.BigEndian) != 0;
+            => MemoryBytes.Length >= HeapDataOverHead &&
+               MemoryBytes.ReadInt(PartitionHashOffset, Endianness.BigEndian) != 0;
 
         /// <inheritdoc />
-        public byte[] ToByteArray() => _bytes ?? Array.Empty<byte>();
+        public byte[] ToByteArray() => MemoryBytes.ToArray();
 
         /// <inheritdoc />
         public int TypeId
-            => TotalSize == 0 ? SerializationConstants.ConstantTypeNull : _bytes.ReadInt(TypeOffset, Endianness.BigEndian);
+            => TotalSize == 0 ? SerializationConstants.ConstantTypeNull : MemoryBytes.ReadInt(TypeOffset, Endianness.BigEndian);
 
         /// <inheritdoc />
         public int HeapCost
             // where does this come from?
-            => BytesExtensions.SizeOfInt + (_bytes != null ? ArrayHeaderSizeInBytes + _bytes.Length : 0);
+            => BytesExtensions.SizeOfInt + (MemoryBytes.Length > 0 ? ArrayHeaderSizeInBytes + MemoryBytes.Length : 0);
 
         /// <inheritdoc />
         public bool IsPortable
@@ -129,13 +137,14 @@ namespace Hazelcast.Serialization
             if (dataSize != data.DataSize)
                 return false;
 
-            return dataSize == 0 || Equals(_bytes, data.ToByteArray());
+            // todo: optimize this by comparing partition hashes first, if they are present. Also, get rid of toByteArray() call by comparing MemoryBytes directly.
+            return dataSize == 0 || Equals(MemoryBytes, data.ToByteArray());
         }
 
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Murmur3HashCode.Hash(_bytes, DataOffset, DataSize);
+            return Murmur3HashCode.Hash(MemoryBytes.Span, DataOffset, DataSize);
         }
 
         /// <inheritdoc />
@@ -151,6 +160,28 @@ namespace Hazelcast.Serialization
             sb.Append('}');
             return sb.ToString();
         }
+        public void Dispose()
+        {
+            _bufferPool?.Return(_bytes);
+            _bytes = null;
+            MemoryBytes = ReadOnlyMemory<byte>.Empty;
+            _schemaIds = null;
+        }
+
+        public IData DeAttach()
+        {
+            if (_detached) return this;
+
+            var copy = new byte[MemoryBytes.Length];
+
+            MemoryBytes.CopyTo(copy);
+            _bytes = null;
+            MemoryBytes = ReadOnlyMemory<byte>.Empty;
+            _detached = true;
+
+            return new HeapData(copy, _schemaIds);
+        }
+
 
         // Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
         private static bool Equals(byte[] data1, byte[] data2)
@@ -176,5 +207,6 @@ namespace Hazelcast.Serialization
 
             return true;
         }
+
     }
 }

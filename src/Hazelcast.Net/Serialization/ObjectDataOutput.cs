@@ -27,6 +27,7 @@ namespace Hazelcast.Serialization
         private int _position;
         private HashSet<long> _schemaIds;
         private IBufferPool _bufferPool;
+        private bool _initialized = false;
 
         internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness, IBufferPool bufferPool)
         {
@@ -34,9 +35,68 @@ namespace Hazelcast.Serialization
             _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
-            _buffer = _bufferPool.Rent(_initialBufferSize);
         }
 
+        # region Memory Owner Ship
+
+        /// <summary>
+        /// Initializes the output, renting a buffer from the pool. This must be called before using the output.
+        /// </summary>
+        public void Initialize()
+        {
+            if (_initialized)
+                throw new InvalidOperationException("Output is already initialized.");
+
+            _buffer = _bufferPool.Rent(_initialBufferSize);
+            _initialized = true;
+        }
+
+        /// <summary>
+        /// Detaches the buffer from the output, returning it to the caller. After this call,
+        /// the output is no longer usable and should be reinitialized.
+        /// </summary>
+        /// <returns>buffer</returns>
+        public byte[] DetachBuffer()
+        {
+            var buffer = _buffer;
+            _buffer = null;
+            _position = 0;
+            _initialized = false;
+            return buffer;
+        }
+
+        # endregion
+
+        public void Clear()
+        {
+            Position = 0;
+            _schemaIds?.Clear();
+            
+            // If not detached, return the buffer to the pool and detach it.
+            // We don't want a buffer to be shared between outputs, but we want to reuse it if the output is reused.
+            if (_initialized)
+            {
+                _bufferPool.Return(_buffer);
+                DetachBuffer();
+            }
+        }
+
+        public bool TryReset()
+        {
+            Clear();
+            return true;
+        }
+
+        public void Dispose()
+        {
+            Position = 0;
+            _bufferPool.Return(_buffer);
+            _buffer = null;
+            _schemaIds = null;
+        }
+
+
+        // TODO: Convert to Memory<byte> and Span<byte> and avoid copying arrays
         public byte[] Buffer
         {
             get => _buffer;
@@ -83,28 +143,6 @@ namespace Hazelcast.Serialization
             }
         }
 
-        public void Clear()
-        {
-            Position = 0;
-            _schemaIds?.Clear();
-
-            if (_buffer != null && _buffer.Length > _initialBufferSize)
-            {
-                _bufferPool.Return(_buffer);
-                _buffer = _bufferPool.Rent(_initialBufferSize);
-            }
-            else if (_buffer != null)
-            {
-                Array.Clear(_buffer, 0, _buffer.Length);
-            }
-        }
-
-        public void Dispose()
-        {
-            Position = 0;
-            _bufferPool.Return(_buffer);
-            _buffer = null;
-        }
 
         public void MoveTo(int position, int count = 0)
         {
@@ -135,10 +173,7 @@ namespace Hazelcast.Serialization
             _bufferPool.Return(_buffer);
             _buffer = newBuffer;
         }
-        public bool TryReset()
-        {
-            Clear();
-            return true;
-        }
+
+
     }
 }

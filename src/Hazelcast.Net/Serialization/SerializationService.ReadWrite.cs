@@ -83,7 +83,7 @@ namespace Hazelcast.Serialization
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 output.WriteIntBigEndian(partitionHash); // partition hash is always big-endian
                 WriteObject(output, obj, true, withSchemas);
-                return new HeapData(output.ToByteArray(), output.HasSchemas ? new HashSet<long>(output.SchemaIds) : null);
+                return new HeapData(output.DetachBuffer(), output.HasSchemas ? new HashSet<long>(output.SchemaIds) : null, _bufferPool);
             }
             catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
@@ -91,6 +91,8 @@ namespace Hazelcast.Serialization
             }
             finally
             {
+                // only return the object, not buffer.
+                // heap data will take care of buffer pooling when disposed.
                 ReturnDataOutput(output);
             }
         }
@@ -184,7 +186,7 @@ namespace Hazelcast.Serialization
             {
                 var typeId = data.TypeId;
                 var serializer = LookupSerializer(typeId);
-                
+
                 // TODO: consider doing this via polymorphism
                 // i.e. have ISerializerAdapter implement TryRead(...)
                 if (serializer is CompactSerializationSerializerAdapter compact)
@@ -284,7 +286,7 @@ namespace Hazelcast.Serialization
                 throw new SerializationException(e);
             }
         }
-        
+
         /// <summary>
         /// Reads an object from an <see cref="ObjectDataInput"/>.
         /// </summary>
