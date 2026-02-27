@@ -26,7 +26,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             iterator.MoveNext();
 
-            var isLast = iterator.Take().Bytes[0] == 1;
+            var isLast = iterator.Take().Bytes.Span[0] == 1;
 
             var columnTypeIds = ListIntegerCodec.Decode(iterator);
             var columnTypes = new SqlColumnType[columnTypeIds.Count];
