@@ -51,7 +51,6 @@ namespace Hazelcast.Core
         /// <returns>The hash code of the array of bytes.</returns>
         public static int Hash(ReadOnlySpan<byte> data, int offset, int count, int seed = DefaultMurmurSeed)
         {
-            if (data == null) throw new ArgumentNullException(nameof(data));
             if (offset < 0 || offset >= data.Length) throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0 || offset + count > data.Length) throw new ArgumentOutOfRangeException(nameof(count));
 

@@ -89,7 +89,7 @@ namespace Hazelcast.Serialization
             _schemaIds = schemaIds;
         }
 
-        public ReadOnlyMemory<byte> MemoryBytes { get; private set; }
+        public ReadOnlyMemory<byte> MemoryBytes { get; private set; } = Memory<byte>.Empty;
 
         /// <inheritdoc />
         public bool HasSchemas => _schemaIds != null;
@@ -157,12 +157,13 @@ namespace Hazelcast.Serialization
                 return false;
 
             // todo: optimize this by comparing partition hashes first, if they are present. Also, get rid of toByteArray() call by comparing MemoryBytes directly.
-            return dataSize == 0 || Equals(MemoryBytes, data.ToByteArray());
+            return dataSize == 0 || Equals(MemoryBytes, data.GetMemory());
         }
 
         /// <inheritdoc />
         public override int GetHashCode()
         {
+            if (DataSize == 0) return 0;
             return Murmur3HashCode.Hash(MemoryBytes.Span, DataOffset, DataSize);
         }
 
@@ -194,8 +195,9 @@ namespace Hazelcast.Serialization
             var copy = new byte[MemoryBytes.Length];
 
             MemoryBytes.CopyTo(copy);
-            _bytes = null;
             MemoryBytes = ReadOnlyMemory<byte>.Empty;
+            _bufferPool?.Return(_bytes);
+            _bytes = null;
             _detached = true;
 
             return new HeapData(copy, _schemaIds);
@@ -203,13 +205,10 @@ namespace Hazelcast.Serialization
 
 
         // Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
-        private static bool Equals(byte[] data1, byte[] data2)
+        private static bool Equals(ReadOnlySpan<byte> data1, ReadOnlySpan<byte> data2)
         {
-            if (data1 == data2)
+            if (data1.SequenceEqual(data2))
                 return true;
-
-            if (data1 == null || data2 == null)
-                return false;
 
             var length = data1.Length;
             if (data2.Length != length)

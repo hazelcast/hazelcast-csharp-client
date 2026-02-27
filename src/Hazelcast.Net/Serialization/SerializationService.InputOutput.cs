@@ -62,6 +62,7 @@ namespace Hazelcast.Serialization
         public ObjectDataOutput CreateObjectDataOutput(int bufferSize)
         {
             var output = _objectDataOutputPool.Get();
+            output.Initialize();
             output.EnsureAvailable(bufferSize);
             return output;
         }

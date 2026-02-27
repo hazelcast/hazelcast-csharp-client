@@ -35,6 +35,7 @@ namespace Hazelcast.Serialization
             _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
+            Initialize();
         }
 
         # region Memory Owner Ship
@@ -44,8 +45,7 @@ namespace Hazelcast.Serialization
         /// </summary>
         public void Initialize()
         {
-            if (_initialized)
-                throw new InvalidOperationException("Output is already initialized.");
+            if (_initialized) return;
 
             _buffer = _bufferPool.Rent(_initialBufferSize);
             _initialized = true;
@@ -90,9 +90,10 @@ namespace Hazelcast.Serialization
         public void Dispose()
         {
             Position = 0;
-            _bufferPool.Return(_buffer);
+            _bufferPool?.Return(_buffer);
             _buffer = null;
             _schemaIds = null;
+            _initialized = false;
         }
 
 

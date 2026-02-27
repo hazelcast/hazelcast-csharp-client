@@ -31,7 +31,6 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ArgumentExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => Murmur3HashCode.Hash(null, 0, 100));
             Assert.Throws<ArgumentOutOfRangeException>(() => Murmur3HashCode.Hash(new byte[10], -1, 100));
             Assert.Throws<ArgumentOutOfRangeException>(() => Murmur3HashCode.Hash(new byte[10], 11, 100));
             Assert.Throws<ArgumentOutOfRangeException>(() => Murmur3HashCode.Hash(new byte[10], 0, -1));
