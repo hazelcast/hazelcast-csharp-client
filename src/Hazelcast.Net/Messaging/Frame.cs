@@ -13,6 +13,8 @@
 // limitations under the License.
 using System;
 using System.Buffers;
+using System.Runtime.InteropServices;
+using System.Threading;
 using Hazelcast.Core;
 
 namespace Hazelcast.Messaging
@@ -27,8 +29,9 @@ namespace Hazelcast.Messaging
     /// <para>Frames form a linked list through their <see cref="Next"/> property, with the
     /// <see cref="ClientMessage"/> keeping track of the first and last frame of the list.</para>
     /// </remarks>
-    internal class Frame
+    internal class Frame : IDisposable
     {
+        private IDisposable _owner;
         /// <summary>
         /// Initializes a new instance of the <see cref="Frame"/> class representing an empty frame.
         /// </summary>
@@ -54,6 +57,19 @@ namespace Hazelcast.Messaging
         {
             Flags = flags;
             Bytes = memoryBytes;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Frame"/> class from read-only memory.
+        /// </summary>
+        /// <param name="bytes">The frame bytes. Must be array-backed.</param>
+        /// <param name="flags">The frame flags.</param>
+        /// <param name="owner">An optional owner whose lifetime is tied to this frame; disposed when the frame is disposed.</param>
+        public Frame(ReadOnlyMemory<byte> bytes, FrameFlags flags = FrameFlags.Default, IDisposable owner = null)
+        {
+            Flags = flags;
+            Bytes = MemoryMarshal.AsMemory(bytes);
+            _owner = owner;
         }
 
         /// <summary>
@@ -164,6 +180,14 @@ namespace Hazelcast.Messaging
             var bytes = new byte[Bytes.Length];
             Bytes.CopyTo(bytes);
             return new Frame(bytes, Flags);
+        }
+
+        /// <summary>
+        /// Disposes the frame, releasing any owned resource.
+        /// </summary>
+        public void Dispose()
+        {
+            Interlocked.Exchange(ref _owner, null)?.Dispose();
         }
 
         /// <inheritdoc />

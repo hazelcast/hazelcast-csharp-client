@@ -266,27 +266,29 @@ namespace Hazelcast.Clustering
         {
             // NOTE: *every* invocation sent to the cluster goes through the code below
 
-            while (true)
+            try
             {
-                MemberConnection connection = null;
-
-                // if not connected and in "async" reconnect mode, don't send and don't retry
-                // unless the invocation has been marked as ok when not connected
-                if ((invocation.Flags & InvocationFlags.InvokeWhenNotConnected) == 0)
-                    _clusterState.ThrowIfNotConnectedAndAsyncReconnect();
-
-                try
+                while (true)
                 {
-                    HConsole.WriteLine(this, $"Trying :{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)}...");
-                    connection = GetInvocationConnection(invocation); // non-null, throws if no connections
-                    return await connection.SendAsync(invocation, cancellationToken).CfAwait();
-                }
+                    MemberConnection connection = null;
+
+                    // if not connected and in "async" reconnect mode, don't send and don't retry
+                    // unless the invocation has been marked as ok when not connected
+                    if ((invocation.Flags & InvocationFlags.InvokeWhenNotConnected) == 0)
+                        _clusterState.ThrowIfNotConnectedAndAsyncReconnect();
+
+                    try
+                    {
+                        HConsole.WriteLine(this, $"Trying :{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)}...");
+                        connection = GetInvocationConnection(invocation); // non-null, throws if no connections
+                        return await connection.SendAsync(invocation, cancellationToken).CfAwait();
+                    }
 #if NET8_0_OR_GREATER
-                catch (OperationCanceledException)
-                {
-                    HConsole.WriteLine(this, "Canceled.");
-                    throw;
-                }
+                    catch (OperationCanceledException)
+                    {
+                        HConsole.WriteLine(this, "Canceled.");
+                        throw;
+                    }
 #else
                 catch (TaskCanceledException)
                 {
@@ -294,29 +296,35 @@ namespace Hazelcast.Clustering
                     throw;
                 }
 #endif
-                catch (Exception exception)
-                {
-                    HConsole.WriteLine(this, $"Exception ({connection?.Id.ToShortString() ?? "null"}):{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)} {exception}");
+                    catch (Exception exception)
+                    {
+                        HConsole.WriteLine(this, $"Exception ({connection?.Id.ToShortString() ?? "null"}):{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)} {exception}");
 
-                    // if the client is not active, die - an active client is starting, started, connected or
-                    // disconnected - but attempting to reconnect - whereas a non-active client is down and
-                    // will not go back up
-                    _clusterState.ThrowIfNotActive(exception);
+                        // if the client is not active, die - an active client is starting, started, connected or
+                        // disconnected - but attempting to reconnect - whereas a non-active client is down and
+                        // will not go back up
+                        _clusterState.ThrowIfNotActive(exception);
 
-                    // if the invocation is not retryable, throw
-                    var retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
-                    const bool retryOnClientReconnecting = true;
-                    if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
-                        throw;
+                        // if the invocation is not retryable, throw
+                        var retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
+                        const bool retryOnClientReconnecting = true;
+                        if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
+                            throw;
 
-                    HConsole.WriteLine(this, "Wait...");
+                        HConsole.WriteLine(this, "Wait...");
 
-                    // else, wait for retrying
-                    // this will throw if it cannot retry
-                    await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
+                        // else, wait for retrying
+                        // this will throw if it cannot retry
+                        await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
 
-                    HConsole.WriteLine(this, "Retry");
+                        HConsole.WriteLine(this, "Retry");
+                    }
                 }
+            }
+            finally
+            {
+                // Return any pooled frame buffers now that all send attempts are complete.
+                invocation.RequestMessage.Dispose();
             }
         }
 

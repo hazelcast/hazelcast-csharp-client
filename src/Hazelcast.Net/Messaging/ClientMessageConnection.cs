@@ -304,6 +304,8 @@ namespace Hazelcast.Messaging
             }
             finally
             {
+                
+                
                 if (_writer != null)
                 {
                     try
