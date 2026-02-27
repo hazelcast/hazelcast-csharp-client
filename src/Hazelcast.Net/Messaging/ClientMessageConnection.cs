@@ -150,7 +150,7 @@ namespace Hazelcast.Messaging
             }
 
             // else, fill, and update the reference
-            bytes.Fill(_currentFrame.Bytes);
+            bytes.Fill(_currentFrame.Bytes.Span);
             bufferReference.Buffer = bytes;
 
             _bytesLength = -1;
@@ -370,7 +370,7 @@ namespace Hazelcast.Messaging
                     HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
                     frame.WriteLengthAndFlags(buffer, length);
                     if (frame.Length > sizeofHeader)
-                        frame.Bytes.AsSpan().CopyTo(buffer.AsSpan(length+ sizeofHeader));
+                        frame.Bytes.Span.CopyTo(buffer.AsSpan(length+ sizeofHeader));
                     length += frame.Length;
                 }
 

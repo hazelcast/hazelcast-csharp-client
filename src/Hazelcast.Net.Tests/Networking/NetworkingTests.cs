@@ -72,7 +72,7 @@ namespace Hazelcast.Tests.Networking
         }
 
         private string GetText(ClientMessage message)
-            => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
+            => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes.ToArray());
 
         // basic handler that handles authentication and member views
         private async Task HandleAsync(Server server, ClientMessageConnection connection, ClientMessage requestMessage,
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.Networking
         private async ValueTask ReceiveMessage(Server server, ClientMessageConnection connection, ClientMessage message)
         {
             HConsole.WriteLine(this, "Respond");
-            var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
+            var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes.ToArray());
 #if NETSTANDARD2_1
             var responseText = text switch
             {

@@ -303,7 +303,7 @@ namespace Hazelcast.Networking
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message bytes have been sent.</returns>
         // virtual for tests
-        public virtual async ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<bool> SendAsync(ReadOnlyMemory<byte> bytes, int length, CancellationToken cancellationToken = default)
         {
             if (_isActive == 0)
                 return false;
@@ -311,7 +311,7 @@ namespace Hazelcast.Networking
             // send bytes
             try
             {
-                await _stream.WriteAsync(bytes, 0, length, cancellationToken).CfAwait();
+                await _stream.WriteAsync(bytes.Slice(0, length), cancellationToken).CfAwait();
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)

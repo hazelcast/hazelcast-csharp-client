@@ -80,5 +80,19 @@ namespace Hazelcast.Core
             bytes.CopyTo(a);
             return a.Dump();
         }
+
+        /// <summary>
+        /// Dumps a region of memory into a readable format.
+        /// </summary>
+        /// <param name="bytes">The region of memory.</param>
+        /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the region.</param>
+        /// <returns>A readable string representation of the region of memory.</returns>
+        public static string Dump(this ReadOnlyMemory<byte> bytes, long length = 0)
+        {
+            if (length == 0) length = bytes.Length;
+            if (length == 0) return string.Empty;
+            var a = bytes.Slice(0, (int)length).ToArray();
+            return a.Dump();
+        }
     }
 }

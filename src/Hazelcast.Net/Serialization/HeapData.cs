@@ -72,6 +72,22 @@ namespace Hazelcast.Serialization
             MemoryBytes = new ReadOnlyMemory<byte>(_bytes);
             _schemaIds = schemaIds;
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HeapData"/> class.
+        /// </summary>
+        /// <param name="memoryBytes">Memory bytes</param>
+        /// <param name="schemaIds">Schema Ids</param>
+        /// <exception cref="ArgumentException"></exception>
+        public HeapData(ReadOnlyMemory<byte> memoryBytes, HashSet<long> schemaIds = null)
+        {
+            if (memoryBytes.Length > 0 && memoryBytes.Length < HeapDataOverHead)
+                throw new ArgumentException($"Data should either be empty or contain at least {HeapDataOverHead} bytes.");
+
+            _bytes = Array.Empty<byte>();
+             MemoryBytes = memoryBytes;
+            _schemaIds = schemaIds;
+        }
 
         public ReadOnlyMemory<byte> MemoryBytes { get; private set; }
 
@@ -107,6 +123,9 @@ namespace Hazelcast.Serialization
 
         /// <inheritdoc />
         public byte[] ToByteArray() => MemoryBytes.ToArray();
+        
+        /// <inheritdoc />
+        public ReadOnlyMemory<byte> GetMemory() => MemoryBytes;
 
         /// <inheritdoc />
         public int TypeId

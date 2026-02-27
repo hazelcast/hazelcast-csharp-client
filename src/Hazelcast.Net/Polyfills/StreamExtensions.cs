@@ -37,6 +37,49 @@ namespace System.IO
         // rather avoid - stick with .ConfigureAwait(false).
 
         /// <summary>
+        /// Writes to a stream.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="memory">The region of memory to read the data from.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that completes when the write is done.</returns>
+        /// <remarks>
+        /// <para>Built-in method is introduced in netstandard2.1.</para>
+        /// </remarks>
+        public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (memory.Length == 0) return;
+
+            byte[] bytes;
+            int offset;
+            bool rentedBytes;
+
+            if (MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> array))
+            {
+                bytes = array.Array;
+                offset = array.Offset;
+                rentedBytes = false;
+            }
+            else
+            {
+                bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
+                offset = 0;
+                rentedBytes = true;
+                memory.CopyTo(bytes);
+            }
+
+            try
+            {
+                await stream.WriteAsync(bytes, offset, memory.Length, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (rentedBytes) ArrayPool<byte>.Shared.Return(bytes);
+            }
+        }
+
+        /// <summary>
         /// Reads from a stream.
         /// </summary>
         /// <param name="stream">The stream.</param>

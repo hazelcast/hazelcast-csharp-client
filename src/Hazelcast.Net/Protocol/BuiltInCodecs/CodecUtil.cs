@@ -21,7 +21,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal delegate T DecodeDelegate<out T>(IEnumerator<Frame> iterator);
 
-    internal delegate T DecodeBytesDelegate<out T>(byte[] bytes, int position);
+    internal delegate T DecodeBytesDelegate<out T>(Memory<byte> bytes, int position);
 
     internal static class CodecUtil
     {

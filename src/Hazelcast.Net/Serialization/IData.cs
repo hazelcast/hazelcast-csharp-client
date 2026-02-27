@@ -53,6 +53,12 @@ namespace Hazelcast.Serialization
         byte[] ToByteArray();
         
         /// <summary>
+        /// Returns a read-only memory segment containing the bytes of this instance.
+        /// </summary>
+        /// <returns></returns>
+        ReadOnlyMemory<byte> GetMemory();
+        
+        /// <summary>
         /// Detaches this instance from its underlying data, if any, and returns a new instance containing the same data.
         /// The original instance is left in an empty state, and the new instance is independent of the original.
         /// It means that after calling this method, the original instance is not managing the underlying data anymore,

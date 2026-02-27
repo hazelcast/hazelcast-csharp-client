@@ -36,7 +36,7 @@ namespace Hazelcast.Messaging
         public Frame(FrameFlags flags = FrameFlags.Default)
         {
             Flags = flags;
-            Bytes = Array.Empty<byte>();
+            Bytes = Memory<byte>.Empty;
         }
 
         /// <summary>
@@ -47,7 +47,13 @@ namespace Hazelcast.Messaging
         public Frame(byte[] bytes, FrameFlags flags = FrameFlags.Default)
         {
             Flags = flags;
-            Bytes = bytes ?? Array.Empty<byte>();
+            Bytes = new Memory<byte>(bytes);
+        }
+        
+        public Frame(Memory<byte> memoryBytes, FrameFlags flags = FrameFlags.Default)
+        {
+            Flags = flags;
+            Bytes = memoryBytes;
         }
 
         /// <summary>
@@ -104,9 +110,8 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets the frame bytes.
         /// </summary>
-#pragma warning disable CA1819 // Properties should not return arrays - but here we do intend to modify the array
-        public byte[] Bytes { get; }
-#pragma warning restore CA1819
+        public Memory<byte> Bytes { get; }
+
 
         /// <summary>
         /// Gets the next frame.
@@ -116,7 +121,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets the frame length (including length and flags fields).
         /// </summary>
-        public int Length => FrameFields.SizeOf.Length + FrameFields.SizeOf.Flags + (Bytes?.Length ?? 0);
+        public int Length => FrameFields.SizeOf.Length + FrameFields.SizeOf.Flags + Bytes.Length;
 
         /// <summary>
         /// Determines whether the frame is a structure end frame.
@@ -157,7 +162,7 @@ namespace Hazelcast.Messaging
         public Frame DeepClone()
         {
             var bytes = new byte[Bytes.Length];
-            Buffer.BlockCopy(Bytes, 0, bytes, 0, bytes.Length);
+            Bytes.CopyTo(bytes);
             return new Frame(bytes, Flags);
         }
 
