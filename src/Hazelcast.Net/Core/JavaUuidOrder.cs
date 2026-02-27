@@ -49,6 +49,44 @@ internal struct JavaUuidOrder
     // now, Java has *another* definition of the byte order, and
     // this order is the polyglot order we use for serialization
 
+    public JavaUuidOrder ReadBytes(ReadOnlySpan<byte> bytes, int position, Endianness endianess)
+    {
+        // assume BytesExtensions.SizeOfByte is 1
+        var i = endianess == Endianness.LittleEndian ? 7 : 0;
+        var s = endianess == Endianness.LittleEndian ? -1 : +1;
+
+        int Index()
+        {
+            var i0 = i;
+            i += s;
+            return i0;
+        }
+
+        X0 = bytes[position + Index()];
+        X1 = bytes[position + Index()];
+        X2 = bytes[position + Index()];
+        X3 = bytes[position + Index()];
+
+        X4 = bytes[position + Index()];
+        X5 = bytes[position + Index()];
+        X6 = bytes[position + Index()];
+        X7 = bytes[position + Index()];
+
+        i = endianess == Endianness.LittleEndian ? 15 : 8;
+
+        X8 = bytes[position + Index()];
+        X9 = bytes[position + Index()];
+        XA = bytes[position + Index()];
+        XB = bytes[position + Index()];
+
+        XC = bytes[position + Index()];
+        XD = bytes[position + Index()];
+        XE = bytes[position + Index()];
+        XF = bytes[position + Index()];
+
+        return this;
+    }
+
     public JavaUuidOrder ReadBytes(byte[] bytes, int position, Endianness endianess)
     {
         // assume BytesExtensions.SizeOfByte is 1
@@ -85,6 +123,42 @@ internal struct JavaUuidOrder
         XF = bytes[position + Index()];
 
         return this;
+    }
+
+    public void WriteBytes(Span<byte> bytes, int position, Endianness endianess)
+    {
+        // assume BytesExtensions.SizeOfByte is 1
+        var i = endianess == Endianness.LittleEndian ? 7 : 0;
+        var s = endianess == Endianness.LittleEndian ? -1 : +1;
+
+        int Index()
+        {
+            var i0 = i;
+            i += s;
+            return i0;
+        }
+
+        bytes[position + Index()] = X0;
+        bytes[position + Index()] = X1;
+        bytes[position + Index()] = X2;
+        bytes[position + Index()] = X3;
+
+        bytes[position + Index()] = X4;
+        bytes[position + Index()] = X5;
+        bytes[position + Index()] = X6;
+        bytes[position + Index()] = X7;
+
+        i = endianess == Endianness.LittleEndian ? 15 : 8;
+
+        bytes[position + Index()] = X8;
+        bytes[position + Index()] = X9;
+        bytes[position + Index()] = XA;
+        bytes[position + Index()] = XB;
+
+        bytes[position + Index()] = XC;
+        bytes[position + Index()] = XD;
+        bytes[position + Index()] = XE;
+        bytes[position + Index()] = XF;
     }
 
     public void WriteBytes(byte[] bytes, int position, Endianness endianess)
