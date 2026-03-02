@@ -17,6 +17,7 @@ using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Testing;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
@@ -154,6 +155,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestObjectDataOutputRentsFromPool()
         {
+            HConsole.Configure(c=> c.ConfigureDefaults(this));
             var maxPoolSize = 10;
             var mockBufferPool = Substitute.For<IBufferPool>();
             var myBufferPool = new MyBufferPool();
@@ -187,21 +189,24 @@ namespace Hazelcast.Tests.Serialization
             {
                 var tempData = new byte[10 * 1024]; // 10 KB data to trigger buffer resize for renting
                 new Random().NextBytes(tempData);
-                ss.ToData(tempData);
+                // The new owner should dispose the buffer. We don't copy the buffer anymore.
+                using var heapData = ss.ToData(tempData);
             }
 
             // since serialization is done sequentially, we expect less than maxPoolSize creations
             Assert.LessOrEqual(countingPolicy.CreateCount, maxPoolSize, "Too many ObjectDataOutput instances created");
 
-            // We expect maxPool*2 since there are two buffer rents when object is already in the pool.
-            // First one is while writing data to buffer (data bigger than buffer so resizing),
-            // Second one is on TryReset during returning to pool. It resizes the buffer to default size.
+            // Rents: two per pooled object iteration.
+            //   First on resize during write (data bigger than initial buffer),
+            //   Second on re-initialization in TryReset after DetachBuffer.
+            // Returns: one per iteration — the previous small buffer is returned during resize.
+            //   The oversized buffer is transferred to HeapData and returned to the serialization
+            //   service's buffer pool (myBufferPool) on HeapData.Dispose(), not to mockBufferPool.
 
             //Legacy .net and .net core versions have different internals for ArrayPool.Shared
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-            // +CreateCount because at the beginning, ObjectDataOutput has no buffer, and it rents on constructor
             mockBufferPool.Received(maxPoolSize * 2 + countingPolicy.CreateCount).Rent(Arg.Any<int>());
-            mockBufferPool.Received(maxPoolSize * 2).Return(Arg.Any<byte[]>());
+            mockBufferPool.Received(maxPoolSize).Return(Arg.Any<byte[]>());
 #else
             // Rented and returned buffers at least maxPoolSize
             Assert.That(mockBufferPool.ReceivedCalls()
@@ -245,7 +250,7 @@ namespace Hazelcast.Tests.Serialization
             public void Return(byte[] buffer)
             {
                 Interlocked.Increment(ref ReturnCount);
-                TestContext.Progress.WriteLine($"[DataInputOutputTest] MyBufferPool.Return called. buffer.length={buffer.Length}, ReturnCount={ReturnCount}");
+                TestContext.Progress.WriteLine($"[DataInputOutputTest] MyBufferPool.Return called. buffer.length={buffer?.Length}, ReturnCount={ReturnCount}");
                 _inner.Return(buffer);
             }
         }

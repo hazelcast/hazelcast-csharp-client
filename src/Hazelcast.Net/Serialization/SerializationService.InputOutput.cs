@@ -31,9 +31,7 @@ namespace Hazelcast.Serialization
         /// <returns>ObjectDataOutput</returns>
         private ObjectDataOutput GetDataOutput()
         {
-            var odo = _objectDataOutputPool.Get();
-            odo.Initialize();
-            return odo;
+            return _objectDataOutputPool.Get();
         }
 
         private void ReturnDataOutput(ObjectDataOutput output)

@@ -75,10 +75,10 @@ namespace Hazelcast.Tests.Serialization
 
         private static void AssertRepeatedSerialisationGivesSameByteArrays(SerializationService ss, IPortable p)
         {
-            var data1 = ss.ToData(p);
+            using var data1 = ss.ToData(p);
             for (var k = 0; k < 100; k++)
             {
-                var data2 = ss.ToData(p);
+                using var data2 = ss.ToData(p);
                 Assert.AreEqual(data1, data2);
             }
         }

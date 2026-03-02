@@ -79,13 +79,32 @@ namespace Hazelcast.Serialization
         /// <param name="memoryBytes">Memory bytes</param>
         /// <param name="schemaIds">Schema Ids</param>
         /// <exception cref="ArgumentException"></exception>
-        public HeapData(ReadOnlyMemory<byte> memoryBytes, HashSet<long> schemaIds = null)
+        public HeapData(Memory<byte> memoryBytes,  HashSet<long> schemaIds = null)
         {
             if (memoryBytes.Length > 0 && memoryBytes.Length < HeapDataOverHead)
                 throw new ArgumentException($"Data should either be empty or contain at least {HeapDataOverHead} bytes.");
 
             _bytes = Array.Empty<byte>();
              MemoryBytes = memoryBytes;
+            _schemaIds = schemaIds;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="HeapData"/> with a pre-sliced memory view and its
+        /// backing buffer. The backing buffer will be returned to the pool on <see cref="Dispose"/>.
+        /// </summary>
+        /// <param name="content">The pre-sliced, correctly-bounded view of the written bytes.</param>
+        /// <param name="backingBuffer">The raw rented array that backs <paramref name="content"/>, for pool return.</param>
+        /// <param name="schemaIds">Schema identifiers.</param>
+        /// <param name="bufferPool">The buffer pool to return <paramref name="backingBuffer"/> to on dispose.</param>
+        public HeapData(Memory<byte> content, byte[] backingBuffer, HashSet<long> schemaIds = null, IBufferPool bufferPool = null)
+        {
+            if (content.Length > 0 && content.Length < HeapDataOverHead)
+                throw new ArgumentException($"Data should either be empty or contain at least {HeapDataOverHead} bytes.");
+
+            _bytes = backingBuffer;
+            MemoryBytes = content;
+            _bufferPool = bufferPool;
             _schemaIds = schemaIds;
         }
 
@@ -157,7 +176,7 @@ namespace Hazelcast.Serialization
                 return false;
 
             // todo: optimize this by comparing partition hashes first, if they are present. Also, get rid of toByteArray() call by comparing MemoryBytes directly.
-            return dataSize == 0 || Equals(MemoryBytes, data.GetMemory());
+            return dataSize == 0 || Equals(MemoryBytes.Span, data.GetMemory().Span);
         }
 
         /// <inheritdoc />
@@ -202,8 +221,7 @@ namespace Hazelcast.Serialization
 
             return new HeapData(copy, _schemaIds);
         }
-
-
+        
         // Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
         private static bool Equals(ReadOnlySpan<byte> data1, ReadOnlySpan<byte> data2)
         {
@@ -225,6 +243,5 @@ namespace Hazelcast.Serialization
 
             return true;
         }
-
     }
 }

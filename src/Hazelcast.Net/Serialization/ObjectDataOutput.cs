@@ -28,7 +28,6 @@ namespace Hazelcast.Serialization
         private HashSet<long> _schemaIds;
         private IBufferPool _bufferPool;
         private bool _initialized = false;
-
         internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness, IBufferPool bufferPool)
         {
             _initialBufferSize = initialBufferSize;
@@ -52,17 +51,19 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Detaches the buffer from the output, returning it to the caller. After this call,
+        /// Detaches the buffer from the output, returning the written content as a sliced
+        /// <see cref="Memory{T}"/> and the backing array for pool return. After this call,
         /// the output is no longer usable and should be reinitialized.
         /// </summary>
-        /// <returns>buffer</returns>
-        public byte[] DetachBuffer()
+        /// <returns>A tuple of the sliced content and the raw backing buffer.</returns>
+        public (Memory<byte> content, byte[] backingBuffer) DetachBuffer()
         {
             var buffer = _buffer;
+            var length = _position;
             _buffer = null;
             _position = 0;
             _initialized = false;
-            return buffer;
+            return (new Memory<byte>(buffer, 0, length), buffer);
         }
 
         # endregion
@@ -76,9 +77,12 @@ namespace Hazelcast.Serialization
             // We don't want a buffer to be shared between outputs, but we want to reuse it if the output is reused.
             if (_initialized)
             {
-                _bufferPool.Return(_buffer);
-                DetachBuffer();
+                _initialized = false;
+                var (_, backingBuffer) = DetachBuffer();
+                _bufferPool.Return(backingBuffer);
             }
+            
+            Initialize();
         }
 
         public bool TryReset()
@@ -96,12 +100,8 @@ namespace Hazelcast.Serialization
             _initialized = false;
         }
 
-
-        // TODO: Convert to Memory<byte> and Span<byte> and avoid copying arrays
-        public byte[] Buffer
-        {
-            get => _buffer;
-        }
+        // TODO: Convert to Memory<byte> while refactoring ObjectDataInput
+        public byte[] Buffer => _buffer ?? Array.Empty<byte>();
 
         internal int Position
         {
