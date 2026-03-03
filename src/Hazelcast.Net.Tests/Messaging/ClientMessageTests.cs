@@ -15,6 +15,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
@@ -103,8 +104,12 @@ namespace Hazelcast.Tests.Messaging
             Assert.That(clone.MessageType, Is.EqualTo(m.MessageType));
             Assert.That(clone.CorrelationId, Is.EqualTo(456));
 
-            Assert.That(clone.FirstFrame.Bytes, Is.Not.SameAs(bytes1));
-            Assert.That(clone.FirstFrame.Next.Bytes, Is.SameAs(bytes2));
+            // Frame.Bytes is now Memory<byte> (a struct); use the backing array for identity checks.
+            MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)clone.FirstFrame.Bytes, out var clonedFirstSegment);
+            Assert.That(clonedFirstSegment.Array, Is.Not.SameAs(bytes1));  // deep-cloned first frame has a new backing array
+
+            MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)clone.FirstFrame.Next.Bytes, out var shallowSegment);
+            Assert.That(shallowSegment.Array, Is.SameAs(bytes2));  // shallow-cloned frame shares the original backing array
         }
 
         [Test]
