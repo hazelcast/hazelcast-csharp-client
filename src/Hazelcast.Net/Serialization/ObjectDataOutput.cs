@@ -25,6 +25,7 @@ namespace Hazelcast.Serialization
         private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
         private byte[] _buffer;
         private int _position;
+        private int _prefixBias; // bytes reserved at start of buffer via ReservePrefix
         private HashSet<long> _schemaIds;
         private IBufferPool _bufferPool;
         private bool _initialized = false;
@@ -51,6 +52,31 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
+        /// Advances the write position by <paramref name="bytes"/> without writing any data,
+        /// reserving that many bytes at the current position for the caller to fill in later.
+        /// Must be called immediately after <see cref="Initialize"/> and before any writes.
+        /// Sets <see cref="PayloadPosition"/> so that serializers storing absolute byte positions
+        /// in the binary (e.g. the portable serializer) record positions relative to the payload
+        /// start rather than the raw buffer start.
+        /// </summary>
+        /// <param name="bytes">Number of bytes to reserve.</param>
+        public void ReservePrefix(int bytes)
+        {
+            EnsureAvailable(bytes);
+            _position += bytes;
+            _prefixBias = bytes;
+        }
+
+        /// <summary>
+        /// Gets the current write position relative to the payload start (i.e. excluding the
+        /// bytes reserved by <see cref="ReservePrefix"/>). Use this — not <see cref="Position"/> —
+        /// whenever a position value is being stored inside the serialized binary (e.g. as a field
+        /// offset in the portable format), so that the stored value is valid when the payload is
+        /// later read back without the prefix.
+        /// </summary>
+        internal int PayloadPosition => _position - _prefixBias;
+
+        /// <summary>
         /// Detaches the buffer from the output, returning the written content as a sliced
         /// <see cref="Memory{T}"/> and the backing array for pool return. After this call,
         /// the output is no longer usable and should be reinitialized.
@@ -71,6 +97,7 @@ namespace Hazelcast.Serialization
         public void Clear()
         {
             Position = 0;
+            _prefixBias = 0;
             _schemaIds?.Clear();
             
             // If not detached, return the buffer to the pool and detach it.

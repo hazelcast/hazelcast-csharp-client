@@ -32,6 +32,13 @@ namespace Hazelcast.Messaging
     internal class Frame : IDisposable
     {
         private IDisposable _owner;
+
+        /// <summary>
+        /// Gets the owner whose lifetime is tied to this frame, or <c>null</c> if none.
+        /// Used by the send path to detect pre-framed <see cref="Hazelcast.Serialization.HeapData"/>
+        /// and route to the zero-copy send path.
+        /// </summary>
+        internal IDisposable Owner => _owner;
         /// <summary>
         /// Initializes a new instance of the <see cref="Frame"/> class representing an empty frame.
         /// </summary>

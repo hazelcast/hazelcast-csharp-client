@@ -108,11 +108,19 @@ namespace Hazelcast.Serialization
 
         private const int ArrayHeaderSizeInBytes = 16;
 
+        /// <summary>
+        /// Size in bytes of the Hazelcast protocol frame header (4-byte length + 2-byte flags)
+        /// that <see cref="ObjectDataOutput"/> reserves at the start of its buffer when producing
+        /// a <em>pre-framed</em> <see cref="HeapData"/>.
+        /// </summary>
+        internal const int FrameHeaderPrefixSize = 6;
+
         private HashSet<long> _schemaIds;
 
         private byte[] _bytes;
         private bool _detached;
         private readonly IBufferPool _bufferPool;
+        private readonly bool _hasFramePrefix;
 
         /// <summary>
         /// Initializes a new empty instance of the <see cref="HeapData"/> class.
@@ -168,7 +176,14 @@ namespace Hazelcast.Serialization
         /// <param name="backingBuffer">The raw rented array that backs <paramref name="content"/>, for pool return.</param>
         /// <param name="schemaIds">Schema identifiers.</param>
         /// <param name="bufferPool">The buffer pool to return <paramref name="backingBuffer"/> to on dispose.</param>
-        public HeapData(Memory<byte> content, byte[] backingBuffer, HashSet<long> schemaIds = null, IBufferPool bufferPool = null)
+        /// <param name="hasFramePrefix">
+        /// <c>true</c> when <paramref name="backingBuffer"/> has <see cref="FrameHeaderPrefixSize"/> bytes reserved
+        /// immediately before <paramref name="content"/> (i.e. <paramref name="content"/> starts at offset
+        /// <see cref="FrameHeaderPrefixSize"/> inside <paramref name="backingBuffer"/>). When <c>true</c>,
+        /// <see cref="GetWireMemory"/> can write the frame header in-place and return the complete wire
+        /// representation without any additional allocation or copy.
+        /// </param>
+        public HeapData(Memory<byte> content, byte[] backingBuffer, HashSet<long> schemaIds = null, IBufferPool bufferPool = null, bool hasFramePrefix = false)
         {
             if (content.Length > 0 && content.Length < HeapDataOverHead)
                 throw new ArgumentException($"Data should either be empty or contain at least {HeapDataOverHead} bytes.");
@@ -177,9 +192,46 @@ namespace Hazelcast.Serialization
             MemoryBytes = content;
             _bufferPool = bufferPool;
             _schemaIds = schemaIds;
+            _hasFramePrefix = hasFramePrefix;
         }
 
         public ReadOnlyMemory<byte> MemoryBytes { get; private set; } = Memory<byte>.Empty;
+
+        /// <summary>
+        /// Gets whether this instance was created with a <see cref="FrameHeaderPrefixSize"/>-byte region
+        /// reserved before <see cref="MemoryBytes"/> in the backing buffer, enabling zero-copy framing.
+        /// </summary>
+        internal bool HasFramePrefix => _hasFramePrefix;
+
+        /// <summary>
+        /// Writes a Hazelcast protocol frame header into the reserved prefix region of the backing buffer
+        /// and returns a <see cref="Memory{T}"/> that spans the complete wire representation:
+        /// <c>[4-byte frame length][2-byte flags][payload bytes]</c>.
+        /// </summary>
+        /// <param name="flags">The frame flags to encode in the header.</param>
+        /// <returns>
+        /// A <see cref="Memory{T}"/> view starting at offset 0 of the backing buffer with length
+        /// <c><see cref="FrameHeaderPrefixSize"/> + <see cref="MemoryBytes"/>.Length</c>.
+        /// The caller must not use the returned memory after this <see cref="HeapData"/> is disposed.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <see cref="HasFramePrefix"/> is <c>false</c>.
+        /// </exception>
+        internal Memory<byte> GetWireMemory(ushort flags)
+        {
+            if (!_hasFramePrefix)
+                throw new InvalidOperationException("This HeapData was not created with a frame header prefix.");
+
+            var wireLength = FrameHeaderPrefixSize + MemoryBytes.Length;
+
+            // Write the 6-byte frame header directly into the reserved prefix region of the
+            // backing buffer.  Frame length includes the header itself (matching Frame.Length
+            // = SizeOf.LengthAndFlags + Bytes.Length = 6 + payload).
+            _bytes.WriteInt(0, wireLength, Endianness.LittleEndian);
+            _bytes.WriteUShort(BytesExtensions.SizeOfInt, flags, Endianness.LittleEndian);
+
+            return new Memory<byte>(_bytes, 0, wireLength);
+        }
 
         /// <inheritdoc />
         public bool HasSchemas => _schemaIds != null;
