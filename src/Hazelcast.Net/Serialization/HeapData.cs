@@ -21,6 +21,80 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Implements <see cref="IData"/> on the heap.
     /// </summary>
+    /// <remarks>
+    /// <para><strong>Memory layout</strong></para>
+    /// <para>Every <see cref="HeapData"/> instance stores a contiguous byte region with the following layout:</para>
+    /// <code>
+    ///   [0..3]  partition-hash  (int32, big-endian)
+    ///   [4..7]  type-id         (int32, big-endian)
+    ///   [8..]   payload bytes
+    /// </code>
+    ///
+    /// <para><strong>Memory ownership and buffer pooling</strong></para>
+    /// <para>
+    /// <see cref="HeapData"/> supports two ownership modes, determined at construction time and
+    /// fixed for the lifetime of the instance:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <term>Non-pooled</term>
+    ///     <description>
+    ///     Created via <c>HeapData(byte[])</c> or <c>HeapData(Memory&lt;byte&gt;)</c> without a
+    ///     <see cref="IBufferPool"/>. The backing array is plain GC-managed heap memory; <see cref="Dispose"/>
+    ///     is a no-op and the GC reclaims the memory in the normal way. Instances decoded from incoming
+    ///     network frames always fall into this category.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <term>Pooled</term>
+    ///     <description>
+    ///     Created by <see cref="SerializationService"/> via <c>ObjectDataOutput.DetachBuffer()</c>,
+    ///     which rents a buffer from an <see cref="IBufferPool"/>, serializes into it, then hands the
+    ///     (content slice, backing array, pool) triple to
+    ///     <c>HeapData(Memory&lt;byte&gt; content, byte[] backingBuffer, ..., IBufferPool)</c>.
+    ///     Calling <see cref="Dispose"/> returns the backing array to the pool and clears
+    ///     <see cref="MemoryBytes"/>. The instance must not be read after disposal.
+    ///     </description>
+    ///   </item>
+    /// </list>
+    ///
+    /// <para><strong>Disposal and the frame-ownership model</strong></para>
+    /// <para>
+    /// When a pooled <see cref="HeapData"/> is encoded into a <c>ClientMessage</c> via
+    /// <c>DataCodec.Encode</c>, the resulting <c>Frame</c> keeps a <c>Memory&lt;byte&gt;</c> view of
+    /// the backing buffer and records the <see cref="HeapData"/> as its <em>owner</em>. Once the message
+    /// has been transmitted, <c>ClientMessage.Dispose()</c> disposes every frame, which in turn calls
+    /// <see cref="Dispose"/> on the owner, returning the pooled buffer.
+    /// </para>
+    /// <para>
+    /// This means that <strong>a pooled <see cref="HeapData"/> must not be stored anywhere that
+    /// outlives the request send operation</strong> — for example, as a dictionary key or in a cache.
+    /// Code that needs to retain a key after sending must create a stable, non-pooled snapshot first:
+    /// </para>
+    /// <code>
+    ///   using var pooledKey = serializationService.ToData(userKey);  // pooled
+    ///   IData stableKey = new HeapData(pooledKey.ToByteArray());     // non-pooled copy
+    ///   // ... use stableKey as dictionary key or NearCache key ...
+    ///   // pooledKey is returned to the pool at the end of the using block
+    /// </code>
+    ///
+    /// <para><strong><see cref="DeAttach"/> — transfer ownership without copying</strong></para>
+    /// <para>
+    /// <see cref="DeAttach"/> creates a fresh non-pooled <see cref="HeapData"/> containing the same
+    /// bytes, clears <see cref="MemoryBytes"/> on the original, and returns the backing buffer to the
+    /// pool. After the call the original instance is empty and must not be used; the returned instance
+    /// is independently owned and safe to store long-term. This avoids copying when a single code path
+    /// both sends the data and needs a long-lived copy.
+    /// </para>
+    ///
+    /// <para><strong>Equality and hashing</strong></para>
+    /// <para>
+    /// <see cref="GetHashCode"/> and <see cref="Equals(object)"/> are based solely on the payload
+    /// bytes (offset 8 onward). Because a disposed pooled instance has an empty <see cref="MemoryBytes"/>,
+    /// its hash becomes 0 and equality comparisons will fail. Never use a disposed instance as a
+    /// dictionary key.
+    /// </para>
+    /// </remarks>
     internal sealed class HeapData : IData, ICanHaveSchemas
     {
         // structure is:
@@ -34,7 +108,6 @@ namespace Hazelcast.Serialization
 
         private const int ArrayHeaderSizeInBytes = 16;
 
-        //private readonly byte[] _bytes;
         private HashSet<long> _schemaIds;
 
         private byte[] _bytes;
