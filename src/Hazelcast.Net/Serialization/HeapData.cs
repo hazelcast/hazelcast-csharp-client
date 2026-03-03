@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Models;
-
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -201,7 +199,11 @@ namespace Hazelcast.Serialization
         }
         public void Dispose()
         {
-            _bufferPool?.Return(_bytes);
+            // Only release resources when this instance manages a pooled buffer.
+            // Non-pooled instances have no resources to release; the GC handles them.
+            if (_bufferPool == null) return;
+
+            _bufferPool.Return(_bytes);
             _bytes = null;
             MemoryBytes = ReadOnlyMemory<byte>.Empty;
             _schemaIds = null;
