@@ -172,9 +172,15 @@ namespace Hazelcast.NearCaching
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
                 return false;
 
+            // The caller-supplied keyData may be a pooled HeapData whose underlying buffer
+            // is returned to the pool (via Dispose) once the outgoing request is sent.
+            // A stable, non-pooled copy ensures the NearCache key remains valid for the
+            // full lifetime of the cache entry.
+            var stableKeyData = new HeapData(keyData.ToByteArray());
+
             ValueTask<NearCacheEntry> CreateEntry(IData _, CancellationToken __)
             {
-                return new ValueTask<NearCacheEntry>(CreateCacheEntry(keyData, ToCachedValue(valueData)));
+                return new ValueTask<NearCacheEntry>(CreateCacheEntry(stableKeyData, ToCachedValue(valueData)));
             }
 
             // if we put an async entry in an async dictionary and the factory throws,
@@ -188,7 +194,7 @@ namespace Hazelcast.NearCaching
 
             try
             {
-                var added = await _entries.TryAddAsync(keyData, CreateEntry).CfAwait();
+                var added = await _entries.TryAddAsync(stableKeyData, CreateEntry).CfAwait();
                 if (added) Statistics.NotifyEntryAdded();
                 return added;
             }
@@ -221,15 +227,21 @@ namespace Hazelcast.NearCaching
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKeyAsync(keyData).CfAwait())
                 return Attempt.Fail(ToCachedValue(await valueFactory(keyData).CfAwait()));
 
+            // The caller-supplied keyData may be a pooled HeapData whose underlying buffer
+            // is returned to the pool (via Dispose) once the outgoing request is sent.
+            // A stable, non-pooled copy ensures the NearCache key remains valid for the
+            // full lifetime of the cache entry.
+            var stableKeyData = new HeapData(keyData.ToByteArray());
+
             async ValueTask<NearCacheEntry> CreateEntry(IData _, CancellationToken __)
             {
-                var valueData = await valueFactory(keyData).CfAwait();
+                var valueData = await valueFactory(keyData).CfAwait(); // original keyData used for request encoding
                 var cachedValue = ToCachedValue(valueData);
 
-                return CreateCacheEntry(keyData, cachedValue); // null if cachedValue is null
+                return CreateCacheEntry(stableKeyData, cachedValue); // null if cachedValue is null
             }
 
-            var entry = await _entries.GetOrAddAsync(keyData, CreateEntry).CfAwait();
+            var entry = await _entries.GetOrAddAsync(stableKeyData, CreateEntry).CfAwait();
             if (entry != null) // null if ValueObject would have been null
             {
 

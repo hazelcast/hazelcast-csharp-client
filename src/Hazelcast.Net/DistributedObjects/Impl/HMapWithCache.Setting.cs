@@ -30,8 +30,9 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
+            var stableKey = StableKey(keyData);
             await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
-            _cache.Remove(keyData);
+            _cache.Remove(stableKey);
         }
 
         /// <inheritdoc />
@@ -41,8 +42,9 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
+            var stableKey = StableKey(keyData);
             var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
-            _cache.Remove(keyData);
+            _cache.Remove(stableKey);
             return value;
         }
 
@@ -57,12 +59,6 @@ namespace Hazelcast.DistributedObjects.Impl
             // this should be no different except for this entry invalidation method,
             // added as a continuation to each task that is being created
 
-            void InvalidateEntries(IEnumerable<KeyValuePair<IData, IData>> list)
-            {
-                foreach (var (key, _) in list)
-                    _cache.Remove(key);
-            }
-
             var tasks = new List<Task>();
             foreach (var (ownerId, part) in ownerEntries)
             {
@@ -70,10 +66,15 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     if (list.Count == 0) continue;
 
+                    // Snapshot keys before the request is sent: the PutAll codec encodes each
+                    // IData key as a frame owner, so all keys in the list are disposed when
+                    // the request message is disposed after sending.
+                    var stableKeys = list.ConvertAll(kvp => StableKey(kvp.Key));
+
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
-                        .ContinueWith(_ => InvalidateEntries(list), default, default, TaskScheduler.Current);
+                        .ContinueWith(_ => { foreach (var k in stableKeys) _cache.Remove(k); }, default, default, TaskScheduler.Current);
                     tasks.Add(ownerTask);
                 }
             }
@@ -91,8 +92,9 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
+            var stableKey = StableKey(keyData);
             var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CfAwait();
-            if (added) _cache.Remove(keyData);
+            if (added) _cache.Remove(stableKey);
             return added;
         }
 

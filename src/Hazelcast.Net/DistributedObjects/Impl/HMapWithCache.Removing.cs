@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
-// 
+// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,34 +25,37 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
+            var stableKey = StableKey(keyData);
             var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CfAwait();
-            if (removed) _cache.Remove(keyData);
+            if (removed) _cache.Remove(stableKey);
             return removed;
         }
 
         /// <inheritdoc />
         protected override async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
+            var stableKey = StableKey(keyData);
             try
             {
                 return await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
             }
             finally
             {
-                _cache.Remove(keyData);
+                _cache.Remove(stableKey);
             }
         }
 
         /// <inheritdoc />
         protected override async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
+            var stableKey = StableKey(keyData);
             try
             {
                 return await base.RemoveAsync(keyData, valueData, cancellationToken).CfAwait();
             }
             finally
             {
-                _cache.Remove(keyData);
+                _cache.Remove(stableKey);
             }
         }
 
@@ -73,13 +76,14 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task RemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
+            var stableKey = StableKey(keyData);
             try
             {
                 await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
             }
             finally
             {
-                _cache.Remove(keyData);
+                _cache.Remove(stableKey);
             }
         }
 

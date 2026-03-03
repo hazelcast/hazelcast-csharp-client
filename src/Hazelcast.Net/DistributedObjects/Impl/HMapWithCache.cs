@@ -64,5 +64,15 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             await _cache.DisposeAsync().CfAwait();
         }
+
+        /// <summary>
+        /// Creates a stable, non-pooled snapshot of <paramref name="keyData"/> for use as a
+        /// NearCache invalidation key. The caller-supplied <paramref name="keyData"/> is a
+        /// pooled <see cref="HeapData"/> whose buffer is returned to the pool (via
+        /// <see cref="System.IDisposable.Dispose"/>) once the outgoing request message is sent.
+        /// Snapshotting before the request ensures <see cref="NearCache{TValue}.Remove"/> can
+        /// still locate the cached entry after the request returns.
+        /// </summary>
+        private static HeapData StableKey(IData keyData) => new HeapData(keyData.ToByteArray());
     }
 }
