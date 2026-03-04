@@ -681,5 +681,111 @@ namespace Hazelcast.Tests.Core
                 return segment;
             }
         }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void JavaUuidOrder_SpanReadBytes_MatchesArrayOverload(Endianness endianness)
+        {
+            var guid = Guid.NewGuid();
+            var buffer = new byte[20];
+
+            // Write via the existing byte[] overload
+            var writer = new JavaUuidOrder { Value = guid };
+            writer.WriteBytes(buffer, 2, endianness);
+
+            // Read via the new ReadOnlySpan<byte> overload
+            ReadOnlySpan<byte> span = buffer;
+            var fromSpan = new JavaUuidOrder().ReadBytes(span, 2, endianness);
+
+            // Read via the original byte[] overload for the baseline
+            var fromArray = new JavaUuidOrder().ReadBytes(buffer, 2, endianness);
+
+            Assert.That(fromSpan.Value, Is.EqualTo(fromArray.Value));
+            Assert.That(fromSpan.Value, Is.EqualTo(guid));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void JavaUuidOrder_SpanWriteBytes_MatchesArrayOverload(Endianness endianness)
+        {
+            var guid = Guid.NewGuid();
+            var bufferViaArray = new byte[20];
+            var bufferViaSpan  = new byte[20];
+
+            var order = new JavaUuidOrder { Value = guid };
+
+            // Write via the original byte[] overload
+            order.WriteBytes(bufferViaArray, 2, endianness);
+
+            // Write via the new Span<byte> overload
+            Span<byte> span = bufferViaSpan;
+            order.WriteBytes(span, 2, endianness);
+
+            Assert.That(bufferViaSpan, Is.EqualTo(bufferViaArray));
+        }
+
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void JavaUuidOrder_SpanRoundTrip_PreservesGuid(Endianness endianness)
+        {
+            var guid   = Guid.NewGuid();
+            var buffer = new byte[20];
+
+            // Write via Span<byte> overload
+            Span<byte> span = buffer;
+            var writer = new JavaUuidOrder { Value = guid };
+            writer.WriteBytes(span, 2, endianness);
+
+            // Read back via ReadOnlySpan<byte> overload
+            ReadOnlySpan<byte> readSpan = buffer;
+            var result = new JavaUuidOrder().ReadBytes(readSpan, 2, endianness);
+
+            Assert.That(result.Value, Is.EqualTo(guid));
+        }
+        
+        [Test]
+        public void ReadOnlyMemory_ReadInt_MatchesArrayOverload()
+        {
+            var bytes = new byte[8];
+            bytes.WriteInt(2, 0x12345678, Endianness.BigEndian);
+
+            ReadOnlyMemory<byte> mem = bytes;
+            Assert.That(mem.ReadInt(2, Endianness.BigEndian), Is.EqualTo(0x12345678));
+        }
+
+        [Test]
+        public void ReadOnlyMemory_ReadLong_MatchesArrayOverload()
+        {
+            var bytes = new byte[16];
+            const long value = unchecked((long)0xDEADBEEF_12345678UL);
+            bytes.WriteLong(4, value, Endianness.LittleEndian);
+
+            ReadOnlyMemory<byte> mem = bytes;
+            Assert.That(mem.ReadLong(4, Endianness.LittleEndian), Is.EqualTo(value));
+        }
+
+        [Test]
+        public void ReadOnlyMemory_ReadInt_MatchesArraySetup()
+        {
+            // Use the byte[] overload to write (available everywhere), then verify
+            // the new ReadOnlyMemory<byte>.ReadInt extension reads the same value.
+            var bytes = new byte[8];
+            const int value = unchecked((int)0xABCD1234u);
+            bytes.WriteInt(2, value, Endianness.LittleEndian);
+
+            ReadOnlyMemory<byte> mem = bytes;
+            Assert.That(mem.ReadInt(2, Endianness.LittleEndian), Is.EqualTo(value));
+        }
+
+        [Test]
+        public void Span_WriteInt_RoundTrips()
+        {
+            var bytes = new byte[8];
+            Span<byte> span = bytes;
+            // Span extensions write at the start of the slice (no position param)
+            span.Slice(2).WriteInt(0x12345678, Endianness.BigEndian);
+
+            Assert.That(bytes.ReadInt(2, Endianness.BigEndian), Is.EqualTo(0x12345678));
+        }
     }
 }

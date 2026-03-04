@@ -360,5 +360,40 @@ namespace Hazelcast.Tests.Messaging
             Assert.That(name3, Is.EqualTo(""));
 #endif
         }
+
+        [Test]
+        public void Dispose_PropagatesDisposalToAllFrames()
+        {
+            var owner1 = new TrackingDisposable();
+            var owner2 = new TrackingDisposable();
+            var owner3 = new TrackingDisposable();
+
+            var m = new ClientMessage();
+            m.Append(new Frame(new ReadOnlyMemory<byte>(new byte[8]), FrameFlags.Default, owner1));
+            m.Append(new Frame(new ReadOnlyMemory<byte>(new byte[8]), FrameFlags.Default, owner2));
+            m.Append(new Frame(new ReadOnlyMemory<byte>(new byte[8]), FrameFlags.Final,   owner3));
+
+            m.Dispose();
+
+            Assert.That(owner1.DisposeCount, Is.EqualTo(1), "first frame owner disposed");
+            Assert.That(owner2.DisposeCount, Is.EqualTo(1), "second frame owner disposed");
+            Assert.That(owner3.DisposeCount, Is.EqualTo(1), "last frame owner disposed");
+        }
+
+        [Test]
+        public void Dispose_FrameWithNullOwner_DoesNotThrow()
+        {
+            var m = new ClientMessage();
+            m.Append(new Frame(new byte[8]));
+            m.Append(new Frame(new byte[8]));
+
+            Assert.DoesNotThrow(() => m.Dispose());
+        }
+
+        private sealed class TrackingDisposable : IDisposable
+        {
+            public int DisposeCount;
+            public void Dispose() => DisposeCount++;
+        }
     }
 }

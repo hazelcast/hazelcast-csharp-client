@@ -193,5 +193,78 @@ namespace Hazelcast.Tests.Serialization
             var actual = BytesExtensions.ReadShort(_output.Buffer, 0, Endianness.BigEndian);
             Assert.AreEqual(actual, expected);
         }
+        
+        [Test]
+        public void ReservePrefix_AdvancesPosition_AndPayloadPositionStaysZero()
+        {
+            const int prefixBytes = 6;
+            _output.ReservePrefix(prefixBytes);
+
+            Assert.That(_output.Position, Is.EqualTo(prefixBytes));
+            Assert.That(_output.PayloadPosition, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ReservePrefix_PayloadPosition_TracksWritesAfterPrefix()
+        {
+            const int prefixBytes = 6;
+            _output.ReservePrefix(prefixBytes);
+
+            _output.WriteInt(42); // writes 4 bytes
+            Assert.That(_output.PayloadPosition, Is.EqualTo(4));
+            Assert.That(_output.Position, Is.EqualTo(prefixBytes + 4));
+        }
+
+        [Test]
+        public void DetachBuffer_ReturnsWrittenContent_AndResetsOutput()
+        {
+            _output.WriteInt(0x12345678);
+
+            var (content, backing) = _output.DetachBuffer();
+
+            Assert.That(content.Length, Is.EqualTo(4), "content spans exactly what was written");
+            Assert.That(backing, Is.Not.Null);
+
+            // output is no longer initialized after detach
+            Assert.That(_output.Buffer.Length, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void DetachBuffer_WithPrefix_ContentIncludesPrefix()
+        {
+            const int prefixBytes = 6;
+            _output.ReservePrefix(prefixBytes);
+            _output.WriteInt(0xDEAD); // 4 bytes of payload
+
+            var (content, _) = _output.DetachBuffer();
+
+            Assert.That(content.Length, Is.EqualTo(prefixBytes + 4));
+        }
+
+        [Test]
+        public void Clear_AfterDetach_ReInitializesOutput()
+        {
+            _output.WriteInt(99);
+            _output.DetachBuffer();
+
+            // Clear should reinitialize the output so it can be used again
+            _output.Clear();
+
+            Assert.That(_output.Position, Is.EqualTo(0));
+            Assert.That(_output.Buffer.Length, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void Clear_ResetsPrefixBias()
+        {
+            _output.ReservePrefix(6);
+            Assert.That(_output.PayloadPosition, Is.EqualTo(0));
+
+            _output.Clear();
+
+            // After clear, both Position and PayloadPosition should be 0
+            Assert.That(_output.Position, Is.EqualTo(0));
+            Assert.That(_output.PayloadPosition, Is.EqualTo(0));
+        }
     }
 }
