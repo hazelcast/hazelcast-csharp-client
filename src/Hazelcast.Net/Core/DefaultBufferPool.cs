@@ -29,7 +29,7 @@ namespace Hazelcast.Core
         public void Return(byte[] buffer)
         {
             if (buffer == null) return;
-            _pool.Return(buffer, clearArray: true);
+            _pool.Return(buffer, clearArray: false); // HeapData clears only the used region before returning
         }
     }
 }

@@ -35,6 +35,7 @@ namespace Hazelcast.Serialization
             _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
+            Initialize();
         }
 
         # region Memory Owner Ship

@@ -328,6 +328,13 @@ namespace Hazelcast.Serialization
             // Non-pooled instances have no resources to release; the GC handles them.
             if (_bufferPool == null) return;
 
+            // Clear only the bytes we actually wrote: payload + 6-byte frame header prefix.
+            // Always add FrameHeaderPrefixSize unconditionally — no branch on _hasFramePrefix,
+            // zeroing 6 extra bytes is cheaper than a branch on the hot path.
+            // Cap to _bytes.Length for safety in non-prefixed pooled edge cases.
+            var clearLength = Math.Min(MemoryBytes.Length + FrameHeaderPrefixSize, _bytes.Length);
+            _bytes.AsSpan(0, clearLength).Clear();
+
             _bufferPool.Return(_bytes);
             _bytes = null;
             MemoryBytes = ReadOnlyMemory<byte>.Empty;
@@ -339,9 +346,13 @@ namespace Hazelcast.Serialization
             if (_detached) return this;
 
             var copy = new byte[MemoryBytes.Length];
-
             MemoryBytes.CopyTo(copy);
+
+            var clearLength = Math.Min(MemoryBytes.Length + FrameHeaderPrefixSize, _bytes.Length);
             MemoryBytes = ReadOnlyMemory<byte>.Empty;
+
+            if (_bufferPool != null)
+                _bytes.AsSpan(0, clearLength).Clear();
             _bufferPool?.Return(_bytes);
             _bytes = null;
             _detached = true;
