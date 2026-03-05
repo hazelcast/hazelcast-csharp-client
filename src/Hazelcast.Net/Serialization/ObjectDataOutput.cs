@@ -96,20 +96,18 @@ namespace Hazelcast.Serialization
 
         public void Clear()
         {
-            Position = 0;
+            _position = 0;
             _prefixBias = 0;
             _schemaIds?.Clear();
-            
-            // If not detached, return the buffer to the pool and detach it.
-            // We don't want a buffer to be shared between outputs, but we want to reuse it if the output is reused.
-            if (_initialized)
-            {
-                _initialized = false;
-                var (_, backingBuffer) = DetachBuffer();
-                _bufferPool.Return(backingBuffer);
-            }
-            
-            Initialize();
+
+            // If the buffer is still held (e.g. exception path before DetachBuffer),
+            // just reset position and keep it — EnsureAvailable() will resize if needed.
+            // Do NOT return + re-rent: that causes an unnecessary ArrayPool round-trip per Clear().
+            //
+            // If the buffer was already detached (normal PUT path), leave _buffer null.
+            // EnsureAvailable(), called on the next write, will rent lazily — spreading
+            // Rent() calls across operation-start time rather than operation-end time,
+            // reducing ArrayPool contention under high concurrency.
         }
 
         public bool TryReset()
