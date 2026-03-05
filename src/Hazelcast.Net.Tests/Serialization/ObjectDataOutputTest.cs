@@ -54,9 +54,10 @@ namespace Hazelcast.Tests.Serialization
         public virtual void TestClear_bufferLen_lt_initX8()
         {
             _output.EnsureAvailable(10*10);
+            var bufferLenBeforeClear = _output.Buffer.Length;
             _output.Clear();
-            // buffer set to default after clear
-            Assert.AreEqual(1<<4, _output.Buffer.Length);
+            // buffer is retained (not returned/re-rented) after clear
+            Assert.AreEqual(bufferLenBeforeClear, _output.Buffer.Length);
 
         }
 
@@ -247,10 +248,12 @@ namespace Hazelcast.Tests.Serialization
             _output.WriteInt(99);
             _output.DetachBuffer();
 
-            // Clear should reinitialize the output so it can be used again
+            // Clear resets position; buffer is rented lazily on next write
             _output.Clear();
 
             Assert.That(_output.Position, Is.EqualTo(0));
+            Assert.That(_output.Buffer.Length, Is.EqualTo(0)); // lazy: no buffer until first write
+            _output.WriteInt(42);                               // trigger lazy rent
             Assert.That(_output.Buffer.Length, Is.GreaterThan(0));
         }
 

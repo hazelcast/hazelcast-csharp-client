@@ -196,7 +196,7 @@ namespace Hazelcast.Serialization
         private void ResizeBuffer(int newCap)
         {
             var newBuffer = _bufferPool.Rent(newCap);
-            _buffer.AsSpan(0, _position).CopyTo(newBuffer);
+            _buffer.AsSpan(0, _buffer.Length).CopyTo(newBuffer);
             _bufferPool.Return(_buffer);
             _buffer = newBuffer;
         }
