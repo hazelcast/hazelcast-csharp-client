@@ -29,9 +29,7 @@ namespace Hazelcast.Core
         public void Return(byte[] buffer)
         {
             if (buffer == null) return;
-            
-            Array.Clear(buffer, 0, buffer.Length);
-            _pool.Return(buffer);
+            _pool.Return(buffer, clearArray: true);
         }
     }
 }

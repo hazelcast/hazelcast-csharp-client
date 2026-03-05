@@ -35,7 +35,6 @@ namespace Hazelcast.Serialization
             _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
-            Initialize();
         }
 
         # region Memory Owner Ship
@@ -192,12 +191,13 @@ namespace Hazelcast.Serialization
             else
             {
                 _buffer = _bufferPool.Rent(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
+                _initialized = true;
             }
         }
         private void ResizeBuffer(int newCap)
         {
             var newBuffer = _bufferPool.Rent(newCap);
-            _buffer.AsSpan(0, _buffer.Length).CopyTo(newBuffer);
+            _buffer.AsSpan(0, _position).CopyTo(newBuffer);
             _bufferPool.Return(_buffer);
             _buffer = newBuffer;
         }
