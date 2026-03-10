@@ -56,10 +56,12 @@ namespace Hazelcast.Serialization
         public ObjectDataInput CreateObjectDataInput(IData data)
             => new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
 
-        // for tests
+        // for tests — creates a fresh instance not managed by the output-object pool.
+        // The buffer inside is still rented from the buffer pool; call output.Dispose()
+        // when done to return it.
         public ObjectDataOutput CreateObjectDataOutput(int bufferSize)
         {
-            var output = _objectDataOutputPool.Get();
+            var output = new ObjectDataOutput(_initialOutputBufferSize, this, Endianness, _bufferPool);
             output.Initialize();
             output.EnsureAvailable(bufferSize);
             return output;

@@ -91,7 +91,27 @@ namespace Hazelcast.DistributedObjects
         /// <para>The partition key data is the <see cref="IData"/> conversion of <see cref="PartitionKey"/>.</para>
         /// <para>This value makes sense only for distributed objects that access a single partition.</para>
         /// </remarks>
-        public IData PartitionKeyData => _partitionKeyData ??= ToData(PartitionKey);
+        public IData PartitionKeyData
+        {
+            get
+            {
+                if (_partitionKeyData != null) return _partitionKeyData;
+                var rawData = ToData(PartitionKey);
+                // ToData returns a pooled HeapData for normal objects. DeAttach() returns the
+                // pool buffer immediately, giving a stable non-pooled copy safe to cache long-term.
+                // If ToData returned a non-pooled IData (e.g. pass-through for an IData argument),
+                // store it directly — it is already stable.
+                IData stable;
+                if (rawData is HeapData pooled)
+                    stable = pooled.DeAttach();
+                else
+                    stable = rawData;
+                // Use CompareExchange so a racing thread's pooled buffer is still returned
+                // via DeAttach() above — we just discard the duplicate stable copy (non-pooled, GC-managed).
+                Interlocked.CompareExchange(ref _partitionKeyData, stable, null);
+                return _partitionKeyData;
+            }
+        }
 
         /// <summary>
         /// Gets the partition identifier of this object.

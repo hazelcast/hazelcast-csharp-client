@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -47,7 +48,12 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task PublishAsync(T message)
         {
-            _keyData ??= ToData(Name);
+            if (_keyData == null)
+            {
+                var rawData = ToData(Name);
+                IData stable = rawData is HeapData pooled ? pooled.DeAttach() : rawData;
+                Interlocked.CompareExchange(ref _keyData, stable, null);
+            }
 
             var messageData = ToSafeData(message);
             var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);

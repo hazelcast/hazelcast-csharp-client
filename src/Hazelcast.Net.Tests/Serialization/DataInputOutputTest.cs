@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Serialization
             using var ss = new SerializationServiceBuilder(config, new NullLoggerFactory())
                 .SetEndianness(endianness).Build();
 
-            IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
+            using var output = ss.CreateObjectDataOutput(1024);
             output.WriteObject(portable);
             var data = output.ToByteArray();
 
@@ -99,7 +99,7 @@ namespace Hazelcast.Tests.Serialization
                 }))
                 .SetEndianness(endianness).Build();
 
-            IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
+            using var output = ss.CreateObjectDataOutput(1024);
             output.WriteObject(obj);
 
             IObjectDataInput input = ss.CreateObjectDataInput(output.ToByteArray());
@@ -113,7 +113,7 @@ namespace Hazelcast.Tests.Serialization
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                 .Build();
 
-            var output = ss.CreateObjectDataOutput(1024);
+            using var output = ss.CreateObjectDataOutput(1024);
             ss.WriteObject(output, null, true, false);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
@@ -128,7 +128,7 @@ namespace Hazelcast.Tests.Serialization
                 var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                     .Build();
 
-                var output = ss.CreateObjectDataOutput(1024);
+                using var output = ss.CreateObjectDataOutput(1024);
                 ss.WriteObject(output, null, true, false);
 
                 var input = ss.CreateObjectDataInput(output.ToByteArray());
@@ -143,7 +143,7 @@ namespace Hazelcast.Tests.Serialization
                 .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
                 .Build();
 
-            var output = ss.CreateObjectDataOutput(1024);
+            using var output = ss.CreateObjectDataOutput(1024);
             ss.WriteObject(output, 1, true, false);
             ss.WriteObject(output, null, true, false);
 

@@ -298,7 +298,7 @@ namespace Hazelcast.Serialization
             if (dataSize != data.DataSize)
                 return false;
 
-            // todo: optimize this by comparing partition hashes first, if they are present. Also, get rid of toByteArray() call by comparing MemoryBytes directly.
+            // todo: optimize by comparing partition hashes first when present.
             return dataSize == 0 || Equals(MemoryBytes.Span, data.GetMemory().Span);
         }
 
@@ -322,11 +322,14 @@ namespace Hazelcast.Serialization
             sb.Append('}');
             return sb.ToString();
         }
+
         public void Dispose()
         {
             // Only release resources when this instance manages a pooled buffer.
             // Non-pooled instances have no resources to release; the GC handles them.
             if (_bufferPool == null) return;
+            // _bytes is null when DeAttach() was called first — pool was already returned there.
+            if (_bytes == null) return;
 
             // Clear only the bytes we actually wrote: payload + 6-byte frame header prefix.
             // Always add FrameHeaderPrefixSize unconditionally — no branch on _hasFramePrefix,
@@ -348,24 +351,27 @@ namespace Hazelcast.Serialization
             var copy = new byte[MemoryBytes.Length];
             MemoryBytes.CopyTo(copy);
 
-            var clearLength = Math.Min(MemoryBytes.Length + FrameHeaderPrefixSize, _bytes.Length);
+            // Compute clearLength before nulling MemoryBytes
+            var contentLength = MemoryBytes.Length;
             MemoryBytes = ReadOnlyMemory<byte>.Empty;
 
-            if (_bufferPool != null)
+            if (_bufferPool != null && _bytes != null)
+            {
+                var clearLength = Math.Min(contentLength + FrameHeaderPrefixSize, _bytes.Length);
                 _bytes.AsSpan(0, clearLength).Clear();
-            _bufferPool?.Return(_bytes);
+                _bufferPool.Return(_bytes);
+            }
             _bytes = null;
             _detached = true;
 
             return new HeapData(copy, _schemaIds);
         }
         
-        // Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
+        // Compare payload bytes only (DataOffset..end), matching Java Arrays.equals semantics.
+        // Header bytes [0..7] (partition hash + type-id) are excluded — callers already
+        // check TypeId and DataSize before reaching this method.
         private static bool Equals(ReadOnlySpan<byte> data1, ReadOnlySpan<byte> data2)
         {
-            if (data1.SequenceEqual(data2))
-                return true;
-
             var length = data1.Length;
             if (data2.Length != length)
                 return false;

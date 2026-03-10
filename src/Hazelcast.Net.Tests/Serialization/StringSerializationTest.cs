@@ -100,7 +100,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestNullStringEncodeDecode2()
         {
-            var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
+            using var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
             objectDataOutput.WriteString(null);
             var bytes = objectDataOutput.ToByteArray();
             var objectDataInput = _serializationService.CreateObjectDataInput(bytes);

@@ -38,7 +38,7 @@ namespace Hazelcast.Serialization
             Initialize();
         }
 
-        # region Memory Owner Ship
+        #region MemoryOwnership
 
         /// <summary>
         /// Initializes the output, renting a buffer from the pool. This must be called before using the output.
@@ -92,7 +92,7 @@ namespace Hazelcast.Serialization
             return (new Memory<byte>(buffer, 0, length), buffer);
         }
 
-        # endregion
+        #endregion
 
         public void Clear()
         {
@@ -112,6 +112,15 @@ namespace Hazelcast.Serialization
 
         public bool TryReset()
         {
+            // Return an oversized buffer to the pool rather than retaining it permanently.
+            // One large serialization should not inflate the pooled buffer forever.
+            if (_buffer != null && _buffer.Length > _initialBufferSize * 8)
+            {
+                _bufferPool.Return(_buffer);
+                _buffer = null;
+                _initialized = false;
+            }
+
             Clear();
             return true;
         }
@@ -119,8 +128,8 @@ namespace Hazelcast.Serialization
         public void Dispose()
         {
             Position = 0;
-            _bufferPool?.Return(_buffer);
-            _buffer = null;
+                _bufferPool?.Return(_buffer);
+                _buffer = null;
             _schemaIds = null;
             _initialized = false;
         }
