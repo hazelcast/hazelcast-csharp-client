@@ -282,10 +282,11 @@ namespace Hazelcast.Clustering
 
         private void InitializeNewCompletionSource()
         {
-            // with PipeScheduler.Inline, the socket-read thread drives the pipe reader; TrySetResult
-            // runs inline on that thread, so the continuation (deserialization) runs on the same
-            // thread before returning to ReadAsync — eliminates one SwapContext per response message
-            _completionSource = new TaskCompletionSource<ClientMessage>();
+            // set options to RunContinuationsAsynchronously so that when the response message
+            // is received and we set the result of the completion source, the code waiting on
+            // the response runs asynchronously on a new task while the networking code proceeds
+            // with messages
+            _completionSource = new TaskCompletionSource<ClientMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
     }
 }
