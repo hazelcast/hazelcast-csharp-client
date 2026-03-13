@@ -112,14 +112,17 @@ namespace Hazelcast.Messaging
                 var flags = Frame.ReadFlags(ref bytes);
                 _bytesLength = frameLength - FrameFields.SizeOf.LengthAndFlags;
 
-                // TODO: refactor byte[] allocations in frames
-                var frameBytes = _bytesLength == 0
-                    ? Array.Empty<byte>()
-                    : new byte[_bytesLength];
-
-                // create a frame
+                // create a frame; rent from pool for non-empty frames to reduce LOH pressure
                 // preserve the isFinal status, as adding the frame to a message messes it
-                _currentFrame = new Frame(frameBytes, flags);
+                if (_bytesLength == 0)
+                {
+                    _currentFrame = new Frame(flags);
+                }
+                else
+                {
+                    var rented = ArrayPool<byte>.Shared.Rent(_bytesLength);
+                    _currentFrame = new Frame(rented, _bytesLength, flags);
+                }
                 _finalFrame = _currentFrame.IsFinal;
 
                 if (_currentMessage == null)
@@ -461,5 +464,6 @@ namespace Hazelcast.Messaging
             await _connection.DisposeAsync().CfAwait(); // does not throw
             _writer.Dispose();
         }
+
     }
 }
