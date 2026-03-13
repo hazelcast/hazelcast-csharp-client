@@ -57,7 +57,9 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value for the specified key.</returns>
         protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var valueData = await GetDataAsync(keyData, cancellationToken).CfAwait();
+            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var valueData = MapGetCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(valueData).CfAwait();
         }
 
@@ -70,9 +72,9 @@ namespace Hazelcast.DistributedObjects.Impl
         protected async Task<IData> GetDataAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
-            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
-            var response = MapGetCodec.DecodeResponse(responseMessage).Response;
-            return response;
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            // No using var — IData is returned and may outlive this scope (NearCache stores it)
+            return MapGetCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />

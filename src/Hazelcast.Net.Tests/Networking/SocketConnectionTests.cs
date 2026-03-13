@@ -358,7 +358,7 @@ namespace Hazelcast.Tests.Networking
             {
                 OnReceiveMessageBytes = (sc, r) =>
                 {
-                    s.Pipe.Writer.Complete();
+                    _ = Task.Run(() => s.Pipe.Writer.Complete());
                     return false;
                 },
                 OnShutdown = sc =>
