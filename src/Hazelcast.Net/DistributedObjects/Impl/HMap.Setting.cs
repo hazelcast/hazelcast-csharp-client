@@ -216,7 +216,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected async Task<bool> TryUpdateAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
         {
             var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
