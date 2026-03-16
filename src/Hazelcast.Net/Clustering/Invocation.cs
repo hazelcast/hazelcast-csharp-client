@@ -282,8 +282,11 @@ namespace Hazelcast.Clustering
 
         private void InitializeNewCompletionSource()
         {
-            // run without async to prevent heavy context switching. 
-            _completionSource = new TaskCompletionSource<ClientMessage>();
+            // RunContinuationsAsynchronously: TrySetResult is called on the socket-read thread
+            // (PipeScheduler.Inline). Without this flag the continuation (deserialization, SQL
+            // page fetch, ReliableTopic error handling) would run inline, risking deadlock when
+            // the continuation tries to acquire _mutex or send new messages.
+            _completionSource = new TaskCompletionSource<ClientMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
     }
 }
