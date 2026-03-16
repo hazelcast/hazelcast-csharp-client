@@ -286,7 +286,7 @@ namespace Hazelcast.Clustering
             // is received and we set the result of the completion source, the code waiting on
             // the response runs asynchronously on a new task while the networking code proceeds
             // with messages
-            _completionSource = new TaskCompletionSource<ClientMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _completionSource = new TaskCompletionSource<ClientMessage>();
         }
     }
 }
