@@ -55,9 +55,16 @@ namespace Hazelcast.Networking
         public int LingerSeconds { get; set; } = 3;
 
         /// <summary>
-        /// Whether the socket is using the Nagle algorithm.
+        /// Whether to disable the Nagle algorithm (TCP_NODELAY).
         /// </summary>
-        public bool TcpNoDelay { get; set; }
+        /// <remarks>
+        /// <para>Defaults to <c>true</c>. The send path coalesces small frames into a shared buffer
+        /// before calling <c>SendAsync</c>, so Nagle's algorithm provides no benefit and only adds
+        /// latency for multi-<c>SendAsync</c> messages (e.g. PUT with payload &gt; 1 KB, where a
+        /// 6-byte end-struct frame is sent in a separate <c>SendAsync</c> after the large payload
+        /// frame, and Nagle buffers it waiting for an ACK).</para>
+        /// </remarks>
+        public bool TcpNoDelay { get; set; } = true;
 
         /// <summary>
         /// Clones the options.
