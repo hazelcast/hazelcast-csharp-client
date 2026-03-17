@@ -36,8 +36,6 @@ namespace Hazelcast.Messaging
         private readonly SocketConnectionBase _connection;
         private readonly ISemaphoreSlim _writer;
         private readonly ILogger _logger;
-        private readonly ArrayPool<byte> _framePool = ArrayPool<byte>.Create(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 8);
-
         private int _disposed;
         private Action<ClientMessageConnection, ClientMessage> _onReceiveMessage;
         private int _bytesLength = -1;
@@ -121,8 +119,8 @@ namespace Hazelcast.Messaging
                 }
                 else
                 {
-                    var rented = _framePool.Rent(_bytesLength);
-                    _currentFrame = new Frame(rented, _bytesLength, flags, _framePool);
+                    var rented = ArrayPool<byte>.Shared.Rent(_bytesLength);
+                    _currentFrame = new Frame(rented, _bytesLength, flags); // pool=null → Dispose returns to ArrayPool<byte>.Shared
                 }
                 _finalFrame = _currentFrame.IsFinal;
 

@@ -73,7 +73,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
-            // No using var — IData is returned and may outlive this scope (NearCache stores it)
+            // No using var: IData wraps frame bytes by reference (HeapData never copies on construction).
+            // The caller may hold this IData beyond the current scope (NearCache Binary path).
             return MapGetCodec.DecodeResponse(responseMessage).Response;
         }
 
