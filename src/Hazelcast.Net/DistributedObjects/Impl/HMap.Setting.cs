@@ -55,7 +55,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 ? MapSetWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
 
-            await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var _ = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
         }
 
         /// <inheritdoc />
