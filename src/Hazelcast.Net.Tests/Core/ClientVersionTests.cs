@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Core
             Assert.That(ClientVersion.GetVersion(new AssemblyInformationalVersionAttribute("1.2.3"), new AssemblyVersionAttribute("4.5.6")), Is.EqualTo("1.2.3"));
 
 
-            Assert.That(Authenticator.ClientVersion, Is.EqualTo(ClientVersion.MajorMinorPatchVersion));
+            Assert.That(Authenticator.ClientVersion, Is.EqualTo(ClientVersion.GetSemVerWithoutBuildingMetadata()));
             Assert.That(Authenticator.ClientVersion.Split('.').Length, Is.GreaterThanOrEqualTo(3));
         }
 
