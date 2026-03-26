@@ -33,9 +33,6 @@ namespace Hazelcast.DistributedObjects
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<DistributedObjectBase> _objectDisposed;
         private string _partitionKey;
-        private IData _partitionKeyData;
-        private int? _partitionId;
-
         private volatile int _disposed;
 
         /// <summary>
@@ -59,6 +56,10 @@ namespace Hazelcast.DistributedObjects
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+            _partitionKey = StringPartitioningStrategy.GetPartitionKey(Name);
+            using var rawData = SerializationService.ToData(_partitionKey);
+            PartitionId = Cluster.Partitioner.GetPartitionId(rawData.PartitionHash);
         }
 
         /// <summary>
@@ -85,43 +86,13 @@ namespace Hazelcast.DistributedObjects
         public string PartitionKey => _partitionKey ??= StringPartitioningStrategy.GetPartitionKey(Name);
 
         /// <summary>
-        /// Get the partition key data of this object.
-        /// </summary>
-        /// <remarks>
-        /// <para>The partition key data is the <see cref="IData"/> conversion of <see cref="PartitionKey"/>.</para>
-        /// <para>This value makes sense only for distributed objects that access a single partition.</para>
-        /// </remarks>
-        public IData PartitionKeyData
-        {
-            get
-            {
-                if (_partitionKeyData != null) return _partitionKeyData;
-                var rawData = ToData(PartitionKey);
-                // ToData returns a pooled HeapData for normal objects. DeAttach() returns the
-                // pool buffer immediately, giving a stable non-pooled copy safe to cache long-term.
-                // If ToData returned a non-pooled IData (e.g. pass-through for an IData argument),
-                // store it directly — it is already stable.
-                IData stable;
-                if (rawData is HeapData pooled)
-                    stable = pooled.DeAttach();
-                else
-                    stable = rawData;
-                // Use CompareExchange so a racing thread's pooled buffer is still returned
-                // via DeAttach() above — we just discard the duplicate stable copy (non-pooled, GC-managed).
-                Interlocked.CompareExchange(ref _partitionKeyData, stable, null);
-                return _partitionKeyData;
-            }
-        }
-
-        /// <summary>
         /// Gets the partition identifier of this object.
         /// </summary>
         /// <remarks>
         /// <para>The partition identifier derives from the <see cref="PartitionKeyData"/>.</para>
         /// <para>This value makes sense only for distributed objects that access a single partition.</para>
         /// </remarks>
-        public int PartitionId => _partitionId ??
-                                  (_partitionId = Cluster.Partitioner.GetPartitionId(PartitionKeyData.PartitionHash)).Value;
+        public int PartitionId {get; }
 
         /// <summary>
         /// Gets the current context identifier.
@@ -335,7 +306,7 @@ namespace Hazelcast.DistributedObjects
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
+            ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
         {
             var task = Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
 
