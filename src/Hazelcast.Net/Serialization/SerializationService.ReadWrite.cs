@@ -80,10 +80,21 @@ namespace Hazelcast.Serialization
 
             try
             {
+                // Reserve space for the Hazelcast frame header (4-byte length + 2-byte flags) at
+                // the very start of the buffer.  The serialized payload is written immediately after.
+                // HeapData.GetWireMemory() will fill in this prefix at send time, allowing the send
+                // path to pass a single contiguous Memory<byte> to stream.WriteAsync() with no copy.
+                output.ReservePrefix(HeapData.FrameHeaderPrefixSize);
+
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 output.WriteIntBigEndian(partitionHash); // partition hash is always big-endian
                 WriteObject(output, obj, true, withSchemas);
-                return new HeapData(output.ToByteArray(), output.HasSchemas ? new HashSet<long>(output.SchemaIds) : null);
+
+                var (fullContent, backingBuffer) = output.DetachBuffer();
+                // fullContent spans [0 .. FrameHeaderPrefixSize + payloadLength).
+                // MemoryBytes must cover only the payload so all HeapData offsets remain correct.
+                var payloadContent = fullContent.Slice(HeapData.FrameHeaderPrefixSize);
+                return new HeapData(payloadContent, backingBuffer, output.HasSchemas ? new HashSet<long>(output.SchemaIds) : null, _bufferPool, hasFramePrefix: true);
             }
             catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
@@ -91,6 +102,8 @@ namespace Hazelcast.Serialization
             }
             finally
             {
+                // only return the object, not buffer.
+                // heap data will take care of buffer pooling when disposed.
                 ReturnDataOutput(output);
             }
         }
@@ -184,7 +197,7 @@ namespace Hazelcast.Serialization
             {
                 var typeId = data.TypeId;
                 var serializer = LookupSerializer(typeId);
-                
+
                 // TODO: consider doing this via polymorphism
                 // i.e. have ISerializerAdapter implement TryRead(...)
                 if (serializer is CompactSerializationSerializerAdapter compact)
@@ -284,7 +297,7 @@ namespace Hazelcast.Serialization
                 throw new SerializationException(e);
             }
         }
-        
+
         /// <summary>
         /// Reads an object from an <see cref="ObjectDataInput"/>.
         /// </summary>

@@ -33,7 +33,11 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static string Decode(Frame frame)
         {
-            return Utf8.GetString(frame.Bytes);
+#if NETSTANDARD2_0
+            return Utf8.GetString(frame.Bytes.ToArray());
+#else
+            return Utf8.GetString(frame.Bytes.Span);
+#endif
         }
     }
 }

@@ -86,10 +86,10 @@ namespace Hazelcast.Tests.Messaging
                 for (var i = 0; i < frame.Bytes.Length;)
                 {
                     var len = 1;
-                    buffer[0] = frame.Bytes[i++];
+                    buffer[0] = frame.Bytes.Span[i++];
                     if (i < frame.Bytes.Length)
                     {
-                        buffer[1] = frame.Bytes[i++];
+                        buffer[1] = frame.Bytes.Span[i++];
                         len = 2;
                     }
                     await c.SendAsync(buffer, len).CfAwait();
@@ -411,8 +411,9 @@ namespace Hazelcast.Tests.Messaging
             { }
 
             public int Count { get; set; }
+ 
 
-            public override ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+            public override ValueTask<bool> SendAsync(ReadOnlyMemory<byte> bytes, int length, CancellationToken cancellationToken = default)
             {
                 return new ValueTask<bool>(Count-- > 0);
             }
@@ -433,7 +434,7 @@ namespace Hazelcast.Tests.Messaging
                 _sending = sending;
             }
 
-            public override async ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+            public override async ValueTask<bool> SendAsync(ReadOnlyMemory<byte> bytes, int length, CancellationToken cancellationToken = default)
             {
                 await _sending();
                 return await base.SendAsync(bytes, length, cancellationToken);

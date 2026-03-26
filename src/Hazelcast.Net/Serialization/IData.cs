@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Represents the basic unit of serialization.
     /// </summary>
-    internal interface IData
+    internal interface IData: IDisposable
     {
         /// <summary>Gets the size of the data contained in this instance.</summary>
         int DataSize { get; }
@@ -50,5 +51,20 @@ namespace Hazelcast.Serialization
         /// <summary>Gets the byte array representation of this instance.</summary>
         /// <remarks>Can return an empty array but never <c>null</c>.</remarks>
         byte[] ToByteArray();
+        
+        /// <summary>
+        /// Returns a read-only memory segment containing the bytes of this instance.
+        /// </summary>
+        /// <returns></returns>
+        ReadOnlyMemory<byte> GetMemory();
+        
+        /// <summary>
+        /// Detaches this instance from its underlying data, if any, and returns a new instance containing the same data.
+        /// The original instance is left in an empty state, and the new instance is independent of the original.
+        /// It means that after calling this method, the original instance is not managing the underlying data anymore,
+        /// it creates the copy of the data, and it returns the original buffer to the pool.
+        /// </summary>
+        /// <returns>Discrete copy of current instance</returns>
+        IData DeAttach();
     }
 }

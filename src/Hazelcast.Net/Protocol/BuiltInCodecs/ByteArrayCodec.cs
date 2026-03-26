@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 using System.Collections.Generic;
 using Hazelcast.Messaging;
 
@@ -25,7 +26,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static byte[] Decode(Frame frame)
         {
-            return frame.Bytes;
+            return frame.Bytes.Span.ToArray();
         }
 
         public static byte[] Decode(IEnumerator<Frame> iterator)

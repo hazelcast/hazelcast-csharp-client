@@ -13,6 +13,8 @@
 // limitations under the License.
 using System;
 using System.Buffers;
+using System.Runtime.InteropServices;
+using System.Threading;
 using Hazelcast.Core;
 
 namespace Hazelcast.Messaging
@@ -27,8 +29,16 @@ namespace Hazelcast.Messaging
     /// <para>Frames form a linked list through their <see cref="Next"/> property, with the
     /// <see cref="ClientMessage"/> keeping track of the first and last frame of the list.</para>
     /// </remarks>
-    internal class Frame
+    internal class Frame : IDisposable
     {
+        private IDisposable _owner;
+
+        /// <summary>
+        /// Gets the owner whose lifetime is tied to this frame, or <c>null</c> if none.
+        /// Used by the send path to detect pre-framed <see cref="Hazelcast.Serialization.HeapData"/>
+        /// and route to the zero-copy send path.
+        /// </summary>
+        internal IDisposable Owner => _owner;
         /// <summary>
         /// Initializes a new instance of the <see cref="Frame"/> class representing an empty frame.
         /// </summary>
@@ -36,7 +46,7 @@ namespace Hazelcast.Messaging
         public Frame(FrameFlags flags = FrameFlags.Default)
         {
             Flags = flags;
-            Bytes = Array.Empty<byte>();
+            Bytes = Memory<byte>.Empty;
         }
 
         /// <summary>
@@ -47,7 +57,26 @@ namespace Hazelcast.Messaging
         public Frame(byte[] bytes, FrameFlags flags = FrameFlags.Default)
         {
             Flags = flags;
-            Bytes = bytes ?? Array.Empty<byte>();
+            Bytes = new Memory<byte>(bytes);
+        }
+        
+        public Frame(Memory<byte> memoryBytes, FrameFlags flags = FrameFlags.Default)
+        {
+            Flags = flags;
+            Bytes = memoryBytes;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Frame"/> class from read-only memory.
+        /// </summary>
+        /// <param name="bytes">The frame bytes. Must be array-backed.</param>
+        /// <param name="flags">The frame flags.</param>
+        /// <param name="owner">An optional owner whose lifetime is tied to this frame; disposed when the frame is disposed.</param>
+        public Frame(ReadOnlyMemory<byte> bytes, FrameFlags flags = FrameFlags.Default, IDisposable owner = null)
+        {
+            Flags = flags;
+            Bytes = MemoryMarshal.AsMemory(bytes);
+            _owner = owner;
         }
 
         /// <summary>
@@ -104,9 +133,8 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets the frame bytes.
         /// </summary>
-#pragma warning disable CA1819 // Properties should not return arrays - but here we do intend to modify the array
-        public byte[] Bytes { get; }
-#pragma warning restore CA1819
+        public Memory<byte> Bytes { get; }
+
 
         /// <summary>
         /// Gets the next frame.
@@ -116,7 +144,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets the frame length (including length and flags fields).
         /// </summary>
-        public int Length => FrameFields.SizeOf.Length + FrameFields.SizeOf.Flags + (Bytes?.Length ?? 0);
+        public int Length => FrameFields.SizeOf.Length + FrameFields.SizeOf.Flags + Bytes.Length;
 
         /// <summary>
         /// Determines whether the frame is a structure end frame.
@@ -157,8 +185,16 @@ namespace Hazelcast.Messaging
         public Frame DeepClone()
         {
             var bytes = new byte[Bytes.Length];
-            Buffer.BlockCopy(Bytes, 0, bytes, 0, bytes.Length);
+            Bytes.CopyTo(bytes);
             return new Frame(bytes, Flags);
+        }
+
+        /// <summary>
+        /// Disposes the frame, releasing any owned resource.
+        /// </summary>
+        public void Dispose()
+        {
+            Interlocked.Exchange(ref _owner, null)?.Dispose();
         }
 
         /// <inheritdoc />

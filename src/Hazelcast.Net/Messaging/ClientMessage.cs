@@ -34,7 +34,7 @@ namespace Hazelcast.Messaging
     /// <see cref="LastFrame"/>. The last frame always has the <see cref="FrameFlags.Final"/>
     /// flag set.</para>
     /// </remarks>
-    internal partial class ClientMessage : IEnumerable<Frame>, ICanHaveSchemas
+    internal partial class ClientMessage : IEnumerable<Frame>, ICanHaveSchemas, IDisposable
     {
         private HashSet<long> _schemaIds;
 
@@ -251,6 +251,15 @@ namespace Hazelcast.Messaging
         /// Determines whether the message carries an exception.
         /// </summary>
         public bool IsException => MessageType == 0;
+
+        /// <summary>
+        /// Disposes all frames in the message, releasing any owned resources.
+        /// </summary>
+        public void Dispose()
+        {
+            for (var frame = FirstFrame; frame != null; frame = frame.Next)
+                frame.Dispose();
+        }
 
         /// <inheritdoc />
         public IEnumerator<Frame> GetEnumerator()

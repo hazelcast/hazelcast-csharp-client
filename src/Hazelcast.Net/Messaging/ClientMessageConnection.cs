@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Networking;
+using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Messaging
@@ -150,7 +151,7 @@ namespace Hazelcast.Messaging
             }
 
             // else, fill, and update the reference
-            bytes.Fill(_currentFrame.Bytes);
+            bytes.Fill(_currentFrame.Bytes.Span);
             bufferReference.Buffer = bytes;
 
             _bytesLength = -1;
@@ -304,6 +305,8 @@ namespace Hazelcast.Messaging
             }
             finally
             {
+                
+                
                 if (_writer != null)
                 {
                     try
@@ -368,10 +371,23 @@ namespace Hazelcast.Messaging
 
                     // copy frame to buffer
                     HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
-                    frame.WriteLengthAndFlags(buffer, length);
-                    if (frame.Length > sizeofHeader)
-                        frame.Bytes.AsSpan().CopyTo(buffer.AsSpan(length+ sizeofHeader));
-                    length += frame.Length;
+                    if (frame.Owner is HeapData { HasFramePrefix: true } hd)
+                    {
+                        // Pre-framed: the backing buffer already has FrameHeaderPrefixSize bytes
+                        // reserved before the payload.  GetWireMemory writes the 6-byte header
+                        // in-place and returns [header][payload] as one contiguous region — no
+                        // separate WriteLengthAndFlags call and no extra offset arithmetic needed.
+                        var wireMemory = hd.GetWireMemory((ushort)frame.Flags);
+                        wireMemory.Span.CopyTo(buffer.AsSpan(length));
+                        length += wireMemory.Length; // == frame.Length
+                    }
+                    else
+                    {
+                        frame.WriteLengthAndFlags(buffer, length);
+                        if (frame.Length > sizeofHeader)
+                            frame.Bytes.Span.CopyTo(buffer.AsSpan(length + sizeofHeader));
+                        length += frame.Length;
+                    }
                 }
 
                 frame = frame.Next;
@@ -390,6 +406,17 @@ namespace Hazelcast.Messaging
         // this is only for large frames
         private async ValueTask<bool> SendFrameAsync(Frame frame)
         {
+            // Pre-framed HeapData: the backing buffer has the 6-byte frame header reserved
+            // immediately before the payload.  Write the header in-place and send the complete
+            // wire representation in a single stream.WriteAsync call — eliminating both the
+            // ArrayPool.Rent(6) and the second WriteAsync that the non-pre-framed path requires.
+            if (frame.Owner is HeapData { HasFramePrefix: true } hd)
+            {
+                var wireMemory = hd.GetWireMemory((ushort)frame.Flags);
+                return await _connection.SendAsync(wireMemory, wireMemory.Length).CfAwait();
+            }
+
+            // Fallback for structural frames (begin, end, null) that are not backed by HeapData.
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
             var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
@@ -399,7 +426,6 @@ namespace Hazelcast.Messaging
             ArrayPool<byte>.Shared.Return(header);
 
             if (!sentHeader) return false;
-            //if (frame.Length <= sizeofHeader) return true;
 
             return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length).CfAwait();
         }

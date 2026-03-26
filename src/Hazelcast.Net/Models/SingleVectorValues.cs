@@ -37,7 +37,22 @@ namespace Hazelcast.Models
             if (this == obj) return true;
             if (obj == null || GetType() != obj.GetType()) return false;
             var that = (SingleVectorValues)obj;
+            if (Vector == null && that.Vector == null) return true;
+            if (Vector == null || that.Vector == null) return false;
             return Vector.SequenceEqual(that.Vector);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            if (Vector == null) return 0;
+            unchecked
+            {
+                var hash = 17;
+                foreach (var f in Vector)
+                    hash = hash * 31 + f.GetHashCode();
+                return hash;
+            }
         }
     }
 }

@@ -72,7 +72,14 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
 
-            var keysmap = keys.ToDictionary(x => ToSafeData(x), x => x);
+            // ToSafeData produces a pooled HeapData; DataCodec.Encode transfers ownership to the
+            // request frame, so RequestMessage.Dispose() (called after send) disposes each key IData.
+            // The response lookup below happens after the send, so we need stable non-pooled copies.
+            var keysmap = keys.ToDictionary(x =>
+            {
+                using var pooledKey = ToSafeData(x);
+                return (IData) new HeapData(pooledKey.ToByteArray());
+            }, x => x);
             if (keysmap.Count == 0) return new Dictionary<TKey, TResult>();
             var processorData = ToSafeData(processor);
 

@@ -25,22 +25,117 @@ namespace Hazelcast.Serialization
         private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
         private byte[] _buffer;
         private int _position;
+        private int _prefixBias; // bytes reserved at start of buffer via ReservePrefix
         private HashSet<long> _schemaIds;
         private IBufferPool _bufferPool;
-
+        private bool _initialized = false;
         internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness, IBufferPool bufferPool)
         {
             _initialBufferSize = initialBufferSize;
             _bufferPool = bufferPool;
             _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
-            _buffer = _bufferPool.Rent(_initialBufferSize);
+            Initialize();
         }
 
-        public byte[] Buffer
+        #region MemoryOwnership
+
+        /// <summary>
+        /// Initializes the output, renting a buffer from the pool. This must be called before using the output.
+        /// </summary>
+        public void Initialize()
         {
-            get => _buffer;
+            if (_initialized) return;
+
+            _buffer = _bufferPool.Rent(_initialBufferSize);
+            _initialized = true;
         }
+
+        /// <summary>
+        /// Advances the write position by <paramref name="bytes"/> without writing any data,
+        /// reserving that many bytes at the current position for the caller to fill in later.
+        /// Must be called immediately after <see cref="Initialize"/> and before any writes.
+        /// Sets <see cref="PayloadPosition"/> so that serializers storing absolute byte positions
+        /// in the binary (e.g. the portable serializer) record positions relative to the payload
+        /// start rather than the raw buffer start.
+        /// </summary>
+        /// <param name="bytes">Number of bytes to reserve.</param>
+        public void ReservePrefix(int bytes)
+        {
+            EnsureAvailable(bytes);
+            _position += bytes;
+            _prefixBias = bytes;
+        }
+
+        /// <summary>
+        /// Gets the current write position relative to the payload start (i.e. excluding the
+        /// bytes reserved by <see cref="ReservePrefix"/>). Use this — not <see cref="Position"/> —
+        /// whenever a position value is being stored inside the serialized binary (e.g. as a field
+        /// offset in the portable format), so that the stored value is valid when the payload is
+        /// later read back without the prefix.
+        /// </summary>
+        internal int PayloadPosition => _position - _prefixBias;
+
+        /// <summary>
+        /// Detaches the buffer from the output, returning the written content as a sliced
+        /// <see cref="Memory{T}"/> and the backing array for pool return. After this call,
+        /// the output is no longer usable and should be reinitialized.
+        /// </summary>
+        /// <returns>A tuple of the sliced content and the raw backing buffer.</returns>
+        public (Memory<byte> content, byte[] backingBuffer) DetachBuffer()
+        {
+            var buffer = _buffer;
+            var length = _position;
+            _buffer = null;
+            _position = 0;
+            _initialized = false;
+            return (new Memory<byte>(buffer, 0, length), buffer);
+        }
+
+        #endregion
+
+        public void Clear()
+        {
+            _position = 0;
+            _prefixBias = 0;
+            _schemaIds?.Clear();
+
+            // If the buffer is still held (e.g. exception path before DetachBuffer),
+            // just reset position and keep it — EnsureAvailable() will resize if needed.
+            // Do NOT return + re-rent: that causes an unnecessary ArrayPool round-trip per Clear().
+            //
+            // If the buffer was already detached (normal PUT path), leave _buffer null.
+            // EnsureAvailable(), called on the next write, will rent lazily — spreading
+            // Rent() calls across operation-start time rather than operation-end time,
+            // reducing ArrayPool contention under high concurrency.
+        }
+
+        public bool TryReset()
+        {
+            // Return an oversized buffer to the pool rather than retaining it permanently.
+            // One large serialization should not inflate the pooled buffer forever.
+            if (_buffer != null && _buffer.Length > _initialBufferSize * 8)
+            {
+                _bufferPool.Return(_buffer);
+                _buffer = null;
+                _initialized = false;
+            }
+
+            Clear();
+            return true;
+        }
+
+        public void Dispose()
+        {
+            Position = 0;
+                _bufferPool?.Return(_buffer);
+                _buffer = null;
+            _schemaIds = null;
+            _initialized = false;
+        }
+
+        // TODO: Convert to Memory<byte> while refactoring ObjectDataInput
+        public byte[] Buffer => _buffer ?? Array.Empty<byte>();
 
         internal int Position
         {
@@ -83,28 +178,6 @@ namespace Hazelcast.Serialization
             }
         }
 
-        public void Clear()
-        {
-            Position = 0;
-            _schemaIds?.Clear();
-
-            if (_buffer != null && _buffer.Length > _initialBufferSize)
-            {
-                _bufferPool.Return(_buffer);
-                _buffer = _bufferPool.Rent(_initialBufferSize);
-            }
-            else if (_buffer != null)
-            {
-                Array.Clear(_buffer, 0, _buffer.Length);
-            }
-        }
-
-        public void Dispose()
-        {
-            Position = 0;
-            _bufferPool.Return(_buffer);
-            _buffer = null;
-        }
 
         public void MoveTo(int position, int count = 0)
         {
@@ -126,6 +199,7 @@ namespace Hazelcast.Serialization
             else
             {
                 _buffer = _bufferPool.Rent(count > _initialBufferSize / 2 ? count * 2 : _initialBufferSize);
+                _initialized = true;
             }
         }
         private void ResizeBuffer(int newCap)
@@ -135,10 +209,7 @@ namespace Hazelcast.Serialization
             _bufferPool.Return(_buffer);
             _buffer = newBuffer;
         }
-        public bool TryReset()
-        {
-            Clear();
-            return true;
-        }
+
+
     }
 }

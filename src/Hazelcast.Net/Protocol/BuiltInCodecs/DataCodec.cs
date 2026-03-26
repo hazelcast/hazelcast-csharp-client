@@ -22,7 +22,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static void Encode(ClientMessage clientMessage, IData data)
         {
-            clientMessage.Append(new Frame(data.ToByteArray()));
+            clientMessage.Append(new Frame(data.GetMemory(), FrameFlags.Default, data));
 
             if (data is ICanHaveSchemas { HasSchemas: true } canHaveSchemas)
             {

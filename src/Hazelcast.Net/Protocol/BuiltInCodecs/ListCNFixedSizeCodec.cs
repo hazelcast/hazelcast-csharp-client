@@ -51,7 +51,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         }
 
         [ItemCanBeNull]
-        private static IList<T?> DecodeNotNullOnly<T>(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count) where T : struct
+        private static IList<T?> DecodeNotNullOnly<T>(Memory<byte> bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count) where T : struct
         {
             var res = new List<T?>(count);
             for (var i = 0; i < count; i++)
@@ -61,7 +61,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         }
 
         [ItemCanBeNull]
-        private static IList<T?> DecodeMixed<T>(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count) where T : struct
+        private static IList<T?> DecodeMixed<T>(Memory<byte> bytes, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc, int count) where T : struct
         {
             var position = HeaderSize;
             var readCount = 0;

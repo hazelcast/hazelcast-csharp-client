@@ -26,14 +26,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             var bytes = iterator.Take().Bytes;
             var contentSize = bytes.ReadIntL(0);
-            var body = new ReadOnlySpan<byte>(bytes, BytesExtensions.SizeOfInt, contentSize);
+            var body = bytes.Slice(BytesExtensions.SizeOfInt, contentSize);
 
 #if NETSTANDARD2_0
             var bodyLE = body.ToArray();
             Array.Reverse(bodyLE);
             var unscaled = new BigInteger(bodyLE);
 #else
-            var unscaled = new BigInteger(body, isUnsigned: false, isBigEndian: true);
+            var unscaled = new BigInteger(body.Span, isUnsigned: false, isBigEndian: true);
 #endif
 
             var scale = bytes.ReadIntL(BytesExtensions.SizeOfInt + contentSize);

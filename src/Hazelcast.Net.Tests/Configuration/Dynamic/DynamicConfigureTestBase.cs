@@ -92,7 +92,7 @@ for (var i = 0; i < bytes.length; i++) result += h2s(bytes[i])
             dotnetBytes.WriteShortL(ix, (short)flags);
             ix += BytesExtensions.SizeOfShort;
             //writeBytes(frame.content)
-            for (var i = 0; i < frame.Bytes.Length; i++) dotnetBytes[ix++] = frame.Bytes[i];
+            for (var i = 0; i < frame.Bytes.Length; i++) dotnetBytes[ix++] = frame.Bytes.Span[i];
         }
 
         return dotnetBytes;

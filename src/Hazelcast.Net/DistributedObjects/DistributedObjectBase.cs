@@ -33,9 +33,6 @@ namespace Hazelcast.DistributedObjects
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<DistributedObjectBase> _objectDisposed;
         private string _partitionKey;
-        private IData _partitionKeyData;
-        private int? _partitionId;
-
         private volatile int _disposed;
 
         /// <summary>
@@ -59,6 +56,10 @@ namespace Hazelcast.DistributedObjects
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+            _partitionKey = StringPartitioningStrategy.GetPartitionKey(Name);
+            using var rawData = SerializationService.ToData(_partitionKey);
+            PartitionId = Cluster.Partitioner.GetPartitionId(rawData.PartitionHash);
         }
 
         /// <summary>
@@ -85,23 +86,13 @@ namespace Hazelcast.DistributedObjects
         public string PartitionKey => _partitionKey ??= StringPartitioningStrategy.GetPartitionKey(Name);
 
         /// <summary>
-        /// Get the partition key data of this object.
-        /// </summary>
-        /// <remarks>
-        /// <para>The partition key data is the <see cref="IData"/> conversion of <see cref="PartitionKey"/>.</para>
-        /// <para>This value makes sense only for distributed objects that access a single partition.</para>
-        /// </remarks>
-        public IData PartitionKeyData => _partitionKeyData ??= ToData(PartitionKey);
-
-        /// <summary>
         /// Gets the partition identifier of this object.
         /// </summary>
         /// <remarks>
         /// <para>The partition identifier derives from the <see cref="PartitionKeyData"/>.</para>
         /// <para>This value makes sense only for distributed objects that access a single partition.</para>
         /// </remarks>
-        public int PartitionId => _partitionId ??
-                                  (_partitionId = Cluster.Partitioner.GetPartitionId(PartitionKeyData.PartitionHash)).Value;
+        public int PartitionId {get; }
 
         /// <summary>
         /// Gets the current context identifier.
@@ -315,7 +306,7 @@ namespace Hazelcast.DistributedObjects
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
+            ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
         {
             var task = Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
 

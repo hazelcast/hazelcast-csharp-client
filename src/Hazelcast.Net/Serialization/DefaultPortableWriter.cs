@@ -203,13 +203,13 @@ namespace Hazelcast.Serialization
             _out.WriteInt(fd.ClassId);
             if (len > 0)
             {
-                var offset = _out.Position;
+                var offset = _out.Position; // write-target: absolute buffer offset for this array's offset table
                 _out.WriteZeroBytes(len*4);
                 for (var i = 0; i < portables.Length; i++)
                 {
                     var portable = portables[i];
                     CheckPortableAttributes(fd, portable);
-                    var position = _out.Position;
+                    var position = _out.PayloadPosition; // stored VALUE: payload-relative position of this element
                     _out.WriteInt(offset + i* BytesExtensions.SizeOfInt, position);
                     _serializer.WriteInternal(_out, portable);
                 }
@@ -221,7 +221,7 @@ namespace Hazelcast.Serialization
         {
             if (!_raw)
             {
-                var pos = _out.Position;
+                var pos = _out.PayloadPosition; // stored VALUE: payload-relative position of raw data section
                 // last index
                 var index = _cd.GetFieldCount();
                 _out.WriteInt(_offset + index* BytesExtensions.SizeOfInt, pos);
@@ -238,8 +238,9 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException" />
         internal virtual void End()
         {
-            // write final offset
-            var position = _out.Position;
+            // write final offset as a payload-relative position so it is valid
+            // when the binary is read back from the payload slice (without the prefix).
+            var position = _out.PayloadPosition;
             _out.WriteInt(_begin, position);
         }
 
@@ -276,7 +277,7 @@ namespace Hazelcast.Serialization
             }
             if (_writtenFields.Add(fieldName))
             {
-                var pos = _out.Position;
+                var pos = _out.PayloadPosition; // stored VALUE: payload-relative position of this field's data
                 var index = fd.Index;
                 _out.WriteInt(_offset + index* BytesExtensions.SizeOfInt, pos);
                 _out.WriteShort((short)fieldName.Length);

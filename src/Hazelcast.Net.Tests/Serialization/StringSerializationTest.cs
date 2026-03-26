@@ -81,7 +81,8 @@ namespace Hazelcast.Tests.Serialization
             }
             var actualStr = sb.ToString();
             var strBytes = Encoding.UTF8.GetBytes(actualStr);
-            var actualDataBytes = _serializationService.ToData(actualStr).ToByteArray();
+            using var heapData = _serializationService.ToData(actualStr);
+            var actualDataBytes = heapData.ToByteArray();
             var expectedDataByte = ToDataByte(strBytes);
             var decodedStr = (string) _serializationService.ToObject<object>(new HeapData(expectedDataByte));
             Assert.AreEqual(decodedStr, actualStr);
@@ -99,7 +100,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestNullStringEncodeDecode2()
         {
-            var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
+            using var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
             objectDataOutput.WriteString(null);
             var bytes = objectDataOutput.ToByteArray();
             var objectDataInput = _serializationService.CreateObjectDataInput(bytes);
