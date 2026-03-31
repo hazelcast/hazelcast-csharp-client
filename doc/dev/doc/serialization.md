@@ -124,3 +124,15 @@ hazelcastOptions.Serialization.GlobalSerializer.Creator =
     }
 }
 ```
+
+## Performance Consideration: CPU-Intensive Serializers
+
+By default, deserialization of incoming messages runs on the I/O thread (via `PipeScheduler.Inline`). If your custom or global serializer performs significant CPU work during deserialization, it will block the I/O thread and delay reading of subsequent messages from the same connection.
+
+In that case, consider switching the pipe reader scheduler to `ThreadPool`:
+
+```csharp
+options.Networking.Socket.PipeReaderScheduler = PipeScheduler.ThreadPool;
+```
+
+See [Pipe Reader Scheduler](network.md#pipe-reader-scheduler) for details.

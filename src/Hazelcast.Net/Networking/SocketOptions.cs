@@ -1,16 +1,17 @@
 ﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System.IO.Pipelines;
 namespace Hazelcast.Networking
 {
     /// <summary>
@@ -33,6 +34,7 @@ namespace Hazelcast.Networking
             KeepAlive = other.KeepAlive;
             LingerSeconds = other.LingerSeconds;
             TcpNoDelay = other.TcpNoDelay;
+            PipeReaderScheduler = other.PipeReaderScheduler;
         }
 
         /// <summary>
@@ -58,6 +60,17 @@ namespace Hazelcast.Networking
         /// Whether the socket is using the Nagle algorithm.
         /// </summary>
         public bool TcpNoDelay { get; set; }
+
+        /// <summary>
+        /// Gets or sets the scheduler used for the pipe reader.
+        /// </summary>
+        /// <remarks>
+        /// <para>Defaults to <see cref="PipeScheduler.Inline"/>, which runs the receive
+        /// loop synchronously on the I/O thread for lower latency. Set to
+        /// <see cref="PipeScheduler.ThreadPool"/> if your message-bytes handler
+        /// performs blocking or heavy work that should not run on the I/O thread.</para>
+        /// </remarks>
+        public PipeScheduler PipeReaderScheduler { get; set; } = PipeScheduler.Inline;
 
         /// <summary>
         /// Clones the options.

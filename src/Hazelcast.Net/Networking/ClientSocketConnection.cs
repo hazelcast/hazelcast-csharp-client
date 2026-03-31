@@ -96,7 +96,7 @@ namespace Hazelcast.Networking
             }
 
             // wire the pipe
-            OpenPipe(socket, stream);
+            OpenPipe(socket, stream, _options.Socket.PipeReaderScheduler);
 
             if (IsActive) HConsole.WriteLine(this, "Opened");
         }
