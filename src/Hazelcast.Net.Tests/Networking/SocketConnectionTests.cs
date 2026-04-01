@@ -14,6 +14,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -358,7 +359,7 @@ namespace Hazelcast.Tests.Networking
             {
                 OnReceiveMessageBytes = (sc, r) =>
                 {
-                    s.Pipe.Writer.Complete();
+                    _ = Task.Run(() => s.Pipe.Writer.Complete());
                     return false;
                 },
                 OnShutdown = sc =>
@@ -406,6 +407,76 @@ namespace Hazelcast.Tests.Networking
             var cancellation = new CancellationTokenSource();
             cancellation.Dispose();
             cancellation.Dispose();
+        }
+
+        [Test]
+        public async Task PipeReaderScheduler_SocketOptionsFlowsToPipe()
+        {
+            // Verify the full chain: SocketOptions.PipeReaderScheduler
+            //   → ClientSocketConnection.ConnectAsync
+            //   → OpenPipe(scheduler)
+            //   → PipeOptions(readerScheduler: scheduler)
+            // by using a TrackingScheduler and confirming it is invoked when data arrives.
+
+            var address = NetworkAddress.Parse("127.0.0.1").WithTestEndPointPort();
+            var scheduler = new TrackingScheduler();
+            var options = new NetworkingOptions();
+            options.Socket.PipeReaderScheduler = scheduler;
+
+            await using var server = new Server(address)
+                .HandleFallback(async request =>
+                {
+                    await Task.Delay(200).CfAwait();
+                    await request.Connection.SendAsync(new ClientMessage(new Frame(new byte[64]))).CfAwait();
+                });
+
+            await server.StartAsync();
+
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, options, new SslOptions(), NullLoggerFactory.Instance);
+            var m = new ClientMessageConnection(socket, NullLoggerFactory.Instance);
+            var received = new SemaphoreSlim(0, 1);
+            m.OnReceiveMessage += (_, _) => received.Release();
+            await socket.ConnectAsync(default);
+
+            await socket.SendAsync(MemberConnection.ClientProtocolInitBytes, MemberConnection.ClientProtocolInitBytes.Length).CfAwait();
+            await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented))).CfAwait();
+            await received.WaitAsync(TimeSpan.FromSeconds(10)).CfAwait();
+
+            Assert.That(scheduler.ScheduleCount, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void SocketOptions_Clone_PreservesPipeReaderScheduler()
+        {
+            var options = new SocketOptions { PipeReaderScheduler = PipeScheduler.ThreadPool };
+            var cloned = options.Clone();
+            Assert.That(cloned.PipeReaderScheduler, Is.SameAs(PipeScheduler.ThreadPool));
+        }
+
+        [Test]
+        public async Task PipeReaderScheduler_IsPassedToPipe()
+        {
+            var pipe = new MemoryPipe();
+            var received = 0;
+            var scheduler = new TrackingScheduler();
+
+            var s = new TestSocketConnection(pipe.Stream1, pipeReaderScheduler: scheduler)
+            {
+                OnReceiveMessageBytes = (sc, r) =>
+                {
+                    Interlocked.Add(ref received, (int) r.Buffer.Length);
+                    r.Buffer = r.Buffer.Slice(r.Buffer.End);
+                    return false;
+                }
+            };
+
+            await s.ConnectAsync();
+            await pipe.Stream2.WriteAsync(new byte[8], 0, 8);
+
+            await AssertEx.SucceedsEventually(() => Assert.That(received, Is.EqualTo(8)), 4000, 200);
+            Assert.That(scheduler.ScheduleCount, Is.GreaterThan(0));
+
+            await s.DisposeAsync();
         }
 
         private class StreamWrapper : Stream
@@ -483,18 +554,20 @@ namespace Hazelcast.Tests.Networking
         private class TestSocketConnection : SocketConnectionBase
         {
             private readonly Stream _stream;
+            private readonly PipeScheduler _pipeReaderScheduler;
 
-            public TestSocketConnection(Stream stream, int prefixLength = 0)
+            public TestSocketConnection(Stream stream, int prefixLength = 0, PipeScheduler pipeReaderScheduler = null)
                 : base(Guid.NewGuid(), prefixLength)
             {
                 _stream = stream;
+                _pipeReaderScheduler = pipeReaderScheduler;
             }
 
             public ValueTask ConnectAsync()
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 EnsureCanOpenPipe();
-                OpenPipe(socket, _stream);
+                OpenPipe(socket, _stream, _pipeReaderScheduler);
                 return default;
             }
 
@@ -505,6 +578,18 @@ namespace Hazelcast.Tests.Networking
             public async Task WritePipeThrowsArgumentNull1() => await WritePipeAsync(null, null);
             public async Task WritePipeThrowsArgumentNull2() => await WritePipeAsync(new MemoryStream(), null);
             public async Task ReadPipeThrowsArgumentNull() => await ReadPipeAsync(null);
+        }
+
+        private class TrackingScheduler : PipeScheduler
+        {
+            private int _scheduleCount;
+            public int ScheduleCount => _scheduleCount;
+
+            public override void Schedule(Action<object> action, object state)
+            {
+                Interlocked.Increment(ref _scheduleCount);
+                System.Threading.ThreadPool.QueueUserWorkItem(s => action(s), state);
+            }
         }
     }
 }

@@ -57,7 +57,9 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value for the specified key.</returns>
         protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var valueData = await GetDataAsync(keyData, cancellationToken).CfAwait();
+            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var valueData = MapGetCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(valueData).CfAwait();
         }
 
@@ -71,8 +73,9 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
-            var response = MapGetCodec.DecodeResponse(responseMessage).Response;
-            return response;
+            // No using var: IData wraps frame bytes by reference (HeapData never copies on construction).
+            // The caller may hold this IData beyond the current scope (NearCache Binary path).
+            return MapGetCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
@@ -159,7 +162,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var keyData = ToSafeData(key);
 
             var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapGetEntryViewCodec.DecodeResponse(responseMessage).Response;
 
             if (response == null) return null;
@@ -386,7 +389,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected virtual async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -400,7 +403,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var valueData = ToSafeData(value);
 
             var requestMessage = MapContainsValueCodec.EncodeRequest(Name, valueData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapContainsValueCodec.DecodeResponse(responseMessage).Response;
             return response;
         }

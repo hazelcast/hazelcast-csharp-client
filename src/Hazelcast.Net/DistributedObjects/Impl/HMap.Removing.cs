@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeoutMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ContextId, timeoutMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -92,7 +92,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected virtual async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(response).CfAwait();
         }
