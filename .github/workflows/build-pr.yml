@@ -47,7 +47,7 @@ jobs:
         uses: hazelcast/hazelcast-tpm/membership@main
         with:
           member-name: ${{ github.actor }}
-          token: ${{ github.token }}
+          token: ${{ secrets.GH_TOKEN }}
 
   # ensure we are an Hazelcast organization member OR manually running
   ensure-membership:
