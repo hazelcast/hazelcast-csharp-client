@@ -46,8 +46,9 @@ jobs:
         id: test-membership
         uses: hazelcast/hazelcast-tpm/membership@main
         with:
+          organization-name: hazelcast
           member-name: ${{ github.actor }}
-          token: ${{ github.token }}
+          token: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
 
   # ensure we are an Hazelcast organization member OR manually running
   ensure-membership:
@@ -59,7 +60,7 @@ jobs:
     steps:
       - name: Report
         shell: bash
-        run: echo "User ${{ github.actor }} is trusted for test execution"
+        run: echo "User ${{ github.event.pull_request.head.repo.owner.login }} is a member of the Hazelcast organization"
 
   # get frameworks
   get-fwks:
