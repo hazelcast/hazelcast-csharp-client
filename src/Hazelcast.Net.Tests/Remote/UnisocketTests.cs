@@ -61,6 +61,8 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestDistributedObjectEventsWithDummyClient()
         {
+            HConsole.Configure(c => c.ConfigureDefaults(this));
+            
             var memberA = await AddMember();
             var memberB = await AddMember();
 
