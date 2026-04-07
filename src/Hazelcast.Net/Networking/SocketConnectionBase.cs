@@ -238,7 +238,7 @@ namespace Hazelcast.Networking
         /// <remarks>
         /// <para>The <see cref="OnReceiveMessageBytes"/> function must be set before this function is invoked.</para>
         /// </remarks>
-        protected void OpenPipe(Socket socket, Stream stream)
+        protected void OpenPipe(Socket socket, Stream stream, PipeScheduler pipeReaderScheduler = null)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
@@ -250,7 +250,7 @@ namespace Hazelcast.Networking
             CreateTime = DateTime.Now;
 
             // wire the pipe
-            _pipe = new Pipe(new PipeOptions(readerScheduler:PipeScheduler.Inline));
+            _pipe = new Pipe(new PipeOptions(readerScheduler: pipeReaderScheduler ?? PipeScheduler.Inline));
             _pipeWriting = WritePipeAsync(_stream, _pipe.Writer);
             _pipeWritingThenShutdown = _pipeWriting.ContinueWith(ShutdownInternal, TaskScheduler.Current);
             _pipeReading = ReadPipeAsync(_pipe.Reader);

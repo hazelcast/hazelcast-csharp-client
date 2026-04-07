@@ -326,37 +326,20 @@ namespace Hazelcast.Tests.Messaging
         }
 
         [Test]
-        public async Task SendExceptions()
+        public async Task ConcurrentSendsAllComplete()
         {
+            // Verify that the pump correctly serialises and completes N concurrent sends.
+            const int count = 50;
             var socket = new TestSocketConnection(Guid.NewGuid());
             socket.Count = int.MaxValue;
+            var m = new ClientMessageConnection(socket, new NullLoggerFactory());
 
-            var message = new ClientMessage(new Frame(new byte[16]));
+            var tasks = Enumerable.Range(0, count)
+                .Select(_ => m.SendAsync(new ClientMessage(new Frame(new byte[16]))).AsTask())
+                .ToArray();
 
-            var s = new TestSemaphore(() => throw new ObjectDisposedException("semaphore"));
-            var m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
-
-            Assert.That(await m.SendAsync(message), Is.False);
-
-            s = new TestSemaphore(() => throw new NullReferenceException());
-            m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
-
-            await AssertEx.ThrowsAsync<NullReferenceException>(async () => await m.SendAsync(message));
-
-            var c = new CancellationTokenSource();
-            s = new TestSemaphore(() =>
-            {
-                c.Cancel();
-                throw new NullReferenceException();
-            });
-            m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
-
-            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await m.SendAsync(message, c.Token));
-
-            s = new TestSemaphore(() => throw new OperationCanceledException());
-            m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
-
-            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await m.SendAsync(message));
+            var results = await Task.WhenAll(tasks);
+            Assert.That(results, Is.All.True);
         }
 
         [Test]
@@ -380,28 +363,6 @@ namespace Hazelcast.Tests.Messaging
             var sent = await messageConnection.SendAsync(message);
 
             Assert.That(sent, Is.False);
-        }
-
-        private class TestSemaphore : ISemaphoreSlim
-        {
-            private readonly Action _waitAsync;
-
-            public TestSemaphore(Action waitAsync)
-            {
-                _waitAsync = waitAsync;
-            }
-
-            public void Dispose()
-            { }
-
-            public Task WaitAsync(CancellationToken cancellationToken)
-            {
-                _waitAsync();
-                return Task.CompletedTask;
-            }
-
-            public void Release()
-            { }
         }
 
         private class TestSocketConnection : SocketConnectionBase

@@ -34,7 +34,6 @@ namespace Hazelcast.Messaging
     {
         private readonly Dictionary<long, ClientMessage> _messages = new();
         private readonly SocketConnectionBase _connection;
-        private readonly ISemaphoreSlim _writer;
         private readonly ILogger _logger;
         private int _disposed;
         private Action<ClientMessageConnection, ClientMessage> _onReceiveMessage;
@@ -43,23 +42,34 @@ namespace Hazelcast.Messaging
         private bool _finalFrame;
         private ClientMessage _currentMessage;
 
+        // Channel-based write pump: replaces the SemaphoreSlim(1,1) write lock.
+        // Multiple callers enqueue SendRequests; a single pump task drains and writes
+        // them sequentially — same serialisation guarantee, zero lock contention.
+        private readonly AsyncQueue<SendRequest> _sendQueue = new();
+        private readonly Task _pumpTask;
+
+        private readonly struct SendRequest
+        {
+            public readonly ClientMessage Message;
+            public readonly TaskCompletionSource<bool> Completion;
+            public readonly CancellationToken CancellationToken;
+
+            public SendRequest(ClientMessage message, CancellationToken ct)
+            {
+                Message = message;
+                CancellationToken = ct;
+                // RunContinuationsAsynchronously: the pump must not be blocked by caller
+                // continuations running inline (same reason as Invocation's TCS).
+                Completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
         /// </summary>
         /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public ClientMessageConnection(SocketConnectionBase connection, ILoggerFactory loggerFactory)
-            : this(connection, new SemaphoreSlimImpl(1, 1), loggerFactory)
-        { }
-
-        /// <summary>
-        /// (internal for tests only)
-        /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
-        /// </summary>
-        /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
-        /// <param name="writerSemaphore">A writer-controlling semaphore.</param>
-        /// <param name="loggerFactory">A logger factory.</param>
-        internal ClientMessageConnection(SocketConnectionBase connection, ISemaphoreSlim writerSemaphore, ILoggerFactory loggerFactory)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _connection.OnReceiveMessageBytes = ReceiveMessageBytesAsync;
@@ -67,9 +77,7 @@ namespace Hazelcast.Messaging
             _logger = loggerFactory?.CreateLogger<ClientMessageConnection>() ??
                       throw new ArgumentNullException(nameof(loggerFactory));
 
-            // TODO: threading control here could be an option
-            // (in case threading control is performed elsewhere)
-            _writer = writerSemaphore;
+            _pumpTask = RunSendPumpAsync();
         }
 
         /// <summary>
@@ -260,67 +268,63 @@ namespace Hazelcast.Messaging
         /// <param name="message">The message.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
+        public ValueTask<bool> SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
         {
-            // serialize the message into bytes,
-            // and then pass those bytes to the socket connection
-
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (message.FirstFrame == null) throw new ArgumentException("Message has no frames.", nameof(message));
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            // send message, serialize sending via semaphore
-            // throws OperationCanceledException if canceled (and semaphore is not acquired)
-            if (_writer != null)
+            if (_disposed == 1) return new ValueTask<bool>(false);
+
+            var req = new SendRequest(message, cancellationToken);
+            if (!_sendQueue.TryWrite(req))
+                return new ValueTask<bool>(false); // queue completed — disposing
+
+            return new ValueTask<bool>(req.Completion.Task);
+        }
+
+        /// <summary>
+        /// Pump task: the single writer. Drains <see cref="_sendQueue"/> and writes
+        /// each message to the socket sequentially — no lock needed.
+        /// </summary>
+        private async Task RunSendPumpAsync()
+        {
+            await foreach (var req in _sendQueue)
             {
+                if (req.CancellationToken.IsCancellationRequested)
+                {
+                    req.Completion.TrySetCanceled(req.CancellationToken);
+                    continue;
+                }
+
+                bool sent;
                 try
                 {
-                    await _writer.WaitAsync(cancellationToken).CfAwait();
+                    HConsole.WriteLine(this, "Send message");
+
+                    // for test purposes - do *not* rely on this
+                    OnSending?.Invoke();
+
+                    // last chance before touching the socket
+                    req.CancellationToken.ThrowIfCancellationRequested();
+
+                    sent = await SendFramesAsync(req.Message).CfAwait();
+                    if (sent) await _connection.FlushAsync().CfAwait();
                 }
-                catch (ObjectDisposedException)
+                catch (OperationCanceledException)
                 {
-                    // _writer can be non-null but disposed
-                    return false;
+                    req.Completion.TrySetCanceled(req.CancellationToken);
+                    continue;
                 }
-                catch (Exception e) when (!(e is OperationCanceledException))
+                catch (Exception ex)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    throw;
+                    req.Completion.TrySetException(ex);
+                    continue;
                 }
+
+                req.Completion.TrySetResult(sent);
             }
-
-            try
-            {
-                HConsole.WriteLine(this, "Send message");
-
-                // for tests purposes - do *not* rely on this
-                OnSending?.Invoke();
-
-                // last chance - after this line, we will send the full message
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var sentFrames = await SendFramesAsync(message).CfAwait();
-                if (!sentFrames) return false;
-
-                await _connection.FlushAsync().CfAwait(); // make sure the message goes out
-            }
-            finally
-            {
-                
-                
-                if (_writer != null)
-                {
-                    try
-                    {
-                        _writer.Release();
-                    }
-                    catch (ObjectDisposedException) // _writer can be non-null but disposed
-                    { }
-                }
-            }
-
-            return true;
         }
 
         private async ValueTask<bool> SendFramesAsync(ClientMessage message)
@@ -460,8 +464,19 @@ namespace Hazelcast.Messaging
             if (!_disposed.InterlockedZeroToOne()) return;
 
             // note: DisposeAsync should not throw (CA1065)
+
+            // Signal the pump to stop accepting new messages.
+            _sendQueue.Complete();
+
+            // Dispose the underlying connection. This kills the socket so any in-progress
+            // write inside the pump will fail/return, allowing the pump to drain remaining
+            // queue items (setting each to false) and exit naturally.
+            //
+            // We intentionally do NOT await _pumpTask here: if DisposeAsync is called from
+            // within the pump's own call stack (e.g. the socket-shutdown handler triggers
+            // DisposeAsync while the pump is mid-write), awaiting _pumpTask would deadlock.
+            // The pump is a background task that completes on its own once the socket is dead.
             await _connection.DisposeAsync().CfAwait(); // does not throw
-            _writer.Dispose();
         }
 
     }
