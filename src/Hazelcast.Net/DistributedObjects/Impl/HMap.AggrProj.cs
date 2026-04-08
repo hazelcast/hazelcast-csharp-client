@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var projectionData = ToSafeData(projection);
 
             var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TResult>(SerializationService);
             await result.AddAsync(response).CfAwait();
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (projectionData, predicateData) = ToSafeData(projection, predicate);
 
             var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TResult>(SerializationService);
             await result.AddAsync(response).CfAwait();

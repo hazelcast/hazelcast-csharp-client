@@ -57,7 +57,9 @@ namespace Hazelcast.Serialization.Collections
             {
                 await _serializationService.EnsureCanDeserialize(keyData).CfAwait();
                 await _serializationService.EnsureCanDeserialize(valueData).CfAwait();
-                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueData));
+                var detachedKey = keyData.DeAttach();
+                var detachedValue = valueData.DeAttach();
+                _entries.Add(detachedKey, new ReadOnlyLazyEntry<TKey, TValue>(detachedKey, detachedValue));
             }
         }
 

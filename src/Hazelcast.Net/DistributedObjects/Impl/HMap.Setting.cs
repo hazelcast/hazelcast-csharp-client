@@ -258,7 +258,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeoutMs = serverTimeout.RoundedMilliseconds(false); // codec: 0 = server, -1 = infinite
 
             var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeoutMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -398,7 +398,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var millis = Convert.ToInt64(timeToLive.TotalMilliseconds);
             var requestMessage = MapSetTtlCodec.EncodeRequest(Name, keyData, millis);
             
-            var result= await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait(); 
+            using var result = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var decoded = MapSetTtlCodec.DecodeResponse(result);
             return decoded.Response;
         }

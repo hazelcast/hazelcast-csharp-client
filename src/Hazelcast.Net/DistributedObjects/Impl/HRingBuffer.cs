@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = RingbufferAddCodec.EncodeRequest(Name, (int) overflowPolicy, itemData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return RingbufferAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -70,7 +70,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var itemsData = ToSafeData(items);
 
             var requestMessage = RingbufferAddAllCodec.EncodeRequest(Name, itemsData, (int) overflowPolicy);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return RingbufferAddAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Impl
             if (_capacity != -1) return _capacity;
 
             var requestMessage = RingbufferCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return _capacity = RingbufferCapacityCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -88,7 +88,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<long> GetHeadSequenceAsync()
         {
             var requestMessage = RingbufferHeadSequenceCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return RingbufferHeadSequenceCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -104,7 +104,7 @@ namespace Hazelcast.DistributedObjects.Impl
             if (maxCount > MaxBatchSize) throw new ArgumentOutOfRangeException(nameof(maxCount), "The value of maxCount must be lower than, or equal to, the max batch size.");
 
             var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
             var response = RingbufferReadManyCodec.DecodeResponse(responseMessage);
             var result = new RingBufferResultSet<TItem>(SerializationService, response.ItemSeqs, response.ReadCount, response.NextSeq);
             await result.AddAsync(response.Items).CfAwait();
@@ -123,7 +123,7 @@ namespace Hazelcast.DistributedObjects.Impl
             if (sequence < 0) throw new ArgumentOutOfRangeException(nameof(sequence));
 
             var requestMessage = RingbufferReadOneCodec.EncodeRequest(Name, sequence);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = RingbufferReadOneCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TItem>(response).CfAwait();
         }
@@ -132,7 +132,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<long> GetRemainingCapacityAsync()
         {
             var requestMessage = RingbufferRemainingCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return RingbufferRemainingCapacityCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -140,7 +140,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<long> GetSizeAsync()
         {
             var requestMessage = RingbufferSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return RingbufferSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -148,7 +148,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<long> GetTailSequenceAsync()
         {
             var requestMessage = RingbufferTailSequenceCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return RingbufferTailSequenceCodec.DecodeResponse(responseMessage).Response;
         }
     }

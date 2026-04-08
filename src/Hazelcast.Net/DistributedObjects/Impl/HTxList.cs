@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalListAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -55,7 +55,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalListRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> GetSizeAsync()
         {
             var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalListSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -49,7 +49,7 @@ namespace Hazelcast.Serialization.Collections
         public async ValueTask AddAsync(IData valueData)
         {
             await _serializationService.EnsureCanDeserialize(valueData).CfAwait();
-            _content.Add(new ReadOnlyLazyEntry<TValue>(valueData));
+            _content.Add(new ReadOnlyLazyEntry<TValue>(valueData.DeAttach()));
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Hazelcast.Serialization.Collections
             foreach (var data in valueData)
             {
                 await _serializationService.EnsureCanDeserialize(data).CfAwait();
-                _content.Add(new ReadOnlyLazyEntry<TValue>(data));
+                _content.Add(new ReadOnlyLazyEntry<TValue>(data.DeAttach()));
             }
         }
 
