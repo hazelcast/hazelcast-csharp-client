@@ -68,7 +68,7 @@ public class DynamicOptions
             mapOptions.DataPersistence, mapOptions.TieredStore, mapOptions.PartitioningAttributes,
             null /*namespace*/);
 
-        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        using var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 
@@ -107,7 +107,7 @@ public class DynamicOptions
             ringbufferOptions.MergePolicy.BatchSize,
             null /*namespace*/);
 
-        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        using var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 

@@ -49,7 +49,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
         permits.ThrowIfLessThanOrZero(nameof(permits));
 
         var requestMessage = SemaphoreInitCodec.EncodeRequest(CPGroupId, Name, permits);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreInitCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -71,7 +71,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
 
         try
         {
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             return SemaphoreAcquireCodec.DecodeResponse(responseMessage).Response;
         }
         catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
@@ -91,7 +91,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
 
         try
         {
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             _ = SemaphoreReleaseCodec.DecodeResponse(responseMessage);
         }
         catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
@@ -104,7 +104,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
     public async Task<int> GetAvailablePermitsAsync()
     {
         var requestMessage = SemaphoreAvailablePermitsCodec.EncodeRequest(CPGroupId, Name);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreAvailablePermitsCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -114,7 +114,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
         var threadId = await GetThreadId().CfAwait();
 
         var requestMessage = SemaphoreDrainCodec.EncodeRequest(CPGroupId, Name, CPSessionManager.NoSessionId, threadId, invocationUid);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreDrainCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -131,7 +131,7 @@ internal class SessionLessSemaphore : CPDistributedObjectBase, ISemaphore
 
         try
         {
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             _ = SemaphoreChangeCodec.DecodeResponse(responseMessage);
         }
         catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)

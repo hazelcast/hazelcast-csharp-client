@@ -300,14 +300,17 @@ namespace Hazelcast.Clustering
 
             // try to add the member subscription to the cluster subscription
             // fails if the cluster subscription is not active anymore
-            var memberSubscription = subscription.ReadSubscriptionResponse(response, connection);
-            var added = subscription.TryAddMemberSubscription(memberSubscription);
-            if (added) return InstallResult.Success;
+            using (response)
+            {
+                var memberSubscription = subscription.ReadSubscriptionResponse(response, connection);
+                var added = subscription.TryAddMemberSubscription(memberSubscription);
+                if (added) return InstallResult.Success;
 
-            // the subscription is not active anymore
-            _correlatedSubscriptions.TryRemove(correlationId, out _);
-            CollectSubscription(memberSubscription);
-            return Attempt.Fail(InstallResult.SubscriptionNotActive);
+                // the subscription is not active anymore
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                CollectSubscription(memberSubscription);
+                return Attempt.Fail(InstallResult.SubscriptionNotActive);
+            }
         }
 
         // (background) adds subscriptions on one member - when a connection is added
@@ -405,7 +408,7 @@ namespace Hazelcast.Clustering
                 // this *may* throw if we fail to talk to the member
                 // this *may* return false for some reason
                 var unsubscribeRequest = subscription.ClusterSubscription.CreateUnsubscribeRequest(subscription.ServerSubscriptionId);
-                var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, subscription.Connection, cancellationToken).CfAwait();
+                using var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, subscription.Connection, cancellationToken).CfAwait();
                 var removed = subscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
                 return removed;
             }

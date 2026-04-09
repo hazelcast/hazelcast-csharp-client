@@ -110,7 +110,7 @@ namespace Hazelcast.CP
         public virtual async ValueTask DestroyAsync()
         {
             var message = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            using var response = await Cluster.Messaging.SendAsync(message).CfAwait();
             _ = CPGroupDestroyCPObjectCodec.DecodeResponse(response);
         }
 

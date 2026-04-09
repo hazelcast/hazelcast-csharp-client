@@ -34,7 +34,7 @@ internal class CountDownLatch : CPDistributedObjectBase, ICountDownLatch
         var timeoutMillis = (long) timeout.TotalMilliseconds;
         if (timeoutMillis < 0) timeoutMillis = 0;
         var requestMessage = CountDownLatchAwaitCodec.EncodeRequest(CPGroupId, Name, Guid.NewGuid(), timeoutMillis);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return CountDownLatchAwaitCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -59,21 +59,21 @@ internal class CountDownLatch : CPDistributedObjectBase, ICountDownLatch
     private async Task<int> GetRoundAsync()
     {
         var requestMessage = CountDownLatchGetRoundCodec.EncodeRequest(CPGroupId, Name);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return CountDownLatchGetRoundCodec.DecodeResponse(responseMessage).Response;
     }
 
     private async Task CountDownAsync(int round, Guid uuid)
     {
         var requestMessage = CountDownLatchCountDownCodec.EncodeRequest(CPGroupId, Name, uuid, round);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         CountDownLatchCountDownCodec.DecodeResponse(responseMessage);
     }
 
     public async Task<int> GetCountAsync()
     {
         var requestMessage = CountDownLatchGetCountCodec.EncodeRequest(CPGroupId, Name);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return CountDownLatchGetCountCodec.DecodeResponse(responseMessage).Response;
     }
 
@@ -82,7 +82,7 @@ internal class CountDownLatch : CPDistributedObjectBase, ICountDownLatch
         if (count <= 0) throw new ArgumentException("Value must be greater than zero.", nameof(count));
 
         var requestMessage = CountDownLatchTrySetCountCodec.EncodeRequest(CPGroupId, Name, count);
-        var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+        using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return CountDownLatchTrySetCountCodec.DecodeResponse(responseMessage).Response;
     }
 }

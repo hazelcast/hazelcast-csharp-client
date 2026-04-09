@@ -141,7 +141,7 @@ namespace Hazelcast.Metrics
             _logger.IfDebug()?.LogDebug($"Send metrics ({metrics.Length} items).");
 
             var requestMessage = ClientStatisticsCodec.EncodeRequest(timestamp, attributes, metrics);
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var _ = ClientStatisticsCodec.DecodeResponse(responseMessage);
         }
 

@@ -114,7 +114,7 @@ internal class Schemas : ISchemas
     internal async ValueTask<Schema?> FetchAsync(long id)
     {
         var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
-        var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
+        using var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
         var schema = ClientFetchSchemaCodec.DecodeResponse(response).Schema;
         if (schema == null) return null;
 
@@ -141,7 +141,7 @@ internal class Schemas : ISchemas
             // parameter, in order to disable raising events, else we would enter an infinite
             // loop when this method is invoked when handling an event
 
-            var response = await _messaging.SendAsync(requestMessage, false, CancellationToken.None).CfAwait();
+            using var response = await _messaging.SendAsync(requestMessage, false, CancellationToken.None).CfAwait();
             var replicatedMembers = ClientSendSchemaCodec.DecodeResponse(response).ReplicatedMembers;
             var clientMembers = _messaging.GetConnectedMembers();
             var allReplicated = clientMembers.All(x => replicatedMembers.Contains(x));
@@ -220,7 +220,7 @@ internal class Schemas : ISchemas
         var sending = connection == null
             ? _messaging.SendAsync(requestMessage, false, CancellationToken.None)
             : _messaging.SendToMemberAsync(requestMessage, connection, CancellationToken.None);
-        var response = await sending.CfAwait();
+        using var response = await sending.CfAwait();
 
 
         var ignored = schemas.Count switch

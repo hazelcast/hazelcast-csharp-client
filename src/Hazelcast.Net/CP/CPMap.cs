@@ -33,7 +33,7 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
         var keyData = ToSafeData(key);
         var valueData = ToSafeData(value);
         var message = CPMapPutCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         var responseData = CPMapPutCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
     }
@@ -43,7 +43,7 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
         var keyData = ToSafeData(key);
         var valueData = ToSafeData(value);
         var message = CPMapSetCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         _ = CPMapSetCodec.DecodeResponse(response);
     }
 
@@ -51,7 +51,7 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     {
         var keyData = ToSafeData(key);
         var message = CPMapGetCodec.EncodeRequest(CPGroupId, Name, keyData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         var responseData = CPMapGetCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
     }
@@ -60,7 +60,7 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     {
         var keyData = ToSafeData(key);
         var message = CPMapRemoveCodec.EncodeRequest(CPGroupId, Name, keyData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         var responseData = CPMapRemoveCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
     }
@@ -69,7 +69,7 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     {
         var keyData = ToSafeData(key);
         var message = CPMapDeleteCodec.EncodeRequest(CPGroupId, Name, keyData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         _ = CPMapDeleteCodec.DecodeResponse(response);
     }
 
@@ -79,7 +79,7 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
         var expectedValueData = ToSafeData(expectedValue);
         var newValueData = ToSafeData(newValue);
         var message = CPMapCompareAndSetCodec.EncodeRequest(CPGroupId, Name, keyData, expectedValueData, newValueData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         return CPMapCompareAndSetCodec.DecodeResponse(response).Response;
     }
 
