@@ -325,111 +325,42 @@ namespace Hazelcast.Messaging
 
         private async ValueTask<bool> SendFramesAsync(ClientMessage message)
         {
-            byte[] buffer = null;
-            var length = 0;
-
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
-            // the default array pool allocates buckets of arrays of sizes:
-            //   int maxSize = 16 << binIndex;
-            // so 0 => 16 bytes, 1 => 32 bytes, 2 => 64 bytes etc. and therefore
-            // the most efficient limit should be 16, 32, 64... ie 2^n
-            // best size could probably only be picked via benchmarking?
-            // trade-off between in-memory copy vs network traffic
-            const int minLength = 1024;
+            // Compute total wire size in one pass so we can rent a single buffer and
+            // send the entire message in one WriteAsync call.  A single write halves the
+            // time the semaphore is held for large-payload messages (e.g. 4 KB PUT), which
+            // dramatically reduces tail latency under high concurrency.
+            int totalSize = 0;
+            for (var f = message.FirstFrame; f != null; f = f.Next)
+                totalSize += f.Length;
 
-            var frame = message.FirstFrame;
+            var buffer = ArrayPool<byte>.Shared.Rent(totalSize);
+            int offset = 0;
 
-            do
+            for (var frame = message.FirstFrame; frame != null; frame = frame.Next)
             {
-                if (frame.Length > minLength)
+                HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
+                if (frame.Owner is HeapData { HasFramePrefix: true } hd)
                 {
-                    // frame wont fit in buffer at all
-                    // flush buffer
-                    if (length > 0)
-                    {
-                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
-                        if (!sent) break;
-                        length = 0;
-                    }
-
-                    // send this frame only
-                    HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
-                    var sentFrame = await SendFrameAsync(frame).CfAwait();
-                    if (!sentFrame) break;
+                    // Pre-framed HeapData: GetWireMemory writes the 6-byte header in-place and
+                    // returns [header][payload] as one contiguous region.
+                    var wireMemory = hd.GetWireMemory((ushort)frame.Flags);
+                    wireMemory.Span.CopyTo(buffer.AsSpan(offset));
+                    offset += wireMemory.Length;
                 }
                 else
                 {
-                    // going to use a buffer
-                    buffer ??= ArrayPool<byte>.Shared.Rent(minLength);
-
-                    // if it won't fit in the buffer, flush the buffer
-                    if (length + frame.Length > buffer.Length)
-                    {
-                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
-                        if (!sent) break;
-                        length = 0;
-                    }
-
-                    // copy frame to buffer
-                    HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
-                    if (frame.Owner is HeapData { HasFramePrefix: true } hd)
-                    {
-                        // Pre-framed: the backing buffer already has FrameHeaderPrefixSize bytes
-                        // reserved before the payload.  GetWireMemory writes the 6-byte header
-                        // in-place and returns [header][payload] as one contiguous region — no
-                        // separate WriteLengthAndFlags call and no extra offset arithmetic needed.
-                        var wireMemory = hd.GetWireMemory((ushort)frame.Flags);
-                        wireMemory.Span.CopyTo(buffer.AsSpan(length));
-                        length += wireMemory.Length; // == frame.Length
-                    }
-                    else
-                    {
-                        frame.WriteLengthAndFlags(buffer, length);
-                        if (frame.Length > sizeofHeader)
-                            frame.Bytes.Span.CopyTo(buffer.AsSpan(length + sizeofHeader));
-                        length += frame.Length;
-                    }
+                    frame.WriteLengthAndFlags(buffer, offset);
+                    if (frame.Bytes.Length > 0)
+                        frame.Bytes.Span.CopyTo(buffer.AsSpan(offset + sizeofHeader));
+                    offset += frame.Length;
                 }
-
-                frame = frame.Next;
-            } while (frame != null);
-
-            var allSent = frame == null;
-            if (allSent && length > 0)
-                allSent &= await _connection.SendAsync(buffer, length).CfAwait();
-
-            if (buffer != null)
-                ArrayPool<byte>.Shared.Return(buffer);
-
-            return allSent;
-        }
-
-        // this is only for large frames
-        private async ValueTask<bool> SendFrameAsync(Frame frame)
-        {
-            // Pre-framed HeapData: the backing buffer has the 6-byte frame header reserved
-            // immediately before the payload.  Write the header in-place and send the complete
-            // wire representation in a single stream.WriteAsync call — eliminating both the
-            // ArrayPool.Rent(6) and the second WriteAsync that the non-pre-framed path requires.
-            if (frame.Owner is HeapData { HasFramePrefix: true } hd)
-            {
-                var wireMemory = hd.GetWireMemory((ushort)frame.Flags);
-                return await _connection.SendAsync(wireMemory, wireMemory.Length).CfAwait();
             }
 
-            // Fallback for structural frames (begin, end, null) that are not backed by HeapData.
-            const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
-
-            var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
-            frame.WriteLengthAndFlags(header);
-
-            var sentHeader = await _connection.SendAsync(header, sizeofHeader).CfAwait();
-            ArrayPool<byte>.Shared.Return(header);
-
-            if (!sentHeader) return false;
-
-            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length).CfAwait();
+            var sent = await _connection.SendAsync(buffer, totalSize).CfAwait();
+            ArrayPool<byte>.Shared.Return(buffer);
+            return sent;
         }
 
         /// <summary>
