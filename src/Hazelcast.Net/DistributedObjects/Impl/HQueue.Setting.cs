@@ -35,21 +35,11 @@ namespace Hazelcast.DistributedObjects.Impl
         // was: Put - enqueue, wait indefinitely, may throw
         public Task PutAsync(T item) => EnqueueAsync(item, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task EnqueueAsync(T item, CancellationToken cancellationToken)
+        private async Task EnqueueAsync(T item, CancellationToken cancellationToken)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = QueuePutCodec.EncodeRequest(Name, itemData);
-            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var requestMessage = QueuePutCodec.EncodeRequest(Name, itemData);
+            using var _ = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
         }
 
         private async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)

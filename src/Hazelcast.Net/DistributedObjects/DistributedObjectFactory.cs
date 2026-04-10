@@ -176,7 +176,7 @@ namespace Hazelcast.DistributedObjects
             await foreach (var (key, _) in _objects.ConfigureAwait(false))
                 proxies[key.Name] = key.ServiceName;
 
-            var requestMessage = ClientCreateProxiesCodec.EncodeRequest(proxies);
+            using var requestMessage = ClientCreateProxiesCodec.EncodeRequest(proxies);
             requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // is part of the connection phase
 
             // if the connection goes down, stop

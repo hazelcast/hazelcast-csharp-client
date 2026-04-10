@@ -42,11 +42,7 @@ namespace Hazelcast.DistributedObjects.Impl
         { }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task PublishAsync(T message)
+        public async Task PublishAsync(T message)
         {
             if (_keyData == null)
             {
@@ -56,14 +52,8 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             var messageData = ToSafeData(message);
-            var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
-            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, _keyData);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
+            using var _ = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, _keyData).CfAwait();
         }
     }
 }

@@ -48,20 +48,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task ClearAsync()
+        public override async Task ClearAsync()
         {
-            var requestMessage = QueueClearCodec.EncodeRequest(Name);
-            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var requestMessage = QueueClearCodec.EncodeRequest(Name);
+            using var _ = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
         }
     }
 }

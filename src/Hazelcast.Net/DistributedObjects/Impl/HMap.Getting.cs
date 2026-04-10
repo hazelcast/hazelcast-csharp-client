@@ -13,6 +13,7 @@
 // limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -32,22 +33,12 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
-        // FIXME - about async state machines (low priority)
-        // - we need to do something about HZ_OPTIMIZE_ASYNC which is ugly really
         // - see AsyncStateMachineVsCallback benchmark which could indicate that for most IClusterMessaging
         //   methods where we await a response and then parse it, it could be more efficient to pass
         //   a callback and avoid 1 level of state machine
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
-            =>
-#if !HZ_OPTIMIZE_ASYNC
-                await
-#endif
-                    GetAsync(ToSafeData(key), cancellationToken).CfAwait();
+        private Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
+            => GetAsync(ToSafeData(key), cancellationToken);
 
         /// <summary>
         /// Gets the value for a key, or null if the map does not contain an entry with this key.
@@ -57,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value for the specified key.</returns>
         protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            using var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var valueData = MapGetCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(valueData).CfAwait();
@@ -71,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value data for the specified key, or null if the map does not contain an entry with this key.</returns>
         protected async Task<IData> GetDataAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            using var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             // No using var: IData wraps frame bytes by reference (HeapData never copies on construction).
             // The caller may hold this IData beyond the current scope (NearCache Binary path).
@@ -82,11 +73,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys)
             => GetAllAsync(keys, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys, CancellationToken cancellationToken)
+        private async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys, CancellationToken cancellationToken)
         {
             var ownerKeys = new Dictionary<Guid, Dictionary<int, List<IData>>>();
 
@@ -106,11 +93,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var task = GetAllAsync(ownerKeys, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
             return await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -119,6 +102,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="ownerKeys">Keys.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The values for the specified keys.</returns>
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope")]
         protected virtual async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAllAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys, CancellationToken cancellationToken)
         {
             // create parallel tasks to fire a request for each owner
@@ -161,7 +145,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
 
-            var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
+            using var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapGetEntryViewCodec.DecodeResponse(responseMessage).Response;
 
@@ -190,7 +174,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
+            using var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapEntrySetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
@@ -211,7 +195,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 pagingPredicate.IterationType = IterationType.Entry;
 
                 var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
+                using var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService)).CfAwait();
@@ -221,10 +205,10 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             {
-                var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
+                using var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 using var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
-                    : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
+                        ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
+                        : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
@@ -239,7 +223,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<IReadOnlyCollection<TKey>> GetKeysAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = MapKeySetCodec.EncodeRequest(Name);
+            using var requestMessage = MapKeySetCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapKeySetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TKey>(SerializationService);
@@ -260,7 +244,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 pagingPredicate.IterationType = IterationType.Key;
 
                 var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
+                using var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService)).CfAwait();
@@ -270,10 +254,10 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             {
-                var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
+                using var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 using var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
-                    : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
+                        ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
+                        : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 var result = new ReadOnlyLazyList<TKey>(SerializationService);
@@ -309,7 +293,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 pagingPredicate.IterationType = IterationType.Value;
 
                 var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
+                using var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
 
@@ -325,10 +309,10 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             {
-                var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
+                using var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 using var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
-                    : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
+                        ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
+                        : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 var result = new ReadOnlyLazyList<TValue>(SerializationService);
@@ -343,7 +327,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<int> CountAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = MapSizeCodec.EncodeRequest(Name);
+            using var requestMessage = MapSizeCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapSizeCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -355,7 +339,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = MapIsEmptyCodec.EncodeRequest(Name);
+            using var requestMessage = MapIsEmptyCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapIsEmptyCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -365,20 +349,9 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<bool> ContainsKeyAsync(TKey key)
             => ContainsKeyAsync(key, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
-        {
-            var task = ContainsKeyAsync(ToSafeData(key), cancellationToken);
+        private Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
+            => ContainsKeyAsync(ToSafeData(key), cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
 
         /// <summary>
         /// Determines whether this map contains an entry for a key.
@@ -388,7 +361,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
         protected virtual async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
+            using var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -402,7 +375,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var valueData = ToSafeData(value);
 
-            var requestMessage = MapContainsValueCodec.EncodeRequest(Name, valueData);
+            using var requestMessage = MapContainsValueCodec.EncodeRequest(Name, valueData);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapContainsValueCodec.DecodeResponse(responseMessage).Response;
             return response;

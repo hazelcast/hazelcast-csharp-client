@@ -584,7 +584,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var request = ClientAddCPGroupViewListenerCodec.EncodeRequest();
+                using var request = ClientAddCPGroupViewListenerCodec.EncodeRequest();
                 request.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(request, connection, correlationId, cancellationToken).CfAwait();

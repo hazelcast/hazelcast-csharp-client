@@ -49,11 +49,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
+        protected override Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
         {
             // see comments on the base Map class
             // this should be no different except for this entry invalidation method,
@@ -80,13 +76,7 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             var task = Task.WhenAll(tasks);
-
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            await task.CfAwait();
-#endif
         }
 
         /// <inheritdoc />
@@ -99,37 +89,17 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        protected override async Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
+            return await base.GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        protected override async Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            await base.SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken).CfAwait();
         }
     }
 }

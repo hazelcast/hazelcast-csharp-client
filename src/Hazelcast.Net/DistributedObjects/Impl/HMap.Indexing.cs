@@ -35,22 +35,14 @@ namespace Hazelcast.DistributedObjects.Impl
             return AddIndexAsync(indexConfig, CancellationToken.None);
         }
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task AddIndexAsync(IndexOptions indexOptions, CancellationToken cancellationToken)
+        private async Task AddIndexAsync(IndexOptions indexOptions, CancellationToken cancellationToken)
         {
             if (indexOptions == null) throw new ArgumentNullException(nameof(indexOptions));
 
-            var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexOptions.ValidateAndNormalize(Name));
+            using var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexOptions.ValidateAndNormalize(Name));
             var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
             await task.CfAwait();
-#endif
         }
     }
 }
