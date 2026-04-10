@@ -282,7 +282,7 @@ namespace Hazelcast.Clustering
 
             // the original subscription.SubscribeRequest message may be used concurrently,
             // we need a safe clone so we can use our own correlation id in a safe way.
-            var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
+            using var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
 
             // talk to the server
             ClientMessage response;
@@ -634,10 +634,10 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
+                using var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 subscribeRequest.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
-                _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
+                using var _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
                 _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}", connection.Id.ToShortString());
 
                 return true;

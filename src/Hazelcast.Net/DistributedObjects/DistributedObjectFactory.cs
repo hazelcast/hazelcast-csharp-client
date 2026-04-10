@@ -70,7 +70,7 @@ namespace Hazelcast.DistributedObjects
             await foreach (var (info, _) in _objects.ConfigureAwait(false)) objects.Add(info);
 
             // fetch remotely-known objects
-            var requestMessage = ClientGetDistributedObjectsCodec.EncodeRequest();
+            using var requestMessage = ClientGetDistributedObjectsCodec.EncodeRequest();
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = ClientGetDistributedObjectsCodec.DecodeResponse(responseMessage);
 
@@ -128,7 +128,7 @@ namespace Hazelcast.DistributedObjects
                 // initialize the object
                 if (remote)
                 {
-                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
+                    using var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
                     _ = await _cluster.Messaging.SendAsync(requestMessage, token).CfAwait();
                 }
 
@@ -227,7 +227,7 @@ namespace Hazelcast.DistributedObjects
         internal async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
         {
             // regardless of whether the object was known locally, destroy on server
-            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
+            using var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
             var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }

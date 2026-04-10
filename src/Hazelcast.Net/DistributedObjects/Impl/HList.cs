@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<IReadOnlyList<T>> IterateAllAsync()
         {
-            var requestMessage = ListIteratorCodec.EncodeRequest(Name);
+            using var requestMessage = ListIteratorCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = ListIteratorCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<T>(SerializationService);

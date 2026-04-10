@@ -31,6 +31,7 @@ namespace Hazelcast.Messaging
         /// identifier and therefore is modified. Other frames are shallow-cloned because they are not
         /// modified.</para>
         /// </remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Ownership transferred to caller.")]
         public static ClientMessage CloneWithNewCorrelationId(this ClientMessage message, long correlationId)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));

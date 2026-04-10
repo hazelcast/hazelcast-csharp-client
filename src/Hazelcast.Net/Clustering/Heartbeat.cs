@@ -203,7 +203,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // ping should complete within the default invocation timeout
-                var requestMessage = ClientPingCodec.EncodeRequest();
+                using var requestMessage = ClientPingCodec.EncodeRequest();
                 requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 using var responseMessage = await memberConnection.SendAsync(requestMessage, messageConnection, cancellationToken).CfAwait();
                 _ = ClientPingCodec.DecodeResponse(responseMessage); // just to be sure everything is ok

@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
 
-            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ContextId);
+            using var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task EvictAllAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
+            using var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
             await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
         }
 
@@ -53,14 +53,14 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task FlushAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = MapFlushCodec.EncodeRequest(Name);
+            using var requestMessage = MapFlushCodec.EncodeRequest(Name);
             await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />
         public async Task LoadAllAsync(bool replaceExistingValues)
         {
-            var requestMessage = MapLoadAllCodec.EncodeRequest(Name, replaceExistingValues);
+            using var requestMessage = MapLoadAllCodec.EncodeRequest(Name, replaceExistingValues);
             await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         }
 
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task LoadAllAsync(ICollection<TKey> keys, bool replaceExistingValues)
         {
             var keysData = keys.Select(key => ToSafeData(key)).ToList();
-            var requestMessage = MapLoadGivenKeysCodec.EncodeRequest(Name, keysData, replaceExistingValues);
+            using var requestMessage = MapLoadGivenKeysCodec.EncodeRequest(Name, keysData, replaceExistingValues);
             await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         }
     }

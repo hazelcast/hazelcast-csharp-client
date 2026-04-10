@@ -113,7 +113,7 @@ internal class Schemas : ISchemas
     // internal for tests
     internal async ValueTask<Schema?> FetchAsync(long id)
     {
-        var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
+        using var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
         using var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
         var schema = ClientFetchSchemaCodec.DecodeResponse(response).Schema;
         if (schema == null) return null;
@@ -132,6 +132,7 @@ internal class Schemas : ISchemas
 
     private async Task PublishAsync(Schema schema)
     {
+#pragma warning disable CA2000 // ClientMessage ownership transferred to repeated SendAsync calls in retry loop
         var requestMessage = ClientSendSchemaCodec.EncodeRequest(schema);
 
         for (var i = 0; i < _replicationRetries; i++)
@@ -154,6 +155,7 @@ internal class Schemas : ISchemas
         throw new HazelcastException($"Failed to replicate schema {schema} in the cluster (retried {_replicationRetries} times)."
             + " It might be the case that the client is connected to the two halves of a cluster that is experiencing a"
             + " split-brain. It might be possible to replicate the schema after some time, once the cluster has healed.");
+#pragma warning restore CA2000
     }
 
     /// <inheritdoc />
@@ -206,7 +208,7 @@ internal class Schemas : ISchemas
         // parameter, in order to disable raising events, else we would enter an infinite
         // loop when this method is invoked when handling an event
 
-        var requestMessage = schemas.Count switch
+        using var requestMessage = schemas.Count switch
         {
             0 => null,
             1 => ClientSendSchemaCodec.EncodeRequest(schemas[0]),

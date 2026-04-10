@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var aggregatorData = ToSafeData(aggregator);
 
-            var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
+            using var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapAggregateCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TResult>(response).CfAwait();
@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (aggregatorData, predicateData) = ToSafeData(aggregator, predicate);
 
-            var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
+            using var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapAggregateWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TResult>(response).CfAwait();
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var projectionData = ToSafeData(projection);
 
-            var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
+            using var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TResult>(SerializationService);
@@ -79,7 +79,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (projectionData, predicateData) = ToSafeData(projection, predicate);
 
-            var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
+            using var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TResult>(SerializationService);

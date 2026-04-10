@@ -33,7 +33,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         protected override async Task<Batch> FetchBatch()
         {
-            var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(_name, _options.PrefetchCount);
+            using var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(_name, _options.PrefetchCount);
             using var responseMessage = await _messaging.SendAsync(requestMessage).CfAwait();
             var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
 

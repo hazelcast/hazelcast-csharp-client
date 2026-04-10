@@ -133,7 +133,7 @@ namespace Hazelcast.Sql
             // the client connection type is MC_JAVA_CLIENT ie if the client is the MC client, and we
             // are not the MC client, we are the .NET client.
 
-            var requestMessage = SqlExecuteCodec.EncodeRequest(
+            using var requestMessage = SqlExecuteCodec.EncodeRequest(
                 sql,
                 serializedParameters,
                 (long) options.Timeout.TotalMilliseconds,
@@ -236,7 +236,7 @@ namespace Hazelcast.Sql
 
         private async Task CloseAsync(SqlQueryId queryId)
         {
-            var requestMessage = SqlCloseCodec.EncodeRequest(queryId);
+            using var requestMessage = SqlCloseCodec.EncodeRequest(queryId);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             _ = SqlCloseCodec.DecodeResponse(responseMessage);
         }

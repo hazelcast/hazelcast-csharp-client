@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> AddAsync(T item)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = SetAddCodec.EncodeRequest(Name, itemData);
+            using var requestMessage = SetAddCodec.EncodeRequest(Name, itemData);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return SetAddCodec.DecodeResponse(responseMessage).Response;
         }
@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> AddAll<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = SetAddAllCodec.EncodeRequest(Name, itemsData);
+            using var requestMessage = SetAddAllCodec.EncodeRequest(Name, itemsData);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return SetAddAllCodec.DecodeResponse(responseMessage).Response;
         }

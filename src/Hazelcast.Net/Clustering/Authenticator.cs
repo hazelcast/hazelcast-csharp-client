@@ -149,13 +149,16 @@ internal class Authenticator
                 break;
 
             default:
-                var bytes = _serializationService.ToData(credentials, withSchemas: true).ToByteArray();
+            {
+                using var credData = _serializationService.ToData(credentials, withSchemas: true);
+                var bytes = credData.ToByteArray();
                 requestMessage = _options.TpcEnabled
                     ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
                         clientVersion, clusterClientName, labels)
                     : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
                         clientVersion, clusterClientName, labels, routingMode, cpDirectEnabled);
                 break;
+            }
         }
 
         cancellationToken.ThrowIfCancellationRequested();

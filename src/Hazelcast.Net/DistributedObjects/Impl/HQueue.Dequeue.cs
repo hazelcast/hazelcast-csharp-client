@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         public async Task<T> PeekAsync() // peek, or null
         {
-            var requestMessage = QueuePeekCodec.EncodeRequest(Name);
+            using var requestMessage = QueuePeekCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<T>(response).CfAwait();
@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToWaitMs = timeToWait.RoundedMilliseconds(); // codec: 0 = zero, -1 = infinite
 
-            var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMs);
+            using var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMs);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<T>(response).CfAwait();
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         public async Task<T> TakeAsync()
         {
-            var requestMessage = QueueTakeCodec.EncodeRequest(Name);
+            using var requestMessage = QueueTakeCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<T>(response).CfAwait();
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
          /// <inheritdoc />
         public async Task<int> DrainToAsync(ICollection<T> items)
         {
-            var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
+            using var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
@@ -70,7 +70,7 @@ namespace Hazelcast.DistributedObjects.Impl
          /// <inheritdoc />
         public async Task<int> DrainToAsync(ICollection<T> items, int maxElements)
         {
-            var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, maxElements);
+            using var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, maxElements);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 

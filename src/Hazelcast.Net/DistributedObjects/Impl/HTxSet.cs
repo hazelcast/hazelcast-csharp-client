@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<bool> AddAsync(TItem item)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = TransactionalSetAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
+            using var requestMessage = TransactionalSetAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalSetAddCodec.DecodeResponse(responseMessage).Response;
         }
@@ -38,14 +38,14 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<bool> RemoveAsync(TItem item)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = TransactionalSetRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
+            using var requestMessage = TransactionalSetRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalSetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<int> GetSizeAsync()
         {
-            var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            using var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalSetSizeCodec.DecodeResponse(responseMessage).Response;
         }

@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var itemData = ToSafeData(item);
 
             var timeToWaitMilliseconds = (long)timeToWait.TotalMilliseconds;
-            var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
+            using var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
             return QueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
@@ -58,7 +58,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> AddAll<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
+            using var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
             using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }

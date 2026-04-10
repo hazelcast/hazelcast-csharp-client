@@ -75,7 +75,7 @@ namespace Hazelcast.CP
         {
             var (groupName, objectName, fullName) = ParseName(name);
             var groupId = await GetGroupIdAsync(fullName).CfAwait();
-            var requestMessage = SemaphoreGetSemaphoreTypeCodec.EncodeRequest(objectName);
+            using var requestMessage = SemaphoreGetSemaphoreTypeCodec.EncodeRequest(objectName);
             using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var noSession = SemaphoreGetSemaphoreTypeCodec.DecodeResponse(responseMessage).Response;
 
@@ -170,7 +170,7 @@ namespace Hazelcast.CP
 
         private async Task<CPGroupId> GetGroupIdAsync(string proxyName)
         {
-            var requestMessage = CPGroupCreateCPGroupCodec.EncodeRequest(proxyName);
+            using var requestMessage = CPGroupCreateCPGroupCodec.EncodeRequest(proxyName);
             using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPGroupCreateCPGroupCodec.DecodeResponse(responseMessage).GroupId;
             return response;

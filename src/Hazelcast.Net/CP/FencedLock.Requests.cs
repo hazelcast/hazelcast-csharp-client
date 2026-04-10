@@ -25,7 +25,7 @@ namespace Hazelcast.CP
     {
         protected async Task<long> RequestLockAsync(long sessionId, long threadId, Guid invocationId)
         {
-            var requestMessage = FencedLockLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId);
+            using var requestMessage = FencedLockLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId);
             using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = FencedLockLockCodec.DecodeResponse(responseMessage);
             return response.Response;
@@ -33,7 +33,7 @@ namespace Hazelcast.CP
 
         protected async Task<long> RequestTryLockAsync(long sessionId, long threadId, Guid invocationId, long timeoutMillisecond)
         {
-            var requestMessage = FencedLockTryLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId, timeoutMillisecond);
+            using var requestMessage = FencedLockTryLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId, timeoutMillisecond);
             using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = FencedLockTryLockCodec.DecodeResponse(responseMessage);
             return response.Response;
@@ -41,7 +41,7 @@ namespace Hazelcast.CP
 
         protected async Task<bool> RequestUnlockAsync(long sessionId, long threadId, Guid invocationId)
         {
-            var requestMessage = FencedLockUnlockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId);
+            using var requestMessage = FencedLockUnlockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId);
             using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = FencedLockUnlockCodec.DecodeResponse(responseMessage);
             return response.Response;
@@ -49,7 +49,7 @@ namespace Hazelcast.CP
         
         protected async Task<FencedLock.LockOwnershipState> RequestLockOwnershipStateAsync()
         {
-            var requestMessage = FencedLockGetLockOwnershipCodec.EncodeRequest(CPGroupId, Name);
+            using var requestMessage = FencedLockGetLockOwnershipCodec.EncodeRequest(CPGroupId, Name);
             using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = FencedLockGetLockOwnershipCodec.DecodeResponse(responseMessage);
             return new FencedLock.LockOwnershipState(response.Fence, response.SessionId, response.ThreadId, response.LockCount);

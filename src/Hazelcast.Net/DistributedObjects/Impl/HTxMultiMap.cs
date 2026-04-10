@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IReadOnlyCollection<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            using var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMultiMapGetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TValue>(SerializationService);
@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<bool> PutAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            using var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalMultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<bool> RemoveAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            using var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key)
         {
             var keyData = ToData(key);
-            var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            using var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMultiMapRemoveCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TValue>(SerializationService);
@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public async Task<int> GetSizeAsync()
         {
-            var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            using var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> GetValueCountAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            using var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             using var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             return TransactionalMultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }

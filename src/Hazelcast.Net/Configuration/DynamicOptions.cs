@@ -42,7 +42,7 @@ public class DynamicOptions
     {
         if (mapOptions == null) throw new ArgumentNullException(nameof(mapOptions));
 
-        var requestMessage = DynamicConfigAddMapConfigCodec.EncodeRequest(
+        using var requestMessage = DynamicConfigAddMapConfigCodec.EncodeRequest(
             mapOptions.Name,
             mapOptions.BackupCount, mapOptions.AsyncBackupCount,
             mapOptions.TimeToLiveSeconds, mapOptions.MaxIdleSeconds,
@@ -99,7 +99,7 @@ public class DynamicOptions
         {
             ringbufferStoreConfig = RingbufferStoreConfigHolder.Of(ringbufferOptions.RingbufferStore);
         }
-        var requestMessage = DynamicConfigAddRingbufferConfigCodec.EncodeRequest(
+        using var requestMessage = DynamicConfigAddRingbufferConfigCodec.EncodeRequest(
             ringbufferOptions.Name, ringbufferOptions.Capacity, ringbufferOptions.BackupCount,
             ringbufferOptions.AsyncBackupCount, ringbufferOptions.TimeToLiveSeconds,
             ringbufferOptions.InMemoryFormat.ToJavaString(), ringbufferStoreConfig,

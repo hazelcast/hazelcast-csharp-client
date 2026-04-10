@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
             _cache.Remove(stableKey);
         }
@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
             _cache.Remove(stableKey);
             return value;
@@ -67,11 +67,13 @@ namespace Hazelcast.DistributedObjects.Impl
                     // the request message is disposed after sending.
                     var stableKeys = list.ConvertAll(kvp => StableKey(kvp.Key));
 
+#pragma warning disable CA2000 // ClientMessage ownership transferred to SendToMemberAsync (fire-and-forget per partition)
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
                         .ContinueWith(_ => { foreach (var k in stableKeys) _cache.Remove(k); }, default, default, TaskScheduler.Current);
                     tasks.Add(ownerTask);
+#pragma warning restore CA2000
                 }
             }
 
@@ -82,7 +84,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CfAwait();
             if (added) _cache.Remove(stableKey);
             return added;

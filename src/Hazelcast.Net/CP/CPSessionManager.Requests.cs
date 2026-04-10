@@ -29,7 +29,7 @@ namespace Hazelcast.CP
         /// <returns></returns>
         private async Task<long> RequestGenerateThreadIdAsync(CPGroupId groupId)
         {
-            var requestMessage = CPSessionGenerateThreadIdCodec.EncodeRequest(groupId);
+            using var requestMessage = CPSessionGenerateThreadIdCodec.EncodeRequest(groupId);
             using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionGenerateThreadIdCodec.DecodeResponse(responseMessage);
             return response.Response;
@@ -42,7 +42,7 @@ namespace Hazelcast.CP
         /// <returns>CPSession and heartbeat milliseconds</returns>
         private async Task<(CPSession Session, long HeartbeatMillis)> RequestNewSessionAsync(CPGroupId groupId)
         {
-            var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, _cluster.ClientId.ToString());
+            using var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, _cluster.ClientId.ToString());
             using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionCreateSessionCodec.DecodeResponse(responseMessage);
             return (new CPSession(response.SessionId, response.TtlMillis), response.HeartbeatMillis);
@@ -56,7 +56,7 @@ namespace Hazelcast.CP
         /// <returns></returns>
         internal async Task<bool> RequestCloseSessionAsync(CPGroupId groupId, long sessionId)
         {
-            var requestMessage = CPSessionCloseSessionCodec.EncodeRequest(groupId, sessionId);
+            using var requestMessage = CPSessionCloseSessionCodec.EncodeRequest(groupId, sessionId);
             using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionCloseSessionCodec.DecodeResponse(responseMessage);
             return response.Response;
@@ -71,7 +71,7 @@ namespace Hazelcast.CP
         /// <returns></returns>
         private async Task RequestSessionHeartbeat(CPGroupId groupId, long sessionId)
         {
-            var requestMessage = CPSessionHeartbeatSessionCodec.EncodeRequest(groupId, sessionId);
+            using var requestMessage = CPSessionHeartbeatSessionCodec.EncodeRequest(groupId, sessionId);
             using var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var _ = CPSessionHeartbeatSessionCodec.DecodeResponse(responseMessage);
         }

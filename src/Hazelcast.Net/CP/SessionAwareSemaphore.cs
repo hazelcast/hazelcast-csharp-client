@@ -47,7 +47,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
     {
         permits.ThrowIfLessThanOrZero(nameof(permits));
 
-        var requestMessage = SemaphoreInitCodec.EncodeRequest(CPGroupId, Name, permits);
+        using var requestMessage = SemaphoreInitCodec.EncodeRequest(CPGroupId, Name, permits);
         using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreInitCodec.DecodeResponse(responseMessage).Response;
     }
@@ -64,7 +64,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 
             try
             {
-                var requestMessage = SemaphoreAcquireCodec.EncodeRequest(
+                using var requestMessage = SemaphoreAcquireCodec.EncodeRequest(
                     CPGroupId, Name, sessionId, threadId, invocationUid, permits,
                     -1);
                 using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
@@ -104,8 +104,8 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 
             try
             {
-                var requestMessage = SemaphoreAcquireCodec.EncodeRequest(
-                    CPGroupId, Name, sessionId, threadId, invocationUid, permits, 
+                using var requestMessage = SemaphoreAcquireCodec.EncodeRequest(
+                    CPGroupId, Name, sessionId, threadId, invocationUid, permits,
                     countdown.RemainingMilliseconds);
                 using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
                 var acquired = SemaphoreAcquireCodec.DecodeResponse(responseMessage).Response;
@@ -142,7 +142,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 
         try
         {
-            var requestMessage = SemaphoreReleaseCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid, permits);
+            using var requestMessage = SemaphoreReleaseCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid, permits);
             using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             _ = SemaphoreReleaseCodec.DecodeResponse(responseMessage);
         }
@@ -159,7 +159,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 
     public async Task<int> GetAvailablePermitsAsync()
     {
-        var requestMessage = SemaphoreAvailablePermitsCodec.EncodeRequest(CPGroupId, Name);
+        using var requestMessage = SemaphoreAvailablePermitsCodec.EncodeRequest(CPGroupId, Name);
         using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
         return SemaphoreAvailablePermitsCodec.DecodeResponse(responseMessage).Response;
     }
@@ -174,7 +174,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
             var sessionId = await _sessionManager.AcquireSessionAsync(CPGroupId, DrainSessionAcqCount).CfAwait();
             try
             {
-                var requestMessage = SemaphoreDrainCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid);
+                using var requestMessage = SemaphoreDrainCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid);
                 using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
                 var count = SemaphoreDrainCodec.DecodeResponse(responseMessage).Response;
                 _sessionManager.ReleaseSession(CPGroupId, sessionId, DrainSessionAcqCount - count);
@@ -205,7 +205,7 @@ internal class SessionAwareSemaphore : CPDistributedObjectBase, ISemaphore
 
         try
         {
-            var requestMessage = SemaphoreChangeCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid, delta);
+            using var requestMessage = SemaphoreChangeCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationUid, delta);
             using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             _ = SemaphoreChangeCodec.DecodeResponse(responseMessage);
         }

@@ -140,10 +140,12 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     if (list.Count == 0) continue;
 
+#pragma warning disable CA2000 // ClientMessage ownership transferred to SendToMemberAsync (fire-and-forget per partition)
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken);
                     tasks.Add(ownerTask);
+#pragma warning restore CA2000
                 }
             }
 
