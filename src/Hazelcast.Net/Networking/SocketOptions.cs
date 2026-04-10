@@ -70,7 +70,7 @@ namespace Hazelcast.Networking
         /// <see cref="PipeScheduler.ThreadPool"/> if your message-bytes handler
         /// performs blocking or heavy work that should not run on the I/O thread.</para>
         /// </remarks>
-        public PipeScheduler PipeReaderScheduler { get; set; } = PipeScheduler.ThreadPool;
+        public PipeScheduler PipeReaderScheduler { get; set; } = PipeScheduler.Inline;
 
         /// <summary>
         /// Clones the options.
