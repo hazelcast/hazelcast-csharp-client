@@ -553,7 +553,9 @@ namespace Hazelcast.Clustering
             }
             finally
             {
-                await reg.DisposeAsync().CfAwait();
+                var disposeTask = reg.DisposeAsync();
+                if (!disposeTask.IsCompletedSuccessfully)
+                    await disposeTask.CfAwait();
             }
         }
 

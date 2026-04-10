@@ -303,7 +303,9 @@ namespace Hazelcast.Messaging
                 var sentFrames = await SendFramesAsync(message).CfAwait();
                 if (!sentFrames) return false;
 
-                await _connection.FlushAsync().CfAwait(); // make sure the message goes out
+                var flushTask = _connection.FlushAsync(); // make sure the message goes out
+                if (!flushTask.IsCompletedSuccessfully)
+                    await flushTask.CfAwait();
             }
             finally
             {
@@ -323,7 +325,7 @@ namespace Hazelcast.Messaging
             return true;
         }
 
-        private async ValueTask<bool> SendFramesAsync(ClientMessage message)
+        private ValueTask<bool> SendFramesAsync(ClientMessage message)
         {
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
@@ -358,9 +360,28 @@ namespace Hazelcast.Messaging
                 }
             }
 
-            var sent = await _connection.SendAsync(buffer, totalSize).CfAwait();
-            ArrayPool<byte>.Shared.Return(buffer);
-            return sent;
+            var sendTask = _connection.SendAsync(buffer, totalSize);
+
+            if (sendTask.IsCompletedSuccessfully)
+            {
+                var result = sendTask.Result;
+                ArrayPool<byte>.Shared.Return(buffer);
+                return new ValueTask<bool>(result);
+            }
+
+            return SendFramesAsyncSlow(sendTask, buffer);
+        }
+
+        private async ValueTask<bool> SendFramesAsyncSlow(ValueTask<bool> sendTask, byte[] buffer)
+        {
+            try
+            {
+                return await sendTask.CfAwait();
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         /// <summary>

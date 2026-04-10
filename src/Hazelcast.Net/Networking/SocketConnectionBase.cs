@@ -303,28 +303,56 @@ namespace Hazelcast.Networking
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message bytes have been sent.</returns>
         // virtual for tests
-        public virtual async ValueTask<bool> SendAsync(ReadOnlyMemory<byte> bytes, int length, CancellationToken cancellationToken = default)
+        public virtual ValueTask<bool> SendAsync(ReadOnlyMemory<byte> bytes, int length, CancellationToken cancellationToken = default)
         {
             if (_isActive == 0)
-                return false;
+                return new ValueTask<bool>(false);
 
-            // send bytes
+            ValueTask writeTask;
             try
             {
-                await _stream.WriteAsync(bytes.Slice(0, length), cancellationToken).CfAwait();
+                writeTask = _stream.WriteAsync(bytes.Slice(0, length), cancellationToken);
+            }
+            catch (Exception e)
+            {
+                // synchronous throw from WriteAsync (e.g. stream already disposed)
+                return SendAsyncHandleErrorAsync(e);
+            }
+
+            if (writeTask.IsCompletedSuccessfully)
+            {
+                LastWriteTime = DateTime.Now;
+                HConsole.WriteLine(this, 2, $"Sent {length} bytes" + HConsole.Lines(this, 1, bytes.Dump(length)));
+                return new ValueTask<bool>(true);
+            }
+
+            return SendAsyncSlow(writeTask, bytes, length);
+        }
+
+        private async ValueTask<bool> SendAsyncSlow(ValueTask writeTask, ReadOnlyMemory<byte> bytes, int length)
+        {
+            try
+            {
+                await writeTask.CfAwait();
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)
             {
-                // on error, shutdown and report
                 HConsole.WriteLine(this, "SendAsync:ERROR");
                 HConsole.WriteLine(this, e);
-                try { await _streamReadCancellationTokenSource.TryCancelAsync().CfAwait(); } catch { /* nothing */ } // can be disposed already
+                try { await _streamReadCancellationTokenSource.TryCancelAsync().CfAwait(); } catch { /* nothing */ }
                 return false;
             }
-
-            HConsole.WriteLine(this, 2, $"Sent {length} bytes" + HConsole.Lines(this, 1 , bytes.Dump(length)));
+            HConsole.WriteLine(this, 2, $"Sent {length} bytes" + HConsole.Lines(this, 1, bytes.Dump(length)));
             return true;
+        }
+
+        private async ValueTask<bool> SendAsyncHandleErrorAsync(Exception e)
+        {
+            HConsole.WriteLine(this, "SendAsync:ERROR");
+            HConsole.WriteLine(this, e);
+            try { await _streamReadCancellationTokenSource.TryCancelAsync().CfAwait(); } catch { /* nothing */ }
+            return false;
         }
 
         /// <summary>
@@ -332,9 +360,10 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <returns>A task that will complete when the connection is flushed.</returns>
         // virtual for tests
-        public virtual async ValueTask FlushAsync()
+        public virtual ValueTask FlushAsync()
         {
-            await _stream.FlushAsync().CfAwait();
+            var t = _stream.FlushAsync();
+            return t.IsCompletedSuccessfully ? default : new ValueTask(t);
         }
 
         /// <summary>
