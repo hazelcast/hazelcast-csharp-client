@@ -65,12 +65,12 @@ namespace Hazelcast.Networking
         /// Gets or sets the scheduler used for the pipe reader.
         /// </summary>
         /// <remarks>
-        /// <para>Defaults to <see cref="PipeScheduler.ThreadPool"/>, which schedules the
-        /// receive loop on the thread pool to avoid blocking the I/O thread. Set to
-        /// <see cref="PipeScheduler.Inline"/> only if your message-bytes handler is
-        /// extremely lightweight and you want to avoid the thread-switch overhead.</para>
+        /// <para>Defaults to <see cref="PipeScheduler.Inline"/>, which runs the receive
+        /// loop synchronously on the I/O thread for lower latency. Set to
+        /// <see cref="PipeScheduler.ThreadPool"/> if your message-bytes handler
+        /// performs blocking or heavy work that should not run on the I/O thread.</para>
         /// </remarks>
-        public PipeScheduler PipeReaderScheduler { get; set; } = PipeScheduler.ThreadPool;
+        public PipeScheduler PipeReaderScheduler { get; set; } = PipeScheduler.Inline;
 
         /// <summary>
         /// Clones the options.
