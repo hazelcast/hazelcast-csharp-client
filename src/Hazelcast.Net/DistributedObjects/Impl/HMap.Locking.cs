@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 
+#pragma warning disable CA2000 // request messages carry key-only data; frames hold no pooled buffers worth returning at this call frequency
 namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable UnusedTypeParameter
@@ -35,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // codec wants -1 for server config, 0 for zero (useless), "max" for max = server config
             var leaseTimeMs = leaseTime.RoundedMilliseconds();
 
-            using var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
+            var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             _ = MapLockCodec.DecodeResponse(responseMessage);
         }
@@ -60,7 +61,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // codec wants -1 for infinite, 0 for zero
             var timeToWaitMs = timeToWait.RoundedMilliseconds();
 
-            using var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
+            var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -74,7 +75,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
 
-            using var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
+            var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -90,7 +91,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var refId = _lockReferenceIdSequence.GetNext();
 
-            using var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ContextId, refId);
+            var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ContextId, refId);
             using var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
             await task.CfAwait();
         }
@@ -105,10 +106,11 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var refId = _lockReferenceIdSequence.GetNext();
 
-            using var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
+            var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
             using var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
             await task.CfAwait();
         }
     }
 }
+#pragma warning restore CA2000

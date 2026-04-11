@@ -25,6 +25,7 @@ using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Collections;
 
+#pragma warning disable CA2000 // request messages carry key-only data; frames hold no pooled buffers worth returning at this call frequency
 namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HMap<TKey, TValue> // Getting
@@ -48,7 +49,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value for the specified key.</returns>
         protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            using var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var valueData = MapGetCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(valueData).CfAwait();
@@ -62,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value data for the specified key, or null if the map does not contain an entry with this key.</returns>
         protected async Task<IData> GetDataAsync(IData keyData, CancellationToken cancellationToken)
         {
-            using var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             // No using var: IData wraps frame bytes by reference (HeapData never copies on construction).
             // The caller may hold this IData beyond the current scope (NearCache Binary path).
@@ -145,7 +146,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
 
-            using var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
+            var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapGetEntryViewCodec.DecodeResponse(responseMessage).Response;
 
@@ -174,7 +175,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(CancellationToken cancellationToken)
         {
-            using var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
+            var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapEntrySetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
@@ -195,7 +196,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 pagingPredicate.IterationType = IterationType.Entry;
 
                 var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                using var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
+                var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService)).CfAwait();
@@ -205,13 +206,11 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             {
-                using var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
-#pragma warning disable CA2000 // false positive: ternary conditional send, responseMessage disposed by using
+                var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 using var responseMessage = await (predicate is PartitionPredicate pp
                         ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
                         : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
-#pragma warning restore CA2000
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
                 await result.AddAsync(response).CfAwait();
@@ -225,7 +224,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<IReadOnlyCollection<TKey>> GetKeysAsync(CancellationToken cancellationToken)
         {
-            using var requestMessage = MapKeySetCodec.EncodeRequest(Name);
+            var requestMessage = MapKeySetCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapKeySetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TKey>(SerializationService);
@@ -246,7 +245,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 pagingPredicate.IterationType = IterationType.Key;
 
                 var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                using var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
+                var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 await pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorAsyncIterator(SerializationService)).CfAwait();
@@ -256,13 +255,11 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             {
-                using var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
-#pragma warning disable CA2000 // false positive: ternary conditional send, responseMessage disposed by using
+                var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 using var responseMessage = await (predicate is PartitionPredicate pp
                         ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
                         : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
-#pragma warning restore CA2000
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 var result = new ReadOnlyLazyList<TKey>(SerializationService);
                 await result.AddAsync(response).CfAwait();
@@ -297,7 +294,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 pagingPredicate.IterationType = IterationType.Value;
 
                 var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                using var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
+                var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
 
@@ -313,13 +310,11 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             {
-                using var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
-#pragma warning disable CA2000 // false positive: ternary conditional send, responseMessage disposed by using
+                var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 using var responseMessage = await (predicate is PartitionPredicate pp
                         ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
                         : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
-#pragma warning restore CA2000
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 var result = new ReadOnlyLazyList<TValue>(SerializationService);
                 await result.AddAsync(response).CfAwait();
@@ -333,7 +328,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<int> CountAsync(CancellationToken cancellationToken)
         {
-            using var requestMessage = MapSizeCodec.EncodeRequest(Name);
+            var requestMessage = MapSizeCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapSizeCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -345,7 +340,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
         {
-            using var requestMessage = MapIsEmptyCodec.EncodeRequest(Name);
+            var requestMessage = MapIsEmptyCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapIsEmptyCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -367,7 +362,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
         protected virtual async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            using var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
+            var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -381,7 +376,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var valueData = ToSafeData(value);
 
-            using var requestMessage = MapContainsValueCodec.EncodeRequest(Name, valueData);
+            var requestMessage = MapContainsValueCodec.EncodeRequest(Name, valueData);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapContainsValueCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -408,3 +403,4 @@ namespace Hazelcast.DistributedObjects.Impl
         }
     }
 }
+#pragma warning restore CA2000

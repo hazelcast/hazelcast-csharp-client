@@ -165,10 +165,11 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
         public async Task<IReadOnlyCollection<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            using var requestMessage = MultiMapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            var requestMessage = MultiMapGetCodec.EncodeRequest(Name, keyData, ContextId);
             using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = MultiMapGetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TValue>(SerializationService);
@@ -280,18 +281,20 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
         public async Task DeleteAsync(TKey key)
         {
             var keyData = ToSafeData(key);
 
-            using var requestMessage = MultiMapDeleteCodec.EncodeRequest(Name, keyData, ContextId);
+            var requestMessage = MultiMapDeleteCodec.EncodeRequest(Name, keyData, ContextId);
             await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
         }
 
         /// <inheritdoc />
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
         public async Task ClearAsync()
         {
-            using var requestMessage = MultiMapClearCodec.EncodeRequest(Name);
+            var requestMessage = MultiMapClearCodec.EncodeRequest(Name);
             using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
             _ = MultiMapClearCodec.DecodeResponse(responseMessage);
         }

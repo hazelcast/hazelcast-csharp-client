@@ -35,11 +35,12 @@ namespace Hazelcast.DistributedObjects.Impl
             return AddIndexAsync(indexConfig, CancellationToken.None);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Index config request; frames hold no pooled buffers worth returning.")]
         private async Task AddIndexAsync(IndexOptions indexOptions, CancellationToken cancellationToken)
         {
             if (indexOptions == null) throw new ArgumentNullException(nameof(indexOptions));
 
-            using var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexOptions.ValidateAndNormalize(Name));
+            var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexOptions.ValidateAndNormalize(Name));
             var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
 
             await task.CfAwait();
