@@ -57,7 +57,9 @@ namespace Hazelcast.Serialization.Collections
             {
                 await _serializationService.EnsureCanDeserialize(keyData).CfAwait();
                 await _serializationService.EnsureCanDeserialize(valueData).CfAwait();
-                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueData));
+                var detachedKey = keyData.DeAttach();
+                var detachedValue = valueData.DeAttach();
+                _entries.Add(detachedKey, new ReadOnlyLazyEntry<TKey, TValue>(detachedKey, detachedValue));
             }
         }
 
@@ -129,7 +131,9 @@ namespace Hazelcast.Serialization.Collections
             if (_keyEntries.ContainsKey(key)) return true;
 
             // slower: serialize
+#pragma warning disable CA2000 // keyData used transiently for dictionary lookup only
             var keyData = _serializationService.ToData(key);
+#pragma warning restore CA2000
 
             // exit if no corresponding entry
             if (!_entries.TryGetValue(keyData, out var entry)) return false;
@@ -155,7 +159,9 @@ namespace Hazelcast.Serialization.Collections
             }
 
             // slower: serialize
+#pragma warning disable CA2000 // keyData used transiently for dictionary lookup only
             var keyData = _serializationService.ToData(key);
+#pragma warning restore CA2000
 
             // exit if no corresponding entry
             if (!_entries.TryGetValue(keyData, out var entry)) return false;

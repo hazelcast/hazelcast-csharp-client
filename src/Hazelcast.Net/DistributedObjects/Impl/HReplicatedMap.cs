@@ -47,8 +47,8 @@ namespace Hazelcast.DistributedObjects.Impl
             // server wants 0 for infinite, no negative value
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 = infinite, -1 = not supported?
 
-            var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeToLiveMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeToLiveMs);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(response).CfAwait();
         }
@@ -62,32 +62,32 @@ namespace Hazelcast.DistributedObjects.Impl
                 entriesData.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
 
-            var requestMessage = ReplicatedMapPutAllCodec.EncodeRequest(Name, entriesData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            using var requestMessage = ReplicatedMapPutAllCodec.EncodeRequest(Name, entriesData);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
         public async Task<TValue> RemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = ReplicatedMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task ClearAsync()
         {
-            var requestMessage = ReplicatedMapClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            using var requestMessage = ReplicatedMapClearCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
             _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
         }
 
         public async Task<TValue> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
 
             return await ToObjectAsync<TValue>(response).CfAwait();
@@ -95,8 +95,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()
         {
-            var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
+            using var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TKey>(SerializationService);
             await result.AddAsync(response).CfAwait();
@@ -105,9 +105,9 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public async Task<IReadOnlyCollection<TValue>> GetValuesAsync()
         {
-            var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
-            var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
+            using var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
+            var response = ReplicatedMapValuesCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyList<TValue>(SerializationService);
             await result.AddAsync(response).CfAwait();
             return result;
@@ -117,8 +117,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CfAwait();
+            using var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CfAwait();
             var response = ReplicatedMapEntrySetCodec.DecodeResponse(responseMessage).Response;
             var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
             await result.AddAsync(response).CfAwait();
@@ -127,31 +127,31 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public async Task<int> GetSizeAsync()
         {
-            var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
+            using var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
             return ReplicatedMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<bool> IsEmptyAsync()
         {
-            var requestMessage = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
+            using var requestMessage = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
             return ReplicatedMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<bool> ContainsKeyAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var requestMessage = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<bool> ContainsValueAsync(TValue value)
         {
             var valueData = ToSafeData(value);
-            var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
+            using var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 

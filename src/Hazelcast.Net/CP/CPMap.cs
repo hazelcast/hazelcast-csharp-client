@@ -32,8 +32,8 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     {
         var keyData = ToSafeData(key);
         var valueData = ToSafeData(value);
-        var message = CPMapPutCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var message = CPMapPutCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         var responseData = CPMapPutCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
     }
@@ -42,16 +42,16 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     {
         var keyData = ToSafeData(key);
         var valueData = ToSafeData(value);
-        var message = CPMapSetCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var message = CPMapSetCodec.EncodeRequest(CPGroupId, Name, keyData, valueData);
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         _ = CPMapSetCodec.DecodeResponse(response);
     }
 
     public async Task<TValue> GetAsync(TKey key)
     {
         var keyData = ToSafeData(key);
-        var message = CPMapGetCodec.EncodeRequest(CPGroupId, Name, keyData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var message = CPMapGetCodec.EncodeRequest(CPGroupId, Name, keyData);
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         var responseData = CPMapGetCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
     }
@@ -59,8 +59,8 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     public async Task<TValue> RemoveAsync(TKey key)
     {
         var keyData = ToSafeData(key);
-        var message = CPMapRemoveCodec.EncodeRequest(CPGroupId, Name, keyData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var message = CPMapRemoveCodec.EncodeRequest(CPGroupId, Name, keyData);
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         var responseData = CPMapRemoveCodec.DecodeResponse(response).Response;
         return await ToObjectAsync<TValue>(responseData).CfAwait();
     }
@@ -68,8 +68,8 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
     public async Task DeleteAsync(TKey key)
     {
         var keyData = ToSafeData(key);
-        var message = CPMapDeleteCodec.EncodeRequest(CPGroupId, Name, keyData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var message = CPMapDeleteCodec.EncodeRequest(CPGroupId, Name, keyData);
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         _ = CPMapDeleteCodec.DecodeResponse(response);
     }
 
@@ -78,8 +78,8 @@ class CPMap<TKey, TValue> : CPDistributedObjectBase, ICPMap<TKey, TValue>
         var keyData = ToSafeData(key);
         var expectedValueData = ToSafeData(expectedValue);
         var newValueData = ToSafeData(newValue);
-        var message = CPMapCompareAndSetCodec.EncodeRequest(CPGroupId, Name, keyData, expectedValueData, newValueData);
-        var response = await SendCPLeaderAsync(message).CfAwait();
+        using var message = CPMapCompareAndSetCodec.EncodeRequest(CPGroupId, Name, keyData, expectedValueData, newValueData);
+        using var response = await SendCPLeaderAsync(message).CfAwait();
         return CPMapCompareAndSetCodec.DecodeResponse(response).Response;
     }
 

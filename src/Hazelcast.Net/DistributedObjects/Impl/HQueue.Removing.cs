@@ -24,8 +24,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return QueueRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -33,8 +33,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = QueueCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = QueueCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return QueueCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -42,26 +42,16 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = QueueCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = QueueCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task ClearAsync()
+        public override async Task ClearAsync()
         {
-            var requestMessage = QueueClearCodec.EncodeRequest(Name);
-            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var requestMessage = QueueClearCodec.EncodeRequest(Name);
+            using var _ = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
         }
     }
 }

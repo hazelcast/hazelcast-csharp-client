@@ -51,11 +51,11 @@ namespace Hazelcast.DistributedObjects.Impl
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var withMaxIdle = maxIdleMs != -1;
 
-            var requestMessage = withMaxIdle
+            using var requestMessage = withMaxIdle
                 ? MapSetWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
 
-            await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var _ = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
         }
 
         /// <inheritdoc />
@@ -78,11 +78,11 @@ namespace Hazelcast.DistributedObjects.Impl
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var withMaxIdle = maxIdleMs != -1;
 
-            var requestMessage = withMaxIdle
+            using var requestMessage = withMaxIdle
                 ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
 
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
 
             var response = withMaxIdle
                 ? MapPutWithMaxIdleCodec.DecodeResponse(responseMessage).Response
@@ -95,11 +95,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task SetAllAsync(IDictionary<TKey, TValue> entries)
             => SetAllAsync(entries, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task SetAllAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
+        private Task SetAllAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
@@ -119,13 +115,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 list.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
 
-            var task = SetAsync(ownerEntries, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            return SetAsync(ownerEntries, cancellationToken);
         }
 
         /// <summary>
@@ -134,11 +124,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="ownerEntries">Entries.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>Nothing.</returns>
-        protected virtual
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
+        protected virtual Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
         {
             // TODO: add a SendAsync(...) to Cluster/Client
             // that can send multiple messages and use one single completion source
@@ -154,21 +140,18 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     if (list.Count == 0) continue;
 
+#pragma warning disable CA2000 // ClientMessage ownership transferred to SendToMemberAsync (fire-and-forget per partition)
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken);
                     tasks.Add(ownerTask);
+#pragma warning restore CA2000
                 }
             }
 
             // and wait on all tasks, ignoring the responses
             var task = Task.WhenAll(tasks);
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            await task.CfAwait();
-#endif
         }
 
         /// <inheritdoc />
@@ -179,8 +162,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
-            var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ContextId);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(response).CfAwait();
         }
@@ -189,20 +172,11 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<bool> ReplaceAsync(TKey key, TValue comparisonValue, TValue newValue)
             => TryUpdateAsync(key, comparisonValue, newValue, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<bool> TryUpdateAsync(TKey key, TValue expectedValue, TValue newValue, CancellationToken cancellationToken)
+        private Task<bool> TryUpdateAsync(TKey key, TValue expectedValue, TValue newValue, CancellationToken cancellationToken)
         {
             var (keyData, expectedData, newData) = ToSafeData(key, expectedValue, newValue);
             var task = TryUpdateAsync(keyData, expectedData, newData, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            return await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -215,8 +189,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>true if the entry was replaced; otherwise false.</returns>
         protected async Task<bool> TryUpdateAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ContextId);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -225,20 +199,11 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeToWait)
             => TrySetAsync(key, value, timeToWait, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        private Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = TrySetAsync(keyData, valueData, serverTimeout, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            return await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -257,8 +222,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeoutMs = serverTimeout.RoundedMilliseconds(false); // codec: 0 = server, -1 = infinite
 
-            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeoutMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeoutMs);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -267,20 +232,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> PutIfAbsentAsync(TKey key, TValue value)
             => GetOrAddAsync(key, value, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TValue> GetOrAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
-        {
-            var task = GetOrAddAsync(key, value, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
+        private Task<TValue> GetOrAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
+            => GetOrAddAsync(key, value, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond, cancellationToken);
 
         /// <inheritdoc />
         public Task<TValue> PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive)
@@ -290,20 +243,11 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
             => GetOrAddAsync(key, value, timeToLive, maxIdle, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        private Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            return await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -325,11 +269,11 @@ namespace Hazelcast.DistributedObjects.Impl
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var withMaxIdle = maxIdleMs != -1;
 
-            var requestMessage = withMaxIdle
+            using var requestMessage = withMaxIdle
                 ? MapPutIfAbsentWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
 
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
 
             var response = withMaxIdle
                 ? MapPutIfAbsentWithMaxIdleCodec.DecodeResponse(responseMessage).Response
@@ -346,20 +290,12 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
             => SetTransientAsync(key, value, timeToLive, maxIdle, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        private Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -370,35 +306,25 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="timeToLive">A time to live.</param>
         /// <param name="maxIdle">The max idle duration.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        protected virtual
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken = default)
+        protected virtual async Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken = default)
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var withMaxIdle = maxIdleMs != -1;
 
-            var requestMessage = withMaxIdle
+            using var requestMessage = withMaxIdle
                 ? MapPutTransientWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
-            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var task = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
         }
 
         public async Task<bool> SetTTL(TKey key, TimeSpan timeToLive)
         {
             var keyData = ToSafeData(key);
             var millis = Convert.ToInt64(timeToLive.TotalMilliseconds);
-            var requestMessage = MapSetTtlCodec.EncodeRequest(Name, keyData, millis);
-            
-            var result= await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait(); 
+            using var requestMessage = MapSetTtlCodec.EncodeRequest(Name, keyData, millis);
+
+            using var result = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var decoded = MapSetTtlCodec.DecodeResponse(result);
             return decoded.Response;
         }

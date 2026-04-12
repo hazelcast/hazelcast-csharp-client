@@ -282,7 +282,7 @@ namespace Hazelcast.Clustering
 
             // the original subscription.SubscribeRequest message may be used concurrently,
             // we need a safe clone so we can use our own correlation id in a safe way.
-            var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
+            using var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
 
             // talk to the server
             ClientMessage response;
@@ -300,14 +300,17 @@ namespace Hazelcast.Clustering
 
             // try to add the member subscription to the cluster subscription
             // fails if the cluster subscription is not active anymore
-            var memberSubscription = subscription.ReadSubscriptionResponse(response, connection);
-            var added = subscription.TryAddMemberSubscription(memberSubscription);
-            if (added) return InstallResult.Success;
+            using (response)
+            {
+                var memberSubscription = subscription.ReadSubscriptionResponse(response, connection);
+                var added = subscription.TryAddMemberSubscription(memberSubscription);
+                if (added) return InstallResult.Success;
 
-            // the subscription is not active anymore
-            _correlatedSubscriptions.TryRemove(correlationId, out _);
-            CollectSubscription(memberSubscription);
-            return Attempt.Fail(InstallResult.SubscriptionNotActive);
+                // the subscription is not active anymore
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                CollectSubscription(memberSubscription);
+                return Attempt.Fail(InstallResult.SubscriptionNotActive);
+            }
         }
 
         // (background) adds subscriptions on one member - when a connection is added
@@ -405,7 +408,7 @@ namespace Hazelcast.Clustering
                 // this *may* throw if we fail to talk to the member
                 // this *may* return false for some reason
                 var unsubscribeRequest = subscription.ClusterSubscription.CreateUnsubscribeRequest(subscription.ServerSubscriptionId);
-                var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, subscription.Connection, cancellationToken).CfAwait();
+                using var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, subscription.Connection, cancellationToken).CfAwait();
                 var removed = subscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
                 return removed;
             }
@@ -581,7 +584,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var request = ClientAddCPGroupViewListenerCodec.EncodeRequest();
+                using var request = ClientAddCPGroupViewListenerCodec.EncodeRequest();
                 request.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(request, connection, correlationId, cancellationToken).CfAwait();
@@ -631,10 +634,10 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
+                using var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 subscribeRequest.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
-                _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
+                using var _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
                 _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}", connection.Id.ToShortString());
 
                 return true;

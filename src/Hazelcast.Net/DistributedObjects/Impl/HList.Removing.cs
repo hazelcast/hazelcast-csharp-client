@@ -24,16 +24,16 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = ListRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = ListRemoveCodec.EncodeRequest(Name, itemData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return ListRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
         public async Task<T> RemoveAsync(int index)
         {
-            var requestMessage = ListRemoveWithIndexCodec.EncodeRequest(Name, index);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = ListRemoveWithIndexCodec.EncodeRequest(Name, index);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = ListRemoveWithIndexCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<T>(response).CfAwait();
         }
@@ -42,8 +42,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = ListCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = ListCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return ListCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -51,16 +51,16 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = ListCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = ListCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return ListCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
         public override async Task ClearAsync()
         {
-            var requestMessage = ListClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = ListClearCodec.EncodeRequest(Name);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             _ = ListClearCodec.DecodeResponse(responseMessage);
         }
     }

@@ -282,10 +282,10 @@ namespace Hazelcast.Clustering
 
         private void InitializeNewCompletionSource()
         {
-            // set options to RunContinuationsAsynchronously so that when the response message
-            // is received and we set the result of the completion source, the code waiting on
-            // the response runs asynchronously on a new task while the networking code proceeds
-            // with messages
+            // RunContinuationsAsynchronously: TrySetResult is called on the socket-read thread
+            // (PipeScheduler.Inline). Without this flag the continuation (deserialization, SQL
+            // page fetch, ReliableTopic error handling) would run inline, risking deadlock when
+            // the continuation tries to acquire _mutex or send new messages.
             _completionSource = new TaskCompletionSource<ClientMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
     }

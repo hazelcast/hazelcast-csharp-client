@@ -32,6 +32,8 @@ namespace Hazelcast.Messaging
     internal class Frame : IDisposable
     {
         private IDisposable _owner;
+        private byte[] _rentedArray; // non-null when Bytes is backed by a pooled array
+        private ArrayPool<byte> _rentedPool; // the pool that owns _rentedArray; null means ArrayPool<byte>.Shared
 
         /// <summary>
         /// Gets the owner whose lifetime is tied to this frame, or <c>null</c> if none.
@@ -64,6 +66,20 @@ namespace Hazelcast.Messaging
         {
             Flags = flags;
             Bytes = memoryBytes;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Frame"/> class backed by a pooled array.
+        /// </summary>
+        /// <param name="rentedArray">The array rented from <see cref="System.Buffers.ArrayPool{T}"/>.</param>
+        /// <param name="length">The number of valid bytes starting at index 0.</param>
+        /// <param name="flags">The frame flags.</param>
+        public Frame(byte[] rentedArray, int length, FrameFlags flags, ArrayPool<byte> pool = null)
+        {
+            Flags = flags;
+            Bytes = new Memory<byte>(rentedArray, 0, length);
+            _rentedArray = rentedArray;
+            _rentedPool = pool;
         }
 
         /// <summary>
@@ -195,6 +211,8 @@ namespace Hazelcast.Messaging
         public void Dispose()
         {
             Interlocked.Exchange(ref _owner, null)?.Dispose();
+            var rented = Interlocked.Exchange(ref _rentedArray, null);
+            if (rented != null) (_rentedPool ?? ArrayPool<byte>.Shared).Return(rented);
         }
 
         /// <inheritdoc />

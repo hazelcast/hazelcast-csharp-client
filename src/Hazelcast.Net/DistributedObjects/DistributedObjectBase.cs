@@ -92,7 +92,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The partition identifier derives from the <see cref="PartitionKeyData"/>.</para>
         /// <para>This value makes sense only for distributed objects that access a single partition.</para>
         /// </remarks>
-        public int PartitionId {get; }
+        public int PartitionId { get; }
 
         /// <summary>
         /// Gets the current context identifier.
@@ -302,20 +302,8 @@ namespace Hazelcast.DistributedObjects
         /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
         /// recommended to retry unsubscribing until it is successful.</para>
         /// </remarks>
-        protected
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
-        {
-            var task = Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
+        protected ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
+            => Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
 
         public virtual void OnInitialized()
         {

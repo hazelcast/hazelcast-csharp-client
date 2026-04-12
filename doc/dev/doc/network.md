@@ -93,3 +93,15 @@ Therefore, you should set an SSL configuration as described in the the [TLS/SSL]
 > Note: Please be aware of that failover can occur during very first connection to the cluster. Whenever client cannot connect on `Started` state, failover can also happen. 
 
 [More about failover](failover.md)
+
+## Pipe Reader Scheduler
+
+By default the receive pipeline uses `PipeScheduler.Inline`, which parses and dispatches incoming bytes **synchronously on the I/O thread**. This avoids a thread-pool hop on every message and reduces latency for typical workloads where message processing is fast.
+
+If your message handlers or deserializers perform significant CPU work (for example, complex [custom serialization](serialization/custom.md), encryption, or compression), that work also runs on the I/O thread and can delay reading subsequent messages. Switch to `PipeScheduler.ThreadPool` to post each receive iteration to the thread pool instead:
+
+```csharp
+options.Networking.Socket.PipeReaderScheduler = PipeScheduler.ThreadPool;
+```
+
+Choose `Inline` (default) when message handling is lightweight; choose `ThreadPool` when message handling is CPU-intensive and you want to keep the I/O thread free.

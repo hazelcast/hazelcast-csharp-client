@@ -266,20 +266,20 @@ namespace Hazelcast.Tests.Messaging
             Assert.That(await m.SendAsync(message));
             Assert.That(socket.Count, Is.EqualTo(9));
 
-            // can send a message with a large frame
+            // can send a message with a large frame — all frames batched into one write
             message = new ClientMessage(new Frame(new byte[16]));
-            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
+            message.Append(new Frame(new byte[4096]));
             message.Append(new Frame(new byte[16]));
             socket.Count = 10;
             Assert.That(await m.SendAsync(message));
-            Assert.That(socket.Count, Is.EqualTo(6));
+            Assert.That(socket.Count, Is.EqualTo(9));
 
-            // can send a message with frames
+            // can send a message with frames that exceed the old 1024-byte batch limit
             message = new ClientMessage(new Frame(new byte[768]));
             message.Append(new Frame(new byte[256]));
             socket.Count = 10;
             Assert.That(await m.SendAsync(message));
-            Assert.That(socket.Count, Is.EqualTo(8));
+            Assert.That(socket.Count, Is.EqualTo(9));
         }
 
         [Test]
@@ -293,28 +293,16 @@ namespace Hazelcast.Tests.Messaging
             socket.Count = 0;
             Assert.That(await m.SendAsync(message), Is.False);
 
-            // send a message with a large frame
+            // send a message with a large frame — all frames go in one write, so Count=0 fails
             message = new ClientMessage(new Frame(new byte[16]));
-            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
-            socket.Count = 0; // fail while flushing the buffer
+            message.Append(new Frame(new byte[4096]));
+            socket.Count = 0;
             Assert.That(await m.SendAsync(message), Is.False);
 
-            // send a message with a large frame
-            message = new ClientMessage(new Frame(new byte[16]));
-            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
-            socket.Count = 1; // failing while writing big frame header
-            Assert.That(await m.SendAsync(message), Is.False);
-
-            // send a message with a large frame
-            message = new ClientMessage(new Frame(new byte[16]));
-            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
-            socket.Count = 1; // failing while writing big frame body
-            Assert.That(await m.SendAsync(message), Is.False);
-
-            // send a message with frames
+            // send a message with frames that exceed the old 1024-byte batch limit
             message = new ClientMessage(new Frame(new byte[768]));
             message.Append(new Frame(new byte[256]));
-            socket.Count = 0; // failing while flushing the buffer
+            socket.Count = 0;
             Assert.That(await m.SendAsync(message), Is.False);
 
             // send a message with frames

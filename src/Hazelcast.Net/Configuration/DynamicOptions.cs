@@ -42,7 +42,7 @@ public class DynamicOptions
     {
         if (mapOptions == null) throw new ArgumentNullException(nameof(mapOptions));
 
-        var requestMessage = DynamicConfigAddMapConfigCodec.EncodeRequest(
+        using var requestMessage = DynamicConfigAddMapConfigCodec.EncodeRequest(
             mapOptions.Name,
             mapOptions.BackupCount, mapOptions.AsyncBackupCount,
             mapOptions.TimeToLiveSeconds, mapOptions.MaxIdleSeconds,
@@ -68,7 +68,7 @@ public class DynamicOptions
             mapOptions.DataPersistence, mapOptions.TieredStore, mapOptions.PartitioningAttributes,
             null /*namespace*/);
 
-        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        using var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 
@@ -99,7 +99,7 @@ public class DynamicOptions
         {
             ringbufferStoreConfig = RingbufferStoreConfigHolder.Of(ringbufferOptions.RingbufferStore);
         }
-        var requestMessage = DynamicConfigAddRingbufferConfigCodec.EncodeRequest(
+        using var requestMessage = DynamicConfigAddRingbufferConfigCodec.EncodeRequest(
             ringbufferOptions.Name, ringbufferOptions.Capacity, ringbufferOptions.BackupCount,
             ringbufferOptions.AsyncBackupCount, ringbufferOptions.TimeToLiveSeconds,
             ringbufferOptions.InMemoryFormat.ToJavaString(), ringbufferStoreConfig,
@@ -107,7 +107,7 @@ public class DynamicOptions
             ringbufferOptions.MergePolicy.BatchSize,
             null /*namespace*/);
 
-        var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        using var responseMessage = await _client.Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         var response = DynamicConfigAddMapConfigCodec.DecodeResponse(responseMessage);
     }
 
