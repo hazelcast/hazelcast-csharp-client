@@ -117,8 +117,10 @@ namespace Hazelcast.NearCaching
         {
             foreach (var member in _cluster.Members.GetMembers(true))
             {
-                var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CfAwait();
+#pragma warning disable CA2000 // false positive: using correctly disposes in IAsyncEnumerable on all paths including abandoned enumeration
+                using var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
+                using var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CfAwait();
+#pragma warning restore CA2000
                 var response = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
 
                 yield return (member, response);

@@ -30,20 +30,12 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key)
             => ExecuteAsync<TResult>(processor, key, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key, CancellationToken cancellationToken)
+        private async Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key, CancellationToken cancellationToken)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ExecuteAsync<TResult>(processorData, keyData, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
             return await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -58,8 +50,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </remarks>
         protected virtual async Task<TResult> ExecuteAsync<TResult>(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TResult>(response).CfAwait();
         }
@@ -83,8 +75,8 @@ namespace Hazelcast.DistributedObjects.Impl
             if (keysmap.Count == 0) return new Dictionary<TKey, TResult>();
             var processorData = ToSafeData(processor);
 
-            var requestMessage = MapExecuteOnKeysCodec.EncodeRequest(Name, processorData, keysmap.Keys);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var requestMessage = MapExecuteOnKeysCodec.EncodeRequest(Name, processorData, keysmap.Keys);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapExecuteOnKeysCodec.DecodeResponse(responseMessage).Response;
 
             var result = new Dictionary<TKey, TResult>();
@@ -106,8 +98,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var processorData = ToSafeData(processor);
 
-            var requestMessage = MapExecuteOnAllKeysCodec.EncodeRequest(Name, processorData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var requestMessage = MapExecuteOnAllKeysCodec.EncodeRequest(Name, processorData);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapExecuteOnAllKeysCodec.DecodeResponse(responseMessage).Response;
 
             var result = new Dictionary<TKey, TResult>();
@@ -125,15 +117,14 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (processorData, predicateData) = ToSafeData(processor, predicate);
 
-            var requestMessage = MapExecuteWithPredicateCodec.EncodeRequest(Name, processorData, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var requestMessage = MapExecuteWithPredicateCodec.EncodeRequest(Name, processorData, predicateData);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapExecuteWithPredicateCodec.DecodeResponse(responseMessage).Response;
 
             var result = new Dictionary<TKey, TResult>();
             foreach (var (keyData, valueData) in response)
                 result[await ToObjectAsync<TKey>(keyData).CfAwait()] = await ToObjectAsync<TResult>(valueData).CfAwait();
             return result;
-
         }
     }
 }

@@ -149,20 +149,23 @@ internal class Authenticator
                 break;
 
             default:
-                var bytes = _serializationService.ToData(credentials, withSchemas: true).ToByteArray();
+            {
+                using var credData = _serializationService.ToData(credentials, withSchemas: true);
+                var bytes = credData.ToByteArray();
                 requestMessage = _options.TpcEnabled
                     ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
                         clientVersion, clusterClientName, labels)
                     : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion,
                         clientVersion, clusterClientName, labels, routingMode, cpDirectEnabled);
                 break;
+            }
         }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // is part of the connection phase
         HConsole.WriteLine(this, "Send auth request");
-        var responseMessage = await client.SendAsync(requestMessage).CfAwait();
+        using var responseMessage = await client.SendAsync(requestMessage).CfAwait();
         HConsole.WriteLine(this, "Rcvd auth response");
         
         var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);

@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
             _cache.Remove(stableKey);
         }
@@ -42,18 +42,14 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
             _cache.Remove(stableKey);
             return value;
         }
 
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
+        protected override Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
         {
             // see comments on the base Map class
             // this should be no different except for this entry invalidation method,
@@ -71,65 +67,41 @@ namespace Hazelcast.DistributedObjects.Impl
                     // the request message is disposed after sending.
                     var stableKeys = list.ConvertAll(kvp => StableKey(kvp.Key));
 
+#pragma warning disable CA2000 // ClientMessage ownership transferred to SendToMemberAsync (fire-and-forget per partition)
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
                         .ContinueWith(_ => { foreach (var k in stableKeys) _cache.Remove(k); }, default, default, TaskScheduler.Current);
                     tasks.Add(ownerTask);
+#pragma warning restore CA2000
                 }
             }
 
             var task = Task.WhenAll(tasks);
-
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            await task.CfAwait();
-#endif
         }
 
         /// <inheritdoc />
         protected override async Task<bool> TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CfAwait();
             if (added) _cache.Remove(stableKey);
             return added;
         }
 
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        protected override async Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
+            return await base.GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        protected override async Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            await base.SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken).CfAwait();
         }
     }
 }

@@ -37,8 +37,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IVectorDocument<TVal>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
-            var message = VectorCollectionGetCodec.EncodeRequest(Name, keyData);
-            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, keyData).CfAwait();
+            using var message = VectorCollectionGetCodec.EncodeRequest(Name, keyData);
+            using var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, keyData).CfAwait();
             var rawResponse = VectorCollectionGetCodec.DecodeResponse(response).Value;
             return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
@@ -48,23 +48,23 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (dataKey, rawDocument) = PrepareForPut(key, valueIVectorDocument);
 
-            var message = VectorCollectionPutCodec.EncodeRequest(Name, dataKey, rawDocument);
-            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
+            using var message = VectorCollectionPutCodec.EncodeRequest(Name, dataKey, rawDocument);
+            using var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionPutCodec.DecodeResponse(response).Value;
             return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
 
-        public Task SetAsync(TKey key, IVectorDocument<TVal> vectorDocument)
+        public async Task SetAsync(TKey key, IVectorDocument<TVal> vectorDocument)
         {
             var (dataKey, rawDocument) = PrepareForPut(key, vectorDocument);
-            var message = VectorCollectionSetCodec.EncodeRequest(Name, dataKey, rawDocument);
-            return Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey);
+            using var message = VectorCollectionSetCodec.EncodeRequest(Name, dataKey, rawDocument);
+            using var _ = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
         }
         public async Task<IVectorDocument<TVal>> PutIfAbsentAsync(TKey key, IVectorDocument<TVal> IVectorDocument)
         {
             var (dataKey, rawDocument) = PrepareForPut(key, IVectorDocument);
-            var message = VectorCollectionPutIfAbsentCodec.EncodeRequest(Name, dataKey, rawDocument);
-            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
+            using var message = VectorCollectionPutIfAbsentCodec.EncodeRequest(Name, dataKey, rawDocument);
+            using var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionPutIfAbsentCodec.DecodeResponse(response).Value;
             return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
@@ -96,51 +96,55 @@ namespace Hazelcast.DistributedObjects.Impl
             var tasks = new List<Task<ClientMessage>>();
             foreach (var entry in entriesByPartition)
             {
+#pragma warning disable CA2000 // ClientMessage ownership transferred to SendToPartitionOwnerAsync (fire-and-forget per partition)
                 var message = VectorCollectionPutAllCodec.EncodeRequest(Name, entry.Value);
                 tasks.Add(Cluster.Messaging.SendToPartitionOwnerAsync(message, entry.Key));
+#pragma warning restore CA2000
             }
 
             await Task.WhenAll(tasks).CfAwait();
+            foreach (var task in tasks)
+                (await task.CfAwait()).Dispose();
         }
         public async Task<IVectorDocument<TVal>> RemoveAsync(TKey key)
         {
             if (key is null) throw new ArgumentNullException(nameof(key));
 
             var dataKey = ToSafeData(key);
-            var message = VectorCollectionRemoveCodec.EncodeRequest(Name, dataKey);
-            var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
+            using var message = VectorCollectionRemoveCodec.EncodeRequest(Name, dataKey);
+            using var response = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(message, dataKey).CfAwait();
             var rawResponse = VectorCollectionRemoveCodec.DecodeResponse(response).Value;
             return await DeserializeIVectorDocumentAsync<TVal>(rawResponse).CfAwait();
         }
 
 
-        public Task OptimizeAsync()
+        public async Task OptimizeAsync()
         {
-            var message = VectorCollectionOptimizeCodec.EncodeRequest(Name, null, Guid.NewGuid());
-            return Cluster.Messaging.SendAsync(message);
+            using var message = VectorCollectionOptimizeCodec.EncodeRequest(Name, null, Guid.NewGuid());
+            using var _ = await Cluster.Messaging.SendAsync(message).CfAwait();
         }
 
-        public Task OptimizeAsync(string indexName)
+        public async Task OptimizeAsync(string indexName)
         {
-            var message = VectorCollectionOptimizeCodec.EncodeRequest(Name, indexName, Guid.NewGuid());
-            return Cluster.Messaging.SendAsync(message);
+            using var message = VectorCollectionOptimizeCodec.EncodeRequest(Name, indexName, Guid.NewGuid());
+            using var _ = await Cluster.Messaging.SendAsync(message).CfAwait();
         }
-        public Task ClearAsync()
+        public async Task ClearAsync()
         {
-            var message = VectorCollectionClearCodec.EncodeRequest(Name);
-            return Cluster.Messaging.SendAsync(message);
+            using var message = VectorCollectionClearCodec.EncodeRequest(Name);
+            using var _ = await Cluster.Messaging.SendAsync(message).CfAwait();
         }
         public async Task<long> GetSizeAsync()
         {
-            var message = VectorCollectionSizeCodec.EncodeRequest(Name);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            using var message = VectorCollectionSizeCodec.EncodeRequest(Name);
+            using var response = await Cluster.Messaging.SendAsync(message).CfAwait();
             return VectorCollectionSizeCodec.DecodeResponse(response).Response;
         }
         public async Task<IVectorSearchResult<TKey, TVal>> SearchAsync(VectorValues vectorValues, VectorSearchOptions searchOptions)
         {
             searchOptions.ThrowIfNull();
-            var message = VectorCollectionSearchNearVectorCodec.EncodeRequest(Name, vectorValues, searchOptions);
-            var response = await Cluster.Messaging.SendAsync(message).CfAwait();
+            using var message = VectorCollectionSearchNearVectorCodec.EncodeRequest(Name, vectorValues, searchOptions);
+            using var response = await Cluster.Messaging.SendAsync(message).CfAwait();
             var rawResponse = VectorCollectionSearchNearVectorCodec.DecodeResponse(response).Result;
 
             var entries = new List<VectorSearchResultEntry<TKey, TVal>>();

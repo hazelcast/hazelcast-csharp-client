@@ -113,8 +113,8 @@ namespace Hazelcast.Transactions
                 // codec wants 0 for server config, -1 for infinite (?)
                 var timeoutMs = _options.Timeout.RoundedMilliseconds(false);
 
-                var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMs, _options.Durability, (int) _options.Type, ContextId);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
+                using var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMs, _options.Durability, (int) _options.Type, ContextId);
+                using var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
                 TransactionId = TransactionCreateCodec.DecodeResponse(responseMessage).Response;
                 State = TransactionState.Active;
             }
@@ -145,8 +145,8 @@ namespace Hazelcast.Transactions
 
             try
             {
-                var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
+                using var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ContextId);
+                using var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
                 _ = TransactionCommitCodec.DecodeResponse(responseMessage);
                 State = TransactionState.Committed;
             }
@@ -183,8 +183,8 @@ namespace Hazelcast.Transactions
 
             try
             {
-                var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
+                using var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ContextId);
+                using var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
                 _ = TransactionRollbackCodec.DecodeResponse(responseMessage);
                 State = TransactionState.RolledBack;
             }

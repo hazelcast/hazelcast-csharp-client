@@ -32,8 +32,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var interceptorData = ToSafeData(interceptor);
 
-            var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapAddInterceptorCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -46,8 +46,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
 
-            var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapRemoveInterceptorCodec.DecodeResponse(responseMessage).Response;
             return response;
         }

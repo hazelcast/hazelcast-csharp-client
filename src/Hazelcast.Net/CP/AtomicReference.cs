@@ -40,8 +40,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<bool> CompareAndSetAsync(T comparand, T value)
         {
-            var requestMessage = AtomicRefCompareAndSetCodec.EncodeRequest(CPGroupId, Name, ToData(comparand), ToData(value));
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefCompareAndSetCodec.EncodeRequest(CPGroupId, Name, ToData(comparand), ToData(value));
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefCompareAndSetCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -49,8 +49,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<T> GetAsync()
         {
-            var requestMessage = AtomicRefGetCodec.EncodeRequest(CPGroupId, Name);
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefGetCodec.EncodeRequest(CPGroupId, Name);
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefGetCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync(response).CfAwait();
         }
@@ -58,16 +58,16 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task SetAsync(T value)
         {
-            var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, ToData(value), returnOldValue: false);
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, ToData(value), returnOldValue: false);
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefSetCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
         public async Task<T> GetAndSetAsync(T value)
         {
-            var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, ToData(value), returnOldValue: true);
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, ToData(value), returnOldValue: true);
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefSetCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync(response).CfAwait();
         }
@@ -75,8 +75,8 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<bool> IsNullAsync()
         {
-            var requestMessage = AtomicRefContainsCodec.EncodeRequest(CPGroupId, Name, null);
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefContainsCodec.EncodeRequest(CPGroupId, Name, null);
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefContainsCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -84,16 +84,16 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task ClearAsync()
         {
-            var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, null, returnOldValue: false);
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, null, returnOldValue: false);
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefSetCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
         public async Task<bool> ContainsAsync(T value)
         {
-            var requestMessage = AtomicRefContainsCodec.EncodeRequest(CPGroupId, Name, ToData(value));
-            var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
+            using var requestMessage = AtomicRefContainsCodec.EncodeRequest(CPGroupId, Name, ToData(value));
+            using var responseMessage = await SendCPLeaderAsync(requestMessage).CfAwait();
             var response = AtomicRefContainsCodec.DecodeResponse(responseMessage).Response;
             return response;
         }

@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CfAwait();
             if (removed) _cache.Remove(stableKey);
             return removed;
@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             try
             {
                 return await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             try
             {
                 return await base.RemoveAsync(keyData, valueData, cancellationToken).CfAwait();
@@ -76,7 +76,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task RemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var stableKey = StableKey(keyData);
+            using var stableKey = StableKey(keyData);
             try
             {
                 await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();

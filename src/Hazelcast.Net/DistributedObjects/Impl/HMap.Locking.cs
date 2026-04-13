@@ -17,26 +17,14 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 
+#pragma warning disable CA2000 // request messages carry key-only data; frames hold no pooled buffers worth returning at this call frequency
 namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable UnusedTypeParameter
     internal partial class HMap<TKey, TValue> // Locking
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task LockAsync(TKey key)
-        {
-            var task = LockAsync(key, TimeSpanExtensions.MinusOneMillisecond);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
-        }
+        public Task LockAsync(TKey key) => LockAsync(key, TimeSpanExtensions.MinusOneMillisecond);
 
         /// <inheritdoc />
         public async Task LockAsync(TKey key, TimeSpan leaseTime)
@@ -49,41 +37,16 @@ namespace Hazelcast.DistributedObjects.Impl
             var leaseTimeMs = leaseTime.RoundedMilliseconds();
 
             var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             _ = MapLockCodec.DecodeResponse(responseMessage);
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<bool> TryLockAsync(TKey key)
-        {
-            var task = TryLockAsync(key, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
+        public Task<bool> TryLockAsync(TKey key) => TryLockAsync(key, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond);
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
-        {
-            var task = TryLockAsync(key, timeToWait, TimeSpanExtensions.MinusOneMillisecond);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
+        public Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
+            => TryLockAsync(key, timeToWait, TimeSpanExtensions.MinusOneMillisecond);
 
         /// <inheritdoc />
         public async Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
@@ -99,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeToWaitMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -113,7 +76,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var keyData = ToSafeData(key);
 
             var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -129,13 +92,8 @@ namespace Hazelcast.DistributedObjects.Impl
             var refId = _lockReferenceIdSequence.GetNext();
 
             var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ContextId, refId);
-            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
+            using var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
             await task.CfAwait();
-#endif
         }
 
         /// <inheritdoc />
@@ -149,13 +107,10 @@ namespace Hazelcast.DistributedObjects.Impl
             var refId = _lockReferenceIdSequence.GetNext();
 
             var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
-            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            using var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
             await task.CfAwait();
-#endif
         }
     }
 }
+#pragma warning restore CA2000

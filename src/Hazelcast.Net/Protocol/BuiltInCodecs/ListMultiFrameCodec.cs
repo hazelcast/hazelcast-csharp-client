@@ -67,7 +67,9 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 if (item == null)
 #pragma warning restore CA1508
                 {
+#pragma warning disable CA2000 // Frame ownership transferred to clientMessage via Append
                     clientMessage.Append(Frame.CreateNull());
+#pragma warning restore CA2000
                 }
                 else
                 {

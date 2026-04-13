@@ -35,21 +35,11 @@ namespace Hazelcast.DistributedObjects.Impl
         // was: Put - enqueue, wait indefinitely, may throw
         public Task PutAsync(T item) => EnqueueAsync(item, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task EnqueueAsync(T item, CancellationToken cancellationToken)
+        private async Task EnqueueAsync(T item, CancellationToken cancellationToken)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = QueuePutCodec.EncodeRequest(Name, itemData);
-            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var requestMessage = QueuePutCodec.EncodeRequest(Name, itemData);
+            using var _ = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
         }
 
         private async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)
@@ -57,8 +47,8 @@ namespace Hazelcast.DistributedObjects.Impl
             var itemData = ToSafeData(item);
 
             var timeToWaitMilliseconds = (long)timeToWait.TotalMilliseconds;
-            var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
+            using var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
             return QueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -68,8 +58,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> AddAll<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            using var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
+            using var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

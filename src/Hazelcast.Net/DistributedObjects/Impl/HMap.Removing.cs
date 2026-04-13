@@ -27,20 +27,9 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait = default)
             => TryRemoveAsync(key, timeToWait, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
-        {
-            var task = TryRemoveAsync(ToSafeData(key), timeToWait, cancellationToken);
+        private Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
+            => TryRemoveAsync(ToSafeData(key), timeToWait, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
 
         /// <summary>
         /// Tries to remove an entry from the map within a timeout.
@@ -54,12 +43,13 @@ namespace Hazelcast.DistributedObjects.Impl
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
         protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var timeoutMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ContextId, timeoutMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -68,20 +58,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> RemoveAsync(TKey key)
             => GetAndRemoveAsync(key, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken)
-        {
-            var task = GetAndRemoveAsync(ToSafeData(key), cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
+        private Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken)
+            => GetAndRemoveAsync(ToSafeData(key), cancellationToken);
 
         /// <summary>
         /// Removes an entry from this map, and returns the corresponding value if any.
@@ -89,10 +67,11 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">The key.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
         protected virtual async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
             return await ToObjectAsync<TValue>(response).CfAwait();
         }
@@ -101,20 +80,11 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<bool> RemoveAsync(TKey key, TValue value)
             => RemoveAsync(key, value, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        private Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = RemoveAsync(keyData, valueData, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
             return task;
-#else
-            return await task.CfAwait();
-#endif
         }
 
         /// <summary>
@@ -130,8 +100,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </remarks>
         protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            using var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ContextId);
+            using var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -140,35 +110,19 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task DeleteAsync(TKey key)
             => RemoveAsync(key, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task RemoveAsync(TKey key, CancellationToken cancellationToken)
-        {
-            var task = RemoveAsync(ToSafeData(key), cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
-        }
+        private Task RemoveAsync(TKey key, CancellationToken cancellationToken)
+            => RemoveAsync(ToSafeData(key), cancellationToken);
 
         /// <inheritdoc />
         public Task RemoveAllAsync(IPredicate predicate)
             => RemoveAsync(predicate, CancellationToken.None);
 
-        protected virtual
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken)
+        protected virtual async Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             var predicateData = ToSafeData(predicate);
 
-            var requestMessage = MapRemoveAllCodec.EncodeRequest(Name, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            using var requestMessage = MapRemoveAllCodec.EncodeRequest(Name, predicateData);
+            using var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             _ = MapRemoveAllCodec.DecodeResponse(responseMessage);
         }
 
@@ -181,40 +135,24 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <para>For performance reasons, this method does not return the value. Prefer
         /// <see cref="DeleteAsync"/> if the value is required.</para>
         /// </remarks>
-        protected virtual
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task RemoveAsync(IData keyData, CancellationToken cancellationToken = default)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
+        protected virtual async Task RemoveAsync(IData keyData, CancellationToken cancellationToken = default)
         {
             var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ContextId);
-            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            using var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
             await task.CfAwait();
-#endif
         }
 
         /// <inheritdoc />
         public Task ClearAsync()
             => ClearAsync(CancellationToken.None);
 
-        protected virtual
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task ClearAsync(CancellationToken cancellationToken)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "Key-only request; frames hold no pooled buffers worth returning.")]
+        protected virtual async Task ClearAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapClearCodec.EncodeRequest(Name);
-            var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var task = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
         }
     }
 }

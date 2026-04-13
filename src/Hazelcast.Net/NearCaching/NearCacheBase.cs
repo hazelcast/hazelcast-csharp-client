@@ -176,7 +176,9 @@ namespace Hazelcast.NearCaching
             // is returned to the pool (via Dispose) once the outgoing request is sent.
             // A stable, non-pooled copy ensures the NearCache key remains valid for the
             // full lifetime of the cache entry.
+#pragma warning disable CA2000 // stableKeyData lifetime is managed by the cache entry
             var stableKeyData = new HeapData(keyData.ToByteArray());
+#pragma warning restore CA2000
 
             ValueTask<NearCacheEntry> CreateEntry(IData _, CancellationToken __)
             {
@@ -231,7 +233,9 @@ namespace Hazelcast.NearCaching
             // is returned to the pool (via Dispose) once the outgoing request is sent.
             // A stable, non-pooled copy ensures the NearCache key remains valid for the
             // full lifetime of the cache entry.
+#pragma warning disable CA2000 // stableKeyData lifetime is managed by the cache entry
             var stableKeyData = new HeapData(keyData.ToByteArray());
+#pragma warning restore CA2000
 
             async ValueTask<NearCacheEntry> CreateEntry(IData _, CancellationToken __)
             {
