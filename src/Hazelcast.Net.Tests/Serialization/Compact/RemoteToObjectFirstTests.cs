@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
     [ServerCondition("[5.2,)")]
-    public class RemoteToObjectFirstTests : SingleMemberRemoteTestBase
+    public class RemoteToObjectFirstTests : ClusterRemoteTestBase
     {
         // we have to have 1 member per test else the schemas may end up being cached
         private Hazelcast.Testing.Remote.Member _rcMember;
@@ -33,10 +33,6 @@ namespace Hazelcast.Tests.Serialization.Compact
         public async Task SetUp()
         {
             _rcMember = await RcClient.StartMemberAsync(RcCluster);
-            // Allow the newly started member time to stabilize and complete
-            // partition migration before the test begins. On slow CI machines,
-            // skipping this can cause transient failures in schema publication.
-            await Task.Delay(500);
         }
 
         [TearDown]
