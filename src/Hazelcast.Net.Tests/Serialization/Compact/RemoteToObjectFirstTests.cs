@@ -33,6 +33,10 @@ namespace Hazelcast.Tests.Serialization.Compact
         public async Task SetUp()
         {
             _rcMember = await RcClient.StartMemberAsync(RcCluster);
+            // Allow the newly started member time to stabilize and complete
+            // partition migration before the test begins. On slow CI machines,
+            // skipping this can cause transient failures in schema publication.
+            await Task.Delay(500);
         }
 
         [TearDown]
