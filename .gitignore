@@ -35,3 +35,5 @@ build/hazelcast-*.xml
 
 /_ReSharper.Caches
 .github/secrets
+
+.worktrees/

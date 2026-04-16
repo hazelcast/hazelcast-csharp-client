@@ -204,7 +204,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
-          path: './temp/tests/results/*.trx'
+          path: |
+            ./temp/tests/results/*.trx
+            ./temp/tests/results/*.log
 
       # upload test coverage artifact
       - name: Upload test coverage artifact
@@ -213,6 +215,17 @@ jobs:
         with:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
+
+      # upload RC and server logs for post-mortem analysis of server-side failures
+      - name: Upload server logs artifact
+        if: (success() || failure()) && steps.build.conclusion == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Server-Logs ${{ inputs.os }}-${{ matrix.fwk }}
+          path: |
+            ./temp/rc/*.log
+            ./temp/server/*.log
+          if-no-files-found: ignore
 
       # and then, everything below is for releases only
       # and need only be done on 1 environment (windows-latest + latest fwk) 

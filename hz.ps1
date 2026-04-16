@@ -2126,7 +2126,7 @@ function run-tests ( $f ) {
 
         Write-Output "> dotnet dotcover $testArgs"
         pushd "$srcDir/Hazelcast.Net.Tests"
-        &dotnet dotcover $testArgs
+        &dotnet dotcover $testArgs 2>&1 | Tee-Object -FilePath "$tmpDir/tests/results/console-$f.log"
         popd
     }
     else {
@@ -2136,7 +2136,7 @@ function run-tests ( $f ) {
         $testArgs += $nunitArgs
 
         Write-Output "> dotnet test $testArgs"
-        &dotnet test $testArgs
+        &dotnet test $testArgs 2>&1 | Tee-Object -FilePath "$tmpDir/tests/results/console-$f.log"
     }
 
     # NUnit adapter does not support configuring the file name, move
