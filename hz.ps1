@@ -2000,7 +2000,36 @@ function start-server() {
 
 # tests the remote controller
 function test-remote-controller() {
-    return test-path "$tmpDir/rc/pid"
+    if (-not (test-path "$tmpDir/rc/pid")) { return $false }
+
+    # pid file exists - verify the process is still alive (it may have exited cleanly when
+    # all test-fixture clients called ExitAsync, but the pid file is not removed in that case)
+    if ($script:remoteController -and $script:remoteController.HasExited) {
+        Write-Output "Remote controller (pid=$($script:remoteController.Id)) has exited; removing stale pid file."
+        remove-item "$tmpDir/rc/pid" -ErrorAction SilentlyContinue
+        remove-item "$tmpDir/rc/version" -ErrorAction SilentlyContinue
+        return $false
+    }
+
+    # if we don't own the process reference, fall back to probing the pid in the file
+    $rcPid = [int](get-content "$tmpDir/rc/pid" -ErrorAction SilentlyContinue)
+    if ($rcPid -gt 0) {
+        try {
+            $proc = Get-Process -Id $rcPid -ErrorAction Stop
+            if ($proc.HasExited) {
+                remove-item "$tmpDir/rc/pid" -ErrorAction SilentlyContinue
+                remove-item "$tmpDir/rc/version" -ErrorAction SilentlyContinue
+                return $false
+            }
+        } catch {
+            # process not found at all
+            remove-item "$tmpDir/rc/pid" -ErrorAction SilentlyContinue
+            remove-item "$tmpDir/rc/version" -ErrorAction SilentlyContinue
+            return $false
+        }
+    }
+
+    return $true
 }
 
 # stops the remote controller
@@ -2217,6 +2246,15 @@ function hz-test {
         foreach ($framework in $testFrameworks) {
             Write-Output ""
             Write-Output "Run tests for $framework..."
+
+            # the RC may have exited between framework runs (when all test-fixture clients
+            # called ExitAsync the RC process exits cleanly but the pid file is not removed);
+            # restart it if we own it and it is no longer alive
+            if ($ownsrc -and -not (test-remote-controller)) {
+                Write-Output "Remote controller exited between runs, restarting..."
+                start-remote-controller
+            }
+
             run-tests $framework
         }
     }
