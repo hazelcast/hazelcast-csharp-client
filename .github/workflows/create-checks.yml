@@ -82,11 +82,11 @@ jobs:
         if: inputs.run_id == ''
         shell: bash
         run: |
+          shopt -s nullglob
           found=0
           for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            echo "MOVE:"
             mv "$i/"* "./temp/test-results/ubuntu/"
           done
           for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
