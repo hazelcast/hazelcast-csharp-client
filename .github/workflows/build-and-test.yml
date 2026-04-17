@@ -218,7 +218,7 @@ jobs:
 
       # upload RC and server logs for post-mortem analysis of server-side failures
       - name: Upload server logs artifact
-        if: (success() || failure()) && steps.build.conclusion == 'success'
+        if: failure() && steps.build.conclusion == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: Server-Logs ${{ inputs.os }}-${{ matrix.fwk }}

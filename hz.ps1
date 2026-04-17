@@ -2149,7 +2149,7 @@ function run-tests ( $f ) {
         "NUnit.TestOutputXml=.",
         "NUnit.Labels=Off", # quiet please
         "NUnit.DefaultTestNamePattern=$($testName.Replace("<FRAMEWORK>", $f))",
-        "NUnit.ConsoleOut=0" # quiet please
+        "NUnit.ConsoleOut=1" # write test-level console output to the captured log file
     )
 
     if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=$($options.testFilter.Replace("<FRAMEWORK>", $f))" }
