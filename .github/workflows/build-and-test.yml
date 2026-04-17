@@ -206,6 +206,7 @@ jobs:
           name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
           path: |
             ./temp/tests/results/*.trx
+            ./temp/tests/results/*.xml
             ./temp/tests/results/*.log
 
       # upload test coverage artifact
@@ -218,7 +219,7 @@ jobs:
 
       # upload RC and server logs for post-mortem analysis of server-side failures
       - name: Upload server logs artifact
-        if: failure() && steps.build.conclusion == 'success'
+        if: (success() || failure()) && steps.build.conclusion == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: Server-Logs ${{ inputs.os }}-${{ matrix.fwk }}

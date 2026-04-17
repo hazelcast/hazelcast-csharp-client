@@ -217,7 +217,7 @@ jobs:
           echo "move.results      = ${{ steps.move.outputs.results }}"
           echo "move.coverage     = ${{ steps.move.outputs.coverage }}"
 
-      # report test results - always
+      # report test results via TRX - always (pass/fail summary + annotations)
       # see https://github.com/marketplace/actions/test-reporter
       - name: Report test results
         if: steps.unzip.outputs.results == 'true' || steps.move.outputs.results == 'true'
@@ -226,6 +226,18 @@ jobs:
           name: Test Results
           path: ./temp/test-results/*/results-*.trx
           reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
+
+      # report test results via NUnit XML - always (includes full stack traces that TRX drops)
+      - name: Report test results (NUnit XML)
+        if: steps.unzip.outputs.results == 'true' || steps.move.outputs.results == 'true'
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test Results (details)
+          path: ./temp/test-results/*/results-*.xml
+          reporter: java-junit
           list-suites: failed
           list-tests: failed
           fail-on-error: false

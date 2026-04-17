@@ -2138,7 +2138,7 @@ function run-tests ( $f ) {
         "-f", "$f",
         "-v", "normal",
         "--logger", "trx;LogFileName=results-$f.trx", # log to file
-        "--logger", "console;verbosity=minimal", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
+        "--logger", "console;verbosity=normal", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
         "--results-directory", "$tmpDir/tests/results"
     )
 
