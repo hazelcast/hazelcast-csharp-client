@@ -2091,6 +2091,10 @@ function stop-server() {
 # runs tests for a specified framework
 function run-tests ( $f ) {
 
+    # ensure the results directory exists before Tee-Object tries to write the console log
+    # (dotnet test creates it lazily via --results-directory, but Tee-Object needs it upfront)
+    New-Item -ItemType Directory -Force -Path "$tmpDir/tests/results" | Out-Null
+
     # run .NET Core unit tests
     # note:
     #   on some machines (??) MSBuild does not copy the NUnit adapter to the bin directory,
