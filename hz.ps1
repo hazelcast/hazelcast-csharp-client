@@ -1932,19 +1932,42 @@ function start-remote-controller() {
         -RedirectStandardOutput "$tmpDir/rc/stdout-$serverVersion.log" `
         -RedirectStandardError "$tmpDir/rc/stderr-$serverVersion.log" `
         -PassThru
-    Start-Sleep -Seconds 4
 
     if ($script:remoteController.HasExited) {
         Write-Output "stderr:"
         Write-Output $(get-content "$tmpDir/rc/stderr-$serverVersion.log")
         Write-Output ""
         Die "Remote controller has exited immediately."
-	}
-    else {
-        set-content "$tmpDir/rc/pid" $script:remoteController.Id
-        set-content "$tmpDir/rc/version" $serverVersion
-        Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
     }
+
+    set-content "$tmpDir/rc/pid" $script:remoteController.Id
+    set-content "$tmpDir/rc/version" $serverVersion
+    Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
+
+    # poll port 9701 until the RC is actually accepting connections (replaces the old blind
+    # Start-Sleep -Seconds 4 which was unreliable on slow CI or after a restart)
+    Write-Output "Waiting for remote controller to be ready..."
+    $rcReady = $false
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        if ($script:remoteController.HasExited) {
+            Write-Output "stderr:"
+            Write-Output $(get-content "$tmpDir/rc/stderr-$serverVersion.log")
+            Die "Remote controller exited while waiting for it to become ready."
+        }
+        try {
+            $tcp = [System.Net.Sockets.TcpClient]::new()
+            $tcp.Connect("127.0.0.1", 9701)
+            $tcp.Close()
+            $rcReady = $true
+            break
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    if (-not $rcReady) {
+        Die "Remote controller did not become ready within 30 seconds."
+    }
+    Write-Output "Remote controller is ready."
 }
 
 # starts the server
