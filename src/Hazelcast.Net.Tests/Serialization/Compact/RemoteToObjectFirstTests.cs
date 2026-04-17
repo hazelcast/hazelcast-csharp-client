@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
     [ServerCondition("[5.2,)")]
-    public class RemoteToObjectFirstTests : SingleMemberRemoteTestBase
+    public class RemoteToObjectFirstTests : ClusterRemoteTestBase
     {
         // we have to have 1 member per test else the schemas may end up being cached
         private Hazelcast.Testing.Remote.Member _rcMember;

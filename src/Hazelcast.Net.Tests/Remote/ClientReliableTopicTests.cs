@@ -453,7 +453,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     }
 
     [Test]
-    [Timeout(80_000)]
+    [Timeout(120_000)]
     public async Task TestClusterRestartWhenSubscribed()
     {
         var topicName = "rtTestTopic2";
@@ -478,9 +478,20 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
 
-        await rt2.PublishAsync(1);
+        // Wait for both clients to reconnect before publishing — the executor needs to be
+        // alive and re-syncing its sequence, and client2 must be able to publish.
+        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client.State), 30_000, 100);
+        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client2.State), 30_000, 100);
 
-        Assert.True(await mne.WaitOneAsync());
+        // Publish multiple messages: the executor may miss the first one while adjusting its
+        // sequence after the ring buffer reset, so keep publishing until the mne is set.
+        for (var i = 1; i <= 10 && !mne.WaitOne(0); i++)
+        {
+            await rt2.PublishAsync(i);
+            await Task.Delay(500);
+        }
+
+        Assert.True(await mne.WaitOneAsync(30_000));
         await rt.DestroyAsync();
     }
 

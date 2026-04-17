@@ -1932,19 +1932,42 @@ function start-remote-controller() {
         -RedirectStandardOutput "$tmpDir/rc/stdout-$serverVersion.log" `
         -RedirectStandardError "$tmpDir/rc/stderr-$serverVersion.log" `
         -PassThru
-    Start-Sleep -Seconds 4
 
     if ($script:remoteController.HasExited) {
         Write-Output "stderr:"
         Write-Output $(get-content "$tmpDir/rc/stderr-$serverVersion.log")
         Write-Output ""
         Die "Remote controller has exited immediately."
-	}
-    else {
-        set-content "$tmpDir/rc/pid" $script:remoteController.Id
-        set-content "$tmpDir/rc/version" $serverVersion
-        Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
     }
+
+    set-content "$tmpDir/rc/pid" $script:remoteController.Id
+    set-content "$tmpDir/rc/version" $serverVersion
+    Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
+
+    # poll port 9701 until the RC is actually accepting connections (replaces the old blind
+    # Start-Sleep -Seconds 4 which was unreliable on slow CI or after a restart)
+    Write-Output "Waiting for remote controller to be ready..."
+    $rcReady = $false
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        if ($script:remoteController.HasExited) {
+            Write-Output "stderr:"
+            Write-Output $(get-content "$tmpDir/rc/stderr-$serverVersion.log")
+            Die "Remote controller exited while waiting for it to become ready."
+        }
+        try {
+            $tcp = [System.Net.Sockets.TcpClient]::new()
+            $tcp.Connect("127.0.0.1", 9701)
+            $tcp.Close()
+            $rcReady = $true
+            break
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    if (-not $rcReady) {
+        Die "Remote controller did not become ready within 30 seconds."
+    }
+    Write-Output "Remote controller is ready."
 }
 
 # starts the server
@@ -2000,7 +2023,36 @@ function start-server() {
 
 # tests the remote controller
 function test-remote-controller() {
-    return test-path "$tmpDir/rc/pid"
+    if (-not (test-path "$tmpDir/rc/pid")) { return $false }
+
+    # pid file exists - verify the process is still alive (it may have exited cleanly when
+    # all test-fixture clients called ExitAsync, but the pid file is not removed in that case)
+    if ($script:remoteController -and $script:remoteController.HasExited) {
+        Write-Output "Remote controller (pid=$($script:remoteController.Id)) has exited; removing stale pid file."
+        remove-item "$tmpDir/rc/pid" -ErrorAction SilentlyContinue
+        remove-item "$tmpDir/rc/version" -ErrorAction SilentlyContinue
+        return $false
+    }
+
+    # if we don't own the process reference, fall back to probing the pid in the file
+    $rcPid = [int](get-content "$tmpDir/rc/pid" -ErrorAction SilentlyContinue)
+    if ($rcPid -gt 0) {
+        try {
+            $proc = Get-Process -Id $rcPid -ErrorAction Stop
+            if ($proc.HasExited) {
+                remove-item "$tmpDir/rc/pid" -ErrorAction SilentlyContinue
+                remove-item "$tmpDir/rc/version" -ErrorAction SilentlyContinue
+                return $false
+            }
+        } catch {
+            # process not found at all
+            remove-item "$tmpDir/rc/pid" -ErrorAction SilentlyContinue
+            remove-item "$tmpDir/rc/version" -ErrorAction SilentlyContinue
+            return $false
+        }
+    }
+
+    return $true
 }
 
 # stops the remote controller
@@ -2062,6 +2114,10 @@ function stop-server() {
 # runs tests for a specified framework
 function run-tests ( $f ) {
 
+    # ensure the results directory exists before Tee-Object tries to write the console log
+    # (dotnet test creates it lazily via --results-directory, but Tee-Object needs it upfront)
+    New-Item -ItemType Directory -Force -Path "$tmpDir/tests/results" | Out-Null
+
     # run .NET Core unit tests
     # note:
     #   on some machines (??) MSBuild does not copy the NUnit adapter to the bin directory,
@@ -2082,7 +2138,7 @@ function run-tests ( $f ) {
         "-f", "$f",
         "-v", "normal",
         "--logger", "trx;LogFileName=results-$f.trx", # log to file
-        "--logger", "console;verbosity=minimal", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
+        "--logger", "console;verbosity=normal", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
         "--results-directory", "$tmpDir/tests/results"
     )
 
@@ -2093,7 +2149,7 @@ function run-tests ( $f ) {
         "NUnit.TestOutputXml=.",
         "NUnit.Labels=Off", # quiet please
         "NUnit.DefaultTestNamePattern=$($testName.Replace("<FRAMEWORK>", $f))",
-        "NUnit.ConsoleOut=0" # quiet please
+        "NUnit.ConsoleOut=1" # write test-level console output to the captured log file
     )
 
     if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=$($options.testFilter.Replace("<FRAMEWORK>", $f))" }
@@ -2126,7 +2182,7 @@ function run-tests ( $f ) {
 
         Write-Output "> dotnet dotcover $testArgs"
         pushd "$srcDir/Hazelcast.Net.Tests"
-        &dotnet dotcover $testArgs
+        &dotnet dotcover $testArgs 2>&1 | Tee-Object -FilePath "$tmpDir/tests/results/console-$f.log"
         popd
     }
     else {
@@ -2136,7 +2192,7 @@ function run-tests ( $f ) {
         $testArgs += $nunitArgs
 
         Write-Output "> dotnet test $testArgs"
-        &dotnet test $testArgs
+        &dotnet test $testArgs 2>&1 | Tee-Object -FilePath "$tmpDir/tests/results/console-$f.log"
     }
 
     # NUnit adapter does not support configuring the file name, move
@@ -2217,6 +2273,15 @@ function hz-test {
         foreach ($framework in $testFrameworks) {
             Write-Output ""
             Write-Output "Run tests for $framework..."
+
+            # the RC may have exited between framework runs (when all test-fixture clients
+            # called ExitAsync the RC process exits cleanly but the pid file is not removed);
+            # restart it if we own it and it is no longer alive
+            if ($ownsrc -and -not (test-remote-controller)) {
+                Write-Output "Remote controller exited between runs, restarting..."
+                start-remote-controller
+            }
+
             run-tests $framework
         }
     }

@@ -82,17 +82,17 @@ jobs:
         if: inputs.run_id == ''
         shell: bash
         run: |
+          shopt -s nullglob
           found=0
           for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            echo "MOVE:"
-            mv "$i/"* "./temp/test-results/ubuntu/"
+            for f in "$i"/*; do mv "$f" "./temp/test-results/ubuntu/"; done
           done
           for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
             echo "Move $i"
             found=1
-            mv "$i/"* "./temp/test-results/windows/"
+            for f in "$i"/*; do mv "$f" "./temp/test-results/windows/"; done
           done
           if [ $found -eq 1 ]; then
             echo "results=true" >> $GITHUB_OUTPUT
@@ -105,12 +105,12 @@ jobs:
           for i in ./temp/artifacts/Test-Coverage\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            mv "$i/"* "./temp/test-coverage/ubuntu/"
+            for f in "$i"/*; do mv "$f" "./temp/test-coverage/ubuntu/"; done
           done
           for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
             echo "Move $i"
             found=1
-            mv "$i/"* "./temp/test-coverage/windows/"
+            for f in "$i"/*; do mv "$f" "./temp/test-coverage/windows/"; done
           done
           if [ $found -eq 1 ]; then
             echo "coverage=true" >> $GITHUB_OUTPUT
@@ -217,7 +217,7 @@ jobs:
           echo "move.results      = ${{ steps.move.outputs.results }}"
           echo "move.coverage     = ${{ steps.move.outputs.coverage }}"
 
-      # report test results - always
+      # report test results via TRX - always (pass/fail summary + annotations)
       # see https://github.com/marketplace/actions/test-reporter
       - name: Report test results
         if: steps.unzip.outputs.results == 'true' || steps.move.outputs.results == 'true'
@@ -226,6 +226,18 @@ jobs:
           name: Test Results
           path: ./temp/test-results/*/results-*.trx
           reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
+
+      # report test results via NUnit XML - always (includes full stack traces that TRX drops)
+      - name: Report test results (NUnit XML)
+        if: steps.unzip.outputs.results == 'true' || steps.move.outputs.results == 'true'
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test Results (details)
+          path: ./temp/test-results/*/results-*.xml
+          reporter: java-junit
           list-suites: failed
           list-tests: failed
           fail-on-error: false

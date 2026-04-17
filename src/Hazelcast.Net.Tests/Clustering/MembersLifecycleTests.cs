@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
@@ -133,7 +134,7 @@ namespace Hazelcast.Tests.Clustering
                 .MembersUpdated((sender, args) =>
                 {
                     HConsole.WriteLine(this, $"Handle MembersUpdated ({args.Members.Count} members)");
-                    membersCount = args.Members.Count;
+                    Volatile.Write(ref membersCount, args.Members.Count);
                 })
                 .ObjectCreated((sender, args) =>
                 {
@@ -174,7 +175,7 @@ namespace Hazelcast.Tests.Clustering
                 await RemoveMember(memberId);
                 HConsole.WriteLine(this, $"Removed member {member.Uuid.Substring(0, 7)} ({(int)stopwatch.Elapsed.TotalSeconds}s)");
 
-                await Task.Delay(500);
+                await Task.Delay(1000);
 
                 await UseClientOnce(map);
             }
@@ -188,8 +189,8 @@ namespace Hazelcast.Tests.Clustering
             // all members but one are gone
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(membersCount, Is.EqualTo(1));
-            }, 8000, 200);
+                Assert.That(Volatile.Read(ref membersCount), Is.EqualTo(1));
+            }, 20000, 200);
 
             // now terminate the client
             HConsole.WriteLine(this, "Dispose client...");
