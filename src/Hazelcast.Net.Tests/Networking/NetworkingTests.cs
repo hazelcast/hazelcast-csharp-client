@@ -312,11 +312,7 @@ namespace Hazelcast.Tests.Networking
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-#if NET8_0_OR_GREATER
             await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
-#else
-            await AssertEx.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
-#endif
             // TODO dispose the client, the server
             await server.StopAsync().CfAwait();
         }

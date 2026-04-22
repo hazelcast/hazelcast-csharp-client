@@ -63,7 +63,6 @@ namespace Hazelcast.Sql
             {
                 (metadata, firstPage, partitionId) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
             }
-#if NET8_0_OR_GREATER
             catch (OperationCanceledException)
             {
                 // maybe, the server is running the query, so better notify it
@@ -72,16 +71,6 @@ namespace Hazelcast.Sql
                 await CloseAsync(queryId).CfAwaitNoThrow(); // swallow the exception, nothing we can do really
                 throw;
             }
-#else
-            catch (TaskCanceledException)
-            {
-                // maybe, the server is running the query, so better notify it
-                // for any other exception: assume that the query did not start
-
-                await CloseAsync(queryId).CfAwaitNoThrow(); // swallow the exception, nothing we can do really
-                throw;
-            }
-#endif
 
             return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, partitionId, cancellationToken);
         }

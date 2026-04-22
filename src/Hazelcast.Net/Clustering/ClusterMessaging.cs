@@ -242,19 +242,11 @@ namespace Hazelcast.Clustering
                         connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                         return await connection.SendAsync(invocation, cancellationToken).CfAwait();
                     }
-#if NET8_0_OR_GREATER
                     catch (OperationCanceledException)
                     {
                         HConsole.WriteLine(this, "Canceled.");
                         throw;
                     }
-#else
-                catch (TaskCanceledException)
-                {
-                    HConsole.WriteLine(this, "Canceled.");
-                    throw;
-                }
-#endif
                     catch (Exception exception)
                     {
                         HConsole.WriteLine(this, $"Exception ({connection?.Id.ToShortString() ?? "null"}):{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)} {exception}");
