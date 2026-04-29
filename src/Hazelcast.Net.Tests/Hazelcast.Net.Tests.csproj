@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net48'">
-    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.0" Aliases="MicrosoftBclMemory" />
+    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.7" Aliases="MicrosoftBclMemory" />
   </ItemGroup>
 
   <Choose>
