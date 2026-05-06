@@ -187,7 +187,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 new SubscriptionState(mode, Name, handlers, state));
 
             await Cluster.Events.AddSubscriptionAsync(subscription).CfAwait();
-
+            _subscriptions.Add(subscription.Id);
             return subscription.Id;
         }
 

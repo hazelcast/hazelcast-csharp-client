@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 new MapSubscriptionState(mode, Name, handlers, state));
 
             await Cluster.Events.AddSubscriptionAsync(subscription, cancellationToken).CfAwait();
-
+            _subscriptions.Add(subscription.Id);
             return subscription.Id;
         }
 

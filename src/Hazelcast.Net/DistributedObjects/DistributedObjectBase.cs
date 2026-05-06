@@ -34,6 +34,7 @@ namespace Hazelcast.DistributedObjects
         private Action<DistributedObjectBase> _objectDisposed;
         private string _partitionKey;
         private volatile int _disposed;
+        protected HashSet<Guid> _subscriptions = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectBase"/> class.
@@ -119,6 +120,12 @@ namespace Hazelcast.DistributedObjects
         /// Gets the logger factory.
         /// </summary>
         internal ILoggerFactory LoggerFactory { get; }
+        
+        /// <summary>
+        /// Gets the subscription Ids of the object (internal for testing)
+        /// </summary>
+        /// <returns>Subscription Ids</returns>
+        internal HashSet<Guid> GetSubscriptionsIds() => _subscriptions;
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync()
@@ -311,14 +318,19 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return default;
+                return;
 
+            foreach (var subscription in _subscriptions)
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                UnsubscribeBaseAsync(subscription);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            
             _objectDisposed(this);
 
-            return DisposeAsyncCore();
+            await DisposeAsyncCore();
         }
 
         /// <summary>
