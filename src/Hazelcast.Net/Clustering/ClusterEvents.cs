@@ -746,6 +746,7 @@ namespace Hazelcast.Clustering
         {
             lock (_collectMutex)
             {
+                if (_disposed == 1) return;
                 foreach (var memberSubscription in subscription)
                     _collectSubscriptions.Add(memberSubscription);
                 _collectTask ??= CollectSubscriptionsAsync(_cancel.Token);
@@ -757,6 +758,7 @@ namespace Hazelcast.Clustering
         {
             lock (_collectMutex)
             {
+                if (_disposed == 1) return;
                 _collectSubscriptions.Add(subscription);
                 _collectTask ??= CollectSubscriptionsAsync(_cancel.Token);
             }

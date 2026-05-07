@@ -170,12 +170,17 @@ namespace Hazelcast.Tests.Clustering
             while (RcMembers.Count > 1)
             {
                 var (memberId, member) = RcMembers.First();
+                var expectedCount = RcMembers.Count - 1;
                 HConsole.WriteLine(this, $"Remove member {member.Uuid.Substring(0, 7)} at {member.Host}:{member.Port}...");
                 stopwatch.Restart();
                 await RemoveMember(memberId);
                 HConsole.WriteLine(this, $"Removed member {member.Uuid.Substring(0, 7)} ({(int)stopwatch.Elapsed.TotalSeconds}s)");
 
-                await Task.Delay(1000);
+                // wait for MembersUpdated event to reflect the removal before proceeding
+                await AssertEx.SucceedsEventually(() =>
+                {
+                    Assert.That(Volatile.Read(ref membersCount), Is.EqualTo(expectedCount));
+                }, 20000, 200);
 
                 await UseClientOnce(map);
             }
