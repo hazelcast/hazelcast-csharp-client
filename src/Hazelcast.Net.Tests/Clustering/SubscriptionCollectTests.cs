@@ -301,7 +301,7 @@ namespace Hazelcast.Tests.Clustering
 
             //Subscribe for the event and expect unsubscribe on dispose.
             
-            if (collectionType.IsAssignableTo(typeof(IHCollection<>)))
+            if (collectionType == typeof(IHCollection<>))
             {
                 //IHCollection base covers HList, HQueue, HSet
                 await using var collection = await client.GetListAsync<int>("dummyList");
