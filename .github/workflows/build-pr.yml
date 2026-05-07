@@ -46,7 +46,7 @@ jobs:
         id: test-membership
         uses: hazelcast/hazelcast-tpm/membership@main
         with:
-          member-name: ${{ github.actor }}
+          member-name: ${{ github.triggering_actor }}
           token: ${{ secrets.GH_TOKEN }}
 
   # ensure we are an Hazelcast organization member OR manually running
@@ -59,7 +59,7 @@ jobs:
     steps:
       - name: Report
         shell: bash
-        run: echo "User ${{ github.actor }} is trusted for test execution"
+        run: echo "User ${{ github.triggering_actor }} is trusted for test execution"
 
   # get frameworks
   get-fwks:
