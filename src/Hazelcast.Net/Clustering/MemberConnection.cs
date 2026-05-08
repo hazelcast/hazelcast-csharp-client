@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -314,7 +314,7 @@ namespace Hazelcast.Clustering
 #pragma warning restore CA1801
 #pragma warning restore IDE0079
         {
-            await DisposeAsync().CfAwait();
+            await DisposeAsync().CfAwaitNoThrow();
         }
 
         /// <summary>
