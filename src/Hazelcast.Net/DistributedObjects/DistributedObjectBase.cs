@@ -325,7 +325,7 @@ namespace Hazelcast.DistributedObjects
 
             foreach (var subscription in _subscriptions)
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                UnsubscribeBaseAsync(subscription);
+                UnsubscribeBaseAsync(subscription).CfAwaitNoThrow<bool>(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             
             _objectDisposed(this);
