@@ -1016,8 +1016,6 @@ namespace Hazelcast.Clustering
             }
             await Task.WhenAll(tasks).CfAwait();
 
-            _cancel.Dispose();
-
             // connection is going down
             // it will be disposed as well as all other connections
             // and subscriptions will terminate
