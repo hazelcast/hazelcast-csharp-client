@@ -2712,4 +2712,7 @@ virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get ->
 ~virtual Hazelcast.Query.PredicateBuilder.IsNotEqualTo(object value) -> Hazelcast.Query.IPredicate
 ~virtual Hazelcast.Query.PredicateBuilder.Matches(string regex) -> Hazelcast.Query.IPredicate
 ~override Hazelcast.Models.SingleVectorValues.Equals(object obj) -> bool
-
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SetTTL(TKey key, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<bool>
+override Hazelcast.Models.SingleVectorValues.GetHashCode() -> int
+~Hazelcast.Networking.SocketOptions.PipeReaderScheduler.get -> System.IO.Pipelines.PipeScheduler
+~Hazelcast.Networking.SocketOptions.PipeReaderScheduler.set -> void
