@@ -213,7 +213,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         else if (ex.GetType() == typeof(ArgumentOutOfRangeException) && _options.IsLossTolerant)
         {
             var old = _sequence;
-            _sequence = await _ringBuffer.GetTailSequenceAsync().CfAwait() + 1;
+            _sequence = await _ringBuffer.GetHeadSequenceAsync().CfAwait();
 
             _logger.IfWarning()?.LogWarning("The reliable topic subscription on topic {TopicName} requested a too large sequence {Old}"
                                             + ". Jumping from old {Old} sequence to head sequence {Head}.", _ringBuffer.Name, old, old, _sequence);
