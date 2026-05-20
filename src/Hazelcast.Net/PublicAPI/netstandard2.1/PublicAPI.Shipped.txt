@@ -1738,7 +1738,6 @@ virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get ->
 ~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>> events, TKey key, Hazelcast.Query.IPredicate predicate, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
 ~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.TryPutAsync(TKey key, TValue value, System.TimeSpan timeToWait) -> System.Threading.Tasks.Task<bool>
 ~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.TryRemoveAsync(TKey key, System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<bool>
-~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.UpdateTimeToLive(TKey key, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<bool>
 ~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ClearAsync() -> System.Threading.Tasks.Task
 ~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ContainsKeyAsync(TKey key) -> System.Threading.Tasks.Task<bool>
 ~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ContainsValueAsync(TValue value) -> System.Threading.Tasks.Task<bool>
@@ -2712,4 +2711,7 @@ virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get ->
 ~virtual Hazelcast.Query.PredicateBuilder.IsNotEqualTo(object value) -> Hazelcast.Query.IPredicate
 ~virtual Hazelcast.Query.PredicateBuilder.Matches(string regex) -> Hazelcast.Query.IPredicate
 ~override Hazelcast.Models.SingleVectorValues.Equals(object obj) -> bool
-
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SetTTL(TKey key, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<bool>
+override Hazelcast.Models.SingleVectorValues.GetHashCode() -> int
+~Hazelcast.Networking.SocketOptions.PipeReaderScheduler.get -> System.IO.Pipelines.PipeScheduler
+~Hazelcast.Networking.SocketOptions.PipeReaderScheduler.set -> void

@@ -243,7 +243,6 @@ Hazelcast.DistributedObjects.IHMap<TKey, TValue>
 ~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.TryPutAsync(TKey key, TValue value, System.TimeSpan timeToWait) -> System.Threading.Tasks.Task<bool>
 ~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.TryRemoveAsync(TKey key, System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<bool>
 Hazelcast.DistributedObjects.IHMap<TKey, TValue>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
-~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.UpdateTimeToLive(TKey key, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<bool>
 Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>
 ~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ClearAsync() -> System.Threading.Tasks.Task
 ~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ContainsKeyAsync(TKey key) -> System.Threading.Tasks.Task<bool>
@@ -2655,3 +2654,4 @@ override Hazelcast.Models.ClusterVersion.GetHashCode() -> int
 ~override Hazelcast.Models.ClusterVersion.ToString() -> string
 ~static Hazelcast.Models.ClusterVersion.Parse(string value) -> Hazelcast.Models.ClusterVersion
 ~override Hazelcast.Models.SingleVectorValues.Equals(object obj) -> bool
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SetTTL(TKey key, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<bool>
