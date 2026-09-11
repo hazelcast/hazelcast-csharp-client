@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ namespace Hazelcast.DistributedObjects
         private Action<DistributedObjectBase> _objectDisposed;
         private string _partitionKey;
         private volatile int _disposed;
+        protected HashSet<Guid> _subscriptions = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectBase"/> class.
@@ -119,6 +120,12 @@ namespace Hazelcast.DistributedObjects
         /// Gets the logger factory.
         /// </summary>
         internal ILoggerFactory LoggerFactory { get; }
+        
+        /// <summary>
+        /// Gets the subscription Ids of the object (internal for testing)
+        /// </summary>
+        /// <returns>Subscription Ids</returns>
+        internal HashSet<Guid> GetSubscriptionsIds() => _subscriptions;
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync()
@@ -302,8 +309,13 @@ namespace Hazelcast.DistributedObjects
         /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
         /// recommended to retry unsubscribing until it is successful.</para>
         /// </remarks>
-        protected ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
-            => Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
+        protected async ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
+        {
+            var result= await Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None).CfAwait();
+            if(result) _subscriptions.Remove(subscriptionId);
+            return result;
+        }
+            
 
         public virtual void OnInitialized()
         {
@@ -311,14 +323,19 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return default;
+                return;
 
+            foreach (var subscription in _subscriptions)
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                UnsubscribeBaseAsync(subscription).CfAwaitNoThrow<bool>(false);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            
             _objectDisposed(this);
 
-            return DisposeAsyncCore();
+            await DisposeAsyncCore();
         }
 
         /// <summary>

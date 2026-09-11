@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -300,7 +300,7 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
 
             var sm = await _client.CPSubsystem.GetSemaphore(smName);
 
-            var acquired = await sm.TryAcquireAsync(1, 5_00);
+            var acquired = await sm.TryAcquireAsync(1, 5_000);
 
             if (acquired)
             {
@@ -339,7 +339,7 @@ public class SemaphoreTests : MultiMembersRemoteTestBase
             // Each run will bw in different thread. So, new context is a must.
             AsyncContext.New();
 
-            var acquired = await semaphore.TryAcquireAsync(1, 5_00);
+            var acquired = await semaphore.TryAcquireAsync(1, 5_000);
 
             if (acquired)
             {

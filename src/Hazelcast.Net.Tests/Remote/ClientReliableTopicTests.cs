@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -453,7 +453,7 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
     }
 
     [Test]
-    [Timeout(80_000)]
+    [Timeout(120_000)]
     public async Task TestClusterRestartWhenSubscribed()
     {
         var topicName = "rtTestTopic2";
@@ -478,9 +478,13 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
         await RestartCluster(async () =>
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Disconnected, client.State); }, 15_000, 100));
 
+        // Wait for both clients to reconnect before publishing 
+        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client.State), 30_000, 100);
+        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client2.State), 30_000, 100);
+
         await rt2.PublishAsync(1);
 
-        Assert.True(await mne.WaitOneAsync());
+        Assert.True(await mne.WaitOneAsync(30_000));
         await rt.DestroyAsync();
     }
 

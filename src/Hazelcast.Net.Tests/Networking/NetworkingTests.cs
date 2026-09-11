@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -312,11 +312,7 @@ namespace Hazelcast.Tests.Networking
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-#if NET8_0_OR_GREATER
             await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
-#else
-            await AssertEx.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
-#endif
             // TODO dispose the client, the server
             await server.StopAsync().CfAwait();
         }

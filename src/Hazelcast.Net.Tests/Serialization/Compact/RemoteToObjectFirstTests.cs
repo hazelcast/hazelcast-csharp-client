@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2025, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
     [ServerCondition("[5.2,)")]
-    public class RemoteToObjectFirstTests : SingleMemberRemoteTestBase
+    public class RemoteToObjectFirstTests : ClusterRemoteTestBase
     {
         // we have to have 1 member per test else the schemas may end up being cached
         private Hazelcast.Testing.Remote.Member _rcMember;
