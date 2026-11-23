@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 POWERSHELL=pwsh
 if ! type $POWERSHELL >/dev/null 2>&1; then
