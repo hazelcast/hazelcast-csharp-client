@@ -2,7 +2,7 @@
 
 ### Requirements
 
-For day to day development, the solution builds in Visual Studio or Rider. However, it is possible to build it entirely via our custom PowerShell script. 
+For day to day development, the solution builds in Visual Studio or Rider. However, it is possible to build it entirely via our custom PowerShell script.
 
 The minimal requirements are:
 * PowerShell 6.2+
@@ -20,7 +20,7 @@ The [OpenJDK](https://openjdk.java.net/) provides open Java JDKs for Windows and
 For a complete build, start a Powershell console and build using the `hz.ps1` script:
 
 ```powershell
-PS> ./hs.ps1 build
+PS> ./hz.ps1 build
 ```
 
 See the build script section below for details and arguments.
@@ -35,19 +35,19 @@ $ ./hz.sh build
 
 See the build script section below for details and arguments.
 
-Note that `hs.sh` is just a proxy to `hz.ps1`: the actual build actions are always performed by `hz.ps1`, which is common to Windows and Linux.
+Note that `hz.sh` is just a proxy to `hz.ps1`: the actual build actions are always performed by `hz.ps1`, which is common to Windows and Linux.
 
 It is not possible to build the .NET Framework version of the Hazelcast .NET client on Linux, as the .NET Framework is not supported on Linux. All other targets build on Linux. At the moment it is not possible to build the documentation on Linux, as DocFX does not run on .NET Core yet (see [this issue](https://github.com/dotnet/docfx/issues/138) for details). The upcoming v3 of DocFX will run on .NET Core.
 
 ## Build Script
 
-The `hz.[hs|ps1]` script accepts options, commands, and command arguments.
+The `hz.[sh|ps1]` script accepts options, commands, and command arguments.
 
 ```powershell
 PS> ./hz.[sh|ps1] [<options>] [<commands>] [<commargs>] [--- <rawargs>]
 ```
 
-To list all options and command, run `./hz.[sh|ps1] help`. 
+To list all options and command, run `./hz.[sh|ps1] help`.
 
 Examples of valid usages:
 
@@ -74,6 +74,6 @@ The `global.json` file at the root of the project contains:
 }
 ```
 
-This ensures that any use of the `dotnet` command actuallys use the lastest stable release installed on the machine, and avoids any pre-release versions, as these may break the build. Should you want to experiment with pre-releases of the .NET SDK, change `false` to `true` (but do not commit the change!).
+This ensures that any use of the `dotnet` command actually uses the latest stable release installed on the machine, and avoids any pre-release versions, as these may break the build. Should you want to experiment with pre-releases of the .NET SDK, change `false` to `true` (but do not commit the change!).
 
 For more details, see the [Select the .NET Core version to use](https://docs.microsoft.com/en-us/dotnet/core/versions/selection) and [global.json overview](https://docs.microsoft.com/en-us/dotnet/core/tools/global-json) articles from Microsoft.
