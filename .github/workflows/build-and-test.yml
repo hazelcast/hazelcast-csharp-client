@@ -91,8 +91,9 @@ jobs:
         if: inputs.release == false && inputs.merged-ref != ''
         shell: bash
         run: |
-          git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
-          if [ $? -eq 0 ]; then
+          # read parents from the raw commit object: checkout is shallow (depth 1), and
+          # 'git rev-list --parents' reports no parents for a shallow (grafted) commit
+          if git cat-file -p HEAD | grep -q "^parent ${{ inputs.merged-ref }}"; then
             echo "Code is valid, found merged-ref as parent of HEAD."
           else
             echo "Code is NOT valid, could not find merged-ref as parent of HEAD."
