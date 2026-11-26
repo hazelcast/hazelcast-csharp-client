@@ -73,6 +73,10 @@ jobs:
           ref: ${{ inputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
+          # build-pr.yml runs on pull_request_target and checks out fork PR code. That is
+          # only reached after the Hazelcast membership gate (or a manual workflow_dispatch),
+          # and the checked-out merge commit is validated against the PR head SHA below.
+          allow-unsafe-pr-checkout: ${{ github.event_name == 'pull_request_target' }}
 
       # Install our environment
       - name: Install environment

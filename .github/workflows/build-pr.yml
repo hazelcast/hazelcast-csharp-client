@@ -90,7 +90,9 @@ jobs:
           else
             echo "PR_NUMBER: ${{ github.event.pull_request.number }}"
             echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
-            echo "merged-ref=''" >> $GITHUB_OUTPUT
+            # pin to the head SHA the trusted actor triggered on, so a push made after
+            # the membership check cannot slip unreviewed code into the build
+            echo "merged-ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
           fi
 
   # build & test
