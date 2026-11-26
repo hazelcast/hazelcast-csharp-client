@@ -68,11 +68,12 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
+          allow-unsafe-pr-checkout: true
 
       # Install our environment
       - name: Install environment

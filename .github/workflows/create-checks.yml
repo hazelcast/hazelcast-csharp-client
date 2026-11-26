@@ -48,7 +48,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # no need for submodules, but we need the .github directory
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: false
