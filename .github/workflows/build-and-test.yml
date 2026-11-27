@@ -75,8 +75,38 @@ jobs:
           submodules: true
           # build-pr.yml runs on pull_request_target and checks out fork PR code. That is
           # only reached after the Hazelcast membership gate (or a manual workflow_dispatch),
-          # and the checked-out merge commit is validated against the PR head SHA below.
+          # build-pr.yml pins 'ref' to an API-verified merge commit SHA, and the checkout
+          # is verified again in the next step before any checked-out code runs.
           allow-unsafe-pr-checkout: ${{ github.event_name == 'pull_request_target' }}
+
+      # validate code: must run right after checkout, before anything from the
+      # checked-out tree (local actions, scripts) is executed
+      - name: Validate code
+        if: inputs.release == false && inputs.merged-ref != ''
+        shell: bash
+        env:
+          # passed through env, never interpolated into the script
+          EXPECTED_HEAD: ${{ inputs.merged-ref }}
+          EXPECTED_COMMIT: ${{ inputs.ref }}
+        run: |
+          fail() { echo "Code is NOT valid: $1"; echo "::error::$1"; exit 1; }
+          sha_re='^[0-9a-f]{40}$'
+
+          [[ "$EXPECTED_HEAD" =~ $sha_re ]] || fail "merged-ref '$EXPECTED_HEAD' is not a full commit SHA."
+          [[ "$EXPECTED_COMMIT" =~ $sha_re ]] || fail "ref '$EXPECTED_COMMIT' is not a full commit SHA."
+
+          actual=$(git rev-parse HEAD)
+          [ "$actual" == "$EXPECTED_COMMIT" ] || fail "checked out $actual, expected $EXPECTED_COMMIT."
+
+          # read parents from the raw commit object: checkout is shallow (depth 1), and
+          # 'git rev-list --parents' reports no parents for a shallow (grafted) commit
+          parents=$(git cat-file -p HEAD | sed -n 's/^parent //p')
+          echo "HEAD $actual parents:"
+          echo "$parents"
+          [ "$(echo "$parents" | wc -l | tr -d ' ')" == "2" ] || fail "HEAD is not a merge commit."
+          [ "$(echo "$parents" | sed -n 2p)" == "$EXPECTED_HEAD" ] || fail "second parent of HEAD is not $EXPECTED_HEAD."
+
+          echo "Code is valid: HEAD is $EXPECTED_COMMIT, merging approved head $EXPECTED_HEAD."
 
       # Install our environment
       - name: Install environment
@@ -85,20 +115,6 @@ jobs:
           os: ${{ inputs.os }}
           dotnet: true
           java: true
-
-      # validate code
-      - name: Validate code
-        if: inputs.release == false && inputs.merged-ref != ''
-        shell: bash
-        run: |
-          git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
-          if [ $? -eq 0 ]; then
-            echo "Code is valid, found merged-ref as parent of HEAD."
-          else
-            echo "Code is NOT valid, could not find merged-ref as parent of HEAD."
-            echo "::error::Invalid merged-ref."
-            exit 1
-          fi
 
       # verify the code version (release only)
       - name: Verify the code version
