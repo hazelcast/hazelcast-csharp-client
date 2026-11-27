@@ -68,10 +68,19 @@ jobs:
     needs: ensure-membership
     secrets: inherit
 
-  # get
+  # resolve the exact commits to build, using the GitHub API only (no PR code is
+  # checked out here). Outputs:
+  #   ref        - the SHA of the PR test-merge commit to check out
+  #   merged-ref - the PR head SHA that was approved (event head, or verified input)
+  # The merge commit is verified to have the base tip as first parent and the
+  # approved head as second parent, so a push after approval fails the run.
   get-refs:
     name: Get Refs
     runs-on: ubuntu-latest
+    needs: ensure-membership
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       ref: ${{ steps.get-refs.outputs.ref }}
       merged-ref: ${{ steps.get-refs.outputs.merged-ref }}
@@ -79,21 +88,78 @@ jobs:
     steps:
       - name: Get Refs
         id: get-refs
-        shell: bash
-        run: |
-          echo "EVENT: ${{ github.event_name }}"
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "PR_NUMBER: ${{ inputs.pr_number }}"
-            echo "PR_COMMIT: ${{ inputs.pr_commit }}"
-            echo "ref=refs/pull/${{ inputs.pr_number }}/merge" >> $GITHUB_OUTPUT
-            echo "merged-ref=${{ inputs.pr_commit }}" >> $GITHUB_OUTPUT
-          else
-            echo "PR_NUMBER: ${{ github.event.pull_request.number }}"
-            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
-            # pin to the head SHA the trusted actor triggered on, so a push made after
-            # the membership check cannot slip unreviewed code into the build
-            echo "merged-ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-          fi
+        uses: actions/github-script@v7
+        env:
+          # passed through env, never interpolated into the script
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}
+          PR_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_commit || github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const prNumberText = (process.env.PR_NUMBER || '').trim();
+            const expectedHead = (process.env.PR_COMMIT || '').trim().toLowerCase();
+
+            if (!/^[0-9]+$/.test(prNumberText)) {
+              core.setFailed(`Invalid PR number '${prNumberText}'.`);
+              return;
+            }
+            if (!/^[0-9a-f]{40}$/.test(expectedHead)) {
+              core.setFailed(`Invalid PR commit '${expectedHead}', expected a full 40-character SHA.`);
+              return;
+            }
+            const prNumber = Number(prNumberText);
+            core.info(`EVENT: ${process.env.EVENT_NAME}`);
+            core.info(`PR_NUMBER: ${prNumber}`);
+            core.info(`PR_COMMIT: ${expectedHead}`);
+
+            const { owner, repo } = context.repo;
+            const attempts = 10;
+            const delayMs = 6000;
+            let reason = '';
+
+            for (let i = 1; i <= attempts; i++) {
+              if (i > 1) await new Promise(r => setTimeout(r, delayMs));
+
+              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+
+              if (pr.state !== 'open') {
+                core.setFailed(`PR #${prNumber} is ${pr.state}.`);
+                return;
+              }
+              if (pr.head.sha.toLowerCase() !== expectedHead) {
+                core.setFailed(`PR #${prNumber} head is now ${pr.head.sha}, not the approved ${expectedHead}. ` +
+                               `A newer push needs its own approved run.`);
+                return;
+              }
+              if (pr.mergeable === false) {
+                core.setFailed(`PR #${prNumber} cannot be merged (conflicts), there is no merge commit to build.`);
+                return;
+              }
+
+              // mergeable is null while GitHub is still computing the test-merge commit
+              if (pr.mergeable === null || !pr.merge_commit_sha) {
+                reason = 'merge commit not computed yet';
+                core.info(`Attempt ${i}/${attempts}: ${reason}, retrying.`);
+                continue;
+              }
+
+              const { data: commit } = await github.rest.git.getCommit({ owner, repo, commit_sha: pr.merge_commit_sha });
+              const parents = commit.parents.map(p => p.sha.toLowerCase());
+
+              if (parents.length === 2 && parents[0] === pr.base.sha.toLowerCase() && parents[1] === expectedHead) {
+                core.info(`Merge commit ${commit.sha} verified: base ${parents[0]} + head ${parents[1]}.`);
+                core.setOutput('ref', commit.sha.toLowerCase());
+                core.setOutput('merged-ref', expectedHead);
+                return;
+              }
+
+              // the merge commit can lag behind a base or head update, try again
+              reason = `merge commit ${commit.sha} has parents [${parents.join(', ')}], ` +
+                       `expected [${pr.base.sha}, ${expectedHead}]`;
+              core.info(`Attempt ${i}/${attempts}: ${reason}, retrying.`);
+            }
+
+            core.setFailed(`Could not verify the merge commit for PR #${prNumber}: ${reason}.`);
 
   # build & test
   build-test:
